@@ -13,14 +13,14 @@
 Generación y cierre de toda la documentación técnica base del repositorio.
 
 **Entregables**
-- Estructura base del repo: README, AGENTS, CITATION, decisions, backlog ✅
-- `docs/tech-spec.md` — stack, arquitectura, diagramas Mermaid ⏳
-- `docs/PRD.md` — espejo del PRD v1.9 con stack cerrado ⏳
-- `docs/security.md` — Falso Negativo Cero, OWASP, RGPD ⏳
-- `docs/evaluation.md` — RAGAS, métricas, checklist CHART ⏳
-- `prompts.md` — log histórico inicial ⏳
+- Estructura base del repo: README, AGENTS, CITATION, decisions, backlog
+- `docs/tech-spec.md` — stack, arquitectura, diagramas Mermaid
+- `docs/PRD.md` — espejo del PRD v1.9 con stack cerrado
+- `docs/security.md` — Falso Negativo Cero, OWASP, RGPD
+- `docs/evaluation.md` — RAGAS, métricas, checklist CHART
+- `prompts.md` — log histórico inicial
 
-**Estado:** 🟡 En curso
+**Estado:** ✅ Completada — junio 2026
 
 ---
 

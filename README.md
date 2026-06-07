@@ -17,11 +17,12 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 
 ## Estado del proyecto
 
-| Fase | Estado | Descripción |
-|---|---|---|
-| Fase 1 — MVP | 🟡 En desarrollo | Agente de texto + perfil familias, autenticación y memoria de perfil |
-| Fase 2A — Multimodal | ⚪ Backlog | Agente para imágenes de síntomas |
-| Fase 2B — Científico | ⚪ Backlog | Agente de literatura científica para profesionales |
+| Fase | Estado | Hito | Descripción |
+|---|---|---|---|
+| Fase 0 — Documentación | ✅ Completada | 12 jun 2026 | Documentación técnica cerrada |
+| Fase 1 — MVP core | ⚪ No iniciada | 10 jul 2026 | Pipeline RAG + autenticación básica + perfil familias |
+| Fase 1.5 — MVP completo | ⚪ No iniciada | 29 jul 2026 | Memoria de perfil + RAGAS completo + pulido |
+| Features opcionales | ⚪ Backlog | Post-TFM | Perfil profesional, multimodal, integraciones |
 
 ---
 

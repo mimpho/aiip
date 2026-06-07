@@ -172,3 +172,41 @@ Si Context Precision < 85%, revisar los criterios de descarte del paso 5.
 
 *Log iniciado en Fase 0 — junio 2026*
 *Próximas entradas previstas: P-005 (system prompt v1.0 tras primera evaluación RAGAS), P-006 (prompt de evaluación clínica para el inmunólogo)*
+
+---
+
+### P-005 — Prompt de arranque para nuevas sesiones (Cowork / IDE)
+**Fecha:** junio 2026
+**Fase:** todas
+**Tipo:** context
+**Herramienta:** Cowork / Claude Code / Cursor / cualquier agente de IA
+
+**Prompt:**
+```
+Contexto del proyecto: soy Marcos de la Torre, desarrollando el TFM
+del Máster en IA. El proyecto es AIIP — Asistente Inteligente de
+Inmunodeficiencias Primarias.
+
+El repo está en https://github.com/mimpho/aiip con toda la
+documentación técnica de la Fase 0 ya cerrada.
+
+Ficheros clave de contexto — léelos antes de hacer nada:
+- AGENTS.md — principios no negociables, stack y convenciones
+- decisions.md — 12 decisiones tomadas (D-001 a D-012)
+- docs/tech-spec.md — arquitectura completa del sistema
+- backlog/epics.md — épicas de Fase 1 y su estado
+
+Metodología: BDD + Gherkin + TDD (ver D-006).
+Toda tarea nueva necesita especificación Gherkin antes de implementarse.
+Los tests se escriben antes que el código.
+
+Tarea a abordar: [épica o tarea concreta]
+```
+
+**Resultado / aprendizaje:**
+Prompt base para arrancar cualquier sesión de desarrollo sin perder contexto.
+Considerar el uso de agentes especializados de agency-agents
+(https://github.com/msitarzewski/agency-agents) para orquestar el trabajo:
+- AgentsOrchestrator para el pipeline completo PM → Dev → QA
+- product-sprint-prioritizer para priorizar entre el 10 y el 29 de julio
+Ver backlog/ideas.md para más detalle.
