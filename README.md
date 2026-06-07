@@ -86,7 +86,6 @@ aiip/
 │
 └── backlog/
     ├── epics.md       ← Épicas del proyecto. Esqueleto que se puebla durante el desarrollo.
-    ├── epics.md       ← Épicas del proyecto. Esqueleto que se puebla durante el desarrollo.
     └── ideas.md       ← Cajón de sastre. Ideas y referencias pendientes.
 ```
 
@@ -107,9 +106,6 @@ Esta estructura responde a tres principios que se documentan y justifican en det
 | `docs/tech-spec.md` | Diseño técnico | Hay decisión técnica nueva o cambio de stack |
 | `docs/security.md` | Módulo de seguridad | Evoluciona el modelo de seguridad |
 | `docs/evaluation.md` | Plan de evaluación | Hay resultados o cambio de métricas |
-| `decisions.md` | Registro de decisiones | Se toma una decisión relevante de producto, técnica o de proceso |
-| `backlog/epics.md` | Épicas del proyecto | Se añade una épica o cambia su estado |
-| `decisions.md` | Registro de decisiones | Se toma una decisión relevante de producto, técnica o de proceso |
 | `backlog/epics.md` | Épicas del proyecto | Se añade una épica o cambia su estado |
 | `backlog/ideas.md` | Cajón de sastre | Cuando surge una idea. Sin mantenimiento activo. |
 
