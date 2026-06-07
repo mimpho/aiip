@@ -1,0 +1,186 @@
+# backlog/epics.md — Épicas del proyecto AIIP
+
+> Backlog estructurado por épicas y fases.  
+> Metodología: BDD + Gherkin + TDD — ver D-006 en `decisions.md`.  
+> Cada épica se descompone en tareas con especificación Gherkin una vez el TDD esté cerrado.
+
+---
+
+## Fase 0 — Planificación y documentación técnica
+*Hito: 12 de junio de 2026*
+
+### E-00 — Documentación técnica del TFM
+Generación y cierre de toda la documentación técnica base del repositorio.
+
+**Entregables**
+- Estructura base del repo: README, AGENTS, CITATION, decisions, backlog ✅
+- `docs/tech-spec.md` — stack, arquitectura, diagramas Mermaid ⏳
+- `docs/PRD.md` — espejo del PRD v1.9 con stack cerrado ⏳
+- `docs/security.md` — Falso Negativo Cero, OWASP, RGPD ⏳
+- `docs/evaluation.md` — RAGAS, métricas, checklist CHART ⏳
+- `prompts.md` — log histórico inicial ⏳
+
+**Estado:** 🟡 En curso
+
+---
+
+## Fase 1 — MVP core
+*Hito: 10 de julio de 2026 — código funcional*
+
+Perfil familias. Pipeline RAG completo. Seguridad. Autenticación básica.
+
+### E-01 — Ingesta y procesamiento de la Knowledge Base
+Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
+
+**Criterios de aceptación de alto nivel**
+- Fuentes procesadas: Orphanet, ESID, upiip.com — indexadas en inglés (ver D-011)
+- Estrategia de chunking definida y documentada en TDD
+- Colección de familias separada en ChromaDB
+
+**Estado:** ⚪ No iniciada
+
+---
+
+### E-02 — Pipeline RAG
+Flujo completo: query → detección de idioma → embedding → retrieval → generación → respuesta en idioma del usuario.
+
+**Criterios de aceptación de alto nivel**
+- Pipeline end-to-end funcional con LangChain v1.0
+- Gemini Flash como LLM (configurable via `.env`)
+- bge-m3 para embeddings — cross-lingual retrieval funcionando en español
+- Detección automática de idioma via `langdetect`
+- Respuesta generada en el idioma del usuario
+
+**Estado:** ⚪ No iniciada
+
+---
+
+### E-03 — Módulo de seguridad: Falso Negativo Cero
+System prompt, lógica de derivación a consulta médica y filtros de seguridad.
+
+**Criterios de aceptación de alto nivel**
+- El agente nunca confirma que una situación es segura
+- Ante síntomas de alarma, deriva siempre a consulta médica
+- Parámetros de inferencia implementados y testeados
+- OWASP Top 10 para LLMs cubierto con mitigaciones
+
+**Estado:** ⚪ No iniciada
+
+---
+
+### E-04 — Autenticación básica y separación de perfiles
+Registro, login y URLs separadas por perfil (familiar / profesional).
+
+**Criterios de aceptación de alto nivel**
+- Registro con rol definido: familiar o profesional
+- Autenticación via Supabase Auth (OAuth Google + email/password)
+- URLs separadas: el familiar no ve que existe la versión profesional
+- El rol determina la KB consultada y el tono del agente
+
+**Estado:** ⚪ No iniciada
+
+---
+
+### E-05 — Interfaz conversacional (Chainlit) — perfil familias
+Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
+
+**Criterios de aceptación de alto nivel**
+- Chat funcional con streaming nativo de tokens
+- Visualización de pasos intermedios del RAG (documentos recuperados, chunks usados)
+- Diseño responsive desde el inicio (D-007)
+- Tono y UX adaptados al perfil familiar según PRD
+
+**Estado:** ⚪ No iniciada
+
+---
+
+### E-06 — Evaluación RAGAS (parcial)
+Dataset de prueba y métricas básicas funcionando para la entrega del 10 de julio.
+
+**Criterios de aceptación de alto nivel**
+- Dataset de preguntas representativas del perfil familias definido
+- Las cuatro métricas RAGAS implementadas: Faithfulness, Answer Relevancy, Context Precision, Context Recall
+- Primeros resultados documentados
+
+**Estado:** ⚪ No iniciada
+
+---
+
+## Fase 1.5 — MVP completo
+*Hito: 29 de julio de 2026 — entrega final*
+
+Completa el MVP con memoria, histórico y evaluación cerrada.
+
+### E-07 — Memoria de perfil e histórico de conversaciones
+Onboarding, datos estables del paciente y persistencia de conversaciones.
+
+**Criterios de aceptación de alto nivel**
+- Onboarding captura datos del paciente: tipo de IDP, edad, contexto relevante
+- El agente usa la memoria de perfil para contextualizar respuestas
+- Histórico de conversaciones persistente por usuario en Supabase
+- El usuario puede borrar sus datos (derecho al olvido — D-009)
+
+**Estado:** ⚪ No iniciada
+
+---
+
+### E-08 — Evaluación RAGAS completa
+Cierre del plan de evaluación con al menos un ciclo de mejora.
+
+**Criterios de aceptación de alto nivel**
+- Resultados RAGAS completos documentados en `docs/evaluation.md`
+- Al menos un ciclo de mejora basado en los resultados
+- Checklist CHART completado como anexo
+
+**Estado:** ⚪ No iniciada
+
+---
+
+### E-09 — Pulido: responsive, CORS y UX
+Ajustes finales para la entrega.
+
+**Criterios de aceptación de alto nivel**
+- Interfaz validada en móvil y escritorio
+- CORS configurado para futura integración web (D-007)
+- Revisión de UX con criterios del PRD
+
+**Estado:** ⚪ No iniciada
+
+---
+
+## Backlog de features opcionales
+*Entre entrega parcial y final, o post-TFM según tiempo disponible*
+
+### F-01 — Perfil profesional
+KB científica (PubMed, ESID literatura), tono clínico, interfaz adaptada.
+
+**Nota:** KB distinta a la del perfil familiar, aunque comparten base común sobre IDP. El LLM para este perfil puede evolucionar a uno más potente en producción (ver D-004). Colección separada en ChromaDB.
+
+**Esfuerzo estimado:** alto — KB nueva, tono diferente, posiblemente UI distinta.
+
+---
+
+### F-02 — Input multimodal para imágenes de síntomas
+El agente acepta imágenes de síntomas y las describe sin diagnosticar.
+
+**Nota:** Gemini Flash es nativo multimodal y Chainlit soporta upload de imágenes de fábrica — el stack ya lo facilita. El esfuerzo real está en el prompt engineering y en mantener el límite clínico. Excluye explícitamente interpretación de resultados médicos (analíticas, informes).
+
+**Esfuerzo estimado:** medio — más feature grande que fase nueva gracias al stack.
+
+---
+
+### F-03 — Selector explícito de idioma en interfaz
+Dropdown en Chainlit para selección manual de idioma, complementando la detección automática.
+
+**Esfuerzo estimado:** bajo.
+
+---
+
+### F-04 — Integración web: responsive avanzado y CORS
+Preparación para embeber el AIIP como widget o iframe en la web de la fundación (upiip.com).
+
+**Esfuerzo estimado:** bajo-medio.
+
+---
+
+*Última actualización: junio 2026*
