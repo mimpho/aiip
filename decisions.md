@@ -103,7 +103,7 @@ El AIIP tiene vocación de convertirse en una herramienta real más allá del TF
 
 | Componente | Elección | Alternativas descartadas |
 |---|---|---|
-| LLM | Gemini Flash (Google API — free tier) | Claude Sonnet API (mejor rendimiento, pero coste por token — candidato natural en producción), GPT-4o, Gemma local |
+| LLM | Gemini Flash (Google API — free tier) | Claude Sonnet API (mejor rendimiento, pero coste por token — candidato natural en producción), GPT-4o, Gemma local (sin infraestructura GPU garantizada, añade ops sin beneficio claro para el TFM) |
 | Embeddings | BAAI/bge-m3 | all-MiniLM-L12-v2 (monolingüe inglés, 2021) |
 | Vector DB | ChromaDB 1.x | Pinecone (coste), FAISS (sin persistencia), pgvector (infra adicional) |
 | Orquestación | LangChain v1.0 | LlamaIndex (mejor RAG puro, menos ecosistema agéntico) |
