@@ -9,22 +9,22 @@
 
 ## Índice
 
-- [D-001 — Elección del proyecto: agente conversacional para IDP](#d-001)
-- [D-002 — Principio arquitectónico: Falso Negativo Cero](#d-002)
-- [D-003 — Estructura de la documentación del repositorio](#d-003)
-- [D-004 — Stack tecnológico: Fase 1](#d-004)
-- [D-005 — Patrón RAG básico para Fase 1](#d-005)
-- [D-006 — Metodología de desarrollo: BDD + TDD + Gherkin](#d-006)
-- [D-007 — Plataforma, despliegue y separación de perfiles](#d-007)
-- [D-008 — Autenticación, persistencia y memoria de perfil](#d-008)
-- [D-009 — Protección de datos: RGPD y datos de salud](#d-009)
-- [D-010 — Agnósticismo de proveedor de IA](#d-010)
-- [D-011 — Estrategia multiidioma](#d-011)
-- [D-012 — Escalabilidad a otras patologías](#d-012)
+- [D-001 — Elección del proyecto: agente conversacional para IDP](#d-001--elección-del-proyecto-agente-conversacional-para-idp)
+- [D-002 — Principio arquitectónico: Falso Negativo Cero](#d-002--principio-arquitectónico-falso-negativo-cero)
+- [D-003 — Estructura de la documentación del repositorio](#d-003--estructura-de-la-documentación-del-repositorio)
+- [D-004 — Stack tecnológico: Fase 1](#d-004--stack-tecnológico-fase-1)
+- [D-005 — Patrón RAG básico para Fase 1](#d-005--patrón-rag-básico-para-fase-1)
+- [D-006 — Metodología de desarrollo: BDD + TDD + Gherkin](#d-006--metodología-de-desarrollo-bdd--tdd--gherkin)
+- [D-007 — Plataforma, despliegue y separación de perfiles](#d-007--plataforma-despliegue-y-separación-de-perfiles)
+- [D-008 — Autenticación, persistencia y memoria de perfil](#d-008--autenticación-persistencia-y-memoria-de-perfil)
+- [D-009 — Protección de datos: RGPD y datos de salud](#d-009--protección-de-datos-rgpd-y-datos-de-salud)
+- [D-010 — Agnósticismo de proveedor de IA](#d-010--agnósticismo-de-proveedor-de-ia)
+- [D-011 — Estrategia multiidioma](#d-011--estrategia-multiidioma)
+- [D-012 — Escalabilidad a otras patologías](#d-012--escalabilidad-a-otras-patologías)
 
 ---
 
-## D-001 — Elección del proyecto: agente conversacional para IDP {#d-001}
+## D-001 — Elección del proyecto: agente conversacional para IDP
 
 **Fecha:** mayo 2026  
 **Fase:** planificación
@@ -44,7 +44,7 @@ El asistente conversacional permite demostrar el ciclo de vida completo de un si
 
 ---
 
-## D-002 — Principio arquitectónico: Falso Negativo Cero {#d-002}
+## D-002 — Principio arquitectónico: Falso Negativo Cero
 
 **Fecha:** mayo 2026  
 **Fase:** producto / arquitectura
@@ -63,7 +63,7 @@ En salud pediátrica, un falso negativo (decirle a una familia que todo está bi
 
 ---
 
-## D-003 — Estructura de la documentación del repositorio {#d-003}
+## D-003 — Estructura de la documentación del repositorio
 
 **Fecha:** junio 2026  
 **Fase:** planificación
@@ -88,7 +88,7 @@ AGENTS.md (Agentic AI Foundation / Linux Foundation, 2025), CHART (2025), TRIPOD
 
 ---
 
-## D-004 — Stack tecnológico: Fase 1 {#d-004}
+## D-004 — Stack tecnológico: Fase 1
 
 **Fecha:** junio 2026  
 **Fase:** planificación / técnica
@@ -109,7 +109,7 @@ El AIIP tiene vocación de convertirse en una herramienta real más allá del TF
 | Orquestación | LangChain v1.0 | LlamaIndex (mejor RAG puro, menos ecosistema agéntico) |
 | Frontend | Chainlit | Streamlit (insuficiente para visualizar pipeline RAG al jurado) |
 | Autenticación + DB | Supabase | Firebase (vendor lock-in), SQLite (no escalable), PostgreSQL local (más ops) |
-| Entorno desarrollo | Google Colab + Drive | Local (sin GPU garantizada) |
+| Entorno desarrollo | Claude Cowork mode + Antigravity IDE (Claude Sonnet 4.6) |
 
 **Justificación clave**  
 - *Gemini Flash:* free tier generoso, suficiente para el volumen de un TFM (demos, pruebas, evaluación RAGAS), multimodal nativo (relevante para la feature de imágenes de síntomas del backlog). El TFM demuestra la arquitectura, no la elección del modelo más potente. En producción — especialmente para el perfil profesional — se evaluará un modelo más potente (Claude Sonnet, GPT-4o u otros). Gracias a D-010, ese cambio es una variable de entorno.  
@@ -126,7 +126,7 @@ El AIIP tiene vocación de convertirse en una herramienta real más allá del TF
 
 ---
 
-## D-005 — Patrón RAG básico para Fase 1 {#d-005}
+## D-005 — Patrón RAG básico para Fase 1
 
 **Fecha:** junio 2026  
 **Fase:** técnica
@@ -147,7 +147,7 @@ El RAG básico es la base sobre la que se construyen todas las variantes. Para e
 
 ---
 
-## D-006 — Metodología de desarrollo: BDD + TDD + Gherkin {#d-006}
+## D-006 — Metodología de desarrollo: BDD + TDD + Gherkin
 
 **Fecha:** junio 2026  
 **Fase:** planificación / proceso
@@ -180,7 +180,7 @@ BDD + Gherkin crea un puente directo entre los casos de uso del PRD y los tests 
 
 ---
 
-## D-007 — Plataforma, despliegue y separación de perfiles {#d-007}
+## D-007 — Plataforma, despliegue y separación de perfiles
 
 **Fecha:** junio 2026  
 **Fase:** planificación / producto
@@ -210,7 +210,7 @@ El AIIP tiene vocación de herramienta real. La decisión de plataforma y separa
 
 ---
 
-## D-008 — Autenticación, persistencia y memoria de perfil {#d-008}
+## D-008 — Autenticación, persistencia y memoria de perfil
 
 **Fecha:** junio 2026  
 **Fase:** planificación / técnica
@@ -240,7 +240,7 @@ Con código funcional previsto para el 10 de julio y entrega final el 29 de juli
 
 ---
 
-## D-009 — Protección de datos: RGPD y datos de salud {#d-009}
+## D-009 — Protección de datos: RGPD y datos de salud
 
 **Fecha:** junio 2026  
 **Fase:** planificación / legal / ética
@@ -274,7 +274,7 @@ No se requiere implementar un sistema de compliance completo, pero sí demostrar
 
 ---
 
-## D-010 — Agnósticismo de proveedor de IA {#d-010}
+## D-010 — Agnósticismo de proveedor de IA
 
 **Fecha:** junio 2026  
 **Fase:** planificación / arquitectura
@@ -306,7 +306,7 @@ Este principio se documenta explícitamente en `AGENTS.md` para que cualquier ag
 
 ---
 
-## D-011 — Estrategia multiidioma {#d-011}
+## D-011 — Estrategia multiidioma
 
 **Fecha:** junio 2026  
 **Fase:** planificación / técnica
@@ -353,7 +353,7 @@ bge-m3 fue elegido precisamente por su capacidad multilingüe y cross-lingual (v
 
 ---
 
-## D-012 — Escalabilidad a otras patologías {#d-012}
+## D-012 — Escalabilidad a otras patologías
 
 **Fecha:** junio 2026  
 **Fase:** planificación / arquitectura
@@ -379,4 +379,4 @@ Anotado en `backlog/ideas.md` — expansión a otras patologías como línea de 
 
 ---
 
-*Próximas decisiones previstas: diseño del system prompt (D-013), configuración definitiva de colecciones ChromaDB (D-014), estrategia de chunking validada (D-015)*
+*Próximas decisiones previstas: diseño del system prompt (D-013) — al arrancar E-02 (Pipeline RAG), configuración definitiva de colecciones ChromaDB (D-014) — al arrancar E-04 (Ingesta KB), estrategia de chunking validada (D-015) — tras primera evaluación RAGAS*
