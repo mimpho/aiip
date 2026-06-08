@@ -23,7 +23,7 @@
 | Frontend | Chainlit | Latest | Chat-first, streaming nativo, visualización step-by-step del pipeline RAG |
 | Auth + persistencia | Supabase | Latest | Auth integrado, PostgreSQL gestionado, región EU (RGPD), MCP connector disponible |
 | Detección de idioma | langdetect | Latest | Detección automática del idioma del usuario para respuesta en su idioma |
-| Entorno desarrollo | Google Colab + Drive | — | GPU disponible, integración con Drive para KB |
+| IDE | Claude Cowork mode + Antigravity IDE | Claude Sonnet 4.6 | Entorno de desarrollo con IA integrada |
 
 > **Principio rector:** el sistema es agnóstico de proveedor de IA. El modelo LLM se configura en `.env` — cambiar de Gemini Flash a Claude Sonnet o GPT-4o es cambiar una variable. Ver D-010 en `decisions.md`.
 
@@ -435,8 +435,8 @@ Las siguientes decisiones están identificadas pero requieren el inicio del desa
 
 | ID | Decisión | Cuándo |
 |---|---|---|
-| D-013 | Diseño definitivo del system prompt (versión familiar) | Al arrancar E-03 |
-| D-014 | Configuración definitiva de colecciones ChromaDB | Al arrancar E-01 |
+| D-013 | Diseño definitivo del system prompt (versión familiar) | Al arrancar E-02 (Pipeline RAG) |
+| D-014 | Configuración definitiva de colecciones ChromaDB | Al arrancar E-04 (Ingesta KB) |
 | D-015 | Estrategia de chunking validada con primeros resultados RAGAS | Tras primera evaluación |
 
 ---

@@ -34,13 +34,13 @@ El sistema almacena datos de salud de categoría especial (RGPD Art. 9), potenci
 ## Stack
 
 ```
-LLM:          Claude Sonnet via LangChain (configurable en .env)
+LLM:          Gemini Flash (Google API — free tier), configurable en .env
 Embeddings:   BAAI/bge-m3
 Vector DB:    ChromaDB 1.x  
 Orquestación: LangChain v1.0
 Frontend:     Chainlit
 Auth + DB:    Supabase (región EU)
-Entorno:      Google Colab + Drive
+IDE:          Claude Cowork mode + Antigravity IDE (Claude Sonnet 4.6)
 ```
 
 Variables de entorno necesarias — ver `.env.example` (a crear al inicio del desarrollo).

@@ -29,46 +29,20 @@ Generación y cierre de toda la documentación técnica base del repositorio.
 
 Perfil familias. Pipeline RAG completo. Seguridad. Autenticación básica.
 
-### E-01 — Ingesta y procesamiento de la Knowledge Base
-Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
+> **Nota sobre numeración:** los IDs son correlativos al orden de ejecución, no al orden arquitectónico del sistema.
 
-**Criterios de aceptación de alto nivel**
-- Fuentes procesadas: Orphanet, ESID, upiip.com — indexadas en inglés (ver D-011)
-- Estrategia de chunking definida y documentada en TDD
-- Colección de familias separada en ChromaDB
-
-**Estado:** ⚪ No iniciada
-
----
-
-### E-02 — Pipeline RAG
-Flujo completo: query → detección de idioma → embedding → retrieval → generación → respuesta en idioma del usuario.
-
-**Criterios de aceptación de alto nivel**
-- Pipeline end-to-end funcional con LangChain v1.0
-- Gemini Flash como LLM (configurable via `.env`)
-- bge-m3 para embeddings — cross-lingual retrieval funcionando en español
-- Detección automática de idioma via `langdetect`
-- Respuesta generada en el idioma del usuario
-
-**Estado:** ⚪ No iniciada
+| ID | Épica | Bloqueada por |
+|---|---|---|
+| E-01 | Autenticación y separación de perfiles | — |
+| E-02 | Pipeline RAG + módulo de seguridad | — |
+| E-03 | Interfaz conversacional (Chainlit) | E-02 |
+| E-04 | Ingesta y procesamiento de la KB | Feedback Jacques Rivière |
+| E-05 | Evaluación RAGAS parcial | E-04 |
+| E-06 | Memoria de perfil e histórico | E-01, E-02, E-04 |
 
 ---
 
-### E-03 — Módulo de seguridad: Falso Negativo Cero
-System prompt, lógica de derivación a consulta médica y filtros de seguridad.
-
-**Criterios de aceptación de alto nivel**
-- El agente nunca confirma que una situación es segura
-- Ante síntomas de alarma, deriva siempre a consulta médica
-- Parámetros de inferencia implementados y testeados
-- OWASP Top 10 para LLMs cubierto con mitigaciones
-
-**Estado:** ⚪ No iniciada
-
----
-
-### E-04 — Autenticación básica y separación de perfiles
+### E-01 — Autenticación básica y separación de perfiles
 Registro, login y URLs separadas por perfil (familiar / profesional).
 
 **Criterios de aceptación de alto nivel**
@@ -81,7 +55,25 @@ Registro, login y URLs separadas por perfil (familiar / profesional).
 
 ---
 
-### E-05 — Interfaz conversacional (Chainlit) — perfil familias
+### E-02 — Pipeline RAG + módulo de seguridad
+Flujo completo: query → detección de idioma → embedding → retrieval → generación → respuesta en idioma del usuario. Incluye el módulo de seguridad (Falso Negativo Cero), ya que son inseparables en el pipeline.
+
+**Criterios de aceptación de alto nivel**
+- Pipeline end-to-end funcional con LangChain v1.0
+- Gemini Flash como LLM (configurable via `.env`)
+- bge-m3 para embeddings — cross-lingual retrieval funcionando en español
+- Detección automática de idioma via `langdetect`
+- Respuesta generada en el idioma del usuario
+- El agente nunca confirma que una situación es segura (Falso Negativo Cero)
+- Ante síntomas de alarma, deriva siempre a consulta médica
+- Parámetros de inferencia implementados y testeados
+- OWASP Top 10 para LLMs cubierto con mitigaciones
+
+**Estado:** ⚪ No iniciada
+
+---
+
+### E-03 — Interfaz conversacional (Chainlit) — perfil familias
 Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 
 **Criterios de aceptación de alto nivel**
@@ -90,11 +82,23 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 - Diseño responsive desde el inicio (D-007)
 - Tono y UX adaptados al perfil familiar según PRD
 
-**Estado:** ⚪ No iniciada
+**Estado:** ⚪ No iniciada — bloqueada por E-02
 
 ---
 
-### E-06 — Evaluación RAGAS (parcial)
+### E-04 — Ingesta y procesamiento de la Knowledge Base
+Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
+
+**Criterios de aceptación de alto nivel**
+- Fuentes procesadas: IPOPI, IDF, upiip.com, guías clínicas validadas — indexadas en inglés (ver D-011)
+- Estrategia de chunking definida y documentada
+- Colección de familias separada en ChromaDB
+
+**Estado:** ⚪ No iniciada — bloqueada por feedback de Jacques Rivière (validación de fuentes KB)
+
+---
+
+### E-05 — Evaluación RAGAS (parcial)
 Dataset de prueba y métricas básicas funcionando para la entrega del 10 de julio.
 
 **Criterios de aceptación de alto nivel**
@@ -102,17 +106,12 @@ Dataset de prueba y métricas básicas funcionando para la entrega del 10 de jul
 - Las cuatro métricas RAGAS implementadas: Faithfulness, Answer Relevancy, Context Precision, Context Recall
 - Primeros resultados documentados
 
-**Estado:** ⚪ No iniciada
+**Estado:** ⚪ No iniciada — bloqueada por E-04
 
 ---
 
-## Fase 1.5 — MVP completo
-*Hito: 29 de julio de 2026 — entrega final*
-
-Completa el MVP con memoria, histórico y evaluación cerrada.
-
-### E-07 — Memoria de perfil e histórico de conversaciones
-Onboarding, datos estables del paciente y persistencia de conversaciones.
+### E-06 — Memoria de perfil e histórico de conversaciones
+Onboarding, datos estables del paciente y persistencia de conversaciones entre sesiones.
 
 **Criterios de aceptación de alto nivel**
 - Onboarding captura datos del paciente: tipo de IDP, edad, contexto relevante
@@ -120,11 +119,16 @@ Onboarding, datos estables del paciente y persistencia de conversaciones.
 - Histórico de conversaciones persistente por usuario en Supabase
 - El usuario puede borrar sus datos (derecho al olvido — D-009)
 
-**Estado:** ⚪ No iniciada
+**Estado:** ⚪ No iniciada — bloqueada por E-01, E-02, E-04
 
 ---
 
-### E-08 — Evaluación RAGAS completa
+## Fase 1.5 — MVP completo
+*Hito: 29 de julio de 2026 — entrega final*
+
+Completa el MVP con evaluación cerrada y pulido final.
+
+### E-07 — Evaluación RAGAS completa
 Cierre del plan de evaluación con al menos un ciclo de mejora.
 
 **Criterios de aceptación de alto nivel**
@@ -136,7 +140,7 @@ Cierre del plan de evaluación con al menos un ciclo de mejora.
 
 ---
 
-### E-09 — Pulido: responsive, CORS y UX
+### E-08 — Pulido: responsive, CORS y UX
 Ajustes finales para la entrega.
 
 **Criterios de aceptación de alto nivel**

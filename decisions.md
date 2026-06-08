@@ -18,6 +18,9 @@
 - [D-007 — Plataforma, despliegue y separación de perfiles](#d-007)
 - [D-008 — Autenticación, persistencia y memoria de perfil](#d-008)
 - [D-009 — Protección de datos: RGPD y datos de salud](#d-009)
+- [D-010 — Agnósticismo de proveedor de IA](#d-010)
+- [D-011 — Estrategia multiidioma](#d-011)
+- [D-012 — Escalabilidad a otras patologías](#d-012)
 
 ---
 
@@ -271,10 +274,6 @@ No se requiere implementar un sistema de compliance completo, pero sí demostrar
 
 ---
 
-*Próximas decisiones previstas: diseño del system prompt (D-010), estructura de colecciones en ChromaDB (D-011), estrategia de chunking (D-012)*
-
----
-
 ## D-010 — Agnósticismo de proveedor de IA {#d-010}
 
 **Fecha:** junio 2026  
@@ -304,10 +303,6 @@ La elección de Claude como herramienta principal es una decisión práctica del
 
 **Implicaciones en `AGENTS.md`**  
 Este principio se documenta explícitamente en `AGENTS.md` para que cualquier agente de IA que trabaje en el repositorio lo respete por defecto.
-
----
-
-*Próximas decisiones previstas: diseño del system prompt (D-011), estructura de colecciones en ChromaDB (D-012), estrategia de chunking (D-013)*
 
 ---
 
@@ -384,4 +379,4 @@ Anotado en `backlog/ideas.md` — expansión a otras patologías como línea de 
 
 ---
 
-*Próximas decisiones previstas: diseño del system prompt (D-013), estructura de colecciones en ChromaDB (D-014), estrategia de chunking (D-015)*
+*Próximas decisiones previstas: diseño del system prompt (D-013), configuración definitiva de colecciones ChromaDB (D-014), estrategia de chunking validada (D-015)*
