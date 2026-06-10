@@ -75,13 +75,13 @@ gantt
 aiip/
 ├── README.md          ← Este fichero. Navegación y estado del proyecto.
 ├── AGENTS.md          ← Contexto para agentes de IA durante el desarrollo.
-├── CITATION.cff       ← Cita académica formal del TFM.
+├── CITATION.cff       ← Cita académica y referencias clave (documentación viva).
 ├── prompts.md         ← Prompts operativos usados en el desarrollo. Append-only.
 ├── decisions.md       ← Registro de decisiones relevantes del proyecto.
 │
 ├── docs/
 │   ├── PRD.md         ← Product Requirements Document. El qué y el por qué.
-│   ├── tech-spec.md         ← Technical Design Document. El cómo.
+│   ├── tech-spec.md   ← Technical Design Document. El cómo.
 │   ├── security.md    ← Módulo de seguridad. Falso Negativo Cero en profundidad.
 │   └── evaluation.md  ← Plan de evaluación. RAGAS, métricas, validación clínica.
 │
@@ -100,7 +100,7 @@ Esta estructura responde a tres principios que se documentan y justifican en det
 |---|---|---|
 | `README.md` | Navegación y estado | Hay un hito o cambia el estado del proyecto |
 | `AGENTS.md` | Contexto para agentes de IA | Cambian convenciones de desarrollo |
-| `CITATION.cff` | Cita académica formal | Se cierra el TFM |
+| `CITATION.cff` | Cita académica y referencias clave | Se añade/cambia una referencia teórica o metodológica clave, o se finaliza el TFM |
 | `prompts.md` | Prompts operativos del desarrollo | Se añade un prompt relevante. Nunca se edita. |
 | `decisions.md` | Registro de decisiones | Se toma una decisión relevante de producto, técnica o de proceso |
 | `docs/PRD.md` | Requisitos de producto | Hay cambio de producto o feedback clínico |

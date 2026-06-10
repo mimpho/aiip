@@ -53,12 +53,12 @@ Variables de entorno necesarias — ver `.env.example` (a crear al inicio del de
 aiip/
 ├── README.md          ← Índice y estado del proyecto
 ├── AGENTS.md          ← Este fichero
-├── CITATION.cff       ← Cita académica
+├── CITATION.cff       ← Cita académica y referencias clave (documentación viva)
 ├── prompts.md         ← Log histórico de prompts. Append-only.
 ├── decisions.md       ← Registro de decisiones. Leerlo antes de tomar decisiones de diseño.
 ├── docs/
 │   ├── PRD.md         ← Requisitos de producto
-│   ├── tech-spec.md         ← Diseño técnico (fuente de verdad técnica)
+│   ├── tech-spec.md   ← Diseño técnico (fuente de verdad técnica)
 │   ├── security.md    ← Seguridad: Falso Negativo Cero + OWASP + RGPD
 │   └── evaluation.md  ← Evaluación: RAGAS + CHART
 ├── backlog/

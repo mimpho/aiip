@@ -39,6 +39,13 @@
 
 ## Ideas de producto / funcionalidad
 
+### Business rules como documento indexado en la KB
+- **Qué sería:** un fichero `knowledge_base/business_rules.md` (o equivalente) con las reglas clínicas explícitas del sistema indexado como chunk en ChromaDB — p.ej. síntomas que siempre requieren derivación urgente, situaciones de alarma en IDP pediátrica, límites del sistema.
+- **Por qué es interesante:** refuerza el principio de Falso Negativo Cero con conocimiento *recuperable* vía RAG, no solo con instrucciones estáticas en el system prompt. Si el LLM recupera la regla del vector store, la cita con fuente — más trazable y auditable que una instrucción embebida.
+- **Origen:** sesión de agentes del máster (junio 2026) — patrón observado en el laboratorio de chatbot con reglas de negocio.
+- **Cuándo revisarlo:** al diseñar la KB en Fase 1 (E-04 Ingesta KB). Valorar si las reglas de seguridad clínica van mejor como documento indexado o como system prompt hardcodeado — o ambos en capas.
+
+
 ### Integración con la web de la fundación (upiip.com)
 - **Qué sería:** widget o iframe embebido en la web de la fundación donde colabora el inmunólogo.
 - **Requisito técnico ya cubierto en Fase 1:** CORS configurado correctamente.
