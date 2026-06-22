@@ -1,0 +1,57 @@
+cff-version: 1.2.0
+message: "If you use or reference this work, please cite it as below."
+type: software
+
+title: "AIIP — Asistente Inteligente de Inmunodeficiencias Primarias"
+abstract: >
+  Conversational agent based on RAG (Retrieval-Augmented Generation) designed
+  to support families and medical professionals facing questions related to
+  Primary Immunodeficiencies (PID). Built with a Zero False Negative safety
+  architecture, the system never confirms a situation as safe and always
+  directs users toward medical consultation. Developed as a Master's thesis
+  in Artificial Intelligence in collaboration with a pediatric immunologist.
+
+authors:
+  - family-names: "de la Torre"
+    given-names: "Marcos"
+    email: "mimpho@gmail.com"
+
+repository-code: "https://github.com/mimpho/aiip"
+url: "https://aiip-familly-app.lovable.app/"
+
+version: "1.0.0-tfm"
+date-released: "2026-07-29"
+
+license: MIT
+
+keywords:
+  - primary immunodeficiencies
+  - RAG
+  - retrieval-augmented generation
+  - LLM
+  - conversational agent
+  - clinical AI
+  - rare diseases
+  - LangChain
+  - ChromaDB
+  - pediatric immunology
+
+references:
+  - type: article
+    title: "Reporting guideline for chatbot health advice studies: the Chatbot Assessment Reporting Tool (CHART) statement"
+    authors:
+      - name: "The CHART Collaborative"
+    journal: "BMJ"
+    year: 2025
+    doi: "10.1136/bmj-2024-083305"
+
+  - type: article
+    title: "TRIPOD-LLM: A Reporting Guideline for Studies Using Large Language Models"
+    authors:
+      - family-names: "Gallifant"
+        given-names: "Jack"
+    journal: "Nature Medicine"
+    volume: 31
+    pages: "60-69"
+    year: 2025
+    doi: "10.1038/s41591-024-03425-5"
