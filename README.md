@@ -53,7 +53,9 @@ gantt
     Planificación y documentación     :done,    f0, 2026-06-08, 2026-06-12
 
     section Fase 1 — MVP core
-    Pipeline RAG + Auth básica        :active,  f1, 2026-06-12, 2026-07-10
+    Setup del entorno (E-01)          :active,  f1a, 2026-06-22, 2026-06-25
+    Auth básica (E-02)                :         f1b, 2026-06-25, 2026-07-03
+    Pipeline RAG (E-03)               :         f1c, 2026-06-25, 2026-07-10
 
     section Fase 1.5 — MVP completo
     Memoria + RAGAS + pulido          :         f15, 2026-07-10, 2026-07-29
