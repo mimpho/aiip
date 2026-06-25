@@ -20,7 +20,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | Fase | Estado | Hito | Descripción |
 |---|---|---|---|
 | Fase 0 — Documentación | ✅ Completada | 12 jun 2026 | Documentación técnica cerrada |
-| Fase 1 — MVP core | ⚪ No iniciada | 10 jul 2026 | Pipeline RAG + autenticación básica + perfil familias |
+| Fase 1 — MVP core | 🔄 En progreso | 10 jul 2026 | Pipeline RAG + autenticación básica + perfil familias |
 | Fase 1.5 — MVP completo | ⚪ No iniciada | 29 jul 2026 | Memoria de perfil + RAGAS completo + pulido |
 | Features opcionales | ⚪ Backlog | Post-TFM | Perfil profesional, multimodal, integraciones |
 
@@ -53,7 +53,7 @@ gantt
     Planificación y documentación     :done,    f0, 2026-06-08, 2026-06-12
 
     section Fase 1 — MVP core
-    Setup del entorno (E-01)          :active,  f1a, 2026-06-22, 2026-06-25
+    Setup del entorno (E-01)          :done,    f1a, 2026-06-22, 2026-06-25
     Auth básica (E-02)                :         f1b, 2026-06-25, 2026-07-03
     Pipeline RAG (E-03)               :         f1c, 2026-06-25, 2026-07-10
 

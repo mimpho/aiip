@@ -54,7 +54,7 @@ Configuración de todos los servicios, credenciales y estructura de carpetas nec
 - `.env.example` creado en el repo con todas las variables necesarias
 - `.gitignore` actualizado para excluir `.env`
 
-**Estado:** 🔄 En progreso
+**Estado:** ✅ Completada — junio 2026
 
 ---
 
@@ -67,7 +67,7 @@ Registro, login y URLs separadas por perfil (familiar / profesional).
 - URLs separadas: el familiar no ve que existe la versión profesional
 - El rol determina la KB consultada y el tono del agente
 
-**Estado:** ⚪ No iniciada — bloqueada por E-01
+**Estado:** ⚪ No iniciada
 
 ---
 
@@ -85,7 +85,7 @@ Flujo completo: query → detección de idioma → embedding → retrieval → g
 - Parámetros de inferencia implementados y testeados
 - OWASP Top 10 para LLMs cubierto con mitigaciones
 
-**Estado:** ⚪ No iniciada — bloqueada por E-01
+**Estado:** ⚪ No iniciada
 
 ---
 
@@ -110,7 +110,7 @@ Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 - Estrategia de chunking definida y documentada
 - Colección de familias separada en ChromaDB
 
-**Estado:** ⚪ No iniciada — bloqueada por E-01 y feedback de Jacques Rivière (validación de fuentes KB)
+**Estado:** ⚪ No iniciada — pendiente feedback de Jacques Rivière (validación de fuentes KB)
 
 ---
 
