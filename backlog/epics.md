@@ -34,12 +34,13 @@ Perfil familias. Pipeline RAG completo. Seguridad. Autenticación básica.
 | ID | Épica | Bloqueada por |
 |---|---|---|
 | E-01 | Setup del entorno de desarrollo | — |
-| E-02 | Autenticación y separación de perfiles | E-01 |
-| E-03 | Pipeline RAG + módulo de seguridad | E-01 |
-| E-04 | Interfaz conversacional (Chainlit) | E-03 |
-| E-05 | Ingesta y procesamiento de la KB | E-01, Feedback Jacques Rivière |
-| E-06 | Evaluación RAGAS parcial | E-05 |
-| E-07 | Memoria de perfil e histórico | E-02, E-03, E-05 |
+| E-02 | Identidad visual mínima | E-01 |
+| E-03 | Autenticación y separación de perfiles | E-02 |
+| E-04 | Pipeline RAG + módulo de seguridad | E-01 |
+| E-05 | Interfaz conversacional (Chainlit) | E-02, E-04 |
+| E-06 | Ingesta y procesamiento de la KB | E-01, Feedback Jacques Rivière |
+| E-07 | Evaluación RAGAS parcial | E-06 |
+| E-08 | Memoria de perfil e histórico | E-03, E-04, E-06 |
 
 ---
 
@@ -58,8 +59,27 @@ Configuración de todos los servicios, credenciales y estructura de carpetas nec
 
 ---
 
-### E-02 — Autenticación básica y separación de perfiles
-Registro, login y URLs separadas por perfil (familiar / profesional).
+### E-02 — Identidad visual mínima
+Definición de design tokens base (colores, tipografía, espaciado) y aplicación en auth pages y theming de Chainlit. Ver D-013.
+
+**Criterios de aceptación de alto nivel**
+- `public/tokens.css` con CSS custom properties como única fuente de verdad
+- Logo definido (placeholder o definitivo)
+- Paleta de colores y tipografía documentadas
+- Theming de Chainlit consume los tokens via `public/style.css`
+- Auth pages de Supabase consumen los tokens via `auth/style.css`
+
+**Proceso**
+- Usar Claude Design o v0 con el brief en `docs/design-brief.md` como contexto
+- La propuesta exploratoria de Lovable está incluida en el brief como referencia, no como constraint
+- Revisar y aprobar antes de traducir a tokens
+
+**Estado:** ⚪ No iniciada
+
+---
+
+### E-03 — Autenticación básica y separación de perfiles
+Registro, login y URLs separadas por perfil (familiar / profesional). Auth pages usan Supabase Auth UI con la identidad visual de E-02. Look & feel completo de la interfaz conversacional se aborda en E-05.
 
 **Criterios de aceptación de alto nivel**
 - Registro con rol definido: familiar o profesional
@@ -71,7 +91,7 @@ Registro, login y URLs separadas por perfil (familiar / profesional).
 
 ---
 
-### E-03 — Pipeline RAG + módulo de seguridad
+### E-04 — Pipeline RAG + módulo de seguridad
 Flujo completo: query → detección de idioma → embedding → retrieval → generación → respuesta en idioma del usuario. Incluye el módulo de seguridad (Falso Negativo Cero), ya que son inseparables en el pipeline.
 
 **Criterios de aceptación de alto nivel**
@@ -89,7 +109,7 @@ Flujo completo: query → detección de idioma → embedding → retrieval → g
 
 ---
 
-### E-04 — Interfaz conversacional (Chainlit) — perfil familias
+### E-05 — Interfaz conversacional (Chainlit) — perfil familias
 Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 
 **Criterios de aceptación de alto nivel**
@@ -97,12 +117,13 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 - Visualización de pasos intermedios del RAG (documentos recuperados, chunks usados)
 - Diseño responsive desde el inicio (D-007)
 - Tono y UX adaptados al perfil familiar según PRD
+- Theming completo basado en tokens de E-02
 
-**Estado:** ⚪ No iniciada — bloqueada por E-03
+**Estado:** ⚪ No iniciada
 
 ---
 
-### E-05 — Ingesta y procesamiento de la Knowledge Base
+### E-06 — Ingesta y procesamiento de la Knowledge Base
 Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 
 **Criterios de aceptación de alto nivel**
@@ -114,7 +135,7 @@ Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 
 ---
 
-### E-06 — Evaluación RAGAS (parcial)
+### E-07 — Evaluación RAGAS (parcial)
 Dataset de prueba y métricas básicas funcionando para la entrega del 10 de julio.
 
 **Criterios de aceptación de alto nivel**
@@ -122,11 +143,11 @@ Dataset de prueba y métricas básicas funcionando para la entrega del 10 de jul
 - Las cuatro métricas RAGAS implementadas: Faithfulness, Answer Relevancy, Context Precision, Context Recall
 - Primeros resultados documentados
 
-**Estado:** ⚪ No iniciada — bloqueada por E-05
+**Estado:** ⚪ No iniciada
 
 ---
 
-### E-07 — Memoria de perfil e histórico de conversaciones
+### E-08 — Memoria de perfil e histórico de conversaciones
 Onboarding, datos estables del paciente y persistencia de conversaciones entre sesiones.
 
 **Criterios de aceptación de alto nivel**
@@ -135,7 +156,7 @@ Onboarding, datos estables del paciente y persistencia de conversaciones entre s
 - Histórico de conversaciones persistente por usuario en Supabase
 - El usuario puede borrar sus datos (derecho al olvido — D-009)
 
-**Estado:** ⚪ No iniciada — bloqueada por E-02, E-03, E-05
+**Estado:** ⚪ No iniciada
 
 ---
 

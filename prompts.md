@@ -278,3 +278,77 @@ correcto es `gemini-2.5-flash` (versión `001`, estable desde junio 2025,
 1M tokens de contexto, thinking habilitado). Actualizado en `.env` y
 `.env.example`. Para verificar modelos disponibles: `curl
 "https://generativelanguage.googleapis.com/v1beta/models?key=$KEY"`.
+
+---
+
+### P-009 — Redefinición del backlog: nueva épica de identidad visual
+**Fecha:** junio 2026
+**Fase:** Fase 1
+**Tipo:** process
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+El backlog actual no contempla una épica de identidad visual.
+Al analizar E-02 (autenticación), detectamos que las auth pages
+necesitan diseño propio y que no hay look & feel definido.
+Propón cómo reestructurar el backlog para incluir esta épica
+manteniendo orden secuencial y actualizando dependencias.
+```
+
+**Resultado / aprendizaje:**
+Nueva E-02 (Identidad visual), E-03→E-08 renumeradas, dependencias
+actualizadas en `epics.md` y gantt en `README.md`. Decisión de stack
+de UI registrada como D-013. El patrón: detectar gaps de diseño antes
+de entrar en desarrollo evita tener que retrofitar identidad visual
+sobre componentes ya construidos.
+
+---
+
+### P-010 — Stack de UI: decisión sobre Tailwind vs theming nativo
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-02
+**Tipo:** development
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+Para la épica de identidad visual necesitamos decidir el stack de UI.
+Contexto: Chainlit es el frontend principal (app Python compilada,
+no React controlable), Supabase Auth UI para las auth pages,
+todo debe convivir en una misma app. Opciones: Tailwind, Shadcn,
+theming nativo de Chainlit, o CSS custom properties como base común.
+```
+
+**Resultado / aprendizaje:**
+CSS custom properties en `tokens.css` como única fuente de verdad,
+consumida por Chainlit (`public/style.css`) y Supabase Auth UI
+(`auth/style.css`). Sin dependencias de build. Registrado como D-013.
+Tailwind descartado porque Chainlit es una app compilada — no hay
+acceso al árbol de componentes para aplicar clases atómicas.
+
+---
+
+### P-011 — Brief de identidad visual para Claude Design
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-02
+**Tipo:** design
+**Herramienta:** Claude Cowork → Claude Design (Pro)
+
+**Prompt:**
+```
+Redacta un design brief completo para AIIP con el que arrancar
+la propuesta de identidad visual en Claude Design.
+Contexto: dos perfiles (familiar y profesional), dark mode,
+tono empático pero no clínico. Incluir como referencia exploratoria
+el prototipo de Lovable v1.8. Entregables: tokens CSS, tipografía,
+logo SVG, arquitectura de consumo.
+```
+
+**Resultado / aprendizaje:**
+`docs/design-brief.md` con paleta de tokens, tipografía, restricciones
+técnicas y análisis visual del Lovable como referencia. Herramienta
+elegida: Claude Design (cuenta Pro) — coherente con el stack de
+desarrollo (Claude Cowork + Antigravity). El brief incluye capturas
+del Lovable analizadas visualmente: dark mode azul marino (familiar),
+verde bosque (profesional), serif en display, mismo logomark.
