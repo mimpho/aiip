@@ -170,11 +170,6 @@ Si Context Precision < 85%, revisar los criterios de descarte del paso 5.
 
 ---
 
-*Log iniciado en Fase 0 — junio 2026*
-*Próximas entradas previstas: P-005 (system prompt v1.0 tras primera evaluación RAGAS), P-006 (prompt de evaluación clínica para el inmunólogo)*
-
----
-
 ### P-005 — Prompt de arranque para nuevas sesiones (Cowork / IDE)
 **Fecha:** junio 2026
 **Fase:** todas
@@ -210,3 +205,76 @@ Considerar el uso de agentes especializados de agency-agents
 - AgentsOrchestrator para el pipeline completo PM → Dev → QA
 - product-sprint-prioritizer para priorizar entre el 10 y el 29 de julio
 Ver backlog/ideas.md para más detalle.
+
+---
+
+*Log iniciado en Fase 0 — junio 2026*
+*Próximas entradas previstas: P-009 (system prompt v1.0 tras primera evaluación RAGAS), P-010 (prompt de evaluación clínica para el inmunólogo)*
+
+---
+
+## Fase 1 — Desarrollo
+
+### P-006 — Workflow de desarrollo del proyecto
+**Fecha:** junio 2026
+**Fase:** Fase 1
+**Tipo:** process
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+Define el workflow de desarrollo del proyecto AIIP:
+- Tareas de setup: proceso ligero sin ramas ni TDD
+- Tareas de código: Plan → Rama → TDD → Validación → PR → Cierre
+- Reparto git: consulta (agente) vs escritura en remoto (Marcos)
+- Cierre de sesión: borrador de prompts con valor para prompts.md
+```
+
+**Resultado / aprendizaje:**
+Workflow acordado y documentado en AGENTS.md. El agente propone y redacta;
+Marcos ejecuta `git push` y aprueba PRs. El cierre de cada épica incluye
+actualización de `prompts.md` con los prompts de valor generados en la sesión.
+
+---
+
+### P-007 — Definición de tareas E-01 en formato Gherkin
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-01
+**Tipo:** development
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+Actúa como product manager y crea las tareas de la épica E-01 Setup
+en formato Gherkin, con casos de uso y criterios de aceptación
+para cada tarea.
+```
+
+**Resultado / aprendizaje:**
+6 features en `tests/features/e01_setup.feature` (T-01 a T-06).
+La T-06 (smoke test) actúa como criterio de cierre de la épica.
+El formato Gherkin demostró ser útil para alinear expectativas antes
+de implementar — cada `Then` es un criterio de aceptación verificable.
+
+---
+
+### P-008 — Diagnóstico de modelo Gemini deprecado
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-01
+**Tipo:** development
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+El smoke test falla con 404 NOT_FOUND en Google AI. El modelo configurado
+es gemini-1.5-flash. Consulta el listado de modelos disponibles para
+la API key activa y determina cuál es el modelo estable más adecuado
+para el proyecto.
+```
+
+**Resultado / aprendizaje:**
+`gemini-1.5-flash` y `gemini-2.0-flash` fueron deprecados. El modelo
+correcto es `gemini-2.5-flash` (versión `001`, estable desde junio 2025,
+1M tokens de contexto, thinking habilitado). Actualizado en `.env` y
+`.env.example`. Para verificar modelos disponibles: `curl
+"https://generativelanguage.googleapis.com/v1beta/models?key=$KEY"`.

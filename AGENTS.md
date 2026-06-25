@@ -75,11 +75,44 @@ aiip/
 
 **Prompts:** siempre en ficheros bajo `prompts/`. Nunca embebidos en código Python. Versionados como cualquier otro fichero.
 
+**Log de prompts (`prompts.md`):** al cerrar cada épica o sesión de trabajo relevante, el agente prepara un borrador de las entradas del log con valor real — decisiones de prompting, system prompts candidatos, razonamiento técnico — formateadas según la convención del fichero (P-ID, fecha, fase, tipo, herramienta, prompt, resultado). Marcos revisa y añade las entradas al log. No se registran conversaciones exploratorias ni prompts sin aprendizaje transferible.
+
 **Configuración:** toda variable sensible o configurable (modelo, temperatura, URLs, API keys) en `.env`. Nunca en código.
 
 **Tests:** bajo `tests/` con estructura que refleje el módulo que testean. Los escenarios Gherkin en `tests/features/`.
 
 **Commits:** mensajes descriptivos en inglés. Una responsabilidad por commit.
+
+---
+
+## Workflow por tipo de tarea
+
+### Tareas de setup y configuración (E-01)
+
+Proceso ligero sin ramas ni TDD. Para cada tarea:
+
+1. Ejecutar los pasos de configuración
+2. Verificar manualmente cada criterio de aceptación Gherkin
+3. Marcar la tarea como completada cuando todos los criterios pasan
+
+### Tareas de código (E-02 en adelante)
+
+Proceso completo en 6 pasos:
+
+1. **Plan** — el agente propone el plan de implementación de la tarea antes de tocar código. Marcos lo aprueba.
+2. **Rama** — el agente proporciona el comando para crear la rama. Marcos lo ejecuta.
+   - Nomenclatura: `task/E[nn]-T[nn]-descripcion-corta` (ej: `task/E02-T01-supabase-auth`)
+3. **TDD** — el agente escribe el test primero (Gherkin → pytest), luego la implementación.
+4. **Validación** — el agente ejecuta los tests en el sandbox local. Si pasan, prepara el resumen.
+5. **PR** — el agente prepara título, descripción y checklist del PR. Marcos crea el PR en GitHub y mergea.
+6. **Cierre** — el agente actualiza el estado de la tarea en `epics.md` y prepara el borrador de `prompts.md`.
+
+### Reparto de responsabilidades con git
+
+| Acción | Quién | Motivo |
+|---|---|---|
+| `git status`, `git log`, `git diff`, `git branch` | Agente | Consulta — solo lectura |
+| `git checkout -b`, `git push`, `git merge`, `git tag` | Marcos | Escritura en remoto |
 
 ---
 
