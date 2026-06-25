@@ -42,7 +42,7 @@ Feature: T-01 Proyecto Supabase operativo
 # T-02 — API key de Google AI obtenida y verificada
 # ─────────────────────────────────────────────────────────────
 
-@blocked
+@done
 Feature: T-02 Google AI API key operativa
 
   Como desarrollador del proyecto AIIP
@@ -52,7 +52,7 @@ Feature: T-02 Google AI API key operativa
   Scenario: API key obtenida en Google AI Studio
     Given que accedo a aistudio.google.com con mi cuenta Google
     When creo una nueva API key
-    Then la key tiene acceso al modelo "gemini-1.5-flash"
+    Then la key tiene acceso al modelo "gemini-2.5-flash"
     And la key está registrada como GOOGLE_API_KEY en .env.example
 
   Scenario: Llamada de verificación al modelo
@@ -138,7 +138,7 @@ Feature: T-05 Gestión segura de credenciales en el repositorio
     And contiene SUPABASE_ANON_KEY con valor de ejemplo
     And contiene SUPABASE_SERVICE_KEY con valor de ejemplo
     And contiene GOOGLE_API_KEY con valor de ejemplo
-    And contiene LLM_MODEL con valor por defecto "gemini-1.5-flash"
+    And contiene LLM_MODEL con valor por defecto "gemini-2.5-flash"
     And contiene HF_TOKEN con valor de ejemplo
     And contiene DRIVE_BASE_PATH con valor por defecto "/content/drive/MyDrive/AIIP"
     And ningún valor real aparece en el fichero — solo placeholders
@@ -161,7 +161,7 @@ Feature: T-05 Gestión segura de credenciales en el repositorio
 # T-06 — Script de smoke test del entorno completo
 # ─────────────────────────────────────────────────────────────
 
-@in-progress
+@done
 Feature: T-06 Smoke test de verificación del entorno
 
   Como desarrollador del proyecto AIIP
