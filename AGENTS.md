@@ -108,13 +108,13 @@ Proceso ligero sin ramas ni TDD. Para cada tarea:
 2. Verificar manualmente cada criterio de aceptación Gherkin
 3. Marcar la tarea como completada cuando todos los criterios pasan
 
-### Tareas de código (E-02 en adelante)
+### Tareas de código (E-03 en adelante)
 
 Proceso completo en 6 pasos:
 
 1. **Plan** — el agente propone el plan de implementación de la tarea antes de tocar código. Marcos lo aprueba.
 2. **Rama** — el agente proporciona el comando para crear la rama. Marcos lo ejecuta.
-   - Nomenclatura: `task/E[nn]-T[nn]-descripcion-corta` (ej: `task/E02-T01-supabase-auth`)
+   - Nomenclatura: `task/E[nn]-T[nn]-descripcion-corta` (ej: `task/E03-T01-supabase-auth`)
 3. **TDD** — el agente escribe el test primero (Gherkin → pytest), luego la implementación.
 4. **Validación** — el agente ejecuta los tests en el sandbox local. Si pasan, prepara el resumen.
 5. **PR** — el agente proporciona en el chat el título y la descripción completa del PR en inglés, formateados en Markdown para copiar y pegar directamente en GitHub (incluye descripción, cambios, criterios de aceptación cubiertos y checklist). No se crea ningún fichero .md para esto.

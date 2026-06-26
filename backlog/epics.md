@@ -172,7 +172,7 @@ Onboarding, datos estables del paciente y persistencia de conversaciones entre s
 
 Completa el MVP con evaluación cerrada y pulido final.
 
-### E-08 — Evaluación RAGAS completa
+### E-09 — Evaluación RAGAS completa
 Cierre del plan de evaluación con al menos un ciclo de mejora.
 
 **Criterios de aceptación de alto nivel**
@@ -184,7 +184,7 @@ Cierre del plan de evaluación con al menos un ciclo de mejora.
 
 ---
 
-### E-09 — Pulido: responsive, CORS y UX
+### E-10 — Pulido: responsive, CORS y UX
 Ajustes finales para la entrega.
 
 **Criterios de aceptación de alto nivel**
