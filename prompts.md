@@ -278,3 +278,176 @@ correcto es `gemini-2.5-flash` (versión `001`, estable desde junio 2025,
 1M tokens de contexto, thinking habilitado). Actualizado en `.env` y
 `.env.example`. Para verificar modelos disponibles: `curl
 "https://generativelanguage.googleapis.com/v1beta/models?key=$KEY"`.
+
+---
+
+### P-009 — Redefinición del backlog: nueva épica de identidad visual
+**Fecha:** junio 2026
+**Fase:** Fase 1
+**Tipo:** process
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+El backlog actual no contempla una épica de identidad visual.
+Al analizar E-02 (autenticación), detectamos que las auth pages
+necesitan diseño propio y que no hay look & feel definido.
+Propón cómo reestructurar el backlog para incluir esta épica
+manteniendo orden secuencial y actualizando dependencias.
+```
+
+**Resultado / aprendizaje:**
+Nueva E-02 (Identidad visual), E-03→E-08 renumeradas, dependencias
+actualizadas en `epics.md` y gantt en `README.md`. Decisión de stack
+de UI registrada como D-013. El patrón: detectar gaps de diseño antes
+de entrar en desarrollo evita tener que retrofitar identidad visual
+sobre componentes ya construidos.
+
+---
+
+### P-010 — Stack de UI: decisión sobre Tailwind vs theming nativo
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-02
+**Tipo:** development
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+Para la épica de identidad visual necesitamos decidir el stack de UI.
+Contexto: Chainlit es el frontend principal (app Python compilada,
+no React controlable), Supabase Auth UI para las auth pages,
+todo debe convivir en una misma app. Opciones: Tailwind, Shadcn,
+theming nativo de Chainlit, o CSS custom properties como base común.
+```
+
+**Resultado / aprendizaje:**
+CSS custom properties en `tokens.css` como única fuente de verdad,
+consumida por Chainlit (`public/style.css`) y Supabase Auth UI
+(`auth/style.css`). Sin dependencias de build. Registrado como D-013.
+Tailwind descartado porque Chainlit es una app compilada — no hay
+acceso al árbol de componentes para aplicar clases atómicas.
+
+---
+
+### P-011 — Brief de identidad visual para Claude Design
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-02
+**Tipo:** design
+**Herramienta:** Claude Cowork → Claude Design (Pro)
+
+**Prompt:**
+```
+Redacta un design brief completo para AIIP con el que arrancar
+la propuesta de identidad visual en Claude Design.
+Contexto: dos perfiles (familiar y profesional), dark mode,
+tono empático pero no clínico. Incluir como referencia exploratoria
+el prototipo de Lovable v1.8. Entregables: tokens CSS, tipografía,
+logo SVG, arquitectura de consumo.
+```
+
+**Resultado / aprendizaje:**
+`docs/design-brief.md` con paleta de tokens, tipografía, restricciones
+técnicas y análisis visual del Lovable como referencia. Herramienta
+elegida: Claude Design (cuenta Pro) — coherente con el stack de
+desarrollo (Claude Cowork + Antigravity). El brief incluye capturas
+del Lovable analizadas visualmente: dark mode azul marino (familiar),
+verde bosque (profesional), serif en display, mismo logomark.
+
+---
+
+### P-012 — Revisión crítica de la propuesta de Claude Design
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-02
+**Tipo:** design
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+He adjuntado los archivos que generó Claude Design para E-02:
+AIIP Identity Phase 1.dc.html, AIIP Phase 2 Auth.dc.html,
+AIIP Phase 2 Chat.dc.html, tokens.css, style.css (Chainlit),
+auth-style.css (Supabase). Revísalos y dime qué encaja y qué
+hay que ajustar antes de integrarlos al repo.
+```
+
+**Resultado / aprendizaje:**
+La propuesta de Claude Design fue sólida en sistema de tokens, diferenciación
+de perfiles por accent color y arquitectura CSS. El punto débil: los tres
+logos propuestos (Shield of care, Immune node, Refined triangle) eran
+demasiado genéricos para el dominio. Se decidió buscar un logo de mayor
+calidad con una herramienta especializada.
+
+---
+
+### P-013 — Prompt para generador de logos (Recraft)
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-02
+**Tipo:** design
+**Herramienta:** Claude Cowork → Recraft
+
+**Prompt:**
+```
+Design a minimal single-color logo icon for AIIP — an AI-powered
+conversational assistant for Primary Immunodeficiencies (PID),
+a rare chronic condition affecting the immune system, primarily
+in children.
+
+The icon will be used as an app logomark at two sizes: 32px (UI header)
+and 64px (landing page). No text, no wordmark — pure symbol only.
+
+What the logo must convey: Protection (the immune system as a shield,
+the tool as a safety net for families), medical trust (rigour, validated
+sources), human warmth (a companion for families in difficult moments,
+not cold or clinical), and clarity.
+
+Visual direction: A simplified antibody Y-shape, geometric and clean.
+Or an immune cell with a soft circular nucleus and short radiating
+connector arms. Or a rounded shield with an organic, human element
+inside (a small heart, a cell, a soft form suggesting life and
+protection). Avoid crosses, caduceus, stethoscope, and generic medical
+symbols. The form should feel considered and warm, not corporate.
+
+Style: Flat vector, single color, geometric with organic softness.
+Optimized for dark backgrounds. Clean enough to be legible at 32px
+with no fine detail. Aesthetic sits between a medical NGO and a premium
+health tech app — think Calm meets rare disease advocacy.
+
+Color: render in blue #6E8BFF on dark background #0F1419. The icon
+will also be used in green #2FC18C for a second profile variant —
+design for single-color flexibility.
+```
+
+**Resultado / aprendizaje:**
+Recraft generó una forma orgánica fluida que evoca una célula protegida
+dentro de un escudo — forma curva tipo "S" con un círculo inscrito.
+Lecturas posibles: célula en movimiento, cadena molecular, protección
+orgánica. El logomark fue aceptado.
+SVG limpiado para producción: color hardcodeado → `currentColor`,
+clipPath innecesario eliminado, `xmlns:xlink` y declaración XML eliminados.
+Guardado en `docs/logo-aiip.svg`. A 32px el círculo interior pierde
+algo de presencia — pendiente evaluar un variant optimizado para
+tamaños pequeños si es necesario.
+
+---
+
+### P-014 — Ajuste de diseño: borde gradiente animado en input de chat
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-02
+**Tipo:** design
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+Veo que en interfaces de IA se usa bastante degradados animados como
+borde de la caja del prompt. Podríamos utilizarlo para el input de
+chat. El degradado podría ser entre los dos colores accent que tenemos.
+```
+
+**Resultado / aprendizaje:**
+Se exploraron tres variantes: conic-gradient rotatorio, pulso suave y
+sweep horizontal. Elegida la C (sweep) por ser la más elegante sin
+distraer en un contexto médico. Implementada en `design/public/style.css`
+con técnica de pseudo-element: wrapper con `padding: 2px` y gradiente
+animado + `::before` con `blur()` para el glow. Detalle clave: la
+animación se pausa en `focus-within` para no competir con la atención
+mientras el usuario escribe.

@@ -21,6 +21,7 @@
 - [D-010 — Agnósticismo de proveedor de IA](#d-010--agnósticismo-de-proveedor-de-ia)
 - [D-011 — Estrategia multiidioma](#d-011--estrategia-multiidioma)
 - [D-012 — Escalabilidad a otras patologías](#d-012--escalabilidad-a-otras-patologías)
+- [D-013 — Stack de UI e identidad visual](#d-013--stack-de-ui-e-identidad-visual)
 
 ---
 
@@ -379,4 +380,37 @@ Anotado en `backlog/ideas.md` — expansión a otras patologías como línea de 
 
 ---
 
-*Próximas decisiones previstas: diseño del system prompt (D-013) — al arrancar E-02 (Pipeline RAG), configuración definitiva de colecciones ChromaDB (D-014) — al arrancar E-04 (Ingesta KB), estrategia de chunking validada (D-015) — tras primera evaluación RAGAS*
+## D-013 — Stack de UI e identidad visual
+
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-02
+
+**Contexto**
+Al definir la épica de identidad visual (E-02) se necesitó decidir cómo gestionar estilos, theming y componentes de UI de forma coherente entre las páginas de autenticación (Supabase Auth UI) y la interfaz conversacional (Chainlit).
+
+**Decisión**
+Design tokens centralizados en CSS custom properties como única fuente de verdad, consumidos por cada sistema vía su mecanismo de theming nativo. Sin frameworks CSS adicionales (sin Tailwind, sin Shadcn).
+
+```
+public/tokens.css     ← fuente de verdad: colores, tipografía, espaciado
+    ↓
+public/style.css      ← Chainlit consume los tokens, sobreescribe sus variables CSS
+auth/style.css        ← Supabase Auth UI consume los mismos tokens
+```
+
+**Alternativas descartadas**
+- *Tailwind CSS:* Chainlit es una app Python con frontend compilado — no es una app React controlable con clases atómicas. La fricción de integración no justifica el beneficio.
+- *Shadcn/ui:* pensado para React; no encaja con la arquitectura de Chainlit.
+- *Theming solo en Chainlit:* no resuelve las auth pages de Supabase, que viven fuera del frontend de Chainlit.
+
+**Justificación**
+Los CSS custom properties son el único mecanismo que funciona de forma nativa en ambos sistemas sin dependencias adicionales. Un cambio en `tokens.css` se propaga a toda la app. Mínima complejidad, máxima coherencia visual.
+
+**Implicaciones**
+- E-02 (Identidad visual) define los tokens base
+- E-03 (Auth) consume los tokens en las páginas de Supabase
+- E-05 (Interfaz Chainlit) consume los tokens en el theming del chat
+
+---
+
+*Próximas decisiones previstas: diseño del system prompt (D-014) — al arrancar E-04 (Pipeline RAG), configuración definitiva de colecciones ChromaDB (D-015) — al arrancar E-06 (Ingesta KB), estrategia de chunking validada (D-016) — tras primera evaluación RAGAS*

@@ -6,6 +6,19 @@
 
 ---
 
+## Arranque de sesión
+
+Si estás iniciando una sesión de trabajo en este repositorio, lee en este orden antes de tocar nada:
+
+1. **Este fichero** (`AGENTS.md`) — contexto operativo, principios y workflow
+2. **`decisions.md`** — decisiones de diseño ya tomadas. No las repitas ni las contradiges sin leerlas.
+3. **`backlog/epics.md`** — estado actual de las épicas. La próxima en ejecutar es la primera con estado `⚪ No iniciada`.
+4. **`prompts.md` → sección P-001** — prompt de contexto base del proyecto para orientarte si la sesión es conversacional.
+
+Una vez orientado, consulta la épica activa para ver sus criterios de aceptación y el workflow que corresponde (ver sección "Workflow por tipo de tarea" abajo).
+
+---
+
 ## Qué es este proyecto
 
 AIIP es un asistente conversacional RAG para familias y profesionales médicos en el contexto de las Inmunodeficiencias Primarias (IDP). Es un TFM con vocación de herramienta real.
@@ -104,8 +117,11 @@ Proceso completo en 6 pasos:
    - Nomenclatura: `task/E[nn]-T[nn]-descripcion-corta` (ej: `task/E02-T01-supabase-auth`)
 3. **TDD** — el agente escribe el test primero (Gherkin → pytest), luego la implementación.
 4. **Validación** — el agente ejecuta los tests en el sandbox local. Si pasan, prepara el resumen.
-5. **PR** — el agente prepara título, descripción y checklist del PR. Marcos crea el PR en GitHub y mergea.
-6. **Cierre** — el agente actualiza el estado de la tarea en `epics.md` y prepara el borrador de `prompts.md`.
+5. **PR** — el agente proporciona en el chat el título y la descripción completa del PR en inglés, formateados en Markdown para copiar y pegar directamente en GitHub (incluye descripción, cambios, criterios de aceptación cubiertos y checklist). No se crea ningún fichero .md para esto.
+6. **Cierre** — al cerrar cada épica o sesión relevante, el agente actualiza en este orden:
+   - Estado de la épica en `backlog/epics.md` (con entregables listados)
+   - Roadmap y tabla de estado en `README.md` (Gantt + tabla de fases si procede)
+   - Borrador de entradas del log en `prompts.md` para revisión de Marcos
 
 ### Reparto de responsabilidades con git
 
