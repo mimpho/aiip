@@ -54,7 +54,7 @@ gantt
 
     section Fase 1 — MVP core
     Setup del entorno (E-01)          :done,    f1a, 2026-06-22, 2026-06-25
-    Identidad visual (E-02)           :         f1b, 2026-06-25, 2026-06-27
+    Identidad visual (E-02)           :done,    f1b, 2026-06-25, 2026-06-27
     Auth básica (E-03)                :         f1c, 2026-06-27, 2026-07-03
     Pipeline RAG (E-04)               :         f1d, 2026-06-25, 2026-07-10
 
