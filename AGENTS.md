@@ -117,7 +117,7 @@ Proceso completo en 6 pasos:
    - Nomenclatura: `task/E[nn]-T[nn]-descripcion-corta` (ej: `task/E02-T01-supabase-auth`)
 3. **TDD** — el agente escribe el test primero (Gherkin → pytest), luego la implementación.
 4. **Validación** — el agente ejecuta los tests en el sandbox local. Si pasan, prepara el resumen.
-5. **PR** — el agente prepara en Markdown el título y la descripción completa del PR en inglés (incluye descripción, cambios, criterios de aceptación cubiertos y checklist). Marcos crea el PR en GitHub y mergea.
+5. **PR** — el agente proporciona en el chat el título y la descripción completa del PR en inglés, formateados en Markdown para copiar y pegar directamente en GitHub (incluye descripción, cambios, criterios de aceptación cubiertos y checklist). No se crea ningún fichero .md para esto.
 6. **Cierre** — al cerrar cada épica o sesión relevante, el agente actualiza en este orden:
    - Estado de la épica en `backlog/epics.md` (con entregables listados)
    - Roadmap y tabla de estado en `README.md` (Gantt + tabla de fases si procede)
