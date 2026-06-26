@@ -6,6 +6,19 @@
 
 ---
 
+## Arranque de sesión
+
+Si estás iniciando una sesión de trabajo en este repositorio, lee en este orden antes de tocar nada:
+
+1. **Este fichero** (`AGENTS.md`) — contexto operativo, principios y workflow
+2. **`decisions.md`** — decisiones de diseño ya tomadas. No las repitas ni las contradiges sin leerlas.
+3. **`backlog/epics.md`** — estado actual de las épicas. La próxima en ejecutar es la primera con estado `⚪ No iniciada`.
+4. **`prompts.md` → sección P-001** — prompt de contexto base del proyecto para orientarte si la sesión es conversacional.
+
+Una vez orientado, consulta la épica activa para ver sus criterios de aceptación y el workflow que corresponde (ver sección "Workflow por tipo de tarea" abajo).
+
+---
+
 ## Qué es este proyecto
 
 AIIP es un asistente conversacional RAG para familias y profesionales médicos en el contexto de las Inmunodeficiencias Primarias (IDP). Es un TFM con vocación de herramienta real.
