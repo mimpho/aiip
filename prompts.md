@@ -352,3 +352,102 @@ elegida: Claude Design (cuenta Pro) — coherente con el stack de
 desarrollo (Claude Cowork + Antigravity). El brief incluye capturas
 del Lovable analizadas visualmente: dark mode azul marino (familiar),
 verde bosque (profesional), serif en display, mismo logomark.
+
+---
+
+### P-012 — Revisión crítica de la propuesta de Claude Design
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-02
+**Tipo:** design
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+He adjuntado los archivos que generó Claude Design para E-02:
+AIIP Identity Phase 1.dc.html, AIIP Phase 2 Auth.dc.html,
+AIIP Phase 2 Chat.dc.html, tokens.css, style.css (Chainlit),
+auth-style.css (Supabase). Revísalos y dime qué encaja y qué
+hay que ajustar antes de integrarlos al repo.
+```
+
+**Resultado / aprendizaje:**
+La propuesta de Claude Design fue sólida en sistema de tokens, diferenciación
+de perfiles por accent color y arquitectura CSS. El punto débil: los tres
+logos propuestos (Shield of care, Immune node, Refined triangle) eran
+demasiado genéricos para el dominio. Se decidió buscar un logo de mayor
+calidad con una herramienta especializada.
+
+---
+
+### P-013 — Prompt para generador de logos (Recraft)
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-02
+**Tipo:** design
+**Herramienta:** Claude Cowork → Recraft
+
+**Prompt:**
+```
+Design a minimal single-color logo icon for AIIP — an AI-powered
+conversational assistant for Primary Immunodeficiencies (PID),
+a rare chronic condition affecting the immune system, primarily
+in children.
+
+The icon will be used as an app logomark at two sizes: 32px (UI header)
+and 64px (landing page). No text, no wordmark — pure symbol only.
+
+What the logo must convey: Protection (the immune system as a shield,
+the tool as a safety net for families), medical trust (rigour, validated
+sources), human warmth (a companion for families in difficult moments,
+not cold or clinical), and clarity.
+
+Visual direction: A simplified antibody Y-shape, geometric and clean.
+Or an immune cell with a soft circular nucleus and short radiating
+connector arms. Or a rounded shield with an organic, human element
+inside (a small heart, a cell, a soft form suggesting life and
+protection). Avoid crosses, caduceus, stethoscope, and generic medical
+symbols. The form should feel considered and warm, not corporate.
+
+Style: Flat vector, single color, geometric with organic softness.
+Optimized for dark backgrounds. Clean enough to be legible at 32px
+with no fine detail. Aesthetic sits between a medical NGO and a premium
+health tech app — think Calm meets rare disease advocacy.
+
+Color: render in blue #6E8BFF on dark background #0F1419. The icon
+will also be used in green #2FC18C for a second profile variant —
+design for single-color flexibility.
+```
+
+**Resultado / aprendizaje:**
+Recraft generó una forma orgánica fluida que evoca una célula protegida
+dentro de un escudo — forma curva tipo "S" con un círculo inscrito.
+Lecturas posibles: célula en movimiento, cadena molecular, protección
+orgánica. El logomark fue aceptado.
+SVG limpiado para producción: color hardcodeado → `currentColor`,
+clipPath innecesario eliminado, `xmlns:xlink` y declaración XML eliminados.
+Guardado en `docs/logo-aiip.svg`. A 32px el círculo interior pierde
+algo de presencia — pendiente evaluar un variant optimizado para
+tamaños pequeños si es necesario.
+
+---
+
+### P-014 — Ajuste de diseño: borde gradiente animado en input de chat
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-02
+**Tipo:** design
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+Veo que en interfaces de IA se usa bastante degradados animados como
+borde de la caja del prompt. Podríamos utilizarlo para el input de
+chat. El degradado podría ser entre los dos colores accent que tenemos.
+```
+
+**Resultado / aprendizaje:**
+Se exploraron tres variantes: conic-gradient rotatorio, pulso suave y
+sweep horizontal. Elegida la C (sweep) por ser la más elegante sin
+distraer en un contexto médico. Implementada en `design/public/style.css`
+con técnica de pseudo-element: wrapper con `padding: 2px` y gradiente
+animado + `::before` con `blur()` para el glow. Detalle clave: la
+animación se pausa en `focus-within` para no competir con la atención
+mientras el usuario escribe.

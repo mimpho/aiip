@@ -74,7 +74,14 @@ Definición de design tokens base (colores, tipografía, espaciado) y aplicació
 - La propuesta exploratoria de Lovable está incluida en el brief como referencia, no como constraint
 - Revisar y aprobar antes de traducir a tokens
 
-**Estado:** ⚪ No iniciada
+**Estado:** ✅ Completada — junio 2026
+
+**Entregables**
+- `design/public/tokens.css` — fuente de verdad con dark/light mode y swap de accent por perfil
+- `design/public/style.css` — Chainlit theme con glassmorphism y borde gradiente animado en input
+- `design/auth/style.css` — Supabase Auth UI theme con selectores reales y swap de perfil
+- `docs/logo-aiip.svg` — logomark Recraft (célula protegida), `currentColor` listo para producción
+- `docs/design/` — screens de referencia (identity, auth, chat) con logo actualizado
 
 ---
 
