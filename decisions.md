@@ -22,6 +22,7 @@
 - [D-011 — Estrategia multiidioma](#d-011--estrategia-multiidioma)
 - [D-012 — Escalabilidad a otras patologías](#d-012--escalabilidad-a-otras-patologías)
 - [D-013 — Stack de UI e identidad visual](#d-013--stack-de-ui-e-identidad-visual)
+- [D-014 — Supabase como broker único del OAuth de Google](#d-014--supabase-como-broker-único-del-oauth-de-google)
 
 ---
 
@@ -413,4 +414,28 @@ Los CSS custom properties son el único mecanismo que funciona de forma nativa e
 
 ---
 
-*Próximas decisiones previstas: diseño del system prompt (D-014) — al arrancar E-04 (Pipeline RAG), configuración definitiva de colecciones ChromaDB (D-015) — al arrancar E-06 (Ingesta KB), estrategia de chunking validada (D-016) — tras primera evaluación RAGAS*
+## D-014 — Supabase como broker único del OAuth de Google
+
+**Fecha:** junio 2026
+**Fase:** Fase 1 / E-03
+
+**Contexto**
+Al descomponer T-01 de E-03 (configurar el login con Google) surgió una ambigüedad no resuelta: Chainlit soporta su propio mecanismo nativo de OAuth (`@cl.oauth_callback` contra un proveedor configurado directamente en Chainlit), independiente de Supabase. Había que decidir si ese era el camino, o si Supabase Auth debía seguir siendo el único punto de identidad, también para OAuth.
+
+**Decisión**
+Supabase Auth es el único broker de identidad del sistema, tanto para email/password como para OAuth Google. Chainlit nunca implementa su propio flujo OAuth nativo: dispara `signInWithOAuth` contra Supabase y consume la sesión que Supabase devuelve tras el callback. El Client ID/Secret de Google se configuran una sola vez en Supabase Authentication > Providers — nunca en código ni en `.env` del repo (no confundir con `GOOGLE_API_KEY`, que es la key de Gemini en un proyecto de Google Cloud distinto).
+
+**Alternativas descartadas**
+- *Chainlit OAuth nativo + sincronización manual a Supabase:* introduce dos sistemas de identidad en paralelo que habría que mantener sincronizados a mano, duplicando lógica que Supabase ya resuelve.
+
+**Justificación**
+Un único mecanismo de identidad para los dos métodos de login es más simple de razonar y testear, y es coherente con D-008 (Chainlit "se conecta directamente con Supabase Auth"). Un solo Client ID de Google compartido por las dos apps (familiar/profesional), ya que ambas comparten el mismo proyecto Supabase (D-007) — la app a la que vuelve el usuario tras el login se resuelve con el parámetro `redirectTo`, no con credenciales distintas por app.
+
+**Implicaciones técnicas**
+- Redirect URI registrada en Google Cloud Console: `https://<project-ref>.supabase.co/auth/v1/callback` (única, no una por app)
+- Supabase Auth > URL Configuration > Redirect URLs debe incluir las URLs de ambas apps (familiar y profesional, dev y producción a medida que se definan)
+- La pantalla de consentimiento de Google ("OAuth consent screen") se configura con scopes mínimos (`email`, `profile`, `openid`); en modo "Testing" solo los usuarios añadidos explícitamente como testers podrán autenticarse
+
+---
+
+*Próximas decisiones previstas: diseño del system prompt (D-015) — al arrancar E-04 (Pipeline RAG), configuración definitiva de colecciones ChromaDB (D-016) — al arrancar E-06 (Ingesta KB), estrategia de chunking validada (D-017) — tras primera evaluación RAGAS*

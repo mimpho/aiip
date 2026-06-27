@@ -145,6 +145,38 @@ Presenta el borrador a Marcos para revisión. Marcos decide qué entra en el log
 
 ---
 
+## Paso 5 — Retrospectiva del workflow
+
+Una revisión corta del proceso, no del producto. El objetivo es detectar
+fricciones o mejoras en las skills y el workflow antes de arrancar la siguiente
+épica.
+
+Presenta en el chat (sin crear fichero) una retro con este formato:
+
+```
+## Retro — E-XX [nombre]
+
+**¿Qué funcionó bien en el proceso?**
+[1-3 puntos concretos — skills, handoffs, gates, reparto Cowork/IDE]
+
+**¿Qué generó fricción o retraso?**
+[1-3 puntos concretos — ambigüedades, pasos que faltaban, idas y vueltas]
+
+**¿Qué cambiaría en las skills o el workflow?**
+[Propuestas concretas — si implica editar una skill, indícalo explícitamente]
+```
+
+Basa la retro en evidencia observable: el historial de la conversación, los
+puntos abiertos que aparecieron durante la épica, las decisiones de arquitectura
+que se añadieron a mitad de desarrollo, y cualquier tarea que requirió más de
+un ciclo de revisión.
+
+Si la retro identifica mejoras a las skills (`epic-start`, `task-start`,
+`epic-close`), edítalas directamente antes de cerrar la sesión — no las dejes
+como "pendiente".
+
+---
+
 ## Resumen de entregables del cierre
 
 | Entregable | Destino | Quién ejecuta |
@@ -153,3 +185,4 @@ Presenta el borrador a Marcos para revisión. Marcos decide qué entra en el log
 | Estado + entregables de la épica | `backlog/epics.md` | Agente |
 | Tabla de fases actualizada | `README.md` | Agente |
 | Borrador de entradas | `prompts.md` | Marcos (tras revisión) |
+| Retrospectiva del workflow | Chat | Agente (Marcos valida) |

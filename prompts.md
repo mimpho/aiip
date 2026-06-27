@@ -475,3 +475,41 @@ clave: dos gates humanos separados — aprobación de tareas (alcance) y
 aprobación del .feature (comportamiento clínico) — antes de escribir
 una línea de código. La estructura de ramas `epic/EXX → task/EXX-TYY → epic/EXX → main`
 aísla el trabajo por épica y produce un único PR de integración al cerrar.
+
+---
+
+### P-016 — Skill task-start y mejoras al workflow de épica
+**Fecha:** 27 jun 2026
+**Fase:** Fase 1 (proceso transversal)
+**Tipo:** process
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+Al arrancar E-03, epic-start generó tareas con una inconsistencia
+(ambigüedad del broker OAuth) que no salió hasta pedir una pasada
+extra de revisión crítica. Necesitamos una skill task-start para
+trabajar las tareas desde Cowork antes del IDE, y mejorar epic-start
+para que detecte ese tipo de problemas solo.
+```
+
+**Resultado / aprendizaje:**
+Tres mejoras al workflow:
+1. `epic-start` Paso 1: auto-revisión estructurada antes del gate —
+   5 preguntas (ambigüedad de responsabilidades, configuración de
+   terceros no capturada, puntos abiertos, confusión entre credenciales,
+   tipo configuración vs código). La inconsistencia de E-03 habría
+   salido aquí sin necesitar el pase extra.
+2. `task-start` (nueva, Cowork): cubre el hueco entre tener el .feature
+   aprobado y abrir el IDE. 5 pasos: revisión crítica de la tarea,
+   decisiones de arquitectura pendientes, .feature formal, rama, y plan
+   de implementación en `tasks/E[nn]-T[nn]-plan.md`. El plan incluye
+   research de APIs externas si aplica, tabla de ficheros a tocar, y
+   el orden TDD escenario a escenario. El IDE lee el plan al arrancar —
+   no diseña, solo ejecuta.
+3. `epic-close` Paso 5: retrospectiva del workflow al cierre de cada
+   épica. Si identifica mejoras a las skills, se editan en esa misma
+   sesión — no se dejan como pendiente.
+   Principio que emerge: el trabajo previo al desarrollo (revisión,
+   decisiones, .feature, plan) pertenece a Cowork; el desarrollo TDD
+   pertenece al IDE. La frontera es el fichero `tasks/E[nn]-T[nn]-plan.md`.

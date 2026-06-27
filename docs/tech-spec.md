@@ -435,9 +435,9 @@ Las siguientes decisiones están identificadas pero requieren el inicio del desa
 
 | ID | Decisión | Cuándo |
 |---|---|---|
-| D-014 | Diseño definitivo del system prompt (versión familiar) | Al arrancar E-04 (Pipeline RAG) |
-| D-015 | Configuración definitiva de colecciones ChromaDB | Al arrancar E-06 (Ingesta KB) |
-| D-016 | Estrategia de chunking validada con primeros resultados RAGAS | Tras primera evaluación |
+| D-015 | Diseño definitivo del system prompt (versión familiar) | Al arrancar E-04 (Pipeline RAG) |
+| D-016 | Configuración definitiva de colecciones ChromaDB | Al arrancar E-06 (Ingesta KB) |
+| D-017 | Estrategia de chunking validada con primeros resultados RAGAS | Tras primera evaluación |
 
 ---
 
