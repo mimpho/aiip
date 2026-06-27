@@ -50,6 +50,18 @@ Criterios para una buena descomposición:
 - Los criterios cubren happy path + casos de error relevantes
 - El Gherkin es legible por alguien sin conocimiento técnico (validación clínica)
 
+### Auto-revisión antes del gate
+
+Antes de presentar la lista a Marcos, hazte estas preguntas sobre cada tarea y anota cualquier problema encontrado:
+
+1. **Ambigüedad de responsabilidades** — ¿Queda claro qué sistema/librería hace qué? (ej: si hay un OAuth, ¿quién es el broker? Si hay callbacks, ¿quién los gestiona?)
+2. **Pasos de configuración de terceros** — ¿Hay configuración en consolas externas (Google Cloud, Supabase, etc.) que no aparece como criterio ni como tarea? ¿Falta algún paso manual no trivial?
+3. **Puntos abiertos que bloqueen la aprobación** — ¿Hay decisiones de diseño sin tomar que afectan a los criterios? ¿Hay tareas con un "¿qué pasa si...?" sin respuesta?
+4. **Riesgo de confusión entre elementos similares** — ¿Hay credenciales, variables de entorno, o configuraciones que se podrían confundir entre sí? (ej: clave OAuth vs clave de API del LLM)
+5. **Tareas de configuración vs tareas de código** — ¿Alguna tarea es en realidad configuración manual (estilo E-01, sin rama ni PR)? Márcala explícitamente si es así.
+
+Si encuentras problemas, corrígelos en la propuesta antes de presentarla. Si hay puntos abiertos que no puedes resolver solo (decisiones de arquitectura, preferencias de producto), preséntalos explícitamente como **⚠️ Punto abierto** junto con las opciones posibles.
+
 **Espera aprobación explícita de Marcos antes de continuar.**
 Ajusta según el feedback recibido.
 

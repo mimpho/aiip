@@ -19,10 +19,11 @@ Una vez orientado, consulta la épica activa para ver sus criterios de aceptaci�
 
 ## Skills del proyecto
 
-Para arrancar o cerrar una épica, usa las skills en `skills/`:
+Las skills en `skills/` cubren el workflow completo de épica a tarea:
 
-- **`skills/epic-start/SKILL.md`** — descomposición en tareas, Gherkin, gates de aprobación, rama lista
-- **`skills/epic-close/SKILL.md`** — PR description, actualización de registros, borrador para prompts.md
+- **`skills/epic-start/SKILL.md`** — descomposición en tareas, revisión crítica automática, Gherkin informal, gates de aprobación, rama lista. Se lanza desde el IDE (Antigravity) al inicio de una épica.
+- **`skills/task-start/SKILL.md`** — arranque de una tarea individual: revisión crítica, resolución de puntos abiertos, decisiones de arquitectura, `.feature` formal, preparación de rama. Se lanza desde **Cowork** antes de abrir el IDE para cada tarea.
+- **`skills/epic-close/SKILL.md`** — PR description, actualización de registros, borrador para prompts.md. Se lanza desde el IDE al cerrar la épica.
 
 ---
 
@@ -84,6 +85,8 @@ aiip/
 ├── backlog/
 │   ├── epics.md       ← Épicas de Fase 1
 │   └── ideas.md       ← Cajón de sastre
+├── tasks/             ← Planes de implementación por tarea (E[nn]-T[nn]-plan.md)
+│                         Generados en Cowork por task-start. Léelos al arrancar en el IDE.
 └── tests/             ← Tests con especificación Gherkin (se crea al arrancar desarrollo)
 ```
 
@@ -109,9 +112,11 @@ aiip/
 ### Desarrollo con código (E-03 en adelante)
 
 Metodología BDD + TDD + pytest-bdd. Seguir las skills:
-- **Arranque de épica** → `skills/epic-start/SKILL.md`
-- **Tarea a tarea (TDD):** step definitions fallan ✗ → implementar → tests pasan ✓
-- **Cierre de épica** → `skills/epic-close/SKILL.md`
+- **Arranque de épica** → `skills/epic-start/SKILL.md` (en el IDE)
+- **Arranque de tarea** → `skills/task-start/SKILL.md` (en Cowork) — genera el `.feature` y el plan de implementación en `tasks/E[nn]-T[nn]-plan.md`
+- **Al abrir el IDE para una tarea:** lee `tasks/E[nn]-T[nn]-plan.md` antes de tocar código
+- **Tarea a tarea (TDD):** step definitions fallan ✗ → implementar → tests pasan ✓ → PR de tarea
+- **Cierre de épica** → `skills/epic-close/SKILL.md` (en el IDE)
 
 ### Reparto git
 
