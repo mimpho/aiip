@@ -1,12 +1,13 @@
 ---
 name: epic-close
 description: >
-  Cierre de una épica de desarrollo en AIIP. Úsala cuando todos los tests de una
-  épica pasan y Marcos confirma que está lista para cerrar. Orquesta el cierre
-  completo: revisa el trabajo realizado, prepara la descripción del PR final,
-  actualiza backlog/epics.md y README.md, y genera el borrador de entradas para
-  prompts.md. Actívala cuando el usuario diga "cerramos la E-XX", "épica
-  terminada", "vamos a cerrar" o cuando todos los tests de la épica estén en verde.
+  Cierre de una épica de desarrollo en AIIP. Se lanza desde Cowork. Úsala cuando
+  todos los tests de la épica pasan y Marcos confirma que está lista para cerrar.
+  Orquesta el cierre completo: revisa el trabajo realizado, prepara la descripción
+  del PR final (epic→main), actualiza backlog/epics.md y README.md, genera el
+  borrador de entradas para prompts.md, y hace una retrospectiva del workflow con
+  mejoras inmediatas a las skills si aplica. Actívala cuando el usuario diga
+  "cerramos la E-XX", "épica terminada", "vamos a cerrar" o similar.
 ---
 
 # epic-close
