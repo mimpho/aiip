@@ -55,7 +55,6 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 
 ---
 
-
 ## Roadmap
 
 ```mermaid
