@@ -513,3 +513,30 @@ Tres mejoras al workflow:
    Principio que emerge: el trabajo previo al desarrollo (revisión,
    decisiones, .feature, plan) pertenece a Cowork; el desarrollo TDD
    pertenece al IDE. La frontera es el fichero `tasks/E[nn]-T[nn]-plan.md`.
+
+---
+
+### P-017 — Arquitectura del workflow: todas las skills en Cowork
+**Fecha:** 28 jun 2026
+**Fase:** Fase 1 (proceso transversal)
+**Tipo:** process
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+epic-start estaba asignada a Antigravity sin motivo técnico real. Cowork
+tiene acceso al repo igual, y la iteración con Marcos es más fluida aquí
+(gates, debate, puntos abiertos). ¿Tiene sentido mover todas las skills
+a Cowork y dejar Antigravity solo para TDD?
+```
+
+**Resultado / aprendizaje:**
+Sí. El criterio que emerge: las skills son trabajo de planificación y
+revisión con human-in-the-loop — pertenecen a Cowork. El desarrollo TDD
+es ejecución mecánica sin decisiones de diseño — pertenece a Antigravity.
+La frontera entre ambos entornos es el fichero `tasks/E[nn]-T[nn]-plan.md`:
+Cowork lo genera, Antigravity lo consume.
+Nueva skill añadida: `task-close` — cierra el ciclo de tarea con PR
+description en inglés y checklist de merge a `epic/`. Diagrama Mermaid
+del workflow completo añadido al README para hacer visible la arquitectura
+de herramientas.
