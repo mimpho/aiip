@@ -125,6 +125,8 @@ Metodología BDD + TDD + pytest-bdd. Seguir las skills:
 | `status`, `log`, `diff`, `branch` | Agente |
 | `checkout -b`, `push`, `merge`, `tag` | Marcos |
 
+> **`main` está protegida.** Nunca proponer commits directos a main. Todo el trabajo va en rama + PR.
+
 ---
 
 ## Antes de tomar cualquier decisión de diseño
