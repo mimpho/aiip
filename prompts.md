@@ -3,6 +3,7 @@
 
 > Log append-only de prompts operativos usados durante el desarrollo del proyecto.
 > Solo se registran prompts con valor real — decisiones de prompting, system prompts candidatos, razonamiento técnico. No se registran conversaciones exploratorias.
+> Las entradas se añaden siempre al final, respetando orden cronológico estricto.
 > De este log se extraerán en el futuro los prompts especializados por área.
 
 ---
@@ -11,7 +12,7 @@
 
 ```
 ### P-[ID] — [Título descriptivo]
-**Fecha:** [fecha]
+**Fecha:** [DD mes YYYY]
 **Fase:** [Fase 0 / Fase 1 / Fase 1.5]
 **Tipo:** [system_prompt / ingestion / evaluation / development / security]
 **Herramienta:** [Claude / Gemini / LangChain / etc.]
@@ -28,7 +29,7 @@
 ## Fase 0 — Planificación y documentación
 
 ### P-001 — Contexto inicial del proyecto para sesiones de trabajo
-**Fecha:** junio 2026
+**Fecha:** 8 jun 2026
 **Fase:** Fase 0
 **Tipo:** context
 **Herramienta:** Claude (claude.ai)
@@ -60,7 +61,7 @@ Actualizar cuando cambien decisiones relevantes del stack o la estructura del re
 ---
 
 ### P-002 — Generación de estructura de documentación técnica
-**Fecha:** junio 2026
+**Fecha:** 8 jun 2026
 **Fase:** Fase 0
 **Tipo:** development
 **Herramienta:** Claude (claude.ai)
@@ -88,7 +89,7 @@ de proceso de los prompts operativos.
 ---
 
 ### P-003 — System prompt candidato v0.1 (perfil familiar)
-**Fecha:** junio 2026
+**Fecha:** 8 jun 2026
 **Fase:** Fase 0 → Fase 1
 **Tipo:** system_prompt
 **Herramienta:** A implementar en LangChain
@@ -136,7 +137,7 @@ explícitamente" es clave para el control de alucinaciones.
 ---
 
 ### P-004 — Prompt de ingesta y chunking de la KB
-**Fecha:** junio 2026
+**Fecha:** 8 jun 2026
 **Fase:** Fase 0 → Fase 1 (E-01)
 **Tipo:** ingestion
 **Herramienta:** LangChain + ChromaDB
@@ -151,7 +152,7 @@ base de datos vectorial.
 
 Para cada documento:
 1. Identifica las secciones principales
-2. Extrae chunks de ~512 tokens con overlap del 10-20%
+2. Extrae chunks de 512 tokens con overlap del 10-20%
 3. Añade metadatos: source, section, language, date_indexed
 4. Si el documento está en inglés, NO lo traduzcas —
    el sistema usa cross-lingual retrieval con bge-m3
@@ -171,7 +172,7 @@ Si Context Precision < 85%, revisar los criterios de descarte del paso 5.
 ---
 
 ### P-005 — Prompt de arranque para nuevas sesiones (Cowork / IDE)
-**Fecha:** junio 2026
+**Fecha:** 8 jun 2026
 **Fase:** todas
 **Tipo:** context
 **Herramienta:** Cowork / Claude Code / Cursor / cualquier agente de IA
@@ -200,11 +201,8 @@ Tarea a abordar: [épica o tarea concreta]
 
 **Resultado / aprendizaje:**
 Prompt base para arrancar cualquier sesión de desarrollo sin perder contexto.
-Considerar el uso de agentes especializados de agency-agents
-(https://github.com/msitarzewski/agency-agents) para orquestar el trabajo:
-- AgentsOrchestrator para el pipeline completo PM → Dev → QA
-- product-sprint-prioritizer para priorizar entre el 10 y el 29 de julio
-Ver backlog/ideas.md para más detalle.
+La orquestación PM→Dev→QA se resolvió con las skills `epic-start` y `epic-close`
+del propio repo (27 jun 2026, P-015) — agency-agents queda descartado para este uso.
 
 ---
 
@@ -216,7 +214,7 @@ Ver backlog/ideas.md para más detalle.
 ## Fase 1 — Desarrollo
 
 ### P-006 — Workflow de desarrollo del proyecto
-**Fecha:** junio 2026
+**Fecha:** 22 jun 2026
 **Fase:** Fase 1
 **Tipo:** process
 **Herramienta:** Claude Cowork
@@ -238,7 +236,7 @@ actualización de `prompts.md` con los prompts de valor generados en la sesión.
 ---
 
 ### P-007 — Definición de tareas E-01 en formato Gherkin
-**Fecha:** junio 2026
+**Fecha:** 22 jun 2026
 **Fase:** Fase 1 / E-01
 **Tipo:** development
 **Herramienta:** Claude Cowork
@@ -259,7 +257,7 @@ de implementar — cada `Then` es un criterio de aceptación verificable.
 ---
 
 ### P-008 — Diagnóstico de modelo Gemini deprecado
-**Fecha:** junio 2026
+**Fecha:** 25 jun 2026
 **Fase:** Fase 1 / E-01
 **Tipo:** development
 **Herramienta:** Claude Cowork
@@ -282,7 +280,7 @@ correcto es `gemini-2.5-flash` (versión `001`, estable desde junio 2025,
 ---
 
 ### P-009 — Redefinición del backlog: nueva épica de identidad visual
-**Fecha:** junio 2026
+**Fecha:** 25 jun 2026
 **Fase:** Fase 1
 **Tipo:** process
 **Herramienta:** Claude Cowork
@@ -306,7 +304,7 @@ sobre componentes ya construidos.
 ---
 
 ### P-010 — Stack de UI: decisión sobre Tailwind vs theming nativo
-**Fecha:** junio 2026
+**Fecha:** 25 jun 2026
 **Fase:** Fase 1 / E-02
 **Tipo:** development
 **Herramienta:** Claude Cowork
@@ -330,7 +328,7 @@ acceso al árbol de componentes para aplicar clases atómicas.
 ---
 
 ### P-011 — Brief de identidad visual para Claude Design
-**Fecha:** junio 2026
+**Fecha:** 25 jun 2026
 **Fase:** Fase 1 / E-02
 **Tipo:** design
 **Herramienta:** Claude Cowork → Claude Design (Pro)
@@ -356,7 +354,7 @@ verde bosque (profesional), serif en display, mismo logomark.
 ---
 
 ### P-012 — Revisión crítica de la propuesta de Claude Design
-**Fecha:** junio 2026
+**Fecha:** 26 jun 2026
 **Fase:** Fase 1 / E-02
 **Tipo:** design
 **Herramienta:** Claude Cowork
@@ -380,7 +378,7 @@ calidad con una herramienta especializada.
 ---
 
 ### P-013 — Prompt para generador de logos (Recraft)
-**Fecha:** junio 2026
+**Fecha:** 26 jun 2026
 **Fase:** Fase 1 / E-02
 **Tipo:** design
 **Herramienta:** Claude Cowork → Recraft
@@ -431,7 +429,7 @@ tamaños pequeños si es necesario.
 ---
 
 ### P-014 — Ajuste de diseño: borde gradiente animado en input de chat
-**Fecha:** junio 2026
+**Fecha:** 27 jun 2026
 **Fase:** Fase 1 / E-02
 **Tipo:** design
 **Herramienta:** Claude Cowork
@@ -451,3 +449,29 @@ con técnica de pseudo-element: wrapper con `padding: 2px` y gradiente
 animado + `::before` con `blur()` para el glow. Detalle clave: la
 animación se pausa en `focus-within` para no competir con la atención
 mientras el usuario escribe.
+
+---
+
+### P-015 — Workflow de desarrollo BDD+TDD y skills de épica
+**Fecha:** 27 jun 2026
+**Fase:** Fase 1 (proceso transversal)
+**Tipo:** process
+**Herramienta:** Claude Cowork
+
+**Prompt:**
+```
+Antes de arrancar la primera épica de desarrollo, definir el workflow
+completo de BDD+TDD con pytest-bdd, el rol del human-in-the-loop,
+la estrategia de ramas (epic/ + task/) y las skills que lo orquestan.
+```
+
+**Resultado / aprendizaje:**
+Dos skills creadas en `skills/`: `epic-start` (descomposición en tareas,
+Gherkin informal → .feature ejecutable, dos gates de aprobación, ramas)
+y `epic-close` (pytest acumulado, PR epic→main, actualización de registros,
+borrador prompts.md). AGENTS.md simplificado: el workflow detallado vive
+en las skills, el fichero principal solo referencia y orienta. Decisión
+clave: dos gates humanos separados — aprobación de tareas (alcance) y
+aprobación del .feature (comportamiento clínico) — antes de escribir
+una línea de código. La estructura de ramas `epic/EXX → task/EXX-TYY → epic/EXX → main`
+aísla el trabajo por épica y produce un único PR de integración al cerrar.

@@ -94,17 +94,11 @@
 
 Repo: https://github.com/msitarzewski/agency-agents
 
-### AgentsOrchestrator
-- **Qué es:** agente que gestiona el pipeline completo PM → Arquitectura → Dev ↔ QA en bucle. Coordina handoffs entre agentes especializados y mantiene el estado del proyecto.
-- **Relevancia para AIIP:** encaja directamente con la metodología BDD+TDD definida en D-006. Útil para orquestar el desarrollo de las épicas de Fase 1.
-- **Cuándo usarlo:** al arrancar el desarrollo real (post-12 junio).
-
-### product-sprint-prioritizer
-- **Qué es:** agente especializado en priorización de sprints con frameworks RICE, MoSCoW y Kano.
-- **Relevancia para AIIP:** útil cuando toque descomponer las épicas en tareas Gherkin y decidir qué entra entre el 10 y el 29 de julio.
-- **Cuándo usarlo:** al planificar el sprint entre Fase 1 y Fase 1.5.
+> **Estado (27 jun 2026):** la necesidad de orquestación PM→Dev→QA está cubierta
+> por las skills `epic-start` y `epic-close` del propio repo + el workflow de AGENTS.md.
+> Revisar solo si surge una necesidad concreta no cubierta.
 
 ### product-manager (Alex)
 - **Qué es:** agente PM con plantilla de PRD estructurada con evidencia, PRFAQ y gestión de scope creep.
-- **Relevancia para AIIP:** para cuando haya que iterar el PRD con el feedback del inmunólogo o gestionar cambios de alcance durante el desarrollo.
-- **Cuándo usarlo:** cuando llegue feedback de Jacques Rivière o haya que tomar decisiones de scope.
+- **Relevancia para AIIP:** útil si hay cambios de alcance por feedback de Jacques Rivière o decisiones de scope durante el desarrollo.
+- **Cuándo usarlo:** cuando llegue feedback clínico que obligue a iterar el PRD.

@@ -17,12 +17,27 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 
 ## Estado del proyecto
 
-| Fase | Estado | Hito | Descripción |
+| Fase | Estado | Hito |
+|---|---|---|
+| Fase 0 — Documentación técnica | ✅ Completada | 12 jun 2026 |
+| Fase 1 — MVP core | 🔄 En progreso | 10 jul 2026 |
+| Fase 1.5 — MVP completo | ⚪ No iniciada | 29 jul 2026 |
+| Features opcionales | ⚪ Backlog | Post-TFM |
+
+### Épicas
+
+| ID | Épica | Estado | Bloqueada por |
 |---|---|---|---|
-| Fase 0 — Documentación | ✅ Completada | 12 jun 2026 | Documentación técnica cerrada |
-| Fase 1 — MVP core | 🔄 En progreso | 10 jul 2026 | Pipeline RAG + autenticación básica + perfil familias |
-| Fase 1.5 — MVP completo | ⚪ No iniciada | 29 jul 2026 | Memoria de perfil + RAGAS completo + pulido |
-| Features opcionales | ⚪ Backlog | Post-TFM | Perfil profesional, multimodal, integraciones |
+| E-01 | Setup del entorno de desarrollo | ✅ Completada | — |
+| E-02 | Identidad visual mínima | ✅ Completada | — |
+| E-03 | Autenticación y separación de perfiles | ⚪ No iniciada | — |
+| E-04 | Pipeline RAG + módulo de seguridad | ⚪ No iniciada | — |
+| E-05 | Interfaz conversacional (Chainlit) | ⚪ No iniciada | E-02, E-04 |
+| E-06 | Ingesta y procesamiento de la KB | ⚪ No iniciada | E-01 |
+| E-07 | Evaluación RAGAS parcial | ⚪ No iniciada | E-06 |
+| E-08 | Memoria de perfil e histórico | ⚪ No iniciada | E-03, E-04, E-06 |
+| E-09 | Evaluación RAGAS completa | ⚪ No iniciada | E-07 |
+| E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada | E-05 |
 
 ---
 
@@ -53,16 +68,21 @@ gantt
     Planificación y documentación     :done,    f0, 2026-06-08, 2026-06-12
 
     section Fase 1 — MVP core
-    Setup del entorno (E-01)          :done,    f1a, 2026-06-22, 2026-06-25
-    Identidad visual (E-02)           :done,    f1b, 2026-06-25, 2026-06-27
-    Auth básica (E-03)                :         f1c, 2026-06-27, 2026-07-03
-    Pipeline RAG (E-04)               :         f1d, 2026-06-25, 2026-07-10
+    E-01 Setup del entorno            :done,    e01, 2026-06-22, 2026-06-25
+    E-02 Identidad visual             :done,    e02, 2026-06-25, 2026-06-27
+    E-03 Autenticación                :         e03, 2026-06-27, 2026-07-03
+    E-04 Pipeline RAG                 :         e04, 2026-06-27, 2026-07-07
+    E-05 Interfaz Chainlit            :         e05, 2026-07-07, 2026-07-10
+    E-06 Ingesta KB                   :         e06, 2026-06-27, 2026-07-05
+    E-07 RAGAS parcial                :         e07, 2026-07-05, 2026-07-10
 
     section Fase 1.5 — MVP completo
-    Memoria + RAGAS + pulido          :         f15, 2026-07-10, 2026-07-29
+    E-08 Memoria + histórico          :         e08, 2026-07-10, 2026-07-18
+    E-09 RAGAS completo               :         e09, 2026-07-18, 2026-07-25
+    E-10 Pulido final                 :         e10, 2026-07-25, 2026-07-29
 
     section Features opcionales
-    Perfil profesional · Multimodal   :         fo, 2026-07-10, 2026-09-01
+    Perfil profesional · Multimodal   :         fo, 2026-07-29, 2026-09-01
 
     section Hitos
     Doc técnica cerrada               :milestone, 2026-06-12, 0d
