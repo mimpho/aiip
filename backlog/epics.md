@@ -138,6 +138,10 @@ Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 - Estrategia de chunking definida y documentada
 - Colección de familias separada en ChromaDB
 
+**Notas**
+- Revisar DAIMS (Datasheets for AI and Medical Datasets, arXiv 2501.14094) al formalizar la KB — checklist de 24 requisitos aplicable directamente a este dataset. Ver `backlog/ideas.md`.
+- Valorar si las reglas de seguridad clínica (Falso Negativo Cero) van como chunk indexado en ChromaDB, como system prompt, o en capas. Ver `backlog/ideas.md` → "Business rules como documento indexado en la KB".
+
 **Estado:** ⚪ No iniciada — pendiente feedback de Jacques Rivière (validación de fuentes KB)
 
 ---
@@ -149,6 +153,9 @@ Dataset de prueba y métricas básicas funcionando para la entrega del 10 de jul
 - Dataset de preguntas representativas del perfil familias definido
 - Las cuatro métricas RAGAS implementadas: Faithfulness, Answer Relevancy, Context Precision, Context Recall
 - Primeros resultados documentados
+
+**Notas**
+- Hito de cierre de Fase 1 (10 jul). Al cerrar: ejecutar `pytest tests/ -v` sobre el sistema completo acumulado hasta este punto — primera validación de integración real del pipeline.
 
 **Estado:** ⚪ No iniciada
 
@@ -191,6 +198,9 @@ Ajustes finales para la entrega.
 - Interfaz validada en móvil y escritorio
 - CORS configurado para futura integración web (D-007)
 - Revisión de UX con criterios del PRD
+
+**Notas**
+- Al cerrar esta épica: ejecutar tests RAGAS end-to-end (E-07/E-09) sobre el sistema completo antes del PR final. Es el único momento en que se valida el pipeline integrado en su totalidad.
 
 **Estado:** ⚪ No iniciada
 
