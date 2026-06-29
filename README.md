@@ -91,7 +91,7 @@ gantt
 
 > Las fechas internas son orientativas — los únicos hitos inamovibles son el 12 de junio, el 10 de julio y el 29 de julio.
 
-## Estructura de la documentación
+## Estructura del repositorio
 
 ```
 aiip/
@@ -100,6 +100,7 @@ aiip/
 ├── CITATION.cff       ← Cita académica y referencias clave (documentación viva).
 ├── prompts.md         ← Prompts operativos usados en el desarrollo. Append-only.
 ├── decisions.md       ← Registro de decisiones relevantes del proyecto.
+├── requirements.txt   ← Dependencias Python del proyecto.
 │
 ├── docs/
 │   ├── PRD.md         ← Product Requirements Document. El qué y el por qué.
@@ -107,8 +108,19 @@ aiip/
 │   ├── security.md    ← Módulo de seguridad. Falso Negativo Cero en profundidad.
 │   └── evaluation.md  ← Plan de evaluación. RAGAS, métricas, validación clínica.
 │
+├── design/            ← Tokens CSS y temas visuales (Chainlit + Supabase Auth).
+├── auth/              ← Módulo de autenticación Python.
+├── supabase/
+│   └── migrations/    ← Migraciones SQL de Supabase.
+├── scripts/           ← Scripts auxiliares de verificación y setup.
+├── skills/            ← Skills del workflow de desarrollo (epic/task start y close).
+├── tasks/             ← Planes de implementación por tarea, generados en Cowork.
+├── tests/
+│   ├── features/      ← Escenarios Gherkin por tarea (.feature).
+│   └── step_defs/     ← Step definitions pytest-bdd.
+│
 └── backlog/
-    ├── epics.md       ← Épicas del proyecto. Esqueleto que se puebla durante el desarrollo.
+    ├── epics.md       ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
     └── ideas.md       ← Cajón de sastre. Ideas y referencias pendientes.
 ```
 
@@ -116,23 +128,6 @@ Esta estructura responde a tres principios que se documentan y justifican en det
 
 ---
 
-## Documentación clave
-
-| Fichero | Rol | Se actualiza cuando... |
-|---|---|---|
-| `README.md` | Navegación y estado | Hay un hito o cambia el estado del proyecto |
-| `AGENTS.md` | Contexto para agentes de IA | Cambian convenciones de desarrollo |
-| `CITATION.cff` | Cita académica y referencias clave | Se añade/cambia una referencia teórica o metodológica clave, o se finaliza el TFM |
-| `prompts.md` | Prompts operativos del desarrollo | Se añade un prompt relevante. Nunca se edita. |
-| `decisions.md` | Registro de decisiones | Se toma una decisión relevante de producto, técnica o de proceso |
-| `docs/PRD.md` | Requisitos de producto | Hay cambio de producto o feedback clínico |
-| `docs/tech-spec.md` | Diseño técnico | Hay decisión técnica nueva o cambio de stack |
-| `docs/security.md` | Módulo de seguridad | Evoluciona el modelo de seguridad |
-| `docs/evaluation.md` | Plan de evaluación | Hay resultados o cambio de métricas |
-| `backlog/epics.md` | Épicas del proyecto | Se añade una épica o cambia su estado |
-| `backlog/ideas.md` | Cajón de sastre | Cuando surge una idea. Sin mantenimiento activo. |
-
----
 
 ## Referencias clave
 
@@ -141,6 +136,14 @@ Esta estructura responde a tres principios que se documentan y justifican en det
 - **Seguridad LLM:** OWASP Top 10 para LLMs
 - **Estándares de documentación IA:** AGENTS.md (Agentic AI Foundation / Linux Foundation, 2025)
 - **Marco regulatorio:** Reglamento UE de IA 2024/1689, guías AESIA
+
+---
+
+## Setup local
+
+> 🚧 En construcción — se documentará al finalizar la Fase 1 (MVP core).
+>
+> La intención es que cualquier persona pueda levantar AIIP en local con los servicios externos necesarios (Supabase, Google AI API, Hugging Face). Ver `.env.example` para las variables de entorno requeridas.
 
 ---
 
