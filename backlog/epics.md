@@ -94,7 +94,18 @@ Registro, login y URLs separadas por perfil (familiar / profesional). Auth pages
 - URLs separadas: el familiar no ve que existe la versión profesional
 - El rol determina la KB consultada y el tono del agente
 
-**Estado:** ⚪ No iniciada
+**Estado:** 🔄 En progreso
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | OAuth Google — configuración en Supabase y Google Cloud | ✅ Completada |
+| T-02 | Esquema Supabase: tabla `profiles` + RLS | 🔄 En progreso |
+| T-03 | Registro y login con email/password, rol fijo por app | ⚪ Pendiente |
+| T-04 | Login con Google OAuth, rol fijo por app | ⚪ Pendiente |
+| T-05 | Integración de autenticación en Chainlit | ⚪ Pendiente |
+| T-06 | Separación de URLs por perfil (familiar real + profesional stub) | ⚪ Pendiente |
 
 ---
 
