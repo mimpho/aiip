@@ -84,7 +84,8 @@ cambios propuestos."
 
 **Espera aprobación explícita de Marcos antes de continuar.**
 
-Tras la aprobación, actualiza el estado de la tarea en `backlog/epics.md`:
+Tras la aprobación, actualiza **inmediatamente** el estado de la tarea en
+`backlog/epics.md` antes de seguir al Paso 2:
 
 ```markdown
 | T-XX | [nombre] | 🔄 En progreso |

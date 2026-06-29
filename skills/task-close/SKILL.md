@@ -72,9 +72,15 @@ Tipos de commit permitidos: `feat`, `fix`, `refactor`, `test`, `docs`.
 
 ---
 
-## Paso 3 — Checklist de merge
+## Paso 3 — Actualizar tracker y checklist de merge
 
-Antes de que Marcos haga el merge, verifica:
+Actualiza **inmediatamente** el estado de la tarea en `backlog/epics.md`:
+
+```markdown
+| T-XX | [nombre] | ✅ Completada |
+```
+
+Luego verifica el checklist antes de que Marcos haga el merge:
 
 - [ ] La rama base del PR es `epic/E[nn]-nombre`, no `main`
 - [ ] El `.feature` de la tarea está en `tests/features/`
