@@ -84,6 +84,12 @@ cambios propuestos."
 
 **Espera aprobación explícita de Marcos antes de continuar.**
 
+Tras la aprobación, actualiza el estado de la tarea en `backlog/epics.md`:
+
+```markdown
+| T-XX | [nombre] | 🔄 En progreso |
+```
+
 ---
 
 ## Paso 2 — Decisiones de arquitectura pendientes [si aplica]

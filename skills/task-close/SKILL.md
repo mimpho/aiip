@@ -83,6 +83,12 @@ Antes de que Marcos haga el merge, verifica:
 - [ ] Si se tomaron decisiones de arquitectura durante el TDD no registradas
       en `decisions.md`, créalas ahora antes del merge
 
+Actualiza el estado de la tarea en `backlog/epics.md`:
+
+```markdown
+| T-XX | [nombre] | ✅ Completada |
+```
+
 ---
 
 ## Resumen de entregables

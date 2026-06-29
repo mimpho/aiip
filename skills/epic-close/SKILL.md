@@ -92,10 +92,16 @@ Actualiza en este orden:
 
 ### 3a. `backlog/epics.md`
 
-Cambia el estado de la épica y añade los entregables:
+Cambia el estado de la épica, marca todas las tareas como completadas en la
+tabla de tareas, y añade los entregables:
 
 ```markdown
 **Estado:** ✅ Completada — [mes año]
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | [nombre] | ✅ Completada |
+| T-02 | [nombre] | ✅ Completada |
 
 **Entregables**
 - `path/fichero.py` — [descripción]
@@ -104,8 +110,15 @@ Cambia el estado de la épica y añade los entregables:
 
 ### 3b. `README.md`
 
-Actualiza la tabla de fases y el Gantt si existe. El estado de la épica debe
-reflejar ✅ y la fecha de cierre.
+Actualiza la tabla de épicas. El estado de la épica debe reflejar ✅ y la
+fecha de cierre. Actualiza también la tabla de fases si la épica cierra una fase.
+
+### 3c. `AGENTS.md`
+
+Revisa la sección "Estructura del repositorio". Si la épica ha creado carpetas
+o ficheros raíz nuevos (no ficheros de código individuales, sino directorios o
+ficheros raíz relevantes para cualquier agente que trabaje en el repo), actualiza
+el árbol para reflejar el estado real del repositorio.
 
 ---
 
@@ -183,7 +196,8 @@ como "pendiente".
 | Entregable | Destino | Quién ejecuta |
 |---|---|---|
 | Descripción del PR | Chat (copiar en GitHub) | Marcos |
-| Estado + entregables de la épica | `backlog/epics.md` | Agente |
-| Tabla de fases actualizada | `README.md` | Agente |
+| Estado + tareas + entregables | `backlog/epics.md` | Agente |
+| Tabla de épicas actualizada | `README.md` | Agente |
+| Estructura del repo actualizada | `AGENTS.md` (si aplica) | Agente |
 | Borrador de entradas | `prompts.md` | Marcos (tras revisión) |
 | Retrospectiva del workflow | Chat | Agente (Marcos valida) |

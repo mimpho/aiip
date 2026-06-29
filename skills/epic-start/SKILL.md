@@ -65,6 +65,22 @@ Si encuentras problemas, corrígelos en la propuesta antes de presentarla. Si ha
 **Espera aprobación explícita de Marcos antes de continuar.**
 Ajusta según el feedback recibido.
 
+Una vez aprobada la lista, añade la tabla de tareas a la épica en
+`backlog/epics.md`, justo antes de los criterios de aceptación:
+
+```markdown
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | [nombre] | ⚪ Pendiente |
+| T-02 | [nombre] | ⚪ Pendiente |
+| ...  | ...       | ...         |
+```
+
+Esta tabla es la fuente de verdad del estado de las tareas durante toda la épica.
+`task-start` y `task-close` la actualizan; `epic-close` la cierra.
+
 ---
 
 ## Paso 2 — Formalización de .feature [GATE: Marcos aprueba — validación de comportamiento]
