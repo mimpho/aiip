@@ -80,17 +80,30 @@ aiip/
 ├── CITATION.cff       ← Cita académica y referencias clave (documentación viva)
 ├── prompts.md         ← Log histórico de prompts. Append-only.
 ├── decisions.md       ← Registro de decisiones. Leerlo antes de tomar decisiones de diseño.
+├── requirements.txt   ← Dependencias Python del proyecto
+├── .env.example       ← Variables de entorno necesarias (nunca commitear .env)
 ├── docs/
 │   ├── PRD.md         ← Requisitos de producto
 │   ├── tech-spec.md   ← Diseño técnico (fuente de verdad técnica)
 │   ├── security.md    ← Seguridad: Falso Negativo Cero + OWASP + RGPD
-│   └── evaluation.md  ← Evaluación: RAGAS + CHART
+│   ├── evaluation.md  ← Evaluación: RAGAS + CHART
+│   └── design/        ← Screens de referencia (identity, auth, chat)
+├── design/            ← Tokens CSS, temas Chainlit y Supabase Auth (E-02)
+│   ├── public/        ← tokens.css, style.css (Chainlit theme)
+│   └── auth/          ← style.css (Supabase Auth UI theme)
+├── auth/              ← Módulo de autenticación Python (E-03 en adelante)
 ├── backlog/
-│   ├── epics.md       ← Épicas de Fase 1
+│   ├── epics.md       ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
 │   └── ideas.md       ← Cajón de sastre
+├── scripts/           ← Scripts auxiliares (verificación, setup, etc.)
+├── skills/            ← Skills del proyecto (epic-start, task-start, task-close, epic-close)
+├── supabase/
+│   └── migrations/    ← Migraciones SQL de Supabase
 ├── tasks/             ← Planes de implementación por tarea (E[nn]-T[nn]-plan.md)
 │                         Generados en Cowork por task-start. Léelos al arrancar en el IDE.
-└── tests/             ← Tests con especificación Gherkin (se crea al arrancar desarrollo)
+└── tests/
+    ├── features/      ← Escenarios Gherkin por tarea (eXX_tYY_nombre.feature)
+    └── step_defs/     ← Step definitions pytest-bdd (test_eXX_tYY.py)
 ```
 
 ---
