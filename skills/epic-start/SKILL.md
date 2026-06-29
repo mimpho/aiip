@@ -1,12 +1,12 @@
 ---
 name: epic-start
 description: >
-  Arranque de una épica de desarrollo en AIIP. Úsala al inicio de cualquier épica
-  con estado "No iniciada" en backlog/epics.md. Guía el proceso completo desde la
-  descomposición en tareas hasta tener la rama lista para el primer TDD: propone
-  tareas con Gherkin informal (gate de aprobación), formaliza los .feature con
-  pytest-bdd (gate clínico), y prepara la rama. Actívala cuando el usuario diga
-  "arrancamos la E-XX", "empezamos con la épica", "vamos con E-XX" o similar.
+  Arranque de una épica de desarrollo en AIIP. Se lanza desde Cowork. Úsala al
+  inicio de cualquier épica con estado "No iniciada" en backlog/epics.md. Descompone
+  la épica en tareas con Gherkin informal, aplica auto-revisión crítica antes del
+  gate, y obtiene aprobación de Marcos. Las tareas individuales se formalizan
+  después con task-start. Actívala cuando el usuario diga "arrancamos la E-XX",
+  "empezamos con la épica", "vamos con E-XX" o similar.
 ---
 
 # epic-start
@@ -64,6 +64,22 @@ Si encuentras problemas, corrígelos en la propuesta antes de presentarla. Si ha
 
 **Espera aprobación explícita de Marcos antes de continuar.**
 Ajusta según el feedback recibido.
+
+Una vez aprobada la lista, añade la tabla de tareas a la épica en
+`backlog/epics.md`, justo antes de los criterios de aceptación:
+
+```markdown
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | [nombre] | ⚪ Pendiente |
+| T-02 | [nombre] | ⚪ Pendiente |
+| ...  | ...       | ...         |
+```
+
+Esta tabla es la fuente de verdad del estado de las tareas durante toda la épica.
+`task-start` y `task-close` la actualizan; `epic-close` la cierra.
 
 ---
 

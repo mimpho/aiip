@@ -19,11 +19,14 @@ Una vez orientado, consulta la épica activa para ver sus criterios de aceptaci�
 
 ## Skills del proyecto
 
-Las skills en `skills/` cubren el workflow completo de épica a tarea:
+Las skills en `skills/` cubren el workflow completo de épica a tarea. **Todas se lanzan desde Cowork** — Antigravity se reserva exclusivamente para el desarrollo TDD.
 
-- **`skills/epic-start/SKILL.md`** — descomposición en tareas, revisión crítica automática, Gherkin informal, gates de aprobación, rama lista. Se lanza desde el IDE (Antigravity) al inicio de una épica.
-- **`skills/task-start/SKILL.md`** — arranque de una tarea individual: revisión crítica, resolución de puntos abiertos, decisiones de arquitectura, `.feature` formal, preparación de rama. Se lanza desde **Cowork** antes de abrir el IDE para cada tarea.
-- **`skills/epic-close/SKILL.md`** — PR description, actualización de registros, borrador para prompts.md. Se lanza desde el IDE al cerrar la épica.
+| Skill | Cuándo | Qué produce |
+|---|---|---|
+| `epic-start` | Al iniciar una épica | Lista de tareas revisada + Gherkin informal aprobado por Marcos |
+| `task-start` | Antes de cada tarea de código | Revisión crítica, decisiones de arquitectura, `.feature`, plan en `tasks/` |
+| `task-close` | Al terminar una tarea (tests en verde) | PR description lista para copiar en GitHub |
+| `epic-close` | Al cerrar una épica | PR epic→main, registros actualizados, borrador prompts.md, retro |
 
 ---
 
@@ -77,17 +80,30 @@ aiip/
 ├── CITATION.cff       ← Cita académica y referencias clave (documentación viva)
 ├── prompts.md         ← Log histórico de prompts. Append-only.
 ├── decisions.md       ← Registro de decisiones. Leerlo antes de tomar decisiones de diseño.
+├── requirements.txt   ← Dependencias Python del proyecto
+├── .env.example       ← Variables de entorno necesarias (nunca commitear .env)
 ├── docs/
 │   ├── PRD.md         ← Requisitos de producto
 │   ├── tech-spec.md   ← Diseño técnico (fuente de verdad técnica)
 │   ├── security.md    ← Seguridad: Falso Negativo Cero + OWASP + RGPD
-│   └── evaluation.md  ← Evaluación: RAGAS + CHART
+│   ├── evaluation.md  ← Evaluación: RAGAS + CHART
+│   └── design/        ← Screens de referencia (identity, auth, chat)
+├── design/            ← Tokens CSS, temas Chainlit y Supabase Auth (E-02)
+│   ├── public/        ← tokens.css, style.css (Chainlit theme)
+│   └── auth/          ← style.css (Supabase Auth UI theme)
+├── auth/              ← Módulo de autenticación Python (E-03 en adelante)
 ├── backlog/
-│   ├── epics.md       ← Épicas de Fase 1
+│   ├── epics.md       ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
 │   └── ideas.md       ← Cajón de sastre
+├── scripts/           ← Scripts auxiliares (verificación, setup, etc.)
+├── skills/            ← Skills del proyecto (epic-start, task-start, task-close, epic-close)
+├── supabase/
+│   └── migrations/    ← Migraciones SQL de Supabase
 ├── tasks/             ← Planes de implementación por tarea (E[nn]-T[nn]-plan.md)
 │                         Generados en Cowork por task-start. Léelos al arrancar en el IDE.
-└── tests/             ← Tests con especificación Gherkin (se crea al arrancar desarrollo)
+└── tests/
+    ├── features/      ← Escenarios Gherkin por tarea (eXX_tYY_nombre.feature)
+    └── step_defs/     ← Step definitions pytest-bdd (test_eXX_tYY.py)
 ```
 
 ---
@@ -111,12 +127,41 @@ aiip/
 
 ### Desarrollo con código (E-03 en adelante)
 
-Metodología BDD + TDD + pytest-bdd. Seguir las skills:
-- **Arranque de épica** → `skills/epic-start/SKILL.md` (en el IDE)
-- **Arranque de tarea** → `skills/task-start/SKILL.md` (en Cowork) — genera el `.feature` y el plan de implementación en `tasks/E[nn]-T[nn]-plan.md`
-- **Al abrir el IDE para una tarea:** lee `tasks/E[nn]-T[nn]-plan.md` antes de tocar código
-- **Tarea a tarea (TDD):** step definitions fallan ✗ → implementar → tests pasan ✓ → PR de tarea
-- **Cierre de épica** → `skills/epic-close/SKILL.md` (en el IDE)
+Metodología BDD + TDD + pytest-bdd.
+
+```mermaid
+flowchart TD
+    subgraph COWORK["☁️ Cowork"]
+        ES["epic-start\n─────────────\nDescomposición en tareas\nAuto-revisión crítica\nAprobación de Marcos"]
+        TS["task-start\n─────────────\nRevisión de la tarea\nDecisiones de arquitectura\n.feature formal\nPlan de implementación"]
+        TC["task-close\n─────────────\nVerificación de tests\nPR description\nChecklist de merge"]
+        EC["epic-close\n─────────────\nPR epic → main\nActualización de registros\nBorrador prompts.md\nRetrospectiva"]
+    end
+
+    subgraph ANTIGRAVITY["⚡ Antigravity"]
+        TDD["Desarrollo TDD\n─────────────\nLee tasks/plan.md\nStep defs fallan ✗\nImplementar\nTests pasan ✓"]
+    end
+
+    INICIO([Épica en backlog]) --> ES
+    ES -->|"Lista de tareas aprobada"| TS
+    TS -->|".feature + plan listos"| TDD
+    TDD -->|"Todos los escenarios ✓"| TC
+    TC -->|"PR mergeado a epic/"| MAS_TAREAS{¿Más tareas?}
+    MAS_TAREAS -->|"Sí"| TS
+    MAS_TAREAS -->|"No"| EC
+    EC --> FIN([Épica cerrada · PR a main])
+```
+
+**En Cowork** (con Marcos, iterativo):
+1. `skills/epic-start/SKILL.md` — descomposición y aprobación de tareas
+2. `skills/task-start/SKILL.md` — por cada tarea: revisión, `.feature`, plan en `tasks/E[nn]-T[nn]-plan.md`
+3. `skills/task-close/SKILL.md` — cuando los tests pasan: PR description lista para GitHub
+4. `skills/epic-close/SKILL.md` — al cerrar la épica: PR epic→main, registros, retro
+
+**En Antigravity** (desarrollo puro, sin skills):
+- Lee `tasks/E[nn]-T[nn]-plan.md` al arrancar
+- Ciclo: step definitions fallan ✗ → implementar → tests pasan ✓
+- Cuando todos los escenarios de la tarea están en verde, vuelve a Cowork para `task-close`
 
 ### Reparto git
 
@@ -124,6 +169,8 @@ Metodología BDD + TDD + pytest-bdd. Seguir las skills:
 |---|---|
 | `status`, `log`, `diff`, `branch` | Agente |
 | `checkout -b`, `push`, `merge`, `tag` | Marcos |
+
+> **`main` está protegida.** Nunca proponer commits directos a main. Todo el trabajo va en rama + PR.
 
 ---
 

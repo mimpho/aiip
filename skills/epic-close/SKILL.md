@@ -1,12 +1,13 @@
 ---
 name: epic-close
 description: >
-  Cierre de una épica de desarrollo en AIIP. Úsala cuando todos los tests de una
-  épica pasan y Marcos confirma que está lista para cerrar. Orquesta el cierre
-  completo: revisa el trabajo realizado, prepara la descripción del PR final,
-  actualiza backlog/epics.md y README.md, y genera el borrador de entradas para
-  prompts.md. Actívala cuando el usuario diga "cerramos la E-XX", "épica
-  terminada", "vamos a cerrar" o cuando todos los tests de la épica estén en verde.
+  Cierre de una épica de desarrollo en AIIP. Se lanza desde Cowork. Úsala cuando
+  todos los tests de la épica pasan y Marcos confirma que está lista para cerrar.
+  Orquesta el cierre completo: revisa el trabajo realizado, prepara la descripción
+  del PR final (epic→main), actualiza backlog/epics.md y README.md, genera el
+  borrador de entradas para prompts.md, y hace una retrospectiva del workflow con
+  mejoras inmediatas a las skills si aplica. Actívala cuando el usuario diga
+  "cerramos la E-XX", "épica terminada", "vamos a cerrar" o similar.
 ---
 
 # epic-close
@@ -91,10 +92,16 @@ Actualiza en este orden:
 
 ### 3a. `backlog/epics.md`
 
-Cambia el estado de la épica y añade los entregables:
+Cambia el estado de la épica, marca todas las tareas como completadas en la
+tabla de tareas, y añade los entregables:
 
 ```markdown
 **Estado:** ✅ Completada — [mes año]
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | [nombre] | ✅ Completada |
+| T-02 | [nombre] | ✅ Completada |
 
 **Entregables**
 - `path/fichero.py` — [descripción]
@@ -103,8 +110,15 @@ Cambia el estado de la épica y añade los entregables:
 
 ### 3b. `README.md`
 
-Actualiza la tabla de fases y el Gantt si existe. El estado de la épica debe
-reflejar ✅ y la fecha de cierre.
+Actualiza la tabla de épicas. El estado de la épica debe reflejar ✅ y la
+fecha de cierre. Actualiza también la tabla de fases si la épica cierra una fase.
+
+### 3c. `AGENTS.md`
+
+Revisa la sección "Estructura del repositorio". Si la épica ha creado carpetas
+o ficheros raíz nuevos (no ficheros de código individuales, sino directorios o
+ficheros raíz relevantes para cualquier agente que trabaje en el repo), actualiza
+el árbol para reflejar el estado real del repositorio.
 
 ---
 
@@ -182,7 +196,8 @@ como "pendiente".
 | Entregable | Destino | Quién ejecuta |
 |---|---|---|
 | Descripción del PR | Chat (copiar en GitHub) | Marcos |
-| Estado + entregables de la épica | `backlog/epics.md` | Agente |
-| Tabla de fases actualizada | `README.md` | Agente |
+| Estado + tareas + entregables | `backlog/epics.md` | Agente |
+| Tabla de épicas actualizada | `README.md` | Agente |
+| Estructura del repo actualizada | `AGENTS.md` (si aplica) | Agente |
 | Borrador de entradas | `prompts.md` | Marcos (tras revisión) |
 | Retrospectiva del workflow | Chat | Agente (Marcos valida) |
