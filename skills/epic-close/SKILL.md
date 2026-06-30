@@ -205,6 +205,28 @@ Si la retro identifica mejoras a las skills (`epic-start`, `task-start`,
 `epic-close`), edítalas directamente antes de cerrar la sesión — no las dejes
 como "pendiente".
 
+Una vez validada por Marcos, añade la entrada a `docs/process-log.md` con este formato:
+
+```markdown
+## E-XX — [nombre de la épica]
+**Periodo:** [DD mes] – [DD mes YYYY]
+**Tareas:** T-01 a T-XX (N tareas, todas completadas)
+
+### ¿Qué funcionó bien en el proceso?
+[1-3 puntos concretos]
+
+### ¿Qué generó fricción o retraso?
+[1-3 puntos concretos]
+
+### ¿Qué cambió en las skills o el workflow?
+[Skills editadas, pasos añadidos, decisiones de proceso]
+
+---
+```
+
+Este fichero es material para la memoria del TFM — cada entrada debe ser legible
+de forma independiente, sin asumir contexto de la sesión.
+
 ---
 
 ## Resumen de entregables del cierre
@@ -216,4 +238,4 @@ como "pendiente".
 | Tabla de épicas actualizada | `README.md` | Agente |
 | Estructura del repo actualizada | `AGENTS.md` (si aplica) | Agente |
 | Borrador de entradas | `prompts.md` | Marcos (tras revisión) |
-| Retrospectiva del workflow | Chat | Agente (Marcos valida) |
+| Retrospectiva del workflow | `docs/process-log.md` | Agente (Marcos valida) |
