@@ -103,7 +103,7 @@ Registro, login y URLs separadas por perfil (familiar / profesional). Auth pages
 | T-01 | OAuth Google — configuración en Supabase y Google Cloud | ✅ Completada |
 | T-02 | Esquema Supabase: tabla `profiles` + RLS | ✅ Completada |
 | T-03 | Registro y login con email/password, rol fijo por app | ✅ Completada |
-| T-04 | Login con Google OAuth, rol fijo por app | ⚪ Pendiente |
+| T-04 | Login con Google OAuth, rol fijo por app | ✅ Completada |
 | T-05 | Integración de autenticación en Chainlit | ⚪ Pendiente |
 | T-06 | Separación de URLs por perfil (familiar real + profesional stub) | ⚪ Pendiente |
 
@@ -136,6 +136,8 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 - Diseño responsive desde el inicio (D-007)
 - Tono y UX adaptados al perfil familiar según PRD
 - Theming completo basado en tokens de E-02
+
+**Nota metodológica:** E-05 no aplica TDD. Los criterios son de UX y presentación visual — streaming, responsive, theming — que no son verificables con pytest de forma significativa. La validación es manual (revisión visual + prueba funcional en browser). Los tests automatizados del pipeline RAG subyacente se cubren en E-04.
 
 **Estado:** ⚪ No iniciada
 
