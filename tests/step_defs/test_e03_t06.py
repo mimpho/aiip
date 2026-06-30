@@ -40,7 +40,7 @@ def app_familiar_arrancada():
 
 @when("cargo la página de login de la app familiar", target_fixture="familiar_source")
 def cargo_pagina_familiar():
-    return (ROOT / "main_familiar.py").read_text()
+    return (ROOT / "chainlit" / "main_familiar.py").read_text()
 
 
 @then('no hay ningún texto ni enlace que mencione "profesional" ni "F-01"')
@@ -116,7 +116,7 @@ def inicializa_chainlit():
 
 @then("no se importa ni instancia supabase_client ni ningún callback de auth")
 def no_importa_auth():
-    source = (ROOT / "main_profesional.py").read_text()
+    source = (ROOT / "chainlit" / "main_profesional.py").read_text()
     assert "supabase_client" not in source
     assert "from auth" not in source
     assert "import auth" not in source

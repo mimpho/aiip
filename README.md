@@ -108,10 +108,11 @@ aiip/
 │   ├── security.md    ← Módulo de seguridad. Falso Negativo Cero en profundidad.
 │   └── evaluation.md  ← Plan de evaluación. RAGAS, métricas, validación clínica.
 │
-├── main_familiar.py       ← Entrypoint Chainlit perfil familiar (puerto 8000).
-├── main_profesional.py    ← Entrypoint Chainlit perfil profesional stub (puerto 8001).
-├── .chainlit/             ← Config Chainlit app familiar.
-├── .chainlit_profesional/ ← Config Chainlit app profesional.
+├── chainlit/              ← Entrypoints y configuración Chainlit.
+│   ├── main_familiar.py   ← Entrypoint perfil familiar (puerto 8000).
+│   ├── main_profesional.py← Entrypoint perfil profesional stub (puerto 8001).
+│   ├── familiar/          ← Config Chainlit app familiar (config.toml).
+│   └── profesional/       ← Config Chainlit app profesional (config.toml).
 ├── design/                ← Tokens CSS y temas visuales (Chainlit + Supabase Auth).
 │   └── profesional/       ← Stub JS/CSS del perfil profesional.
 ├── auth/                  ← Módulo de autenticación Python.

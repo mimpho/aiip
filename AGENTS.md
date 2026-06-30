@@ -82,10 +82,11 @@ aiip/
 ├── decisions.md           ← Registro de decisiones. Leerlo antes de tomar decisiones de diseño.
 ├── requirements.txt       ← Dependencias Python del proyecto
 ├── .env.example           ← Variables de entorno necesarias (nunca commitear .env)
-├── main_familiar.py       ← Entrypoint Chainlit perfil familiar (puerto 8000)
-├── main_profesional.py    ← Entrypoint Chainlit perfil profesional stub (puerto 8001)
-├── .chainlit/             ← Config Chainlit app familiar (config.toml)
-├── .chainlit_profesional/ ← Config Chainlit app profesional (config.toml)
+├── chainlit/              ← Entrypoints y configuración Chainlit
+│   ├── main_familiar.py   ← Entrypoint perfil familiar (puerto 8000)
+│   ├── main_profesional.py← Entrypoint perfil profesional stub (puerto 8001)
+│   ├── familiar/          ← Config Chainlit app familiar (config.toml)
+│   └── profesional/       ← Config Chainlit app profesional (config.toml)
 ├── docs/
 │   ├── PRD.md             ← Requisitos de producto
 │   ├── tech-spec.md       ← Diseño técnico (fuente de verdad técnica)

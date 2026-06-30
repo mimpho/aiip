@@ -28,7 +28,7 @@ sys.modules.setdefault("chainlit", _fake_cl)
 
 # ── Import entrypoint under test ─────────────────────────────────────────────
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "chainlit"))
 import main_familiar  # noqa: E402
 
 scenarios("../features/e03_t05_chainlit_auth.feature")
