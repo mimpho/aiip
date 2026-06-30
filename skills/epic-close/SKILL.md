@@ -18,6 +18,12 @@ la siguiente épica.
 
 ## Antes de empezar
 
+Primero, asegúrate de estar en la rama de épica correcta:
+
+```bash
+git checkout epic/E[nn]-nombre
+```
+
 Verifica que la épica está realmente lista para cerrar:
 - No hay TODOs pendientes en el código de la épica
 - Marcos ha confirmado el cierre
@@ -28,6 +34,12 @@ pytest tests/ -v
 ```
 
 Si algún test de una épica anterior falla, es una regresión — hay que resolverla antes de cerrar.
+
+> **Tests de integración contra servicios externos (Supabase, Google, etc.):**
+> Los tests que requieren conexión de red a Supabase u otros servicios externos
+> fallarán en el sandbox de Cowork por restricciones de red (proxy SOCKS no disponible).
+> Esto **no es una regresión** — verificar que pasan en Antigravity con los servicios
+> reales y documentarlo. No bloquear el cierre por este motivo.
 
 > **E-10 (última épica):** antes de cerrar, ejecutar también los tests RAGAS end-to-end
 > definidos en E-07/E-09 sobre el sistema completo. Es el único momento en que se
@@ -96,7 +108,7 @@ Cambia el estado de la épica, marca todas las tareas como completadas en la
 tabla de tareas, y añade los entregables:
 
 ```markdown
-**Estado:** ✅ Completada — [mes año]
+**Estado:** ✅ Completada — [DD mes YYYY]
 
 | ID | Tarea | Estado |
 |---|---|---|
@@ -110,8 +122,12 @@ tabla de tareas, y añade los entregables:
 
 ### 3b. `README.md`
 
-Actualiza la tabla de épicas. El estado de la épica debe reflejar ✅ y la
-fecha de cierre. Actualiza también la tabla de fases si la épica cierra una fase.
+Actualiza en este orden:
+1. **Tabla de épicas** — estado ✅ con fecha de cierre.
+2. **Gantt (roadmap)** — marca la épica como `:done` y ajusta la fecha de fin real.
+3. **Árbol del repositorio** — si la épica ha creado ficheros raíz o directorios
+   nuevos relevantes para cualquier lector del README, añádelos al árbol.
+   (Criterio: ¿lo buscaría alguien que acaba de clonar el repo?)
 
 ### 3c. `AGENTS.md`
 
@@ -189,6 +205,28 @@ Si la retro identifica mejoras a las skills (`epic-start`, `task-start`,
 `epic-close`), edítalas directamente antes de cerrar la sesión — no las dejes
 como "pendiente".
 
+Una vez validada por Marcos, añade la entrada a `docs/process-log.md` con este formato:
+
+```markdown
+## E-XX — [nombre de la épica]
+**Periodo:** [DD mes] – [DD mes YYYY]
+**Tareas:** T-01 a T-XX (N tareas, todas completadas)
+
+### ¿Qué funcionó bien en el proceso?
+[1-3 puntos concretos]
+
+### ¿Qué generó fricción o retraso?
+[1-3 puntos concretos]
+
+### ¿Qué cambió en las skills o el workflow?
+[Skills editadas, pasos añadidos, decisiones de proceso]
+
+---
+```
+
+Este fichero es material para la memoria del TFM — cada entrada debe ser legible
+de forma independiente, sin asumir contexto de la sesión.
+
 ---
 
 ## Resumen de entregables del cierre
@@ -200,4 +238,4 @@ como "pendiente".
 | Tabla de épicas actualizada | `README.md` | Agente |
 | Estructura del repo actualizada | `AGENTS.md` (si aplica) | Agente |
 | Borrador de entradas | `prompts.md` | Marcos (tras revisión) |
-| Retrospectiva del workflow | Chat | Agente (Marcos valida) |
+| Retrospectiva del workflow | `docs/process-log.md` | Agente (Marcos valida) |

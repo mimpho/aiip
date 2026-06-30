@@ -540,3 +540,50 @@ Nueva skill añadida: `task-close` — cierra el ciclo de tarea con PR
 description en inglés y checklist de merge a `epic/`. Diagrama Mermaid
 del workflow completo añadido al README para hacer visible la arquitectura
 de herramientas.
+
+---
+
+### P-018 — Decisión de arquitectura OAuth: Supabase como único broker de identidad
+**Fecha:** 27 jun 2026
+**Fase:** Fase 1 / E-03
+**Tipo:** process
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Al descomponer T-01 de E-03 surgió una ambigüedad: Chainlit tiene su propio
+mecanismo OAuth nativo (`@cl.oauth_callback`) independiente de Supabase. Hay que
+decidir si Chainlit gestiona su propio OAuth o si Supabase sigue siendo el
+único punto de identidad también para Google.
+
+**Resultado / aprendizaje:**
+Supabase Auth es el único broker de identidad — para email/password y para
+OAuth Google. Chainlit nunca implementa su propio flujo OAuth: dispara
+`signInWithOAuth` contra Supabase y consume la sesión que Supabase devuelve.
+El Client ID/Secret de Google se configura una sola vez en Supabase — nunca
+en código ni en `.env` del repo. Registrado como D-014.
+Principio que emerge: centralizar la identidad en un único sistema evita
+mantener dos fuentes de verdad sincronizadas. Cuando el stack tiene un
+componente de auth robusto (Supabase), los demás componentes (Chainlit)
+deben delegarle, no duplicarle.
+
+---
+
+### P-019 — Stub de perfil profesional: bloqueo en capa de auth vs. en capa de UI
+**Fecha:** 30 jun 2026
+**Fase:** Fase 1 / E-03
+**Tipo:** process
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Para la separación de URLs (T-06), debate sobre dónde bloquear el acceso
+al perfil profesional stub: ¿en la capa de auth (callback siempre None) o
+en la capa de UI (formulario deshabilitado via CSS/JS)?
+
+**Resultado / aprendizaje:**
+Doble bloqueo: el callback Python siempre devuelve None (imposible autenticarse)
+Y el formulario está deshabilitado via JS MutationObserver (UX explícita).
+El bloqueo en Python es la garantía técnica; el JS es la comunicación al usuario.
+Separar las dos capas es más robusto que depender solo de una: si el JS falla
+(por versión de Chainlit o CSP), el backend sigue bloqueando.
+La app profesional no importa nada de `auth/` — el stub es completamente
+independiente del módulo de autenticación real.

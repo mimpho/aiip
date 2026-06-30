@@ -75,35 +75,41 @@ Variables de entorno necesarias — ver `.env.example` (a crear al inicio del de
 
 ```
 aiip/
-├── README.md          ← Índice y estado del proyecto
-├── AGENTS.md          ← Este fichero
-├── CITATION.cff       ← Cita académica y referencias clave (documentación viva)
-├── prompts.md         ← Log histórico de prompts. Append-only.
-├── decisions.md       ← Registro de decisiones. Leerlo antes de tomar decisiones de diseño.
-├── requirements.txt   ← Dependencias Python del proyecto
-├── .env.example       ← Variables de entorno necesarias (nunca commitear .env)
+├── README.md              ← Índice y estado del proyecto
+├── AGENTS.md              ← Este fichero
+├── CITATION.cff           ← Cita académica y referencias clave (documentación viva)
+├── prompts.md             ← Log histórico de prompts. Append-only.
+├── decisions.md           ← Registro de decisiones. Leerlo antes de tomar decisiones de diseño.
+├── requirements.txt       ← Dependencias Python del proyecto
+├── .env.example           ← Variables de entorno necesarias (nunca commitear .env)
+├── chainlit/              ← Entrypoints y configuración Chainlit
+│   ├── main_familiar.py   ← Entrypoint perfil familiar (puerto 8000)
+│   ├── main_profesional.py← Entrypoint perfil profesional stub (puerto 8001)
+│   ├── familiar/          ← Config Chainlit app familiar (config.toml)
+│   └── profesional/       ← Config Chainlit app profesional (config.toml)
 ├── docs/
-│   ├── PRD.md         ← Requisitos de producto
-│   ├── tech-spec.md   ← Diseño técnico (fuente de verdad técnica)
-│   ├── security.md    ← Seguridad: Falso Negativo Cero + OWASP + RGPD
-│   ├── evaluation.md  ← Evaluación: RAGAS + CHART
-│   └── design/        ← Screens de referencia (identity, auth, chat)
-├── design/            ← Tokens CSS, temas Chainlit y Supabase Auth (E-02)
-│   ├── public/        ← tokens.css, style.css (Chainlit theme)
-│   └── auth/          ← style.css (Supabase Auth UI theme)
-├── auth/              ← Módulo de autenticación Python (E-03 en adelante)
+│   ├── PRD.md             ← Requisitos de producto
+│   ├── tech-spec.md       ← Diseño técnico (fuente de verdad técnica)
+│   ├── security.md        ← Seguridad: Falso Negativo Cero + OWASP + RGPD
+│   ├── evaluation.md      ← Evaluación: RAGAS + CHART
+│   └── design/            ← Screens de referencia (identity, auth, chat)
+├── design/                ← Tokens CSS, temas Chainlit y Supabase Auth (E-02)
+│   ├── public/            ← tokens.css, style.css (Chainlit theme)
+│   ├── auth/              ← style.css (Supabase Auth UI theme)
+│   └── profesional/       ← stub.js, style.css (professional coming-soon UI)
+├── auth/                  ← Módulo de autenticación Python (E-03)
 ├── backlog/
-│   ├── epics.md       ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
-│   └── ideas.md       ← Cajón de sastre
-├── scripts/           ← Scripts auxiliares (verificación, setup, etc.)
-├── skills/            ← Skills del proyecto (epic-start, task-start, task-close, epic-close)
+│   ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
+│   └── ideas.md           ← Cajón de sastre
+├── scripts/               ← Scripts auxiliares (verificación, setup, etc.)
+├── skills/                ← Skills del proyecto (epic-start, task-start, task-close, epic-close)
 ├── supabase/
-│   └── migrations/    ← Migraciones SQL de Supabase
-├── tasks/             ← Planes de implementación por tarea (E[nn]-T[nn]-plan.md)
-│                         Generados en Cowork por task-start. Léelos al arrancar en el IDE.
+│   └── migrations/        ← Migraciones SQL de Supabase
+├── tasks/                 ← Planes de implementación por tarea (E[nn]-T[nn]-plan.md)
+│                             Generados en Cowork por task-start. Léelos al arrancar en el IDE.
 └── tests/
-    ├── features/      ← Escenarios Gherkin por tarea (eXX_tYY_nombre.feature)
-    └── step_defs/     ← Step definitions pytest-bdd (test_eXX_tYY.py)
+    ├── features/          ← Escenarios Gherkin por tarea (eXX_tYY_nombre.feature)
+    └── step_defs/         ← Step definitions pytest-bdd (test_eXX_tYY.py)
 ```
 
 ---

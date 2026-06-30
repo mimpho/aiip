@@ -26,6 +26,20 @@ Si la épica tiene dependencias (`Bloqueada por`), verifica que estén completad
 
 ---
 
+## Setup de rama de épica [ejecutar antes de tocar nada]
+
+Crea la rama de épica desde `main` antes de cualquier otro paso:
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b epic/E[nn]-nombre
+```
+
+Nomenclatura: `epic/E03-auth`, `epic/E04-rag`, `epic/E05-chainlit`, etc.
+
+---
+
 ## Paso 1 — Descomposición en tareas [GATE: Marcos aprueba]
 
 Propón la lista de tareas de la épica con este formato para cada una:

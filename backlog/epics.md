@@ -20,7 +20,7 @@ Generación y cierre de toda la documentación técnica base del repositorio.
 - `docs/evaluation.md` — RAGAS, métricas, checklist CHART
 - `prompts.md` — log histórico inicial
 
-**Estado:** ✅ Completada — junio 2026
+**Estado:** ✅ Completada — 11 jun 2026
 
 ---
 
@@ -55,7 +55,7 @@ Configuración de todos los servicios, credenciales y estructura de carpetas nec
 - `.env.example` creado en el repo con todas las variables necesarias
 - `.gitignore` actualizado para excluir `.env`
 
-**Estado:** ✅ Completada — junio 2026
+**Estado:** ✅ Completada — 25 jun 2026
 
 ---
 
@@ -74,7 +74,7 @@ Definición de design tokens base (colores, tipografía, espaciado) y aplicació
 - La propuesta exploratoria de Lovable está incluida en el brief como referencia, no como constraint
 - Revisar y aprobar antes de traducir a tokens
 
-**Estado:** ✅ Completada — junio 2026
+**Estado:** ✅ Completada — 27 jun 2026
 
 **Entregables**
 - `design/public/tokens.css` — fuente de verdad con dark/light mode y swap de accent por perfil
@@ -94,7 +94,33 @@ Registro, login y URLs separadas por perfil (familiar / profesional). Auth pages
 - URLs separadas: el familiar no ve que existe la versión profesional
 - El rol determina la KB consultada y el tono del agente
 
-**Estado:** ⚪ No iniciada
+**Estado:** ✅ Completada — 30 jun 2026
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | OAuth Google — configuración en Supabase y Google Cloud | ✅ Completada |
+| T-02 | Esquema Supabase: tabla `profiles` + RLS | ✅ Completada |
+| T-03 | Registro y login con email/password, rol fijo por app | ✅ Completada |
+| T-04 | Login con Google OAuth, rol fijo por app | ✅ Completada |
+| T-05 | Integración de autenticación en Chainlit | ✅ Completada |
+| T-06 | Separación de URLs por perfil (familiar real + profesional stub) | ✅ Completada |
+
+**Entregables**
+- `auth/supabase_client.py` — signup, login, Google OAuth y get_or_create_profile
+- `main_familiar.py` — entrypoint Chainlit perfil familiar con auth callback
+- `main_profesional.py` — entrypoint stub profesional (auth bloqueada, sin RAG)
+- `.chainlit/config.toml` — config Chainlit app familiar
+- `.chainlit_profesional/config.toml` — config Chainlit app profesional
+- `design/profesional/stub.js` — banner "En construcción" + deshabilitado de formulario
+- `design/profesional/style.css` — accent profesional (#2FC18C) extendiendo tokens E-02
+- `supabase/migrations/20260628021829_create_profiles.sql` — tabla profiles + RLS
+- `scripts/verify_oauth_google.py` — script de verificación manual T-01
+- `tests/features/e03_t01_*.feature` a `e03_t06_*.feature` — escenarios Gherkin por tarea
+- `tests/step_defs/test_e03_t02.py` a `test_e03_t06.py` — step definitions pytest-bdd
+- `tasks/E03-T02-plan.md` a `E03-T06-plan.md` — planes de implementación
+- `decisions.md` — D-014 (Supabase único broker OAuth), D-015 (criterios TDD por épica)
 
 ---
 
@@ -125,6 +151,8 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 - Diseño responsive desde el inicio (D-007)
 - Tono y UX adaptados al perfil familiar según PRD
 - Theming completo basado en tokens de E-02
+
+**Nota metodológica:** E-05 no aplica TDD. Los criterios son de UX y presentación visual — streaming, responsive, theming — que no son verificables con pytest de forma significativa. La validación es manual (revisión visual + prueba funcional en browser). Los tests automatizados del pipeline RAG subyacente se cubren en E-04.
 
 **Estado:** ⚪ No iniciada
 
