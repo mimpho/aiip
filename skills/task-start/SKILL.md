@@ -30,6 +30,22 @@ tienen su `.feature` creado y están aprobadas.
 
 ---
 
+## Setup de rama [solo tareas de código — ejecutar antes de tocar nada]
+
+Para tareas de configuración, este bloque no aplica.
+
+Para tareas de código, ejecuta estos comandos **antes de leer ficheros o hacer
+cualquier cambio**, para garantizar que el working tree esté limpio y en el
+estado correcto:
+
+```bash
+git checkout epic/E[nn]-nombre
+git pull origin epic/E[nn]-nombre
+git checkout -b task/E[nn]-T[nn]-descripcion-corta
+```
+
+---
+
 ## Paso 1 — Revisión crítica de la tarea [GATE: Marcos aprueba]
 
 Presenta la definición actual de la tarea (tomada del handoff o de la épica) y
@@ -188,22 +204,7 @@ Este es el gate clave: el .feature define exactamente qué se va a testear
 
 ---
 
-## Paso 4 — Preparación para el IDE [solo tareas de código]
-
-Para tareas de configuración, este paso no aplica — la tarea se ejecuta
-directamente siguiendo el checklist del `.feature`.
-
-Para tareas de código, proporciona los comandos exactos:
-
-```bash
-# Desde la rama de épica
-git checkout epic/E[nn]-nombre
-git checkout -b task/E[nn]-T[nn]-descripcion-corta
-```
-
----
-
-## Paso 5 — Plan de implementación [solo tareas de código]
+## Paso 4 — Plan de implementación [solo tareas de código]
 
 Para tareas de configuración, este paso no aplica.
 
@@ -272,8 +273,8 @@ al arrancar la sesión de desarrollo.
 
 | Paso | Qué aprueba Marcos | Por qué es un gate |
 |---|---|---|
+| Setup | — (ejecuta los comandos de rama) | Working tree limpio antes de tocar nada |
 | 1 | Definición revisada de la tarea | Cierra puntos abiertos antes de comprometer diseño |
 | 2 | Decisiones de arquitectura (si aplica) | Registra antes de implementar |
 | 3 | Fichero .feature | Define exactamente qué se valida |
-| 4 | — (ejecuta los comandos de rama) | Acción en git |
-| 5 | Plan de implementación | El IDE ejecuta, no diseña |
+| 4 | Plan de implementación | El IDE ejecuta, no diseña |
