@@ -1,0 +1,56 @@
+/* ============================================================
+   AIIP — Perfil Profesional · Stub styles
+   Extiende los tokens de E-02 (tokens.css) con el accent
+   profesional (#2FC18C) para diferenciar visualmente el entorno.
+   ============================================================ */
+
+@import url('../public/tokens.css');
+@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* Activar accent profesional en todo el árbol */
+:root {
+  --color-accent:       var(--color-accent-professional);
+  --color-accent-hover: var(--color-accent-professional-hover);
+}
+
+/* ── Chainlit root variables ─────────────────────────────── */
+:root {
+  --cl-color-background:         var(--color-bg);
+  --cl-color-surface:            var(--color-surface);
+  --cl-color-background-paper:   var(--color-surface-raised);
+
+  --cl-color-text-primary:       var(--color-text-primary);
+  --cl-color-text-secondary:     var(--color-text-secondary);
+
+  --cl-color-primary:            var(--color-accent);
+  --cl-color-primary-hover:      var(--color-accent-hover);
+  --cl-color-primary-dark:       var(--color-accent);
+
+  --cl-color-border:             var(--color-border);
+  --cl-color-divider:            var(--color-border-subtle);
+
+  --cl-font-family:              var(--font-body);
+  --cl-font-family-mono:         var(--font-mono);
+
+  --cl-shape-border-radius:      var(--radius-lg);
+  --cl-shape-border-radius-sm:   var(--radius-sm);
+  --cl-shape-border-radius-md:   var(--radius-md);
+}
+
+/* ── Base ────────────────────────────────────────────────── */
+body {
+  font-family: var(--font-body);
+  background:  var(--color-bg);
+  color:        var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  /* Desplazar contenido por debajo del banner fijo */
+  padding-top: 100px;
+}
+
+/* ── Inputs deshabilitados (refuerzo visual sobre el JS) ─── */
+input:disabled,
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
