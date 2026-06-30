@@ -1,0 +1,13 @@
+[project]
+# App profesional — stub fuera del alcance del TFM (F-01)
+name = "AIIP — Perfil Profesional"
+
+[UI]
+default_theme = "dark"
+# CSS con accent profesional (#2FC18C) — tokens de E-02
+custom_css = "/public/profesional/style.css"
+# JS que inyecta el banner "En construcción" y deshabilita el formulario
+custom_js = "/public/profesional/stub.js"
+
+[features]
+telemetry = false

@@ -1,0 +1,13 @@
+[project]
+# App familiar — perfil real del TFM
+name = "AIIP — Perfil Familiar"
+
+[UI]
+# Modo de tema por defecto
+default_theme = "dark"
+# Hoja de estilos con los tokens de diseño de E-02
+custom_css = "/public/style.css"
+
+[features]
+# Deshabilitar telemetría de Chainlit
+telemetry = false
