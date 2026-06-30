@@ -13,14 +13,14 @@ Feature: Setup del módulo RAG
     Then ningún módulo lanza ImportError
 
   Scenario: Variables de entorno requeridas presentes
-    Given el fichero .env define GEMINI_API_KEY, HF_TOKEN y CHROMA_PATH
+    Given el fichero .env define GOOGLE_API_KEY, HF_TOKEN y CHROMA_PATH
     When inicializo la configuración del pipeline RAG
     Then no se lanza EnvironmentError
 
   Scenario: Variable de entorno requerida ausente
-    Given el fichero .env no define GEMINI_API_KEY
+    Given el fichero .env no define GOOGLE_API_KEY
     When inicializo la configuración del pipeline RAG
-    Then se lanza EnvironmentError con mensaje que menciona GEMINI_API_KEY
+    Then se lanza EnvironmentError con mensaje que menciona GOOGLE_API_KEY
 
   Scenario: Estructura de módulo rag/ presente
     Given el repositorio está correctamente clonado
