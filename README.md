@@ -30,7 +30,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 |---|---|---|---|
 | E-01 | Setup del entorno de desarrollo | ✅ Completada | — |
 | E-02 | Identidad visual mínima | ✅ Completada | — |
-| E-03 | Autenticación y separación de perfiles | 🔄 En progreso | — |
+| E-03 | Autenticación y separación de perfiles | ✅ Completada — 30 jun 2026 | — |
 | E-04 | Pipeline RAG + módulo de seguridad | ⚪ No iniciada | — |
 | E-05 | Interfaz conversacional (Chainlit) | ⚪ No iniciada | E-02, E-04 |
 | E-06 | Ingesta y procesamiento de la KB | ⚪ No iniciada | E-01 |
@@ -69,7 +69,7 @@ gantt
     section Fase 1 — MVP core
     E-01 Setup del entorno            :done,    e01, 2026-06-22, 2026-06-25
     E-02 Identidad visual             :done,    e02, 2026-06-25, 2026-06-27
-    E-03 Autenticación                :         e03, 2026-06-27, 2026-07-03
+    E-03 Autenticación                :done,    e03, 2026-06-27, 2026-06-30
     E-04 Pipeline RAG                 :         e04, 2026-06-27, 2026-07-07
     E-05 Interfaz Chainlit            :         e05, 2026-07-07, 2026-07-10
     E-06 Ingesta KB                   :         e06, 2026-06-27, 2026-07-05
@@ -108,20 +108,25 @@ aiip/
 │   ├── security.md    ← Módulo de seguridad. Falso Negativo Cero en profundidad.
 │   └── evaluation.md  ← Plan de evaluación. RAGAS, métricas, validación clínica.
 │
-├── design/            ← Tokens CSS y temas visuales (Chainlit + Supabase Auth).
-├── auth/              ← Módulo de autenticación Python.
+├── main_familiar.py       ← Entrypoint Chainlit perfil familiar (puerto 8000).
+├── main_profesional.py    ← Entrypoint Chainlit perfil profesional stub (puerto 8001).
+├── .chainlit/             ← Config Chainlit app familiar.
+├── .chainlit_profesional/ ← Config Chainlit app profesional.
+├── design/                ← Tokens CSS y temas visuales (Chainlit + Supabase Auth).
+│   └── profesional/       ← Stub JS/CSS del perfil profesional.
+├── auth/                  ← Módulo de autenticación Python.
 ├── supabase/
-│   └── migrations/    ← Migraciones SQL de Supabase.
-├── scripts/           ← Scripts auxiliares de verificación y setup.
-├── skills/            ← Skills del workflow de desarrollo (epic/task start y close).
-├── tasks/             ← Planes de implementación por tarea, generados en Cowork.
+│   └── migrations/        ← Migraciones SQL de Supabase.
+├── scripts/               ← Scripts auxiliares de verificación y setup.
+├── skills/                ← Skills del workflow de desarrollo (epic/task start y close).
+├── tasks/                 ← Planes de implementación por tarea, generados en Cowork.
 ├── tests/
-│   ├── features/      ← Escenarios Gherkin por tarea (.feature).
-│   └── step_defs/     ← Step definitions pytest-bdd.
+│   ├── features/          ← Escenarios Gherkin por tarea (.feature).
+│   └── step_defs/         ← Step definitions pytest-bdd.
 │
 └── backlog/
-    ├── epics.md       ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
-    └── ideas.md       ← Cajón de sastre. Ideas y referencias pendientes.
+    ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
+    └── ideas.md           ← Cajón de sastre. Ideas y referencias pendientes.
 ```
 
 Esta estructura responde a tres principios que se documentan y justifican en detalle en [`decisions.md`](./decisions.md): documentación viva sin replicación, mínima superficie de mantenimiento, y separación clara entre documento de producto y documento técnico.

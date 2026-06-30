@@ -18,6 +18,12 @@ la siguiente épica.
 
 ## Antes de empezar
 
+Primero, asegúrate de estar en la rama de épica correcta:
+
+```bash
+git checkout epic/E[nn]-nombre
+```
+
 Verifica que la épica está realmente lista para cerrar:
 - No hay TODOs pendientes en el código de la épica
 - Marcos ha confirmado el cierre
@@ -28,6 +34,12 @@ pytest tests/ -v
 ```
 
 Si algún test de una épica anterior falla, es una regresión — hay que resolverla antes de cerrar.
+
+> **Tests de integración contra servicios externos (Supabase, Google, etc.):**
+> Los tests que requieren conexión de red a Supabase u otros servicios externos
+> fallarán en el sandbox de Cowork por restricciones de red (proxy SOCKS no disponible).
+> Esto **no es una regresión** — verificar que pasan en Antigravity con los servicios
+> reales y documentarlo. No bloquear el cierre por este motivo.
 
 > **E-10 (última épica):** antes de cerrar, ejecutar también los tests RAGAS end-to-end
 > definidos en E-07/E-09 sobre el sistema completo. Es el único momento en que se
@@ -96,7 +108,7 @@ Cambia el estado de la épica, marca todas las tareas como completadas en la
 tabla de tareas, y añade los entregables:
 
 ```markdown
-**Estado:** ✅ Completada — [mes año]
+**Estado:** ✅ Completada — [DD mes YYYY]
 
 | ID | Tarea | Estado |
 |---|---|---|
@@ -110,8 +122,12 @@ tabla de tareas, y añade los entregables:
 
 ### 3b. `README.md`
 
-Actualiza la tabla de épicas. El estado de la épica debe reflejar ✅ y la
-fecha de cierre. Actualiza también la tabla de fases si la épica cierra una fase.
+Actualiza en este orden:
+1. **Tabla de épicas** — estado ✅ con fecha de cierre.
+2. **Gantt (roadmap)** — marca la épica como `:done` y ajusta la fecha de fin real.
+3. **Árbol del repositorio** — si la épica ha creado ficheros raíz o directorios
+   nuevos relevantes para cualquier lector del README, añádelos al árbol.
+   (Criterio: ¿lo buscaría alguien que acaba de clonar el repo?)
 
 ### 3c. `AGENTS.md`
 
