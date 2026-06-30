@@ -54,6 +54,18 @@ def _get_profile(user_id: str) -> dict:
     return existing.data[0]
 
 
+def sign_in_with_oauth(provider: str, redirect_to: str | None = None) -> str:
+    """Inicia el flujo OAuth. Devuelve la URL de redirección hacia el provider.
+
+    El browser redirect y el callback son responsabilidad de Supabase Auth.
+    """
+    client = get_supabase_client(use_service_key=False)
+    response = client.auth.sign_in_with_oauth(
+        {"provider": provider, "options": {"redirect_to": redirect_to}}
+    )
+    return response.url
+
+
 def signup(email: str, password: str, role: str) -> dict:
     """Registra un usuario en Supabase Auth y crea su perfil con role.
 

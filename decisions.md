@@ -23,6 +23,7 @@
 - [D-012 — Escalabilidad a otras patologías](#d-012--escalabilidad-a-otras-patologías)
 - [D-013 — Stack de UI e identidad visual](#d-013--stack-de-ui-e-identidad-visual)
 - [D-014 — Supabase como broker único del OAuth de Google](#d-014--supabase-como-broker-único-del-oauth-de-google)
+- [D-015 — Criterios de aplicación de TDD por épica](#d-015--criterios-de-aplicación-de-tdd-por-épica)
 
 ---
 
@@ -435,6 +436,42 @@ Un único mecanismo de identidad para los dos métodos de login es más simple d
 - Redirect URI registrada en Google Cloud Console: `https://<project-ref>.supabase.co/auth/v1/callback` (única, no una por app)
 - Supabase Auth > URL Configuration > Redirect URLs debe incluir las URLs de ambas apps (familiar y profesional, dev y producción a medida que se definan)
 - La pantalla de consentimiento de Google ("OAuth consent screen") se configura con scopes mínimos (`email`, `profile`, `openid`); en modo "Testing" solo los usuarios añadidos explícitamente como testers podrán autenticarse
+
+---
+
+## D-015 — Criterios de aplicación de TDD por épica
+
+**Fecha:** junio 2026  
+**Fase:** proceso / metodología
+
+**Contexto**  
+D-006 establece BDD + TDD + Gherkin como metodología de desarrollo. Sin embargo, no todas las épicas tienen el mismo tipo de entregable: configuración de servicios, diseño visual y lógica de negocio son categorías distintas con necesidades de validación distintas. Aplicar TDD de forma uniforme a todo el proyecto introduciría coste sin valor en algunas épicas y podría dar una falsa sensación de cobertura en otras.
+
+**Decisión**  
+TDD con pytest-bdd se aplica selectivamente según el tipo de épica:
+
+| Épica | Tipo | TDD | Justificación |
+|---|---|---|---|
+| E-00 | Documentación | No | No hay código ejecutable que testear |
+| E-01 | Configuración de entorno | No | Verificación manual de servicios y credenciales |
+| E-02 | Identidad visual | No | CSS y diseño — la validación es visual, no automatizable con pytest |
+| E-03 | Autenticación | Sí | Lógica de negocio con integración real contra Supabase |
+| E-04 | Pipeline RAG + seguridad | Sí — prioritario | El módulo de Falso Negativo Cero (D-002) requiere tests demostrables |
+| E-05 | Interfaz Chainlit (UX) | No | Streaming, responsive y theming — validación manual en browser |
+| E-06 | Ingesta de KB | Sí | Pipeline de procesamiento con criterios verificables automáticamente |
+| E-07 / E-09 | Evaluación RAGAS | Sí | Las métricas son numéricas y automatizables |
+| E-08 | Memoria e histórico | Sí | Lógica de persistencia con integración Supabase |
+
+**Alternativas descartadas**  
+- *TDD en E-05:* el valor de testear con pytest que un mensaje aparece en pantalla o que el diseño es responsive es mínimo; la verificación visual directa en el browser es más efectiva y menos costosa de mantener.  
+- *Sin TDD en E-04:* descartado explícitamente — el Falso Negativo Cero es el principio de seguridad central del sistema y necesita evidencia objetiva y reproducible.
+
+**Justificación**  
+El coste de TDD es alto en las primeras épicas de setup (E-00 a E-02), pero se amortiza a partir de E-03, donde el patrón de fixtures e integración ya está establecido y reutilizable. La distinción clave es: si el comportamiento es verificable automáticamente y el fallo tiene consecuencias (lógica de negocio, seguridad, persistencia de datos), TDD aplica. Si la verificación requiere juicio humano (diseño, UX), no aplica.
+
+**Implicaciones**  
+- `epic-start` y `task-start` deben identificar el tipo de épica/tarea antes de proponer `.feature` y plan TDD.
+- E-05 se valida con revisión manual documentada, no con pytest. Esto queda anotado en `backlog/epics.md`.
 
 ---
 
