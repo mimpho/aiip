@@ -144,7 +144,7 @@ Flujo completo: query → detección de idioma → embedding → retrieval → g
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-01 | Setup de dependencias y estructura del módulo RAG | ⚪ Pendiente |
+| T-01 | Setup de dependencias y estructura del módulo RAG | 🔄 En progreso |
 | T-02 | Embeddings y retriever con ChromaDB | ⚪ Pendiente |
 | T-03 | Detección de idioma e integración en pipeline | ⚪ Pendiente |
 | T-04 | Generador: LLM Gemini Flash via LangChain | ⚪ Pendiente |
