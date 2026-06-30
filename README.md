@@ -31,7 +31,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-01 | Setup del entorno de desarrollo | ✅ Completada | — |
 | E-02 | Identidad visual mínima | ✅ Completada | — |
 | E-03 | Autenticación y separación de perfiles | ✅ Completada — 30 jun 2026 | — |
-| E-04 | Pipeline RAG + módulo de seguridad | ⚪ No iniciada | — |
+| E-04 | Pipeline RAG + módulo de seguridad | 🔵 En curso | — |
 | E-05 | Interfaz conversacional (Chainlit) | ⚪ No iniciada | E-02, E-04 |
 | E-06 | Ingesta y procesamiento de la KB | ⚪ No iniciada | E-01 |
 | E-07 | Evaluación RAGAS parcial | ⚪ No iniciada | E-06 |
