@@ -104,7 +104,7 @@ Registro, login y URLs separadas por perfil (familiar / profesional). Auth pages
 | T-02 | Esquema Supabase: tabla `profiles` + RLS | ✅ Completada |
 | T-03 | Registro y login con email/password, rol fijo por app | ✅ Completada |
 | T-04 | Login con Google OAuth, rol fijo por app | ✅ Completada |
-| T-05 | Integración de autenticación en Chainlit | ⚪ Pendiente |
+| T-05 | Integración de autenticación en Chainlit | 🔄 En progreso |
 | T-06 | Separación de URLs por perfil (familiar real + profesional stub) | ⚪ Pendiente |
 
 ---
