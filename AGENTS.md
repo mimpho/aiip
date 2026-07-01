@@ -92,6 +92,7 @@ aiip/
 │   ├── tech-spec.md       ← Diseño técnico (fuente de verdad técnica)
 │   ├── security.md        ← Seguridad: Falso Negativo Cero + OWASP + RGPD
 │   ├── evaluation.md      ← Evaluación: RAGAS + CHART
+│   ├── kb-sources.md      ← Índice de fuentes de la KB (E-06). No la dupliques en otro sitio.
 │   └── design/            ← Screens de referencia (identity, auth, chat)
 ├── design/                ← Tokens CSS, temas Chainlit y Supabase Auth (E-02)
 │   ├── public/            ← tokens.css, style.css (Chainlit theme)
