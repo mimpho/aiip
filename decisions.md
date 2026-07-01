@@ -25,6 +25,7 @@
 - [D-014 — Supabase como broker único del OAuth de Google](#d-014--supabase-como-broker-único-del-oauth-de-google)
 - [D-015 — Criterios de aplicación de TDD por épica](#d-015--criterios-de-aplicación-de-tdd-por-épica)
 - [D-016 — Retriever ChromaDB: métrica coseno, scores y Top-K configurable](#d-016--retriever-chromadb-métrica-coseno-scores-y-top-k-configurable)
+- [D-017 — Detección de idioma: determinismo y fallback para texto corto](#d-017--detección-de-idioma-determinismo-y-fallback-para-texto-corto)
 
 ---
 
@@ -504,6 +505,39 @@ El stub de `rag/retriever.py` creado en T-01 (`get_retriever(embeddings, chroma_
 - `rag/config.py` añade `RAG_TOP_K` como variable opcional (no en `REQUIRED_VARS`).
 - `.env.example` añade `RAG_TOP_K=5`.
 - Cuando E-06 formalice las colecciones de producción (ingesta KB), debe reutilizar la misma configuración de métrica coseno establecida aquí — no es una decisión nueva, es continuidad de esta.
+
+---
+
+## D-017 — Detección de idioma: determinismo y fallback para texto corto
+
+**Fecha:** 1 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-03
+
+**Contexto**
+`langdetect` (D-011) tiene dos comportamientos no documentados de forma obvia en su README que afectan directamente a los escenarios de `tests/features/e04_t03_language_detection.feature`, confirmados en pruebas directas durante la revisión de esta tarea:
+
+1. **No determinismo:** el algoritmo interno usa muestreo aleatorio; sin fijar semilla, la misma entrada puede dar resultados distintos entre ejecuciones/procesos.
+2. **Confianza falsa en texto corto:** `detect_langs()` devuelve confianzas superiores a 0.999 incluso en detecciones claramente erróneas sobre texto corto — probado con `"hola"` (detectado como galés, `cy`) y `"si"` (detectado como finés, `fi`). Además, `detect("ok")` no lanza excepción (devuelve `"sk"`); `LangDetectException` solo se lanza con strings vacíos, espacios, símbolos o números puros. Esto descarta tanto "capturar excepción" como "filtrar por confianza" como estrategias de fallback fiables.
+
+**Decisión**
+
+- **Determinismo:** `rag/language.py` fija `DetectorFactory.seed = 0` de `langdetect` a nivel de módulo (una sola vez, al importar).
+- **Fallback para texto corto:** umbral fijo de longitud, `MIN_LENGTH_FOR_DETECTION = 10` caracteres (tras `strip()`). Por debajo del umbral, `detect_language()` devuelve el idioma por defecto (`"es"`, coherente con D-011) sin invocar a `langdetect`. Se descarta un umbral por número de palabras: una respuesta corta de una palabra ("no", "sí") es un caso legítimo de conversación real y no debe tratarse distinto de un texto de dos palabras igual de corto — la longitud en caracteres es la señal más directa y no requiere tokenización.
+- **Idiomas fuera de es/en/ca:** la instrucción de idioma para el prompt (`build_language_instruction()`) usa nombre explícito solo para castellano/inglés/catalán (los tres idiomas de lanzamiento comprometidos en D-011). Para cualquier otro código detectado, la instrucción se construye genéricamente a partir del código ISO (p. ej. "responde en el idioma con código 'fr'"), sin diccionario adicional de nombres de idioma.
+
+**Alternativas descartadas**
+
+- Fallback basado en `try/except LangDetectException` — descartado porque no cubre el caso real del escenario (`"ok"` no lanza excepción).
+- Fallback basado en umbral de confianza de `detect_langs()` — descartado porque `langdetect` es igual de "confiado" acertando que equivocándose en texto corto; el score no es una señal útil aquí.
+- Umbral por número de palabras en vez de caracteres — descartado por tratar de forma distinta respuestas cortas legítimas de una sola palabra.
+- Diccionario ampliado de nombres de idioma (es/en/ca/fr/de/it/pt) para la instrucción del prompt — descartado: D-011 solo compromete es/en/ca como idiomas de lanzamiento; mantener una lista más amplia es esfuerzo en algo no comprometido por el producto y tiende a crecer sin decisión explícita.
+
+**Consecuencias**
+
+- `rag/language.py` (nuevo módulo, sin stub previo de T-01) expone `detect_language(text: str, default: str = "es") -> str` y `build_language_instruction(language: str) -> str`.
+- La integración real en `rag/pipeline.py` queda fuera de esta tarea — es T-06, mismo patrón que D-016 estableció para el retriever.
+- Si en el futuro se añade un selector explícito de idioma en interfaz (evolución futura de D-011), este fallback deja de ser crítico pero puede mantenerse como red de seguridad.
 
 ---
 
