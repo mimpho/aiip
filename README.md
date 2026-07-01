@@ -106,7 +106,8 @@ aiip/
 │   ├── PRD.md         ← Product Requirements Document. El qué y el por qué.
 │   ├── tech-spec.md   ← Technical Design Document. El cómo.
 │   ├── security.md    ← Módulo de seguridad. Falso Negativo Cero en profundidad.
-│   └── evaluation.md  ← Plan de evaluación. RAGAS, métricas, validación clínica.
+│   ├── evaluation.md  ← Plan de evaluación. RAGAS, métricas, validación clínica.
+│   └── kb-sources.md  ← Índice de fuentes de la KB (E-06). No duplica los documentos — solo los referencia.
 │
 ├── chainlit/              ← Entrypoints y configuración Chainlit.
 │   ├── main_familiar.py   ← Entrypoint perfil familiar (puerto 8000).
