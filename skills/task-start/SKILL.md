@@ -15,11 +15,40 @@ Workflow de arranque para tareas individuales. Se ejecuta en Cowork, antes de
 abrir el IDE. El objetivo es que cuando se abra la rama de tarea, no haya
 ambigüedad sobre qué hay que hacer ni cómo validarlo.
 
+## Paso 0 — Setup de rama [solo tareas de código — GATE: Marcos ejecuta]
+
+Este paso va **antes que cualquier otra cosa**, incluida la lectura de
+`AGENTS.md`, `decisions.md` o cualquier fichero de la épica. No leas ni
+modifiques nada del repositorio todavía.
+
+Para tareas de configuración (sin rama, sin PR — ver "Tipo de tarea" en el
+Paso 1), este bloque no aplica: pasa directamente a "Antes de empezar".
+
+Para tareas de código:
+
+1. Identifica únicamente el nombre corto de la tarea leyendo **solo** la fila
+   correspondiente en la tabla de tareas de `backlog/epics.md` (no leas el
+   resto del fichero todavía — eso es parte de "Antes de empezar").
+2. Según la tabla de "Reparto git" de `AGENTS.md`, `checkout -b` es una acción
+   de Marcos, no del agente. **Nunca ejecutes estos comandos tú mismo** —
+   preséntaselos a Marcos y pídele que los ejecute:
+
+   ```bash
+   git checkout epic/E[nn]-nombre
+   git pull origin epic/E[nn]-nombre
+   git checkout -b task/E[nn]-T[nn]-descripcion-corta
+   ```
+
+3. **Espera confirmación explícita de Marcos de que la rama está creada**
+   antes de leer ningún otro fichero o proponer ningún cambio.
+
+---
+
 ## Antes de empezar
 
 Lee en este orden:
 1. `AGENTS.md` — principios no negociables
-2. `backlog/epics.md` — criterios de la épica a la que pertenece la tarea
+2. `backlog/epics.md` — criterios de la épica a la que pertenece la tarea (aquí sí, completo)
 3. `decisions.md` — decisiones relevantes para esta tarea
 4. El fichero de handoff si existe (ej: `HANDOFF_E03_epic-start.md`) — puede
    contener la definición de la tarea y puntos abiertos ya identificados
@@ -27,22 +56,6 @@ Lee en este orden:
 
 Si la tarea tiene dependencias (`Depende de T-XX`), verifica que esas tareas
 tienen su `.feature` creado y están aprobadas.
-
----
-
-## Setup de rama [solo tareas de código — ejecutar antes de tocar nada]
-
-Para tareas de configuración, este bloque no aplica.
-
-Para tareas de código, ejecuta estos comandos **antes de leer ficheros o hacer
-cualquier cambio**, para garantizar que el working tree esté limpio y en el
-estado correcto:
-
-```bash
-git checkout epic/E[nn]-nombre
-git pull origin epic/E[nn]-nombre
-git checkout -b task/E[nn]-T[nn]-descripcion-corta
-```
 
 ---
 
@@ -273,7 +286,7 @@ al arrancar la sesión de desarrollo.
 
 | Paso | Qué aprueba Marcos | Por qué es un gate |
 |---|---|---|
-| Setup | — (ejecuta los comandos de rama) | Working tree limpio antes de tocar nada |
+| 0 | Ejecuta y confirma la creación de la rama | Working tree limpio *antes* de que el agente lea o toque nada |
 | 1 | Definición revisada de la tarea | Cierra puntos abiertos antes de comprometer diseño |
 | 2 | Decisiones de arquitectura (si aplica) | Registra antes de implementar |
 | 3 | Fichero .feature | Define exactamente qué se valida |
