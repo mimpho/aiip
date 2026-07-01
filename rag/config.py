@@ -14,4 +14,5 @@ def load_rag_config() -> dict:
         if not value:
             raise EnvironmentError(f"Variable de entorno requerida no definida: {var}")
         config[var] = value
+    config["RAG_TOP_K"] = int(os.getenv("RAG_TOP_K", "5"))
     return config

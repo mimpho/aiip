@@ -24,6 +24,7 @@
 - [D-013 — Stack de UI e identidad visual](#d-013--stack-de-ui-e-identidad-visual)
 - [D-014 — Supabase como broker único del OAuth de Google](#d-014--supabase-como-broker-único-del-oauth-de-google)
 - [D-015 — Criterios de aplicación de TDD por épica](#d-015--criterios-de-aplicación-de-tdd-por-épica)
+- [D-016 — Retriever ChromaDB: métrica coseno, scores y Top-K configurable](#d-016--retriever-chromadb-métrica-coseno-scores-y-top-k-configurable)
 
 ---
 
@@ -475,4 +476,35 @@ El coste de TDD es alto en las primeras épicas de setup (E-00 a E-02), pero se 
 
 ---
 
-*Próximas decisiones previstas: diseño del system prompt (D-015) — al arrancar E-04 (Pipeline RAG), configuración definitiva de colecciones ChromaDB (D-016) — al arrancar E-06 (Ingesta KB), estrategia de chunking validada (D-017) — tras primera evaluación RAGAS*
+## D-016 — Retriever ChromaDB: métrica coseno, scores y Top-K configurable
+
+**Fecha:** 1 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-02
+
+**Contexto**
+El stub de `rag/retriever.py` creado en T-01 (`get_retriever(embeddings, chroma_path, collection_name)`) no fijaba tres aspectos necesarios para implementar T-02: qué objeto devuelve exactamente, qué métrica de distancia usa la colección ChromaDB, y cómo se parametriza el número de chunks recuperados (Top-K). `docs/tech-spec.md` ya anticipaba `RAG_TOP_K=5` como variable de entorno, pero no estaba implementada.
+
+**Decisión**
+
+- **Retorno de `get_retriever()`:** devuelve el vectorstore `Chroma` de `langchain-chroma` directamente (no el wrapper `.as_retriever()`). Esto permite llamar a `similarity_search_with_score()` y exponer el score de cada chunk sin una capa adicional. Se prioriza velocidad de desarrollo sobre pureza de la abstracción LangChain — el pipeline (T-06) sigue pudiendo envolver el vectorstore en un retriever estándar si lo necesita más adelante.
+- **Métrica de similitud:** la colección ChromaDB se crea con `hnsw:space="cosine"`. bge-m3 produce embeddings normalizados, para los que la similitud coseno es la práctica estándar. El score que expone el retriever queda en semántica de similitud creciente (mayor = más relevante), coherente con los escenarios ya definidos en `tests/features/e04_t02_embeddings_retriever.feature`.
+- **Top-K:** nueva variable de entorno `RAG_TOP_K`, opcional con default `5` (coherente con `docs/tech-spec.md`). Se añade a `.env.example` y a `rag/config.py` como variable opcional (no bloquea el arranque si falta, a diferencia de `GOOGLE_API_KEY`/`HF_TOKEN`/`CHROMA_PATH`, que sí son obligatorias). `get_retriever()` acepta `top_k: int = 5` como parámetro, con posibilidad de override explícito por el llamador.
+
+**Alternativas descartadas**
+
+- Mantener `get_retriever()` devolviendo un retriever LangChain estándar y añadir una función paralela `get_retriever_with_scores()` — descartado por duplicar superficie de API para un beneficio marginal en esta fase del proyecto.
+- Dejar la métrica L2 por defecto de Chroma y reescribir los escenarios Gherkin en semántica de distancia — descartado porque obliga a reescribir criterios ya aprobados y complica la lectura de los tests sin beneficio técnico real.
+
+**Nota técnica (research T-02):** `langchain-chroma` devuelve en `similarity_search_with_score()` la *distancia* coseno (menor = más similar), incluso con `hnsw:space="cosine"` — no la similitud directamente (confirmado en la documentación de Chroma/LangChain). Para que el score expuesto por `get_retriever()` sea similitud creciente como fija esta decisión, `rag/retriever.py` convierte explícitamente: `similarity = 1 - distance`.
+
+**Consecuencias**
+
+- `rag/retriever.py` implementa la creación/apertura de la colección con métrica coseno explícita.
+- `rag/config.py` añade `RAG_TOP_K` como variable opcional (no en `REQUIRED_VARS`).
+- `.env.example` añade `RAG_TOP_K=5`.
+- Cuando E-06 formalice las colecciones de producción (ingesta KB), debe reutilizar la misma configuración de métrica coseno establecida aquí — no es una decisión nueva, es continuidad de esta.
+
+---
+
+*Próximas decisiones previstas: diseño del system prompt — al continuar E-04 (T-04/T-05), configuración definitiva de colecciones ChromaDB de producción — al arrancar E-06 (Ingesta KB, reutiliza métrica coseno de D-016), estrategia de chunking validada — tras primera evaluación RAGAS*
