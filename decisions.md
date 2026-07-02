@@ -24,6 +24,9 @@
 - [D-013 — Stack de UI e identidad visual](#d-013--stack-de-ui-e-identidad-visual)
 - [D-014 — Supabase como broker único del OAuth de Google](#d-014--supabase-como-broker-único-del-oauth-de-google)
 - [D-015 — Criterios de aplicación de TDD por épica](#d-015--criterios-de-aplicación-de-tdd-por-épica)
+- [D-016 — Retriever ChromaDB: métrica coseno, scores y Top-K configurable](#d-016--retriever-chromadb-métrica-coseno-scores-y-top-k-configurable)
+- [D-017 — Detección de idioma: determinismo y fallback para texto corto](#d-017--detección-de-idioma-determinismo-y-fallback-para-texto-corto)
+- [D-018 — Generador LLM: nombres de variables agnósticos y estrategia de test mock + smoke real](#d-018--generador-llm-nombres-de-variables-agnósticos-y-estrategia-de-test-mock--smoke-real)
 
 ---
 
@@ -475,4 +478,98 @@ El coste de TDD es alto en las primeras épicas de setup (E-00 a E-02), pero se 
 
 ---
 
-*Próximas decisiones previstas: diseño del system prompt (D-015) — al arrancar E-04 (Pipeline RAG), configuración definitiva de colecciones ChromaDB (D-016) — al arrancar E-06 (Ingesta KB), estrategia de chunking validada (D-017) — tras primera evaluación RAGAS*
+## D-016 — Retriever ChromaDB: métrica coseno, scores y Top-K configurable
+
+**Fecha:** 1 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-02
+
+**Contexto**
+El stub de `rag/retriever.py` creado en T-01 (`get_retriever(embeddings, chroma_path, collection_name)`) no fijaba tres aspectos necesarios para implementar T-02: qué objeto devuelve exactamente, qué métrica de distancia usa la colección ChromaDB, y cómo se parametriza el número de chunks recuperados (Top-K). `docs/tech-spec.md` ya anticipaba `RAG_TOP_K=5` como variable de entorno, pero no estaba implementada.
+
+**Decisión**
+
+- **Retorno de `get_retriever()`:** devuelve el vectorstore `Chroma` de `langchain-chroma` directamente (no el wrapper `.as_retriever()`). Esto permite llamar a `similarity_search_with_score()` y exponer el score de cada chunk sin una capa adicional. Se prioriza velocidad de desarrollo sobre pureza de la abstracción LangChain — el pipeline (T-06) sigue pudiendo envolver el vectorstore en un retriever estándar si lo necesita más adelante.
+- **Métrica de similitud:** la colección ChromaDB se crea con `hnsw:space="cosine"`. bge-m3 produce embeddings normalizados, para los que la similitud coseno es la práctica estándar. El score que expone el retriever queda en semántica de similitud creciente (mayor = más relevante), coherente con los escenarios ya definidos en `tests/features/e04_t02_embeddings_retriever.feature`.
+- **Top-K:** nueva variable de entorno `RAG_TOP_K`, opcional con default `5` (coherente con `docs/tech-spec.md`). Se añade a `.env.example` y a `rag/config.py` como variable opcional (no bloquea el arranque si falta, a diferencia de `GOOGLE_API_KEY`/`HF_TOKEN`/`CHROMA_PATH`, que sí son obligatorias). `get_retriever()` acepta `top_k: int = 5` como parámetro, con posibilidad de override explícito por el llamador.
+
+**Alternativas descartadas**
+
+- Mantener `get_retriever()` devolviendo un retriever LangChain estándar y añadir una función paralela `get_retriever_with_scores()` — descartado por duplicar superficie de API para un beneficio marginal en esta fase del proyecto.
+- Dejar la métrica L2 por defecto de Chroma y reescribir los escenarios Gherkin en semántica de distancia — descartado porque obliga a reescribir criterios ya aprobados y complica la lectura de los tests sin beneficio técnico real.
+
+**Nota técnica (research T-02):** `langchain-chroma` devuelve en `similarity_search_with_score()` la *distancia* coseno (menor = más similar), incluso con `hnsw:space="cosine"` — no la similitud directamente (confirmado en la documentación de Chroma/LangChain). Para que el score expuesto por `get_retriever()` sea similitud creciente como fija esta decisión, `rag/retriever.py` convierte explícitamente: `similarity = 1 - distance`.
+
+**Consecuencias**
+
+- `rag/retriever.py` implementa la creación/apertura de la colección con métrica coseno explícita.
+- `rag/config.py` añade `RAG_TOP_K` como variable opcional (no en `REQUIRED_VARS`).
+- `.env.example` añade `RAG_TOP_K=5`.
+- Cuando E-06 formalice las colecciones de producción (ingesta KB), debe reutilizar la misma configuración de métrica coseno establecida aquí — no es una decisión nueva, es continuidad de esta.
+
+---
+
+## D-017 — Detección de idioma: determinismo y fallback para texto corto
+
+**Fecha:** 1 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-03
+
+**Contexto**
+`langdetect` (D-011) tiene dos comportamientos no documentados de forma obvia en su README que afectan directamente a los escenarios de `tests/features/e04_t03_language_detection.feature`, confirmados en pruebas directas durante la revisión de esta tarea:
+
+1. **No determinismo:** el algoritmo interno usa muestreo aleatorio; sin fijar semilla, la misma entrada puede dar resultados distintos entre ejecuciones/procesos.
+2. **Confianza falsa en texto corto:** `detect_langs()` devuelve confianzas superiores a 0.999 incluso en detecciones claramente erróneas sobre texto corto — probado con `"hola"` (detectado como galés, `cy`) y `"si"` (detectado como finés, `fi`). Además, `detect("ok")` no lanza excepción (devuelve `"sk"`); `LangDetectException` solo se lanza con strings vacíos, espacios, símbolos o números puros. Esto descarta tanto "capturar excepción" como "filtrar por confianza" como estrategias de fallback fiables.
+
+**Decisión**
+
+- **Determinismo:** `rag/language.py` fija `DetectorFactory.seed = 0` de `langdetect` a nivel de módulo (una sola vez, al importar).
+- **Fallback para texto corto:** umbral fijo de longitud, `MIN_LENGTH_FOR_DETECTION = 10` caracteres (tras `strip()`). Por debajo del umbral, `detect_language()` devuelve el idioma por defecto (`"es"`, coherente con D-011) sin invocar a `langdetect`. Se descarta un umbral por número de palabras: una respuesta corta de una palabra ("no", "sí") es un caso legítimo de conversación real y no debe tratarse distinto de un texto de dos palabras igual de corto — la longitud en caracteres es la señal más directa y no requiere tokenización.
+- **Idiomas fuera de es/en/ca:** la instrucción de idioma para el prompt (`build_language_instruction()`) usa nombre explícito solo para castellano/inglés/catalán (los tres idiomas de lanzamiento comprometidos en D-011). Para cualquier otro código detectado, la instrucción se construye genéricamente a partir del código ISO (p. ej. "responde en el idioma con código 'fr'"), sin diccionario adicional de nombres de idioma.
+
+**Alternativas descartadas**
+
+- Fallback basado en `try/except LangDetectException` — descartado porque no cubre el caso real del escenario (`"ok"` no lanza excepción).
+- Fallback basado en umbral de confianza de `detect_langs()` — descartado porque `langdetect` es igual de "confiado" acertando que equivocándose en texto corto; el score no es una señal útil aquí.
+- Umbral por número de palabras en vez de caracteres — descartado por tratar de forma distinta respuestas cortas legítimas de una sola palabra.
+- Diccionario ampliado de nombres de idioma (es/en/ca/fr/de/it/pt) para la instrucción del prompt — descartado: D-011 solo compromete es/en/ca como idiomas de lanzamiento; mantener una lista más amplia es esfuerzo en algo no comprometido por el producto y tiende a crecer sin decisión explícita.
+
+**Consecuencias**
+
+- `rag/language.py` (nuevo módulo, sin stub previo de T-01) expone `detect_language(text: str, default: str = "es") -> str` y `build_language_instruction(language: str) -> str`.
+- La integración real en `rag/pipeline.py` queda fuera de esta tarea — es T-06, mismo patrón que D-016 estableció para el retriever.
+- Si en el futuro se añade un selector explícito de idioma en interfaz (evolución futura de D-011), este fallback deja de ser crítico pero puede mantenerse como red de seguridad.
+
+---
+
+## D-018 — Generador LLM: nombres de variables agnósticos y estrategia de test mock + smoke real
+
+**Fecha:** 3 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-04
+
+**Contexto**
+El `.feature` de T-04 (creado como stub durante `epic-start`, sin revisión previa contra `tech-spec.md`/`decisions.md`) usaba nombres de variables de entorno específicos de proveedor (`GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_TEMPERATURE`, `GEMINI_MAX_TOKENS`) y una ruta de system prompt (`prompts/system_familiar.txt`) inconsistente con lo ya establecido: `rag/config.py` y `.env.example` ya usan `GOOGLE_API_KEY`, y `docs/tech-spec.md` (sección 10) define `LLM_MODEL`/`LLM_TEMPERATURE`/`LLM_TOP_P`/`LLM_MAX_TOKENS` como nombres agnósticos de proveedor (coherente con D-010). Además, había que decidir cómo testear las llamadas al LLM: T-02 usa el modelo bge-m3 real (local, sin coste ni red) como precedente, pero una llamada real a la API de Gemini introduce red, cuota y no determinismo — en tensión directa con D-015, que justifica TDD en E-04 por "evidencia objetiva y reproducible".
+
+**Decisión**
+
+- **Nombres de variables:** se adoptan los nombres ya usados en el proyecto — `GOOGLE_API_KEY` (ya requerida en `rag/config.py`) y `LLM_MODEL`/`LLM_TEMPERATURE`/`LLM_TOP_P`/`LLM_MAX_TOKENS` (agnósticos de proveedor, per D-010 y tech-spec sección 10). Se añaden a `rag/config.py` como variables opcionales con default, siguiendo el mismo patrón que `RAG_TOP_K` en D-016 (no bloquean el arranque): `LLM_MODEL=gemini-2.5-flash`, `LLM_TEMPERATURE=0.1`, `LLM_TOP_P=0.1`, `LLM_MAX_TOKENS=300`.
+- **Ruta del system prompt:** `prompts/system_prompt_familiar.txt`, tal como fija `tech-spec.md` sección 5 (fuente de verdad técnica). El fichero contiene la estructura completa (rol, restricciones Falso Negativo Cero, idioma, fuentes, tono familiar, cierre obligatorio) — no un stub vacío.
+- **Estrategia de test del LLM:** híbrida. Los escenarios deterministas (generación con contexto válido, lectura de parámetros de entorno, carga del system prompt, error por `GOOGLE_API_KEY` ausente) mockean `ChatGoogleGenerativeAI` — rápido, sin coste, reproducible. Se añade un escenario adicional etiquetado `@integration`, que hace una llamada real a la API de Gemini y es *skippable* si no hay red o `GOOGLE_API_KEY` válida en el entorno — da al menos una verificación genuina de la integración real, relevante de cara al TFM.
+
+**Alternativas descartadas**
+
+- Nombres específicos de proveedor (`GEMINI_*`) tal como estaban en el stub — descartado por inconsistencia con D-010 y con el código ya escrito en T-01/T-02.
+- Solo llamadas reales a la API (paralelo al patrón de T-02) — descartado: a diferencia de bge-m3 (modelo local), Gemini es una API externa de pago/cuota; los tests dejarían de ser reproducibles y rápidos.
+- Solo mocks, sin ningún test de integración real — descartado: para un TFM con vocación de herramienta real, tener al menos una verificación de que la integración con la API real funciona aporta evidencia objetiva de que el wiring es correcto, no solo el contrato mockeado.
+
+**Consecuencias**
+
+- `rag/config.py` se extiende con `LLM_MODEL`, `LLM_TEMPERATURE`, `LLM_TOP_P`, `LLM_MAX_TOKENS` como opcionales.
+- `tests/features/e04_t04_llm_generator.feature` corregido a los nombres agnósticos; incluye escenario `@integration` separado de los deterministas.
+- El escenario de "clave inválida" mockea la excepción que lance `langchain-google-genai` en autenticación fallida — su clase exacta se confirma como research previo en el plan de implementación (Paso 4), no se asume aquí.
+- `prompts/system_prompt_familiar.txt` se crea en esta tarea con el contenido definitivo de tech-spec sección 5; el módulo de seguridad (T-05) añade la lógica de validación en tiempo de ejecución sobre lo que este prompt ya restringe.
+
+---
+
+*Próximas decisiones previstas: configuración definitiva de colecciones ChromaDB de producción — al arrancar E-06 (Ingesta KB, reutiliza métrica coseno de D-016), estrategia de chunking validada — tras primera evaluación RAGAS*

@@ -138,7 +138,18 @@ Flujo completo: query → detección de idioma → embedding → retrieval → g
 - Parámetros de inferencia implementados y testeados
 - OWASP Top 10 para LLMs cubierto con mitigaciones
 
-**Estado:** ⚪ No iniciada
+**Estado:** 🔵 En curso
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Setup de dependencias y estructura del módulo RAG | ✅ Completada |
+| T-02 | Embeddings y retriever con ChromaDB | ✅ Completada |
+| T-03 | Detección de idioma e integración en pipeline | ✅ Completada |
+| T-04 | Generador: LLM Gemini Flash via LangChain | ✅ Completada |
+| T-05 | Módulo de seguridad: Falso Negativo Cero | ⚪ Pendiente |
+| T-06 | Pipeline end-to-end y tests de integración | ⚪ Pendiente |
 
 ---
 
