@@ -26,6 +26,7 @@
 - [D-015 — Criterios de aplicación de TDD por épica](#d-015--criterios-de-aplicación-de-tdd-por-épica)
 - [D-016 — Retriever ChromaDB: métrica coseno, scores y Top-K configurable](#d-016--retriever-chromadb-métrica-coseno-scores-y-top-k-configurable)
 - [D-017 — Detección de idioma: determinismo y fallback para texto corto](#d-017--detección-de-idioma-determinismo-y-fallback-para-texto-corto)
+- [D-018 — Generador LLM: nombres de variables agnósticos y estrategia de test mock + smoke real](#d-018--generador-llm-nombres-de-variables-agnósticos-y-estrategia-de-test-mock--smoke-real)
 
 ---
 
@@ -541,4 +542,34 @@ El stub de `rag/retriever.py` creado en T-01 (`get_retriever(embeddings, chroma_
 
 ---
 
-*Próximas decisiones previstas: diseño del system prompt — al continuar E-04 (T-04/T-05), configuración definitiva de colecciones ChromaDB de producción — al arrancar E-06 (Ingesta KB, reutiliza métrica coseno de D-016), estrategia de chunking validada — tras primera evaluación RAGAS*
+## D-018 — Generador LLM: nombres de variables agnósticos y estrategia de test mock + smoke real
+
+**Fecha:** 3 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-04
+
+**Contexto**
+El `.feature` de T-04 (creado como stub durante `epic-start`, sin revisión previa contra `tech-spec.md`/`decisions.md`) usaba nombres de variables de entorno específicos de proveedor (`GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_TEMPERATURE`, `GEMINI_MAX_TOKENS`) y una ruta de system prompt (`prompts/system_familiar.txt`) inconsistente con lo ya establecido: `rag/config.py` y `.env.example` ya usan `GOOGLE_API_KEY`, y `docs/tech-spec.md` (sección 10) define `LLM_MODEL`/`LLM_TEMPERATURE`/`LLM_TOP_P`/`LLM_MAX_TOKENS` como nombres agnósticos de proveedor (coherente con D-010). Además, había que decidir cómo testear las llamadas al LLM: T-02 usa el modelo bge-m3 real (local, sin coste ni red) como precedente, pero una llamada real a la API de Gemini introduce red, cuota y no determinismo — en tensión directa con D-015, que justifica TDD en E-04 por "evidencia objetiva y reproducible".
+
+**Decisión**
+
+- **Nombres de variables:** se adoptan los nombres ya usados en el proyecto — `GOOGLE_API_KEY` (ya requerida en `rag/config.py`) y `LLM_MODEL`/`LLM_TEMPERATURE`/`LLM_TOP_P`/`LLM_MAX_TOKENS` (agnósticos de proveedor, per D-010 y tech-spec sección 10). Se añaden a `rag/config.py` como variables opcionales con default, siguiendo el mismo patrón que `RAG_TOP_K` en D-016 (no bloquean el arranque): `LLM_MODEL=gemini-2.5-flash`, `LLM_TEMPERATURE=0.1`, `LLM_TOP_P=0.1`, `LLM_MAX_TOKENS=300`.
+- **Ruta del system prompt:** `prompts/system_prompt_familiar.txt`, tal como fija `tech-spec.md` sección 5 (fuente de verdad técnica). El fichero contiene la estructura completa (rol, restricciones Falso Negativo Cero, idioma, fuentes, tono familiar, cierre obligatorio) — no un stub vacío.
+- **Estrategia de test del LLM:** híbrida. Los escenarios deterministas (generación con contexto válido, lectura de parámetros de entorno, carga del system prompt, error por `GOOGLE_API_KEY` ausente) mockean `ChatGoogleGenerativeAI` — rápido, sin coste, reproducible. Se añade un escenario adicional etiquetado `@integration`, que hace una llamada real a la API de Gemini y es *skippable* si no hay red o `GOOGLE_API_KEY` válida en el entorno — da al menos una verificación genuina de la integración real, relevante de cara al TFM.
+
+**Alternativas descartadas**
+
+- Nombres específicos de proveedor (`GEMINI_*`) tal como estaban en el stub — descartado por inconsistencia con D-010 y con el código ya escrito en T-01/T-02.
+- Solo llamadas reales a la API (paralelo al patrón de T-02) — descartado: a diferencia de bge-m3 (modelo local), Gemini es una API externa de pago/cuota; los tests dejarían de ser reproducibles y rápidos.
+- Solo mocks, sin ningún test de integración real — descartado: para un TFM con vocación de herramienta real, tener al menos una verificación de que la integración con la API real funciona aporta evidencia objetiva de que el wiring es correcto, no solo el contrato mockeado.
+
+**Consecuencias**
+
+- `rag/config.py` se extiende con `LLM_MODEL`, `LLM_TEMPERATURE`, `LLM_TOP_P`, `LLM_MAX_TOKENS` como opcionales.
+- `tests/features/e04_t04_llm_generator.feature` corregido a los nombres agnósticos; incluye escenario `@integration` separado de los deterministas.
+- El escenario de "clave inválida" mockea la excepción que lance `langchain-google-genai` en autenticación fallida — su clase exacta se confirma como research previo en el plan de implementación (Paso 4), no se asume aquí.
+- `prompts/system_prompt_familiar.txt` se crea en esta tarea con el contenido definitivo de tech-spec sección 5; el módulo de seguridad (T-05) añade la lógica de validación en tiempo de ejecución sobre lo que este prompt ya restringe.
+
+---
+
+*Próximas decisiones previstas: configuración definitiva de colecciones ChromaDB de producción — al arrancar E-06 (Ingesta KB, reutiliza métrica coseno de D-016), estrategia de chunking validada — tras primera evaluación RAGAS*
