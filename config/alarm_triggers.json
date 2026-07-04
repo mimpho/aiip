@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "estado": "pendiente_validacion_clinica",
+    "fuentes": [
+      "Signos de Alarma Avanzados en Pacientes Diagnósticos de IDP (aportado por Marcos, 2026-07-04)",
+      "Documento KB de señales de alerta IDP (referencia CEREDIH/ESID, francés, secciones chez l'enfant / chez l'adulte)",
+      "Señales de emergencia pediátrica estándar (fiebre alta, dificultad respiratoria)"
+    ],
+    "nota": "Lista placeholder para TDD (D-019). Validar con Jacques Rivière antes de producción."
+  },
+  "triggers": [
+    {"id": "resp_01", "texto": "tos con flema verde, con pus o con sangre desde hace más de tres semanas", "categoria": "respiratorio", "fuente": "signos_avanzados"},
+    {"id": "resp_02", "texto": "cansancio o falta de aire al caminar o subir escaleras que antes no le pasaba", "categoria": "respiratorio", "fuente": "signos_avanzados"},
+    {"id": "resp_03", "texto": "dolor en el pecho o la espalda al respirar hondo o toser", "categoria": "respiratorio", "fuente": "signos_avanzados"},
+    {"id": "resp_04", "texto": "dedos hinchados en la punta o uñas curvadas hacia abajo", "categoria": "respiratorio", "fuente": "signos_avanzados"},
+    {"id": "hemato_01", "texto": "manchas rojas o moradas en la piel, o moratones grandes, sin haberse golpeado", "categoria": "hematologia_autoinmunidad", "fuente": "signos_avanzados"},
+    {"id": "hemato_02", "texto": "labios o encías muy pálidos con cansancio extremo", "categoria": "hematologia_autoinmunidad", "fuente": "signos_avanzados"},
+    {"id": "hemato_03", "texto": "dolor, hinchazón o rigidez en las articulaciones que no mejora", "categoria": "hematologia_autoinmunidad", "fuente": "signos_avanzados"},
+    {"id": "hemato_04", "texto": "fiebre que va y viene sin encontrarse ninguna causa", "categoria": "hematologia_autoinmunidad", "fuente": "signos_avanzados"},
+    {"id": "neuro_01", "texto": "dolor de cabeza fuerte, sobre todo por la mañana, que despierta por la noche", "categoria": "neurologia", "fuente": "signos_avanzados"},
+    {"id": "neuro_02", "texto": "vómitos repentinos sin haber tenido náuseas antes", "categoria": "neurologia", "fuente": "signos_avanzados"},
+    {"id": "neuro_03", "texto": "pérdida de memoria o cambios de comportamiento que no son normales en él o ella", "categoria": "neurologia", "fuente": "signos_avanzados"},
+    {"id": "neuro_04", "texto": "torpeza al caminar, pérdida de equilibrio o debilidad en brazos o piernas", "categoria": "neurologia", "fuente": "signos_avanzados"},
+    {"id": "gastro_01", "texto": "diarrea que dura más de dos semanas", "categoria": "gastrointestinal", "fuente": "signos_avanzados"},
+    {"id": "gastro_02", "texto": "heces muy grasientas, brillantes o que huelen muy mal", "categoria": "gastrointestinal", "fuente": "signos_avanzados"},
+    {"id": "gastro_03", "texto": "ha perdido peso sin explicación", "categoria": "gastrointestinal", "fuente": "signos_avanzados"},
+    {"id": "gastro_04", "texto": "se ha parado de crecer o ha bajado en las tablas de crecimiento", "categoria": "gastrointestinal", "fuente": "signos_avanzados"},
+    {"id": "gastro_05", "texto": "dolor de barriga fuerte después de comer, de forma repetida", "categoria": "gastrointestinal", "fuente": "signos_avanzados"},
+    {"id": "derma_01", "texto": "llagas grandes en la boca que no se curan en varias semanas", "categoria": "dermatologia_mucosas", "fuente": "signos_avanzados"},
+    {"id": "derma_02", "texto": "erupción en la piel muy extendida con picor fuerte que no mejora con cremas", "categoria": "dermatologia_mucosas", "fuente": "signos_avanzados"},
+    {"id": "derma_03", "texto": "heridas pequeñas que no cicatrizan y se infectan", "categoria": "dermatologia_mucosas", "fuente": "signos_avanzados"},
+    {"id": "linfo_01", "texto": "ganglios grandes, duros y que no duelen", "categoria": "linfoproliferativo", "fuente": "signos_avanzados"},
+    {"id": "linfo_02", "texto": "suda muchísimo por la noche, tiene que cambiar la ropa o las sábanas", "categoria": "linfoproliferativo", "fuente": "signos_avanzados"},
+    {"id": "linfo_03", "texto": "se llena enseguida al comer poco, o le duele el lado izquierdo de la barriga", "categoria": "linfoproliferativo", "fuente": "signos_avanzados"},
+    {"id": "labo_01", "texto": "el nivel de IgG ha bajado antes de la próxima infusión", "categoria": "laboratorio", "fuente": "signos_avanzados"},
+    {"id": "labo_02", "texto": "los linfocitos o los neutrófilos han bajado en el análisis", "categoria": "laboratorio", "fuente": "signos_avanzados"},
+    {"id": "labo_03", "texto": "la PCR o la VSG siguen altas sin tener ninguna infección", "categoria": "laboratorio", "fuente": "signos_avanzados"},
+    {"id": "diag_inf_01", "texto": "muchas otitis al año, más de seis, en menores de cuatro años", "categoria": "diagnostico_general_infantil", "fuente": "kb_fr_ceredih"},
+    {"id": "diag_inf_02", "texto": "una infección bacteriana grave, como meningitis o sepsis", "categoria": "diagnostico_general_infantil", "fuente": "kb_fr_ceredih"},
+    {"id": "diag_inf_03", "texto": "más de un mes de antibióticos en un año, o antibiótico por vena", "categoria": "diagnostico_general_infantil", "fuente": "kb_fr_ceredih"},
+    {"id": "diag_inf_04", "texto": "hongos en la piel o en la boca que no se curan o que vuelven", "categoria": "diagnostico_general_infantil", "fuente": "kb_fr_ceredih"},
+    {"id": "diag_inf_05", "texto": "alergias muy graves o eccema muy grave", "categoria": "diagnostico_general_infantil", "fuente": "kb_fr_ceredih"},
+    {"id": "diag_adu_01", "texto": "más de dos sinusitis, otitis o neumonías al año", "categoria": "diagnostico_general_adulto", "fuente": "kb_fr_ceredih"},
+    {"id": "diag_adu_02", "texto": "bronquitis repetidas o bronquiectasias sin explicación", "categoria": "diagnostico_general_adulto", "fuente": "kb_fr_ceredih"},
+    {"id": "diag_adu_03", "texto": "más de dos meses de antibióticos al año", "categoria": "diagnostico_general_adulto", "fuente": "kb_fr_ceredih"},
+    {"id": "diag_adu_04", "texto": "una infección bacteriana grave por neumococo o meningococo", "categoria": "diagnostico_general_adulto", "fuente": "kb_fr_ceredih"},
+    {"id": "emerg_01", "texto": "fiebre muy alta, de 40 grados, que dura varios días", "categoria": "emergencia_aguda", "fuente": "estandar_pediatrico"},
+    {"id": "emerg_02", "texto": "dificultad para respirar, o labios morados o azulados", "categoria": "emergencia_aguda", "fuente": "estandar_pediatrico"}
+  ]
+}
