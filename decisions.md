@@ -27,6 +27,7 @@
 - [D-016 — Retriever ChromaDB: métrica coseno, scores y Top-K configurable](#d-016--retriever-chromadb-métrica-coseno-scores-y-top-k-configurable)
 - [D-017 — Detección de idioma: determinismo y fallback para texto corto](#d-017--detección-de-idioma-determinismo-y-fallback-para-texto-corto)
 - [D-018 — Generador LLM: nombres de variables agnósticos y estrategia de test mock + smoke real](#d-018--generador-llm-nombres-de-variables-agnósticos-y-estrategia-de-test-mock--smoke-real)
+- [D-019 — Módulo de seguridad: funciones separadas, triggers en JSON y lista placeholder pendiente de validación clínica](#d-019--módulo-de-seguridad-funciones-separadas-triggers-en-json-y-lista-placeholder-pendiente-de-validación-clínica)
 
 ---
 
@@ -569,6 +570,43 @@ El `.feature` de T-04 (creado como stub durante `epic-start`, sin revisión prev
 - `tests/features/e04_t04_llm_generator.feature` corregido a los nombres agnósticos; incluye escenario `@integration` separado de los deterministas.
 - El escenario de "clave inválida" mockea la excepción que lance `langchain-google-genai` en autenticación fallida — su clase exacta se confirma como research previo en el plan de implementación (Paso 4), no se asume aquí.
 - `prompts/system_prompt_familiar.txt` se crea en esta tarea con el contenido definitivo de tech-spec sección 5; el módulo de seguridad (T-05) añade la lógica de validación en tiempo de ejecución sobre lo que este prompt ya restringe.
+
+---
+
+## D-019 — Módulo de seguridad: funciones separadas, triggers en JSON y lista placeholder pendiente de validación clínica
+
+**Fecha:** 4 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-05
+
+**Contexto**
+El stub `rag/safety.py` (creado en T-01) solo definía `apply_safety_filter(response: str) -> str`, sin distinguir entre detección de señales de alarma en la query y postprocesado de la respuesta generada. `docs/tech-spec.md` (sección 6) y `docs/security.md` describen 3 capas (pre-retrieval, post-retrieval, post-generación) bajo un directorio `security/` que no existe en el repo — el proyecto real vive en `rag/` desde T-01. Además, los Scenarios 1-2 del `.feature` stub (creado en `epic-start`) daban la query del usuario pero pedían evaluar "la respuesta generada" sin proporcionarla, lo cual no es ejecutable con una única función `apply_safety_filter(response)`. Por último, la lista de señales de alarma específicas por grupo de IDP está marcada como pendiente de validación clínica tanto en `docs/PRD.md` (backlog abierto, ítem 1) como en `docs/security.md`.
+
+**Decisión**
+
+- **Ubicación:** el módulo de seguridad se implementa en `rag/safety.py`, continuando el patrón de T-01 a T-04. No se crea un directorio `security/` separado — la mención en `tech-spec.md`/`security.md` queda como documentación de intención de alto nivel, no como estructura literal a seguir.
+- **Alcance de T-05:** solo las capas *post-retrieval* (detección de señales de alarma en la query) y *post-generación* (filtro/derivación sobre la respuesta), que son las que cubren los escenarios del `.feature`. La capa *pre-retrieval* (prompt injection, filtrado PII — OWASP LLM01/LLM06) queda fuera de esta tarea, sin `.feature` que la cubra; se anota como backlog de seguridad pendiente.
+- **Funciones separadas:** `check_alarm_signals(query: str) -> bool` detecta señales de alarma en la query del usuario; `apply_safety_filter(response: str, has_alarm: bool) -> str` postprocesa la respuesta generada, añadiendo o reforzando la derivación médica cuando `has_alarm` es `True` o cuando la propia respuesta contiene una afirmación tranquilizadora absoluta. Se prefiere sobre una función combinada por ser más testeable de forma aislada y más fiel a las 3 capas descritas en `tech-spec.md`.
+- **Triggers en fichero de configuración JSON:** `config/alarm_triggers.json`, con estructura `{"meta": {...}, "triggers": [{"id", "texto", "grupo", "fuente"}, ...]}`. El campo `grupo` (`infantil` / `adulto` / `general`) y `fuente` permiten trazabilidad y extensión futura sin romper el formato. Se prefiere JSON sobre texto plano por poder anotar metadata sin ambigüedad de parseo.
+- **Contenido placeholder de los triggers — dos fuentes:**
+  1. Documento de la KB en francés (referencia tipo CEREDIH/ESID, secciones "chez l'enfant" / "chez l'adulte") — son *criterios diagnósticos* (cuándo sospechar una IDP no diagnosticada: frecuencia de infecciones, retraso de crecimiento, etc.). Se mantiene como fuente secundaria, de menor prioridad para este producto porque los usuarios de AIIP ya tienen diagnóstico establecido.
+  2. Listado de "Signos de Alarma Avanzados en Pacientes Diagnósticos de IDP" aportado por Marcos — cubre complicación, fallo terapéutico, desregulación inmune, daño orgánico crónico y riesgo oncológico en pacientes ya diagnosticados, organizado por sistema (respiratorio, hematología/autoinmunidad, neurología, gastrointestinal, dermatología, linfoproliferativo, monitorización analítica). Es la fuente **primaria**: encaja directamente con el perfil real de usuario de AIIP (familias con diagnóstico ya establecido).
+
+  Ambas fuentes se traducen/adaptan a frases coloquiales en español (cómo describiría el síntoma una familia, no el término clínico exacto) como contenido inicial de `config/alarm_triggers.json`, junto con dos señales de emergencia pediátrica estándar ya recogidas en el `.feature` (fiebre muy alta persistente, dificultad respiratoria) que no provienen de ningún documento de la KB. **Toda la lista queda marcada explícitamente como pendiente de validación clínica por Jacques Rivière** — es deuda técnica documentada, no una decisión clínica definitiva.
+- **Estrategia de detección en `check_alarm_signals`:** coincidencia de subcadena/palabra clave (case-insensitive) entre la query y las frases de `config/alarm_triggers.json` — sin llamada a LLM ni embeddings. Se prioriza sobre alternativas semánticas (embeddings bge-m3, clasificación vía LLM) por coherencia con D-018 (tests deterministas y reproducibles, sin coste ni red) y con el sesgo MVP del proyecto (D-004/D-005): es la opción más simple que cubre los escenarios del `.feature`, revisable en el futuro si RAGAS o el uso real muestran falsos negativos por variación de fraseo.
+
+**Alternativas descartadas**
+
+- Crear `security/validator.py` y `security/pii_filter.py` tal como literalmente describe `tech-spec.md` — descartado por romper el patrón de estructura ya establecido en E-04 (T-01 a T-04 viven en `rag/`) sin beneficio real para el alcance de esta tarea.
+- Función combinada `apply_safety_filter(query, response)` — descartada por ser menos testeable de forma aislada y menos alineada con las 3 capas ya documentadas.
+- Bloquear T-05 hasta validación clínica completa — descartado: la lista es sustituible en `config/alarm_triggers.json` sin tocar el diseño ni el código; bloquear la tarea no aporta valor frente a avanzar con placeholder marcado explícitamente.
+
+**Consecuencias**
+
+- `rag/safety.py` implementa `check_alarm_signals(query)` y `apply_safety_filter(response, has_alarm)`.
+- Nuevo fichero `config/alarm_triggers.json`, cargado en tiempo de ejecución (no hardcodeado), con contenido placeholder trazable a su fuente.
+- La integración de estas dos funciones en `rag/pipeline.py` queda fuera de T-05 — es T-06, mismo patrón que D-016/D-017 establecieron para retriever y language.
+- Cuando llegue la validación clínica de Jacques Rivière, solo se sustituye el contenido de `config/alarm_triggers.json` — no requiere cambios de diseño ni de código.
 
 ---
 
