@@ -28,6 +28,7 @@
 - [D-017 — Detección de idioma: determinismo y fallback para texto corto](#d-017--detección-de-idioma-determinismo-y-fallback-para-texto-corto)
 - [D-018 — Generador LLM: nombres de variables agnósticos y estrategia de test mock + smoke real](#d-018--generador-llm-nombres-de-variables-agnósticos-y-estrategia-de-test-mock--smoke-real)
 - [D-019 — Módulo de seguridad: funciones separadas, triggers en JSON y lista placeholder pendiente de validación clínica](#d-019--módulo-de-seguridad-funciones-separadas-triggers-en-json-y-lista-placeholder-pendiente-de-validación-clínica)
+- [D-020 — Pipeline end-to-end: comportamiento sin resultados de retrieval y estrategia de test híbrida](#d-020--pipeline-end-to-end-comportamiento-sin-resultados-de-retrieval-y-estrategia-de-test-híbrida)
 
 ---
 
@@ -607,6 +608,37 @@ El stub `rag/safety.py` (creado en T-01) solo definía `apply_safety_filter(resp
 - Nuevo fichero `config/alarm_triggers.json`, cargado en tiempo de ejecución (no hardcodeado), con contenido placeholder trazable a su fuente.
 - La integración de estas dos funciones en `rag/pipeline.py` queda fuera de T-05 — es T-06, mismo patrón que D-016/D-017 establecieron para retriever y language.
 - Cuando llegue la validación clínica de Jacques Rivière, solo se sustituye el contenido de `config/alarm_triggers.json` — no requiere cambios de diseño ni de código.
+
+---
+
+## D-020 — Pipeline end-to-end: comportamiento sin resultados de retrieval y estrategia de test híbrida
+
+**Fecha:** 4 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-06
+
+**Contexto**
+El stub de `.feature` de T-06 (creado en `epic-start`, sin revisión previa) tenía tres inconsistencias con lo ya implementado en T-01 a T-05: usaba `GEMINI_API_KEY` en vez de `GOOGLE_API_KEY` (mismo error que D-018 corrigió en T-04), esperaba que el pipeline "fallase con un error claro" si `CHROMA_PATH` no existe o la colección está vacía — comportamiento contrario al ya aprobado en T-02 (`rag/retriever.py` + su `.feature`: colección vacía → lista vacía, sin excepción) —, y no distinguía estrategia de test mock/real para los escenarios de pipeline completo, a diferencia del patrón híbrido que D-018 estableció para el generador.
+
+**Decisión**
+
+- **Retrieval sin resultados:** el pipeline no falla si la colección está vacía o `CHROMA_PATH` no existe — genera la respuesta igualmente con contexto vacío. Continuidad directa de D-016/T-02, no una decisión nueva pero sí una confirmación explícita a nivel de pipeline.
+- **Estrategia de test:** híbrida, mismo patrón que D-018. Los escenarios deterministas de "pipeline completo" (idioma, Falso Negativo Cero, contexto vacío, propagación de errores) mockean `ChatGoogleGenerativeAI` (parcheando `rag.generator.ChatGoogleGenerativeAI`, igual que en T-04) — embeddings (bge-m3) y ChromaDB corren reales porque son locales y sin coste. Un único escenario `@integration`, skippable via `RUN_LLM_INTEGRATION_TESTS=1`, hace una llamada real de extremo a extremo.
+- **Fixtures de `familias_test`:** unos pocos chunks informativos sobre IDP (reutilizando el contenido ya usado en los mocks de T-04, p. ej. agammaglobulinemia de Bruton), indexados en un `tmp_path` de pytest por test — no la KB real de producción, que es objeto de E-06.
+- **`LLM_TEMPERATURE`:** se mantiene en `0.1` (default de D-018). Se discutió bajar a `0` por el principio de Falso Negativo Cero (D-002), pero la mitigación real de ese riesgo es el filtro post-generación de T-05, que actúa igual sin importar la temperatura; con `LLM_TOP_P=0.1` ya fijado, la diferencia práctica entre 0 y 0.1 es marginal.
+- **Contrato de `RAGPipeline`:** construye sus dependencias (embeddings, retriever, generador) internamente en `__init__` a partir de `config: dict`, sin inyección de dependencias explícita. Es testeable igual que T-04 parcheando `rag.generator.ChatGoogleGenerativeAI` en el punto donde `RAGGenerator` lo usa — no hace falta un diseño más complejo para este alcance.
+
+**Alternativas descartadas**
+
+- Mantener la expectativa de "fallo claro" ante ChromaDB no disponible — descartado por contradecir directamente el comportamiento ya aprobado y testeado en T-02.
+- Todos los escenarios de pipeline completo con LLM real — descartado por el mismo motivo que D-018 lo descartó para el generador: coste de cuota, latencia y no determinismo en cada ejecución de la suite.
+- Bajar `LLM_TEMPERATURE` a 0 — descartado: no aporta garantía adicional de grounding a la KB (la da el diseño RAG + el filtro de T-05), y la diferencia práctica frente a 0.1 es marginal dado `LLM_TOP_P=0.1`.
+
+**Consecuencias**
+
+- `rag/pipeline.py` implementa `RAGPipeline.__init__(config)` y `query(question)` orquestando detect_language → retrieve → generate → safety.
+- `tests/features/e04_t06_e2e_pipeline.feature` corregido a `GOOGLE_API_KEY`, con escenario de retrieval vacío alineado con T-02 y separación explícita mock/`@integration`.
+- Las fixtures de `familias_test` en los tests de T-06 no deben confundirse con la KB de producción de E-06.
 
 ---
 
