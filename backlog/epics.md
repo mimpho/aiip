@@ -148,7 +148,7 @@ Flujo completo: query → detección de idioma → embedding → retrieval → g
 | T-02 | Embeddings y retriever con ChromaDB | ✅ Completada |
 | T-03 | Detección de idioma e integración en pipeline | ✅ Completada |
 | T-04 | Generador: LLM Gemini Flash via LangChain | ✅ Completada |
-| T-05 | Módulo de seguridad: Falso Negativo Cero | 🔄 En progreso |
+| T-05 | Módulo de seguridad: Falso Negativo Cero | ✅ Completada |
 | T-06 | Pipeline end-to-end y tests de integración | ⚪ Pendiente |
 
 ---
