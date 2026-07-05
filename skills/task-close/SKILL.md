@@ -24,6 +24,11 @@ Confirma con Marcos que:
 
 Si alguno de estos puntos falla, no continúes — la tarea no está cerrable.
 
+> **No reejecutes los tests en el sandbox de Cowork.** El entorno de Cowork no
+> tiene el proyecto configurado (venv, dependencias) para correr `pytest`.
+> Confía en el resultado que reporta Marcos/Antigravity tras el ciclo TDD —
+> verifica leyendo el código y el `.feature`, no ejecutando la suite tú mismo.
+
 ---
 
 ## Paso 1 — Revisión del trabajo
