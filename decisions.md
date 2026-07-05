@@ -24,6 +24,11 @@
 - [D-013 — Stack de UI e identidad visual](#d-013--stack-de-ui-e-identidad-visual)
 - [D-014 — Supabase como broker único del OAuth de Google](#d-014--supabase-como-broker-único-del-oauth-de-google)
 - [D-015 — Criterios de aplicación de TDD por épica](#d-015--criterios-de-aplicación-de-tdd-por-épica)
+- [D-016 — Retriever ChromaDB: métrica coseno, scores y Top-K configurable](#d-016--retriever-chromadb-métrica-coseno-scores-y-top-k-configurable)
+- [D-017 — Detección de idioma: determinismo y fallback para texto corto](#d-017--detección-de-idioma-determinismo-y-fallback-para-texto-corto)
+- [D-018 — Generador LLM: nombres de variables agnósticos y estrategia de test mock + smoke real](#d-018--generador-llm-nombres-de-variables-agnósticos-y-estrategia-de-test-mock--smoke-real)
+- [D-019 — Módulo de seguridad: funciones separadas, triggers en JSON y lista placeholder pendiente de validación clínica](#d-019--módulo-de-seguridad-funciones-separadas-triggers-en-json-y-lista-placeholder-pendiente-de-validación-clínica)
+- [D-020 — Pipeline end-to-end: comportamiento sin resultados de retrieval y estrategia de test híbrida](#d-020--pipeline-end-to-end-comportamiento-sin-resultados-de-retrieval-y-estrategia-de-test-híbrida)
 
 ---
 
@@ -475,4 +480,166 @@ El coste de TDD es alto en las primeras épicas de setup (E-00 a E-02), pero se 
 
 ---
 
-*Próximas decisiones previstas: diseño del system prompt (D-015) — al arrancar E-04 (Pipeline RAG), configuración definitiva de colecciones ChromaDB (D-016) — al arrancar E-06 (Ingesta KB), estrategia de chunking validada (D-017) — tras primera evaluación RAGAS*
+## D-016 — Retriever ChromaDB: métrica coseno, scores y Top-K configurable
+
+**Fecha:** 1 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-02
+
+**Contexto**
+El stub de `rag/retriever.py` creado en T-01 (`get_retriever(embeddings, chroma_path, collection_name)`) no fijaba tres aspectos necesarios para implementar T-02: qué objeto devuelve exactamente, qué métrica de distancia usa la colección ChromaDB, y cómo se parametriza el número de chunks recuperados (Top-K). `docs/tech-spec.md` ya anticipaba `RAG_TOP_K=5` como variable de entorno, pero no estaba implementada.
+
+**Decisión**
+
+- **Retorno de `get_retriever()`:** devuelve el vectorstore `Chroma` de `langchain-chroma` directamente (no el wrapper `.as_retriever()`). Esto permite llamar a `similarity_search_with_score()` y exponer el score de cada chunk sin una capa adicional. Se prioriza velocidad de desarrollo sobre pureza de la abstracción LangChain — el pipeline (T-06) sigue pudiendo envolver el vectorstore en un retriever estándar si lo necesita más adelante.
+- **Métrica de similitud:** la colección ChromaDB se crea con `hnsw:space="cosine"`. bge-m3 produce embeddings normalizados, para los que la similitud coseno es la práctica estándar. El score que expone el retriever queda en semántica de similitud creciente (mayor = más relevante), coherente con los escenarios ya definidos en `tests/features/e04_t02_embeddings_retriever.feature`.
+- **Top-K:** nueva variable de entorno `RAG_TOP_K`, opcional con default `5` (coherente con `docs/tech-spec.md`). Se añade a `.env.example` y a `rag/config.py` como variable opcional (no bloquea el arranque si falta, a diferencia de `GOOGLE_API_KEY`/`HF_TOKEN`/`CHROMA_PATH`, que sí son obligatorias). `get_retriever()` acepta `top_k: int = 5` como parámetro, con posibilidad de override explícito por el llamador.
+
+**Alternativas descartadas**
+
+- Mantener `get_retriever()` devolviendo un retriever LangChain estándar y añadir una función paralela `get_retriever_with_scores()` — descartado por duplicar superficie de API para un beneficio marginal en esta fase del proyecto.
+- Dejar la métrica L2 por defecto de Chroma y reescribir los escenarios Gherkin en semántica de distancia — descartado porque obliga a reescribir criterios ya aprobados y complica la lectura de los tests sin beneficio técnico real.
+
+**Nota técnica (research T-02):** `langchain-chroma` devuelve en `similarity_search_with_score()` la *distancia* coseno (menor = más similar), incluso con `hnsw:space="cosine"` — no la similitud directamente (confirmado en la documentación de Chroma/LangChain). Para que el score expuesto por `get_retriever()` sea similitud creciente como fija esta decisión, `rag/retriever.py` convierte explícitamente: `similarity = 1 - distance`.
+
+**Consecuencias**
+
+- `rag/retriever.py` implementa la creación/apertura de la colección con métrica coseno explícita.
+- `rag/config.py` añade `RAG_TOP_K` como variable opcional (no en `REQUIRED_VARS`).
+- `.env.example` añade `RAG_TOP_K=5`.
+- Cuando E-06 formalice las colecciones de producción (ingesta KB), debe reutilizar la misma configuración de métrica coseno establecida aquí — no es una decisión nueva, es continuidad de esta.
+
+---
+
+## D-017 — Detección de idioma: determinismo y fallback para texto corto
+
+**Fecha:** 1 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-03
+
+**Contexto**
+`langdetect` (D-011) tiene dos comportamientos no documentados de forma obvia en su README que afectan directamente a los escenarios de `tests/features/e04_t03_language_detection.feature`, confirmados en pruebas directas durante la revisión de esta tarea:
+
+1. **No determinismo:** el algoritmo interno usa muestreo aleatorio; sin fijar semilla, la misma entrada puede dar resultados distintos entre ejecuciones/procesos.
+2. **Confianza falsa en texto corto:** `detect_langs()` devuelve confianzas superiores a 0.999 incluso en detecciones claramente erróneas sobre texto corto — probado con `"hola"` (detectado como galés, `cy`) y `"si"` (detectado como finés, `fi`). Además, `detect("ok")` no lanza excepción (devuelve `"sk"`); `LangDetectException` solo se lanza con strings vacíos, espacios, símbolos o números puros. Esto descarta tanto "capturar excepción" como "filtrar por confianza" como estrategias de fallback fiables.
+
+**Decisión**
+
+- **Determinismo:** `rag/language.py` fija `DetectorFactory.seed = 0` de `langdetect` a nivel de módulo (una sola vez, al importar).
+- **Fallback para texto corto:** umbral fijo de longitud, `MIN_LENGTH_FOR_DETECTION = 10` caracteres (tras `strip()`). Por debajo del umbral, `detect_language()` devuelve el idioma por defecto (`"es"`, coherente con D-011) sin invocar a `langdetect`. Se descarta un umbral por número de palabras: una respuesta corta de una palabra ("no", "sí") es un caso legítimo de conversación real y no debe tratarse distinto de un texto de dos palabras igual de corto — la longitud en caracteres es la señal más directa y no requiere tokenización.
+- **Idiomas fuera de es/en/ca:** la instrucción de idioma para el prompt (`build_language_instruction()`) usa nombre explícito solo para castellano/inglés/catalán (los tres idiomas de lanzamiento comprometidos en D-011). Para cualquier otro código detectado, la instrucción se construye genéricamente a partir del código ISO (p. ej. "responde en el idioma con código 'fr'"), sin diccionario adicional de nombres de idioma.
+
+**Alternativas descartadas**
+
+- Fallback basado en `try/except LangDetectException` — descartado porque no cubre el caso real del escenario (`"ok"` no lanza excepción).
+- Fallback basado en umbral de confianza de `detect_langs()` — descartado porque `langdetect` es igual de "confiado" acertando que equivocándose en texto corto; el score no es una señal útil aquí.
+- Umbral por número de palabras en vez de caracteres — descartado por tratar de forma distinta respuestas cortas legítimas de una sola palabra.
+- Diccionario ampliado de nombres de idioma (es/en/ca/fr/de/it/pt) para la instrucción del prompt — descartado: D-011 solo compromete es/en/ca como idiomas de lanzamiento; mantener una lista más amplia es esfuerzo en algo no comprometido por el producto y tiende a crecer sin decisión explícita.
+
+**Consecuencias**
+
+- `rag/language.py` (nuevo módulo, sin stub previo de T-01) expone `detect_language(text: str, default: str = "es") -> str` y `build_language_instruction(language: str) -> str`.
+- La integración real en `rag/pipeline.py` queda fuera de esta tarea — es T-06, mismo patrón que D-016 estableció para el retriever.
+- Si en el futuro se añade un selector explícito de idioma en interfaz (evolución futura de D-011), este fallback deja de ser crítico pero puede mantenerse como red de seguridad.
+
+---
+
+## D-018 — Generador LLM: nombres de variables agnósticos y estrategia de test mock + smoke real
+
+**Fecha:** 3 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-04
+
+**Contexto**
+El `.feature` de T-04 (creado como stub durante `epic-start`, sin revisión previa contra `tech-spec.md`/`decisions.md`) usaba nombres de variables de entorno específicos de proveedor (`GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_TEMPERATURE`, `GEMINI_MAX_TOKENS`) y una ruta de system prompt (`prompts/system_familiar.txt`) inconsistente con lo ya establecido: `rag/config.py` y `.env.example` ya usan `GOOGLE_API_KEY`, y `docs/tech-spec.md` (sección 10) define `LLM_MODEL`/`LLM_TEMPERATURE`/`LLM_TOP_P`/`LLM_MAX_TOKENS` como nombres agnósticos de proveedor (coherente con D-010). Además, había que decidir cómo testear las llamadas al LLM: T-02 usa el modelo bge-m3 real (local, sin coste ni red) como precedente, pero una llamada real a la API de Gemini introduce red, cuota y no determinismo — en tensión directa con D-015, que justifica TDD en E-04 por "evidencia objetiva y reproducible".
+
+**Decisión**
+
+- **Nombres de variables:** se adoptan los nombres ya usados en el proyecto — `GOOGLE_API_KEY` (ya requerida en `rag/config.py`) y `LLM_MODEL`/`LLM_TEMPERATURE`/`LLM_TOP_P`/`LLM_MAX_TOKENS` (agnósticos de proveedor, per D-010 y tech-spec sección 10). Se añaden a `rag/config.py` como variables opcionales con default, siguiendo el mismo patrón que `RAG_TOP_K` en D-016 (no bloquean el arranque): `LLM_MODEL=gemini-2.5-flash`, `LLM_TEMPERATURE=0.1`, `LLM_TOP_P=0.1`, `LLM_MAX_TOKENS=300`.
+- **Ruta del system prompt:** `prompts/system_prompt_familiar.txt`, tal como fija `tech-spec.md` sección 5 (fuente de verdad técnica). El fichero contiene la estructura completa (rol, restricciones Falso Negativo Cero, idioma, fuentes, tono familiar, cierre obligatorio) — no un stub vacío.
+- **Estrategia de test del LLM:** híbrida. Los escenarios deterministas (generación con contexto válido, lectura de parámetros de entorno, carga del system prompt, error por `GOOGLE_API_KEY` ausente) mockean `ChatGoogleGenerativeAI` — rápido, sin coste, reproducible. Se añade un escenario adicional etiquetado `@integration`, que hace una llamada real a la API de Gemini y es *skippable* si no hay red o `GOOGLE_API_KEY` válida en el entorno — da al menos una verificación genuina de la integración real, relevante de cara al TFM.
+
+**Alternativas descartadas**
+
+- Nombres específicos de proveedor (`GEMINI_*`) tal como estaban en el stub — descartado por inconsistencia con D-010 y con el código ya escrito en T-01/T-02.
+- Solo llamadas reales a la API (paralelo al patrón de T-02) — descartado: a diferencia de bge-m3 (modelo local), Gemini es una API externa de pago/cuota; los tests dejarían de ser reproducibles y rápidos.
+- Solo mocks, sin ningún test de integración real — descartado: para un TFM con vocación de herramienta real, tener al menos una verificación de que la integración con la API real funciona aporta evidencia objetiva de que el wiring es correcto, no solo el contrato mockeado.
+
+**Consecuencias**
+
+- `rag/config.py` se extiende con `LLM_MODEL`, `LLM_TEMPERATURE`, `LLM_TOP_P`, `LLM_MAX_TOKENS` como opcionales.
+- `tests/features/e04_t04_llm_generator.feature` corregido a los nombres agnósticos; incluye escenario `@integration` separado de los deterministas.
+- El escenario de "clave inválida" mockea la excepción que lance `langchain-google-genai` en autenticación fallida — su clase exacta se confirma como research previo en el plan de implementación (Paso 4), no se asume aquí.
+- `prompts/system_prompt_familiar.txt` se crea en esta tarea con el contenido definitivo de tech-spec sección 5; el módulo de seguridad (T-05) añade la lógica de validación en tiempo de ejecución sobre lo que este prompt ya restringe.
+
+---
+
+## D-019 — Módulo de seguridad: funciones separadas, triggers en JSON y lista placeholder pendiente de validación clínica
+
+**Fecha:** 4 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-05
+
+**Contexto**
+El stub `rag/safety.py` (creado en T-01) solo definía `apply_safety_filter(response: str) -> str`, sin distinguir entre detección de señales de alarma en la query y postprocesado de la respuesta generada. `docs/tech-spec.md` (sección 6) y `docs/security.md` describen 3 capas (pre-retrieval, post-retrieval, post-generación) bajo un directorio `security/` que no existe en el repo — el proyecto real vive en `rag/` desde T-01. Además, los Scenarios 1-2 del `.feature` stub (creado en `epic-start`) daban la query del usuario pero pedían evaluar "la respuesta generada" sin proporcionarla, lo cual no es ejecutable con una única función `apply_safety_filter(response)`. Por último, la lista de señales de alarma específicas por grupo de IDP está marcada como pendiente de validación clínica tanto en `docs/PRD.md` (backlog abierto, ítem 1) como en `docs/security.md`.
+
+**Decisión**
+
+- **Ubicación:** el módulo de seguridad se implementa en `rag/safety.py`, continuando el patrón de T-01 a T-04. No se crea un directorio `security/` separado — la mención en `tech-spec.md`/`security.md` queda como documentación de intención de alto nivel, no como estructura literal a seguir.
+- **Alcance de T-05:** solo las capas *post-retrieval* (detección de señales de alarma en la query) y *post-generación* (filtro/derivación sobre la respuesta), que son las que cubren los escenarios del `.feature`. La capa *pre-retrieval* (prompt injection, filtrado PII — OWASP LLM01/LLM06) queda fuera de esta tarea, sin `.feature` que la cubra; se anota como backlog de seguridad pendiente.
+- **Funciones separadas:** `check_alarm_signals(query: str) -> bool` detecta señales de alarma en la query del usuario; `apply_safety_filter(response: str, has_alarm: bool) -> str` postprocesa la respuesta generada, añadiendo o reforzando la derivación médica cuando `has_alarm` es `True` o cuando la propia respuesta contiene una afirmación tranquilizadora absoluta. Se prefiere sobre una función combinada por ser más testeable de forma aislada y más fiel a las 3 capas descritas en `tech-spec.md`.
+- **Triggers en fichero de configuración JSON:** `config/alarm_triggers.json`, con estructura `{"meta": {...}, "triggers": [{"id", "texto", "grupo", "fuente"}, ...]}`. El campo `grupo` (`infantil` / `adulto` / `general`) y `fuente` permiten trazabilidad y extensión futura sin romper el formato. Se prefiere JSON sobre texto plano por poder anotar metadata sin ambigüedad de parseo.
+- **Contenido placeholder de los triggers — dos fuentes:**
+  1. Documento de la KB en francés (referencia tipo CEREDIH/ESID, secciones "chez l'enfant" / "chez l'adulte") — son *criterios diagnósticos* (cuándo sospechar una IDP no diagnosticada: frecuencia de infecciones, retraso de crecimiento, etc.). Se mantiene como fuente secundaria, de menor prioridad para este producto porque los usuarios de AIIP ya tienen diagnóstico establecido.
+  2. Listado de "Signos de Alarma Avanzados en Pacientes Diagnósticos de IDP" aportado por Marcos — cubre complicación, fallo terapéutico, desregulación inmune, daño orgánico crónico y riesgo oncológico en pacientes ya diagnosticados, organizado por sistema (respiratorio, hematología/autoinmunidad, neurología, gastrointestinal, dermatología, linfoproliferativo, monitorización analítica). Es la fuente **primaria**: encaja directamente con el perfil real de usuario de AIIP (familias con diagnóstico ya establecido).
+
+  Ambas fuentes se traducen/adaptan a frases coloquiales en español (cómo describiría el síntoma una familia, no el término clínico exacto) como contenido inicial de `config/alarm_triggers.json`, junto con dos señales de emergencia pediátrica estándar ya recogidas en el `.feature` (fiebre muy alta persistente, dificultad respiratoria) que no provienen de ningún documento de la KB. **Toda la lista queda marcada explícitamente como pendiente de validación clínica por Jacques Rivière** — es deuda técnica documentada, no una decisión clínica definitiva.
+- **Estrategia de detección en `check_alarm_signals`:** coincidencia de subcadena/palabra clave (case-insensitive) entre la query y las frases de `config/alarm_triggers.json` — sin llamada a LLM ni embeddings. Se prioriza sobre alternativas semánticas (embeddings bge-m3, clasificación vía LLM) por coherencia con D-018 (tests deterministas y reproducibles, sin coste ni red) y con el sesgo MVP del proyecto (D-004/D-005): es la opción más simple que cubre los escenarios del `.feature`, revisable en el futuro si RAGAS o el uso real muestran falsos negativos por variación de fraseo.
+
+**Alternativas descartadas**
+
+- Crear `security/validator.py` y `security/pii_filter.py` tal como literalmente describe `tech-spec.md` — descartado por romper el patrón de estructura ya establecido en E-04 (T-01 a T-04 viven en `rag/`) sin beneficio real para el alcance de esta tarea.
+- Función combinada `apply_safety_filter(query, response)` — descartada por ser menos testeable de forma aislada y menos alineada con las 3 capas ya documentadas.
+- Bloquear T-05 hasta validación clínica completa — descartado: la lista es sustituible en `config/alarm_triggers.json` sin tocar el diseño ni el código; bloquear la tarea no aporta valor frente a avanzar con placeholder marcado explícitamente.
+
+**Consecuencias**
+
+- `rag/safety.py` implementa `check_alarm_signals(query)` y `apply_safety_filter(response, has_alarm)`.
+- Nuevo fichero `config/alarm_triggers.json`, cargado en tiempo de ejecución (no hardcodeado), con contenido placeholder trazable a su fuente.
+- La integración de estas dos funciones en `rag/pipeline.py` queda fuera de T-05 — es T-06, mismo patrón que D-016/D-017 establecieron para retriever y language.
+- Cuando llegue la validación clínica de Jacques Rivière, solo se sustituye el contenido de `config/alarm_triggers.json` — no requiere cambios de diseño ni de código.
+
+---
+
+## D-020 — Pipeline end-to-end: comportamiento sin resultados de retrieval y estrategia de test híbrida
+
+**Fecha:** 4 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 T-06
+
+**Contexto**
+El stub de `.feature` de T-06 (creado en `epic-start`, sin revisión previa) tenía tres inconsistencias con lo ya implementado en T-01 a T-05: usaba `GEMINI_API_KEY` en vez de `GOOGLE_API_KEY` (mismo error que D-018 corrigió en T-04), esperaba que el pipeline "fallase con un error claro" si `CHROMA_PATH` no existe o la colección está vacía — comportamiento contrario al ya aprobado en T-02 (`rag/retriever.py` + su `.feature`: colección vacía → lista vacía, sin excepción) —, y no distinguía estrategia de test mock/real para los escenarios de pipeline completo, a diferencia del patrón híbrido que D-018 estableció para el generador.
+
+**Decisión**
+
+- **Retrieval sin resultados:** el pipeline no falla si la colección está vacía o `CHROMA_PATH` no existe — genera la respuesta igualmente con contexto vacío. Continuidad directa de D-016/T-02, no una decisión nueva pero sí una confirmación explícita a nivel de pipeline.
+- **Estrategia de test:** híbrida, mismo patrón que D-018. Los escenarios deterministas de "pipeline completo" (idioma, Falso Negativo Cero, contexto vacío, propagación de errores) mockean `ChatGoogleGenerativeAI` (parcheando `rag.generator.ChatGoogleGenerativeAI`, igual que en T-04) — embeddings (bge-m3) y ChromaDB corren reales porque son locales y sin coste. Un único escenario `@integration`, skippable via `RUN_LLM_INTEGRATION_TESTS=1`, hace una llamada real de extremo a extremo.
+- **Fixtures de `familias_test`:** unos pocos chunks informativos sobre IDP (reutilizando el contenido ya usado en los mocks de T-04, p. ej. agammaglobulinemia de Bruton), indexados en un `tmp_path` de pytest por test — no la KB real de producción, que es objeto de E-06.
+- **`LLM_TEMPERATURE`:** se mantiene en `0.1` (default de D-018). Se discutió bajar a `0` por el principio de Falso Negativo Cero (D-002), pero la mitigación real de ese riesgo es el filtro post-generación de T-05, que actúa igual sin importar la temperatura; con `LLM_TOP_P=0.1` ya fijado, la diferencia práctica entre 0 y 0.1 es marginal.
+- **Contrato de `RAGPipeline`:** construye sus dependencias (embeddings, retriever, generador) internamente en `__init__` a partir de `config: dict`, sin inyección de dependencias explícita. Es testeable igual que T-04 parcheando `rag.generator.ChatGoogleGenerativeAI` en el punto donde `RAGGenerator` lo usa — no hace falta un diseño más complejo para este alcance.
+
+**Alternativas descartadas**
+
+- Mantener la expectativa de "fallo claro" ante ChromaDB no disponible — descartado por contradecir directamente el comportamiento ya aprobado y testeado en T-02.
+- Todos los escenarios de pipeline completo con LLM real — descartado por el mismo motivo que D-018 lo descartó para el generador: coste de cuota, latencia y no determinismo en cada ejecución de la suite.
+- Bajar `LLM_TEMPERATURE` a 0 — descartado: no aporta garantía adicional de grounding a la KB (la da el diseño RAG + el filtro de T-05), y la diferencia práctica frente a 0.1 es marginal dado `LLM_TOP_P=0.1`.
+
+**Consecuencias**
+
+- `rag/pipeline.py` implementa `RAGPipeline.__init__(config)` y `query(question)` orquestando detect_language → retrieve → generate → safety.
+- `tests/features/e04_t06_e2e_pipeline.feature` corregido a `GOOGLE_API_KEY`, con escenario de retrieval vacío alineado con T-02 y separación explícita mock/`@integration`.
+- Las fixtures de `familias_test` en los tests de T-06 no deben confundirse con la KB de producción de E-06.
+
+---
+
+*Próximas decisiones previstas: configuración definitiva de colecciones ChromaDB de producción — al arrancar E-06 (Ingesta KB, reutiliza métrica coseno de D-016), estrategia de chunking validada — tras primera evaluación RAGAS*

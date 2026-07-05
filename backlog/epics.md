@@ -138,7 +138,34 @@ Flujo completo: query → detección de idioma → embedding → retrieval → g
 - Parámetros de inferencia implementados y testeados
 - OWASP Top 10 para LLMs cubierto con mitigaciones
 
-**Estado:** ⚪ No iniciada
+**Estado:** ✅ Completada — 05 jul 2026
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Setup de dependencias y estructura del módulo RAG | ✅ Completada |
+| T-02 | Embeddings y retriever con ChromaDB | ✅ Completada |
+| T-03 | Detección de idioma e integración en pipeline | ✅ Completada |
+| T-04 | Generador: LLM Gemini Flash via LangChain | ✅ Completada |
+| T-05 | Módulo de seguridad: Falso Negativo Cero | ✅ Completada |
+| T-06 | Pipeline end-to-end y tests de integración | ✅ Completada |
+
+**Entregables**
+- `rag/config.py` — variables de entorno del pipeline (`RAG_TOP_K`, `LLM_MODEL/TEMPERATURE/TOP_P/MAX_TOKENS`, `CHROMA_PATH`)
+- `rag/embeddings.py` — carga de embeddings BAAI/bge-m3
+- `rag/retriever.py` — retriever ChromaDB (métrica coseno, Top-K configurable)
+- `rag/language.py` — detección de idioma (`langdetect`, determinista, fallback para texto corto)
+- `rag/generator.py` — generador LLM Gemini Flash via LangChain
+- `rag/safety.py` — módulo de seguridad: triggers de alarma + filtro post-generación (Falso Negativo Cero)
+- `rag/pipeline.py` — `RAGPipeline`, orquesta el flujo end-to-end
+- `config/alarm_triggers.json` — triggers de alarma (placeholder pendiente de validación clínica)
+- `prompts/system_prompt_familiar.txt` — system prompt del perfil familiar
+- `.env.example` — variables nuevas del pipeline RAG documentadas
+- `tests/features/e04_t01_*.feature` a `e04_t06_*.feature` — escenarios Gherkin por tarea
+- `tests/step_defs/test_e04_t01.py` a `test_e04_t06.py` — step definitions pytest-bdd
+- `tasks/E04-T01-plan.md` a `E04-T06-plan.md` — planes de implementación
+- `decisions.md` — D-016 (retriever ChromaDB), D-017 (detección de idioma), D-018 (generador LLM), D-019 (módulo de seguridad), D-020 (pipeline end-to-end)
 
 ---
 

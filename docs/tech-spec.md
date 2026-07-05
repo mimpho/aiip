@@ -435,9 +435,11 @@ Las siguientes decisiones están identificadas pero requieren el inicio del desa
 
 | ID | Decisión | Cuándo |
 |---|---|---|
-| D-015 | Diseño definitivo del system prompt (versión familiar) | Al arrancar E-04 (Pipeline RAG) |
-| D-016 | Configuración definitiva de colecciones ChromaDB | Al arrancar E-06 (Ingesta KB) |
-| D-017 | Estrategia de chunking validada con primeros resultados RAGAS | Tras primera evaluación |
+| D-017 | Diseño definitivo del system prompt (versión familiar) | Al continuar E-04 (T-04/T-05) |
+| D-018 | Configuración definitiva de colecciones ChromaDB de producción | Al arrancar E-06 (Ingesta KB) — reutiliza métrica coseno de D-016 |
+| D-019 | Estrategia de chunking validada con primeros resultados RAGAS | Tras primera evaluación |
+
+> D-016 (retriever ChromaDB: métrica coseno, scores y Top-K) ya está cerrada — ver `decisions.md`.
 
 ---
 

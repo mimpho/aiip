@@ -26,17 +26,23 @@ Si la épica tiene dependencias (`Bloqueada por`), verifica que estén completad
 
 ---
 
-## Setup de rama de épica [ejecutar antes de tocar nada]
+## Paso 0 — Rama de épica [ejecutar antes de tocar nada]
 
-Crea la rama de épica desde `main` antes de cualquier otro paso:
+Proporciona los comandos exactos para que Marcos cree la rama de épica desde `main`
+antes de que el agente cree ningún fichero:
 
 ```bash
 git checkout main
 git pull origin main
 git checkout -b epic/E[nn]-nombre
+git push -u origin epic/E[nn]-nombre
 ```
 
 Nomenclatura: `epic/E03-auth`, `epic/E04-rag`, `epic/E05-chainlit`, etc.
+
+**Espera confirmación de Marcos antes de continuar.**
+La rama debe existir en origin antes de crear los `.feature` y actualizar el backlog,
+para evitar conflictos con `git pull` posterior.
 
 ---
 
@@ -79,8 +85,11 @@ Si encuentras problemas, corrígelos en la propuesta antes de presentarla. Si ha
 **Espera aprobación explícita de Marcos antes de continuar.**
 Ajusta según el feedback recibido.
 
-Una vez aprobada la lista, añade la tabla de tareas a la épica en
-`backlog/epics.md`, justo antes de los criterios de aceptación:
+Una vez aprobada la lista, actualiza dos ficheros:
+
+**`backlog/epics.md`** — cambia el estado de la épica a `🔵 En curso` y añade la tabla de tareas justo antes de los criterios de aceptación:
+
+**`README.md`** — cambia el estado de la épica en la tabla de épicas a `🔵 En curso`.
 
 ```markdown
 ### Tareas
@@ -138,7 +147,7 @@ Este es el gate clínico: el .feature define exactamente qué se va a testear.
 
 ---
 
-## Paso 3 — Ramas listas
+## Resumen de gates
 
 La estructura de ramas del proyecto es:
 
@@ -150,29 +159,10 @@ main
         └── ...
 ```
 
-Proporciona los comandos exactos para que Marcos los ejecute:
+La rama de la primera tarea la crea `task-start` — no hace falta crearla aquí.
 
-```bash
-# Rama de épica (una sola vez al inicio)
-git checkout -b epic/E03-auth
-
-# Rama de primera tarea (desde la rama de épica)
-git checkout -b task/E03-T01-descripcion-corta
-```
-
-Nomenclatura:
-- Épica: `epic/E03-auth`, `epic/E04-rag`, `epic/E05-chainlit`
-- Tarea: `task/E03-T01-supabase-schema`, `task/E04-T01-rag-pipeline`
-
-Confirma a Marcos que el entorno está listo para iniciar el TDD de T-01.
-El flujo por tarea es: step definitions (test falla ✗) → implementar → tests pasan ✓ → PR de tarea → merge en rama de épica.
-
----
-
-## Resumen de gates
-
-| Paso | Qué aprueba Marcos | Por qué es un gate |
+| Paso | Qué aprueba / ejecuta Marcos | Por qué es un gate |
 |---|---|---|
+| 0 | Crea la rama de épica en git | Los ficheros deben crearse sobre la rama correcta, no sobre main |
 | 1 | Lista de tareas + Gherkin informal | Define el alcance de la épica |
 | 2 | Ficheros .feature (pytest-bdd) | Valida que los tests miden lo correcto antes de escribir código |
-| 3 | — (ejecuta los comandos de rama) | Acción en git remoto |
