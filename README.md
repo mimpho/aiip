@@ -31,7 +31,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-01 | Setup del entorno de desarrollo | ✅ Completada | — |
 | E-02 | Identidad visual mínima | ✅ Completada | — |
 | E-03 | Autenticación y separación de perfiles | ✅ Completada — 30 jun 2026 | — |
-| E-04 | Pipeline RAG + módulo de seguridad | 🔵 En curso | — |
+| E-04 | Pipeline RAG + módulo de seguridad | ✅ Completada — 05 jul 2026 | — |
 | E-05 | Interfaz conversacional (Chainlit) | ⚪ No iniciada | E-02, E-04 |
 | E-06 | Ingesta y procesamiento de la KB | ⚪ No iniciada | E-01 |
 | E-07 | Evaluación RAGAS parcial | ⚪ No iniciada | E-06 |
@@ -70,7 +70,7 @@ gantt
     E-01 Setup del entorno            :done,    e01, 2026-06-22, 2026-06-25
     E-02 Identidad visual             :done,    e02, 2026-06-25, 2026-06-27
     E-03 Autenticación                :done,    e03, 2026-06-27, 2026-06-30
-    E-04 Pipeline RAG                 :         e04, 2026-06-27, 2026-07-07
+    E-04 Pipeline RAG                 :done,    e04, 2026-06-27, 2026-07-05
     E-05 Interfaz Chainlit            :         e05, 2026-07-07, 2026-07-10
     E-06 Ingesta KB                   :         e06, 2026-06-27, 2026-07-05
     E-07 RAGAS parcial                :         e07, 2026-07-05, 2026-07-10
@@ -116,6 +116,9 @@ aiip/
 ├── design/                ← Tokens CSS y temas visuales (Chainlit + Supabase Auth).
 │   └── profesional/       ← Stub JS/CSS del perfil profesional.
 ├── auth/                  ← Módulo de autenticación Python.
+├── rag/                   ← Pipeline RAG: embeddings, retriever, idioma, generador, seguridad.
+├── config/                ← Configuración de dominio (p. ej. triggers de alarma).
+├── prompts/               ← System prompts por perfil, en fichero separado del código.
 ├── supabase/
 │   └── migrations/        ← Migraciones SQL de Supabase.
 ├── scripts/               ← Scripts auxiliares de verificación y setup.

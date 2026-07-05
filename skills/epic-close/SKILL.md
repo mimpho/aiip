@@ -35,6 +35,13 @@ pytest tests/ -v
 
 Si algún test de una épica anterior falla, es una regresión — hay que resolverla antes de cerrar.
 
+> **No correr `pytest` ni instalar dependencias dentro del sandbox de Cowork.**
+> El `.venv` del repo es de macOS/Homebrew y no funciona en el Linux del sandbox, y las
+> dependencias pesadas (torch, chromadb, transformers) no se instalan limpiamente ahí.
+> Pide directamente a Marcos que ejecute `pytest tests/ -v` en su terminal (con el `.venv`
+> activado) o en Antigravity, y que te pase el resultado. No intentes reconstruir el entorno
+> en el sandbox — es tiempo perdido.
+
 > **Tests de integración contra servicios externos (Supabase, Google, etc.):**
 > Los tests que requieren conexión de red a Supabase u otros servicios externos
 > fallarán en el sandbox de Cowork por restricciones de red (proxy SOCKS no disponible).
@@ -68,30 +75,32 @@ Con esto en mano, identifica:
 
 El PR es de la rama de épica a main: `epic/E[nn]-nombre → main`.
 
-Proporciona en el chat el título y descripción del PR, listos para copiar en GitHub:
+Genera la PR description **en inglés**, igual que `task-close` — solo el título del
+commit/PR y el cuerpo van en inglés; el resto de la sesión (chat, retro, registros) sigue en
+español. Proporciona en el chat el título y descripción del PR, listos para copiar en GitHub:
 
 ```
-## [título]
-feat(E-XX): [descripción en una línea de qué aporta la épica]
+## [Title]
+feat(E-XX): [one-line description of what the epic delivers]
 
 ## What
-[2-3 frases explicando el cambio a nivel de producto/sistema]
+[2-3 sentences explaining the change at product/system level]
 
 ## Changes
-- `path/fichero.py` — [qué hace]
-- `tests/features/eXX_tYY.feature` — [qué comportamiento valida]
+- `path/file.py` — [what it does]
+- `tests/features/eXX_tYY.feature` — [what behavior it validates]
 - [...]
 
 ## Acceptance criteria covered
-- [ ] [criterio 1 de la épica en epics.md]
-- [ ] [criterio 2]
+- [ ] [criterion 1 from epics.md]
+- [ ] [criterion 2]
 - [...]
 
 ## Test results
 All scenarios passing: `pytest tests/features/eXX_*.feature`
 
 ## Notes
-[Decisiones de implementación relevantes, deuda técnica conocida, etc.]
+[Relevant implementation decisions, known technical debt, etc.]
 ```
 
 No crees ningún fichero .md para el PR. Solo en el chat.
@@ -170,6 +179,12 @@ Criterios para incluir una entrada:
 - ¿Cambiaría el comportamiento del agente en la siguiente épica saberlo? → incluir
 - ¿Es un prompt que se reutilizará o evolucionará? → incluir
 - ¿Es una conversación exploratoria sin aprendizaje transferible? → no incluir
+
+> **No confundir con `docs/process-log.md` (Paso 5).** `prompts.md` es para prompts y
+> decisiones de prompting puntuales (system prompts, prompts de generación, decisiones de
+> arquitectura de IA concretas). Explicaciones del propio workflow de desarrollo (qué hace
+> cada skill, cómo se reparte Cowork/Antigravity, etc.) van en `docs/process-log.md`, no aquí
+> — evita proponer una entrada de prompts.md para contenido de proceso.
 
 Presenta el borrador a Marcos para revisión. Marcos decide qué entra en el log.
 

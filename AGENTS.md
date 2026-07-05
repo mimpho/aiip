@@ -98,6 +98,9 @@ aiip/
 │   ├── auth/              ← style.css (Supabase Auth UI theme)
 │   └── profesional/       ← stub.js, style.css (professional coming-soon UI)
 ├── auth/                  ← Módulo de autenticación Python (E-03)
+├── rag/                   ← Pipeline RAG (E-04): embeddings, retriever, idioma, generador, seguridad
+├── config/                ← Configuración de dominio, p. ej. alarm_triggers.json (E-04)
+├── prompts/               ← System prompts por perfil, en fichero separado del código (E-04)
 ├── backlog/
 │   ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
 │   └── ideas.md           ← Cajón de sastre
