@@ -189,17 +189,29 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 
 **Criterios de aceptación de alto nivel**
-- Fuentes procesadas: IPOPI, IDF, upiip.com, guías clínicas validadas — indexadas en inglés (ver D-011)
+- Fuentes procesadas: IPOPI, IDF, upiip.com, guías clínicas validadas — cada fuente indexada en su idioma original (amplía D-011: bge-m3 resuelve cross-lingual retrieval en cualquier dirección, no solo EN→consulta)
 - Estrategia de chunking definida y documentada
-- Colección de familias separada en ChromaDB
+- Colección `familiar` separada en ChromaDB (continuidad de métrica coseno de D-016)
 
 **Notas**
-- Revisar DAIMS (Datasheets for AI and Medical Datasets, arXiv 2501.14094) al formalizar la KB — checklist de 24 requisitos aplicable directamente a este dataset. Ver `backlog/ideas.md`.
-- Valorar si las reglas de seguridad clínica (Falso Negativo Cero) van como chunk indexado en ChromaDB, como system prompt, o en capas. Ver `backlog/ideas.md` → "Business rules como documento indexado en la KB".
+- Datasheet DAIMS (arXiv 2501.14094) de la KB formalizado como T-06 (documentación, sin TDD). Ver `backlog/ideas.md`.
+- "Business rules como chunk indexado en la KB" descartado para esta épica — redundante con D-019 (detección de alarma determinista por JSON+substring, no por retrieval). Ver `backlog/ideas.md`.
+- Ficheros crudos (PDFs/guías de terceros) fuera del repo por copyright — viven en Drive/local (`data/raw/`, gitignored), indexados en `docs/kb-sources.md`. Trazabilidad vía `data/raw/manifest.json` (checksum, URL, fecha), este sí versionado.
 - Fuentes ya reunidas en Google Drive (`AIIP/data/raw/`): UPIIP, IPOPI, IDF, AFPA/HAS — no es una lista cerrada, se puede ampliar/ajustar durante y después de esta épica.
 - La revisión de Jacques Rivière sobre estas fuentes es consultiva (¿es suficiente esta base para el perfil familias, cambiaría o ampliaría algo?), no bloqueante para arrancar la épica — construir el pipeline de ingesta no requiere validación clínica previa. Lo único que sí requiere su validación antes de darse por bueno es `config/alarm_triggers.json` (D-019), por estar enchufado a la capa de seguridad de Falso Negativo Cero.
 
-**Estado:** ⚪ No iniciada
+**Estado:** 🔵 En curso
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Setup de dependencias y estructura del módulo de ingesta | ⚪ Pendiente |
+| T-02 | Loader de documentos fuente | ⚪ Pendiente |
+| T-03 | Estrategia de chunking multiidioma | ⚪ Pendiente |
+| T-04 | Indexer: indexación en ChromaDB (colección `familiar`) | ⚪ Pendiente |
+| T-05 | Pipeline de ingesta end-to-end | ⚪ Pendiente |
+| T-06 | Datasheet DAIMS de la KB (documentación, sin TDD) | ⚪ Pendiente |
 
 ---
 
