@@ -207,7 +207,7 @@ Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 | ID | Tarea | Estado |
 |---|---|---|
 | T-01 | Setup de dependencias y estructura del módulo de ingesta | ✅ Completada |
-| T-02 | Loader de documentos fuente | 🔄 En progreso |
+| T-02 | Loader de documentos fuente | ✅ Completada |
 | T-03 | Estrategia de chunking multiidioma | ⚪ Pendiente |
 | T-04 | Indexer: indexación en ChromaDB (colección `familiar`) | ⚪ Pendiente |
 | T-05 | Pipeline de ingesta end-to-end | ⚪ Pendiente |

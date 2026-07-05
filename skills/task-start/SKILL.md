@@ -291,3 +291,17 @@ al arrancar la sesión de desarrollo.
 | 2 | Decisiones de arquitectura (si aplica) | Registra antes de implementar |
 | 3 | Fichero .feature | Define exactamente qué se valida |
 | 4 | Plan de implementación | El IDE ejecuta, no diseña |
+
+---
+
+## Vuelta de Antigravity con tests en verde
+
+Cuando Marcos vuelva a Cowork reportando que el ciclo TDD ha terminado en
+Antigravity y los tests pasan, **no los reejecutes en el sandbox de Cowork** —
+el entorno no tiene el proyecto configurado (venv, dependencias) para correr
+`pytest`. Esto aplica aunque todavía no se haya invocado `task-close`
+explícitamente: es el primer momento en que existe la tentación de
+"verificar" ejecutando la suite, y ya es tarde para hacerlo aquí. Confía en el
+resultado reportado y, si quieres revisar algo, hazlo leyendo el código y el
+`.feature`, no ejecutando tests. Cuando Marcos confirme que quiere cerrar la
+tarea, continúa con `task-close`.
