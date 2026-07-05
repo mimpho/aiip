@@ -25,4 +25,4 @@ Feature: Setup del módulo de ingesta
   Scenario: Estructura de módulo ingestion/ presente
     Given el repositorio está correctamente clonado
     When verifico la estructura de directorios
-    Then existe el módulo ingestion/ con los ficheros __init__.py, loader.py, chunker.py e indexer.py
+    Then existe el módulo ingestion/ con los ficheros __init__.py, config.py, loader.py, chunker.py e indexer.py
