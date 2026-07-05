@@ -102,6 +102,7 @@ aiip/
 ├── rag/                   ← Pipeline RAG (E-04): embeddings, retriever, idioma, generador, seguridad
 ├── config/                ← Configuración de dominio, p. ej. alarm_triggers.json (E-04)
 ├── prompts/               ← System prompts por perfil, en fichero separado del código (E-04)
+├── ingestion/             ← Pipeline de ingesta de la KB (E-06): loader, chunker, indexer
 ├── backlog/
 │   ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
 │   └── ideas.md           ← Cajón de sastre
