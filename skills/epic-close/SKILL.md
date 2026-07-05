@@ -77,10 +77,12 @@ El PR es de la rama de épica a main: `epic/E[nn]-nombre → main`.
 
 Genera la PR description **en inglés**, igual que `task-close` — solo el título del
 commit/PR y el cuerpo van en inglés; el resto de la sesión (chat, retro, registros) sigue en
-español. Proporciona en el chat el título y descripción del PR, listos para copiar en GitHub:
+español. Proporciona en el chat el título y descripción del PR, listos para copiar en GitHub.
+
+**La primera línea es el título del PR** (campo "Title" de GitHub, no un heading dentro
+de la descripción). El resto, a partir de `## What`, es el cuerpo ("Description"):
 
 ```
-## [Title]
 feat(E-XX): [one-line description of what the epic delivers]
 
 ## What
