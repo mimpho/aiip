@@ -38,7 +38,7 @@ Perfil familias. Pipeline RAG completo. Seguridad. Autenticación básica.
 | E-03 | Autenticación y separación de perfiles | E-02 |
 | E-04 | Pipeline RAG + módulo de seguridad | E-01 |
 | E-05 | Interfaz conversacional (Chainlit) | E-02, E-04 |
-| E-06 | Ingesta y procesamiento de la KB | E-01, Feedback Jacques Rivière |
+| E-06 | Ingesta y procesamiento de la KB | E-01 |
 | E-07 | Evaluación RAGAS parcial | E-06 |
 | E-08 | Memoria de perfil e histórico | E-03, E-04, E-06 |
 
@@ -196,8 +196,10 @@ Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 **Notas**
 - Revisar DAIMS (Datasheets for AI and Medical Datasets, arXiv 2501.14094) al formalizar la KB — checklist de 24 requisitos aplicable directamente a este dataset. Ver `backlog/ideas.md`.
 - Valorar si las reglas de seguridad clínica (Falso Negativo Cero) van como chunk indexado en ChromaDB, como system prompt, o en capas. Ver `backlog/ideas.md` → "Business rules como documento indexado en la KB".
+- Fuentes ya reunidas en Google Drive (`AIIP/data/raw/`): UPIIP, IPOPI, IDF, AFPA/HAS — no es una lista cerrada, se puede ampliar/ajustar durante y después de esta épica.
+- La revisión de Jacques Rivière sobre estas fuentes es consultiva (¿es suficiente esta base para el perfil familias, cambiaría o ampliaría algo?), no bloqueante para arrancar la épica — construir el pipeline de ingesta no requiere validación clínica previa. Lo único que sí requiere su validación antes de darse por bueno es `config/alarm_triggers.json` (D-019), por estar enchufado a la capa de seguridad de Falso Negativo Cero.
 
-**Estado:** ⚪ No iniciada — pendiente feedback de Jacques Rivière (validación de fuentes KB)
+**Estado:** ⚪ No iniciada
 
 ---
 
