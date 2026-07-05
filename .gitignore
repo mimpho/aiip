@@ -14,6 +14,11 @@ venv/
 
 # ChromaDB
 chroma_db/
+data/chroma/
+
+# Ingesta KB (E-06) — datos crudos fuera del repo, salvo el manifest de trazabilidad
+data/raw/*
+!data/raw/manifest.json
 
 # Jupyter
 .ipynb_checkpoints/
