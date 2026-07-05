@@ -4,7 +4,7 @@
 Feature: Loader de documentos fuente
 
   Como desarrollador
-  Quiero cargar los documentos desde data/raw/<fuente>/ (PDF, HTML, texto)
+  Quiero cargar los documentos desde data/raw/<fuente>/ (PDF, HTML)
   Para tener el contenido en memoria con metadatos de origen, listo para chunking
 
   Background:
@@ -39,8 +39,24 @@ Feature: Loader de documentos fuente
     When se ejecuta el loader
     Then se lanza un error claro indicando que no hay documentos que cargar
 
-  Scenario: Fichero sin entrada en el manifest se marca como no documentado
+  Scenario: Fichero nuevo sin entrada en el manifest se documenta automáticamente
     Given un fichero en data/raw/<fuente>/ sin entrada correspondiente en data/raw/manifest.json
     When se ejecuta el loader
-    Then se registra un aviso de fuente no documentada
+    Then se crea una entrada nueva en el manifest con su checksum y fecha de detección
+    And el campo "url" de la nueva entrada queda a null
+    And se registra un aviso de fuente nueva sin URL documentada
     And el fichero se carga igualmente sin bloquear el resto del proceso
+
+  Scenario: Fichero documentado cuyo contenido ha cambiado actualiza el manifest
+    Given un fichero en data/raw/<fuente>/ con entrada en el manifest cuyo checksum no coincide con el contenido actual
+    When se ejecuta el loader
+    Then se actualiza el checksum y la fecha de la entrada existente
+    And se registra un aviso indicando que el contenido de la fuente cambió
+    And el fichero se carga igualmente sin bloquear el resto del proceso
+
+  Scenario: Manifest de trazabilidad ausente por completo
+    Given data/raw/manifest.json no existe
+    When se ejecuta el loader
+    Then se crea el manifest con entradas para todos los ficheros encontrados
+    And se registra un aviso indicando que no había manifest previo
+    And todos los ficheros se cargan igualmente sin bloquear el proceso

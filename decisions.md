@@ -29,6 +29,7 @@
 - [D-018 — Generador LLM: nombres de variables agnósticos y estrategia de test mock + smoke real](#d-018--generador-llm-nombres-de-variables-agnósticos-y-estrategia-de-test-mock--smoke-real)
 - [D-019 — Módulo de seguridad: funciones separadas, triggers en JSON y lista placeholder pendiente de validación clínica](#d-019--módulo-de-seguridad-funciones-separadas-triggers-en-json-y-lista-placeholder-pendiente-de-validación-clínica)
 - [D-020 — Pipeline end-to-end: comportamiento sin resultados de retrieval y estrategia de test híbrida](#d-020--pipeline-end-to-end-comportamiento-sin-resultados-de-retrieval-y-estrategia-de-test-híbrida)
+- [D-021 — Manifest de trazabilidad: detección híbrida automática/manual, sin disparo de reindexación](#d-021--manifest-de-trazabilidad-detección-híbrida-automáticamanual-sin-disparo-de-reindexación)
 
 ---
 
@@ -642,4 +643,34 @@ El stub de `.feature` de T-06 (creado en `epic-start`, sin revisión previa) ten
 
 ---
 
-*Próximas decisiones previstas: configuración definitiva de colecciones ChromaDB de producción — al arrancar E-06 (Ingesta KB, reutiliza métrica coseno de D-016), estrategia de chunking validada — tras primera evaluación RAGAS*
+## D-021 — Manifest de trazabilidad: detección híbrida automática/manual, sin disparo de reindexación
+
+**Fecha:** 6 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-02
+
+**Contexto**
+`data/raw/manifest.json` (previsto desde T-01, ver notas de `backlog/epics.md`) traza qué documentos crudos existen fuera del repo (checksum, URL, fecha) sin versionar los ficheros en sí (copyright). Al revisar T-02 surgieron dos preguntas sin resolver: si el loader debe generar/actualizar el manifest automáticamente o si es un fichero mantenido a mano, y qué hace el sistema cuando detecta que un documento es nuevo o ha cambiado — en concreto, si eso debe disparar una actualización de la KB (reindexación en ChromaDB).
+
+**Decisión**
+
+- **Detección híbrida:** el loader (T-02) calcula el checksum de cada fichero en `data/raw/` en cada ejecución. Si un fichero no tiene entrada en el manifest, crea una entrada nueva automáticamente con `checksum` y `fecha` de detección, dejando `url: null` y registrando un aviso de "fuente nueva sin URL — completar manualmente". Si la entrada ya existe pero el checksum no coincide, actualiza `checksum`/`fecha` y avisa de que el contenido cambió. La URL de origen es el único campo que requiere una entrada manual puntual (no se puede inferir de un fichero local).
+- **Alcance de T-02:** el loader solo detecta y registra estos cambios en el manifest — no dispara ninguna acción de reindexación. Qué hacer cuando el manifest indica un documento nuevo o modificado queda **explícitamente fuera de esta tarea**, asignado a **T-05 (pipeline de ingesta end-to-end)**: T-05 orquesta loader → chunker → indexer y es quien decide, a partir del estado del manifest, qué documentos requieren (re)procesarse en cada ejecución (incremental, no todo el corpus en cada run). T-04 (indexer) se limita a la mecánica de escritura en ChromaDB para los chunks que T-05 le pase — no decide qué reindexar, solo cómo.
+
+**Alternativas descartadas**
+
+- Manifest puramente manual (loader solo lee y avisa, nunca escribe) — descartado: Marcos prefiere que la detección de cambios sea automática en la medida de lo posible; el mantenimiento 100% manual no escala con el volumen de fuentes de E-06.
+- Que T-02 dispare directamente la reindexación al detectar un cambio — descartado: acopla el loader (carga en memoria) con el indexer (escritura en ChromaDB), dos responsabilidades separadas por diseño en `ingestion/` (T-01). Prematuro decidir la estrategia de reindexación sin haber implementado aún el indexer.
+
+**Justificación**
+El checksum y la fecha son datos que el propio sistema puede calcular sin intervención humana; la URL de origen no. Repartir la responsabilidad así minimiza el esfuerzo manual sin inventar procedencia que el sistema no puede conocer. Separar "detectar cambio" (T-02) de "decidir qué hacer con el cambio" (tarea futura) respeta la separación de responsabilidades ya establecida en `ingestion/` y evita comprometer una decisión de reindexación antes de tiempo.
+
+**Consecuencias**
+
+- `ingestion/loader.py` (T-02) lee y escribe `data/raw/manifest.json`: crea entradas nuevas (checksum + fecha, url null) y actualiza checksum/fecha cuando detecta cambios, además de avisar en ambos casos.
+- El `.feature` de T-02 (`tests/features/e06_t02_document_loader.feature`) se actualiza: el escenario existente de "fichero sin entrada en el manifest" pasa a verificar que se crea la entrada automáticamente (no solo que se avisa), y se añade un escenario de checksum desactualizado.
+- Queda abierto como nota de backlog: definir en T-05 la estrategia concreta de disparo (qué documentos entran en el run, cómo se le indica al indexer de T-04 qué actualizar/borrar/insertar).
+
+---
+
+*Próximas decisiones previstas: configuración definitiva de colecciones ChromaDB de producción — al arrancar E-06 (Ingesta KB, reutiliza métrica coseno de D-016), estrategia de chunking validada — tras primera evaluación RAGAS; estrategia de disparo de reindexación ante cambios detectados en el manifest — al definir T-05.*
