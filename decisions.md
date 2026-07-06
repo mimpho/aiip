@@ -30,6 +30,7 @@
 - [D-019 — Módulo de seguridad: funciones separadas, triggers en JSON y lista placeholder pendiente de validación clínica](#d-019--módulo-de-seguridad-funciones-separadas-triggers-en-json-y-lista-placeholder-pendiente-de-validación-clínica)
 - [D-020 — Pipeline end-to-end: comportamiento sin resultados de retrieval y estrategia de test híbrida](#d-020--pipeline-end-to-end-comportamiento-sin-resultados-de-retrieval-y-estrategia-de-test-híbrida)
 - [D-021 — Manifest de trazabilidad: detección híbrida automática/manual, sin disparo de reindexación](#d-021--manifest-de-trazabilidad-detección-híbrida-automáticamanual-sin-disparo-de-reindexación)
+- [D-022 — Chunking multiidioma: metadatos generados en T-03, tokenizer real de bge-m3, idioma detectado por documento](#d-022--chunking-multiidioma-metadatos-generados-en-t-03-tokenizer-real-de-bge-m3-idioma-detectado-por-documento)
 
 ---
 
@@ -686,4 +687,41 @@ El checksum y la fecha son datos que el propio sistema puede calcular sin interv
 
 ---
 
-*Próximas decisiones previstas: configuración definitiva de colecciones ChromaDB de producción — al arrancar E-06 (Ingesta KB, reutiliza métrica coseno de D-016), estrategia de chunking validada — tras primera evaluación RAGAS; estrategia de disparo de reindexación ante cambios detectados en el manifest — al definir T-05.*
+## D-022 — Chunking multiidioma: metadatos generados en T-03, tokenizer real de bge-m3, idioma detectado por documento
+
+**Fecha:** 6 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-03
+
+**Contexto**
+El stub de `.feature` de T-03 (creado en `epic-start`) exigía que cada chunk conservara los metadatos `source`, `language`, `date_indexed` y `profile`, pero el loader de T-02 (ya cerrado) solo genera `source`/`filename` — el resto no existía en ningún punto del pipeline hasta ahora. El `.feature` de T-04 (indexer) tampoco los genera: asume que ya llegan puestos. Además, `docs/kb-sources.md` dejaba abierta explícitamente la pregunta de si la KB se indexa en el idioma original de cada fuente o se traduce a inglés (nota "idioma de la KB", pendiente desde antes de arrancar E-06) — pregunta que `backlog/epics.md` ya daba por resuelta en la práctica ("cada fuente indexada en su idioma original — amplía D-011") sin formalizarla nunca como decisión. Por último, `docs/tech-spec.md` (sección 3.2) fija el chunk size en 512 tokens, pero `RecursiveCharacterTextSplitter` cuenta caracteres por defecto — con un corpus mezclando español, inglés, catalán y francés, esa diferencia no es cosmética: 512 caracteres es ~4 veces más pequeño que 512 tokens, y el ratio caracteres/token varía por idioma.
+
+**Decisión**
+
+- **Generación de metadatos en T-03 (no en T-04):** el chunker añade `language`, `date_indexed` y `profile` a los metadatos que ya trae cada `Document` del loader (`source`, `filename`). El indexer (T-04) se limita a persistir lo que ya recibe — no genera metadatos nuevos.
+- **Idioma indexado en el original de cada fuente (formaliza la nota abierta de `kb-sources.md`, amplía D-011):** la KB de E-06 no se traduce. Cada fuente se indexa en su idioma nativo (inglés, español, catalán o francés según el documento), confiando en que bge-m3 resuelve el cross-lingual retrieval en cualquier dirección (no solo inglés→consulta, como ya preveía D-011).
+- **Detección de idioma por documento, no por chunk:** se detecta el idioma una única vez por `Document` cargado (antes de trocear), reutilizando `rag.language.detect_language()` sobre el texto completo del documento, y se propaga ese mismo valor a todos los chunks que resulten de él. Se descarta detectar por chunk individual: los fragmentos pequeños cercanos al límite del chunk son menos fiables para `langdetect` (ver D-017, mismo riesgo de falsa confianza en texto corto) y las fuentes de la KB son monolingües dentro de un mismo documento.
+- **`date_indexed` se rellena en T-03, no en T-04:** el nombre sugiere "fecha de indexación en ChromaDB", pero en la práctica coincide con la fecha de procesamiento porque T-05 orquestará loader→chunker→indexer en la misma ejecución (mismo patrón de ejecución conjunta que asume D-021 para el pipeline de ingesta). No se crea una responsabilidad nueva en el indexer para un dato que ya está disponible en el momento del chunking.
+- **`profile` fijo a `"familiar"`:** E-06 solo construye la colección familiar (ver `backlog/epics.md`, T-04: "colección `familiar`"). `chunk_documents()` expone `profile` como parámetro con default `"familiar"`, sin lógica de selección — no hay todavía un segundo perfil que indexar.
+- **Chunk size en tokens reales de bge-m3, no en caracteres:** `chunker.py` usa `RecursiveCharacterTextSplitter.from_huggingface_tokenizer(tokenizer, chunk_size=512, chunk_overlap=64, separators=["\n\n", "\n", ". ", " "])`, cargando el tokenizer con `transformers.AutoTokenizer.from_pretrained("BAAI/bge-m3")` (sin dependencia nueva — `transformers` ya está instalado vía `sentence-transformers`; solo se carga el tokenizer, no el modelo completo). Se descarta contar caracteres: el ratio caracteres/token no es constante entre español, inglés, catalán y francés, y aproximarlo a ciegas con un multiplicador fijo introduce un error de calibración que el tokenizer real evita sin coste relevante (la ingesta es un proceso offline por lotes, no el path de latencia del chat).
+- **Overlap = 64 tokens (12.5%):** dentro del rango 10–20% de `tech-spec.md` sección 3.2, y coherente con el orden de magnitud (50–100 tokens) de su bloque de ejemplo en sección 10 — se ajusta a 64 en vez de 50 porque 50 cae ligeramente por debajo del 10% mínimo declarado (50/512 ≈ 9.8%).
+- **Variables de entorno nuevas:** `RAG_CHUNK_SIZE=512` y `RAG_CHUNK_OVERLAP=64` se añaden a `.env.example` y a `ingestion/config.py` como opcionales con default, mismo patrón que `RAG_TOP_K` (D-016) — no bloquean el arranque si faltan.
+
+**Alternativas descartadas**
+
+- Detectar idioma por chunk en vez de por documento — descartado por el riesgo de falsos positivos de `langdetect` en fragmentos cortos (D-017).
+- `date_indexed` generado en el indexer (T-04) — descartado: obliga a tocar un `.feature` ya cerrado (T-04) para un dato que T-03 ya puede calcular, y no aporta más precisión real dado que ambas tareas corren en la misma ejecución de T-05.
+- Chunking por caracteres con un multiplicador caracteres/token fijo para aproximar 512 tokens — descartado: el corpus mezcla 4 idiomas con densidad de tokens distinta: cualquier multiplicador fijo es una aproximación no verificada, mientras que `from_huggingface_tokenizer` cuenta tokens reales sin necesidad de calibrar nada.
+- `RAG_CHUNK_OVERLAP=50` (valor literal del bloque de ejemplo de tech-spec sección 10) — descartado por caer ligeramente fuera del rango 10–20% que la misma tech-spec fija en la sección 3.2.
+
+**Consecuencias**
+
+- `ingestion/chunker.py` implementa `chunk_documents(documents, profile="familiar")`: detecta idioma por documento (`rag.language.detect_language`), trocea con `RecursiveCharacterTextSplitter.from_huggingface_tokenizer` usando el tokenizer de bge-m3, y añade `language`, `date_indexed`, `profile` a los metadatos de cada chunk resultante.
+- `ingestion/config.py` añade `RAG_CHUNK_SIZE` y `RAG_CHUNK_OVERLAP` como opcionales (default `512`/`64`).
+- `.env.example` añade ambas variables bajo la sección de ingesta.
+- Cierra la nota abierta de `docs/kb-sources.md` ("idioma de la KB") — se elimina o se marca como resuelta al tocar ese fichero.
+- Cuando E-07/E-09 (evaluación RAGAS) den primeros resultados, esta estrategia de chunking (tamaño, overlap, separadores) es la primera candidata a revisarse — ya anticipado en `docs/tech-spec.md` sección 13.
+
+---
+
+*Próximas decisiones previstas: estrategia de chunking validada — tras primera evaluación RAGAS; estrategia de disparo de reindexación ante cambios detectados en el manifest — al definir T-05.*

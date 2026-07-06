@@ -33,6 +33,10 @@ Para tareas de código:
    de Marcos, no del agente. **Nunca ejecutes estos comandos tú mismo** —
    preséntaselos a Marcos y pídele que los ejecute:
 
+   > Nombra la rama siempre en inglés, aunque el nombre corto de la tarea esté
+   > en castellano (ej. `task/E06-T03-multilingual-chunking-strategy`, no
+   > `chunking-multiidioma`).
+
    ```bash
    git checkout epic/E[nn]-nombre
    git pull origin epic/E[nn]-nombre
