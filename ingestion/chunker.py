@@ -9,7 +9,7 @@ from ingestion.config import load_ingestion_config
 from rag.language import detect_language
 
 
-def chunk_documents(documents, profile="familiar"):
+def chunk_documents(documents, profile="family"):
     """Divide los documentos cargados en chunks para su indexación.
 
     Detecta el idioma una vez por documento (no por chunk) y lo propaga junto con

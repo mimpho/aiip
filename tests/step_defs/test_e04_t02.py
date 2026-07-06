@@ -41,11 +41,11 @@ def embeddings_model():
 
 # ── Background ───────────────────────────────────────────────────────────────
 
-@given('ChromaDB está inicializado con la colección "familias_test"', target_fixture="ctx")
+@given('ChromaDB está inicializado con la colección "family_test"', target_fixture="ctx")
 def chroma_inicializado(tmp_path, embeddings_model):
     from rag.retriever import get_retriever
 
-    vs = get_retriever(embeddings_model, str(tmp_path), "familias_test")
+    vs = get_retriever(embeddings_model, str(tmp_path), "family_test")
     return {"vectorstore": vs, "embeddings": embeddings_model}
 
 
@@ -71,7 +71,7 @@ def vector_dimension_1024(embedding_result):
 
 # ── Scenario 2: Retrieval con documentos indexados devuelve resultados ───────
 
-@given('la colección "familias_test" contiene 10 chunks sobre IDP')
+@given('la colección "family_test" contiene 10 chunks sobre IDP')
 def coleccion_con_chunks_idp(ctx):
     ctx["vectorstore"].add_texts(IDP_CHUNKS_ES)
 
@@ -109,7 +109,7 @@ def score_mayor_que_cero(retrieval_results):
 # ── Scenario 3: Retrieval cross-lingual castellano sobre chunks en inglés ────
 
 @given(
-    'la colección "familias_test" contiene chunks en inglés sobre primary immunodeficiency'
+    'la colección "family_test" contiene chunks en inglés sobre primary immunodeficiency'
 )
 def coleccion_chunks_ingles(ctx):
     ctx["vectorstore"].add_texts(IDP_CHUNKS_EN)
@@ -141,7 +141,7 @@ def devuelve_al_menos_1(retrieval_results):
 
 # ── Scenario 4: Retrieval con colección vacía devuelve lista vacía ───────────
 
-@given('la colección "familias_test" está vacía')
+@given('la colección "family_test" está vacía')
 def coleccion_vacia(ctx):
     pass  # Vectorstore created in Background without documents
 

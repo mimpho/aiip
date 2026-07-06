@@ -6,7 +6,7 @@ Feature: Tabla profiles con RLS y get_or_create_profile
 
   Como desarrollador del proyecto AIIP
   Quiero una tabla profiles con políticas RLS y la función get_or_create_profile
-  Para almacenar el rol (familiar/profesional) ligado a auth.users de forma segura
+  Para almacenar el rol (family/professional) ligado a auth.users de forma segura
 
   Background:
     Given la migración de profiles está aplicada en Supabase
@@ -14,7 +14,7 @@ Feature: Tabla profiles con RLS y get_or_create_profile
   Scenario: La tabla profiles tiene el esquema correcto
     When consulto la estructura de la tabla profiles
     Then existe la columna id como FK a auth.users
-    And existe la columna role con CHECK que solo admite "familiar" o "profesional"
+    And existe la columna role con CHECK que solo admite "family" o "professional"
     And existe la columna created_at
     And existe la columna updated_at
 
@@ -42,12 +42,12 @@ Feature: Tabla profiles con RLS y get_or_create_profile
 
   Scenario: get_or_create_profile crea un perfil nuevo si no existe
     Given un user_id válido sin perfil en la tabla profiles
-    When llamo a get_or_create_profile con ese user_id y role "familiar"
-    Then se crea un perfil con role "familiar"
+    When llamo a get_or_create_profile con ese user_id y role "family"
+    Then se crea un perfil con role "family"
     And la función devuelve el perfil creado
 
   Scenario: get_or_create_profile devuelve el perfil existente sin duplicar
-    Given un user_id válido con perfil existente y role "familiar"
-    When llamo a get_or_create_profile con ese user_id y role "familiar"
+    Given un user_id válido con perfil existente y role "family"
+    When llamo a get_or_create_profile con ese user_id y role "family"
     Then no se crea un perfil duplicado
     And la función devuelve el perfil existente

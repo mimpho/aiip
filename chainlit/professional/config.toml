@@ -5,9 +5,9 @@ name = "AIIP — Perfil Profesional"
 [UI]
 default_theme = "dark"
 # CSS con accent profesional (#2FC18C) — tokens de E-02
-custom_css = "/public/profesional/style.css"
+custom_css = "/public/professional/style.css"
 # JS que inyecta el banner "En construcción" y deshabilita el formulario
-custom_js = "/public/profesional/stub.js"
+custom_js = "/public/professional/stub.js"
 
 [features]
 telemetry = false

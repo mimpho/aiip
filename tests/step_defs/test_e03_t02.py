@@ -33,7 +33,7 @@ def consulto_estructura(test_user):
 def fk_a_auth_users(admin_client):
     fake_id = str(uuid.uuid4())
     try:
-        admin_client.table("profiles").insert({"id": fake_id, "role": "familiar"}).execute()
+        admin_client.table("profiles").insert({"id": fake_id, "role": "family"}).execute()
         assert False, "se esperaba un error de foreign key"
     except APIError as e:
         assert e.code == "23503"
@@ -100,7 +100,7 @@ def perfil_con_updated_at_conocido(admin_client, test_user):
 @when("actualizo cualquier campo del perfil")
 def actualizo_campo_del_perfil(admin_client, profile_state):
     time.sleep(1)
-    admin_client.table("profiles").update({"role": "profesional"}).eq(
+    admin_client.table("profiles").update({"role": "professional"}).eq(
         "id", profile_state["user"]["id"]
     ).execute()
 
@@ -152,7 +152,7 @@ def usuario_a_escribe_b(two_users_authed, admin_client):
     before_role = (
         admin_client.table("profiles").select("role").eq("id", user_b_id).single().execute().data["role"]
     )
-    new_role = "familiar" if before_role != "familiar" else "profesional"
+    new_role = "family" if before_role != "family" else "professional"
     try:
         result = (
             two_users_authed["client_a"]
@@ -211,7 +211,7 @@ def actualiza_propio_perfil(own_user):
     result = (
         own_user["client"]
         .table("profiles")
-        .update({"role": "profesional"})
+        .update({"role": "professional"})
         .eq("id", own_user["user"]["id"])
         .execute()
     )
@@ -221,7 +221,7 @@ def actualiza_propio_perfil(own_user):
 @then("la actualización se aplica correctamente")
 def actualizacion_se_aplica_correctamente(own_update_result):
     assert len(own_update_result) == 1
-    assert own_update_result[0]["role"] == "profesional"
+    assert own_update_result[0]["role"] == "professional"
 
 
 # ── Escenarios: get_or_create_profile ────────────────────────────

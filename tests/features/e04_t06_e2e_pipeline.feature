@@ -11,7 +11,7 @@ Feature: Pipeline RAG end-to-end
 
   Background:
     Given el entorno está correctamente configurado con GOOGLE_API_KEY y CHROMA_PATH
-    And ChromaDB contiene la colección "familias_test" con chunks de fixture sobre IDP
+    And ChromaDB contiene la colección "family_test" con chunks de fixture sobre IDP
 
   Scenario: Pipeline completo — query en castellano produce respuesta en castellano
     Given el usuario envía la query "¿qué es una inmunodeficiencia primaria?"
@@ -31,7 +31,7 @@ Feature: Pipeline RAG end-to-end
     Then la respuesta está en inglés
 
   Scenario: Retrieval sin resultados no bloquea la generación
-    Given la colección "familias_test" está vacía o CHROMA_PATH no existe
+    Given la colección "family_test" está vacía o CHROMA_PATH no existe
     When el pipeline procesa la query completa (LLM mockeado)
     Then el pipeline genera una respuesta igualmente, con contexto vacío
     And no se lanza ninguna excepción

@@ -1,19 +1,19 @@
 # E-06 T-04 — Indexer: indexación en ChromaDB
-# Criterio: los chunks procesados quedan indexados en la colección "familiar" de producción, sin duplicados
+# Criterio: los chunks procesados quedan indexados en la colección "family" de producción, sin duplicados
 
 Feature: Indexación en ChromaDB
 
   Como desarrollador
-  Quiero indexar los chunks procesados en la colección "familiar" de ChromaDB
+  Quiero indexar los chunks procesados en la colección "family" de ChromaDB
   Para que el retriever de E-04 los recupere en producción
 
   Background:
-    Given ChromaDB está inicializado con la colección "familiar_test" y métrica coseno
+    Given ChromaDB está inicializado con la colección "family_test" y métrica coseno
 
   Scenario: Indexación de chunks con embeddings bge-m3
     Given un conjunto de chunks con su embedding bge-m3 ya calculado
     When se ejecuta el indexer
-    Then los chunks quedan persistidos en la colección "familiar_test"
+    Then los chunks quedan persistidos en la colección "family_test"
     And cada chunk indexado conserva sus metadatos de origen
 
   Scenario: Reindexación del mismo documento no duplica chunks

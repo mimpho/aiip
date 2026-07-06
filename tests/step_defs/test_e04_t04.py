@@ -105,9 +105,9 @@ def modelo_usa_valores_entorno(llm_config, llm_init_call_kwargs):
 
 # ── Scenario: System prompt leído de fichero ──────────────────────────────────
 
-@given("existe el fichero prompts/system_prompt_familiar.txt", target_fixture="system_prompt_path")
+@given("existe el fichero prompts/system_prompt_family.txt", target_fixture="system_prompt_path")
 def system_prompt_file_exists():
-    path = Path(__file__).resolve().parents[2] / "prompts" / "system_prompt_familiar.txt"
+    path = Path(__file__).resolve().parents[2] / "prompts" / "system_prompt_family.txt"
     assert path.exists(), f"El fichero no existe: {path}"
     return path
 

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-_SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "system_prompt_familiar.txt"
+_SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "system_prompt_family.txt"
 
 _PROMPT_TEMPLATE = """{system_prompt}
 

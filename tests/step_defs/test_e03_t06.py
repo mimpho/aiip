@@ -30,36 +30,36 @@ sys.modules.setdefault("chainlit", _fake_cl)
 scenarios("../features/e03_t06_url_separation.feature")
 
 
-# ── Scenario 1: la app familiar no expone referencias al perfil profesional ──
+# ── Scenario 1: la app family no expone referencias al perfil professional ──
 
 
-@given("la app familiar está arrancada en el puerto 8000")
-def app_familiar_arrancada():
+@given("la app family está arrancada en el puerto 8000")
+def app_family_arrancada():
     pass  # test estático — no se levanta Chainlit
 
 
-@when("cargo la página de login de la app familiar", target_fixture="familiar_source")
-def cargo_pagina_familiar():
-    return (ROOT / "chainlit" / "main_familiar.py").read_text()
+@when("cargo la página de login de la app family", target_fixture="family_source")
+def cargo_pagina_family():
+    return (ROOT / "chainlit" / "main_family.py").read_text()
 
 
-@then('no hay ningún texto ni enlace que mencione "profesional" ni "F-01"')
-def no_referencias_profesional(familiar_source):
-    assert "profesional" not in familiar_source
-    assert "F-01" not in familiar_source
+@then('no hay ningún texto ni enlace que mencione "professional" ni "F-01"')
+def no_referencias_professional(family_source):
+    assert "professional" not in family_source
+    assert "F-01" not in family_source
 
 
-# ── Scenario 2: la app profesional muestra el formulario deshabilitado ────────
+# ── Scenario 2: la app professional muestra el formulario deshabilitado ────────
 
 
-@given("la app profesional está arrancada en el puerto 8001")
-def app_profesional_arrancada():
+@given("la app professional está arrancada en el puerto 8001")
+def app_professional_arrancada():
     pass  # test estático — no se levanta Chainlit
 
 
-@when("cargo la página de la app profesional", target_fixture="stub_js_content")
-def cargo_pagina_profesional():
-    return (ROOT / "design" / "profesional" / "stub.js").read_text()
+@when("cargo la página de la app professional", target_fixture="stub_js_content")
+def cargo_pagina_professional():
+    return (ROOT / "design" / "professional" / "stub.js").read_text()
 
 
 @then('veo un banner "En construcción" con texto explicativo encima del formulario')
@@ -83,29 +83,29 @@ def boton_submit_deshabilitado(stub_js_content):
 
 
 @given(
-    "el entorno tiene PORT_FAMILIAR=8000 y PORT_PROFESIONAL=8001 en .env",
+    "el entorno tiene PORT_FAMILY=8000 y PORT_PROFESSIONAL=8001 en .env",
     target_fixture="env_example_content",
 )
 def entorno_tiene_puertos():
     return (ROOT / ".env.example").read_text()
 
 
-@when("arranco la app familiar y la app profesional simultáneamente")
+@when("arranco la app family y la app professional simultáneamente")
 def arranco_apps():
     pass  # test estático — se verifica solo la presencia de las variables
 
 
 @then("cada una responde en su puerto sin error de binding")
 def responden_sin_conflicto(env_example_content):
-    assert "PORT_FAMILIAR" in env_example_content
-    assert "PORT_PROFESIONAL" in env_example_content
+    assert "PORT_FAMILY" in env_example_content
+    assert "PORT_PROFESSIONAL" in env_example_content
 
 
-# ── Scenario 4: la app profesional no instancia nada del módulo auth ─────────
+# ── Scenario 4: la app professional no instancia nada del módulo auth ─────────
 
 
-@given("la app profesional arranca")
-def app_profesional_arranca():
+@given("la app professional arranca")
+def app_professional_arranca():
     pass  # test estático sobre el código fuente
 
 
@@ -116,7 +116,7 @@ def inicializa_chainlit():
 
 @then("no se importa ni instancia supabase_client ni ningún callback de auth")
 def no_importa_auth():
-    source = (ROOT / "chainlit" / "main_profesional.py").read_text()
+    source = (ROOT / "chainlit" / "main_professional.py").read_text()
     assert "supabase_client" not in source
     assert "from auth" not in source
     assert "import auth" not in source

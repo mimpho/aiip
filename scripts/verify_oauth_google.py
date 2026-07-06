@@ -3,8 +3,8 @@ Verificación del Escenario 5 — E-03 T-01
 Comprueba que Supabase genera una URL de autorización OAuth válida de Google.
 
 Uso:
-    python scripts/verify_oauth_google.py --app familiar
-    python scripts/verify_oauth_google.py --app profesional
+    python scripts/verify_oauth_google.py --app family
+    python scripts/verify_oauth_google.py --app professional
 """
 
 import argparse
@@ -20,8 +20,8 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
 REDIRECT_URLS = {
-    "familiar": "http://localhost:8000/auth/callback",
-    "profesional": "http://localhost:8001/auth/callback",
+    "family": "http://localhost:8000/auth/callback",
+    "professional": "http://localhost:8001/auth/callback",
 }
 
 
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--app",
-        choices=["familiar", "profesional"],
+        choices=["family", "professional"],
         required=True,
         help="App a verificar",
     )
