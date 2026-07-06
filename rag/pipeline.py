@@ -4,7 +4,7 @@ from rag.language import detect_language
 from rag.retriever import get_retriever
 from rag.safety import apply_safety_filter, check_alarm_signals
 
-_DEFAULT_COLLECTION = "familias"
+_DEFAULT_COLLECTION = "family"
 
 
 class RAGPipeline:

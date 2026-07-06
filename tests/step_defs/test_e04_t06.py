@@ -31,7 +31,7 @@ def _base_config(**overrides) -> dict:
         "GOOGLE_API_KEY": "test-key",
         "HF_TOKEN": "test-hf-token",
         "CHROMA_PATH": "",
-        "COLLECTION_NAME": "familias_test",
+        "COLLECTION_NAME": "family_test",
         "RAG_TOP_K": 3,
         "LLM_MODEL": "gemini-test-model",
         "LLM_TEMPERATURE": 0.1,
@@ -55,7 +55,7 @@ def entorno_configurado(tmp_path):
     }
 
 
-@given('ChromaDB contiene la colección "familias_test" con chunks de fixture sobre IDP')
+@given('ChromaDB contiene la colección "family_test" con chunks de fixture sobre IDP')
 def chroma_con_chunks(ctx, embeddings_model):
     from rag.retriever import get_retriever
 
@@ -90,7 +90,7 @@ def query_alarma(ctx):
 
 # ── Given: overrides de entorno ───────────────────────────────────────────────
 
-@given('la colección "familias_test" está vacía o CHROMA_PATH no existe')
+@given('la colección "family_test" está vacía o CHROMA_PATH no existe')
 def coleccion_vacia(ctx, tmp_path):
     ctx["config"]["CHROMA_PATH"] = str(tmp_path / "empty")
 

@@ -4,7 +4,7 @@
 
 Feature: Registro y login con email y contraseña
 
-  Como usuario (familiar o profesional)
+  Como usuario (family o professional)
   Quiero registrarme e iniciar sesión con email y contraseña
   Para acceder a AIIP con credenciales propias
 
@@ -13,17 +13,17 @@ Feature: Registro y login con email y contraseña
     And existe un email de prueba único generado para esta ejecución
     And al finalizar el test el usuario de prueba es eliminado de Supabase Auth
 
-  Scenario: Registro desde la app familiar crea perfil con rol familiar
-    Given APP_ROLE es "familiar"
+  Scenario: Registro desde la app family crea perfil con rol family
+    Given APP_ROLE es "family"
     When llamo a signup con el email de prueba y contraseña válida
     Then el usuario existe en Supabase Auth
-    And existe un perfil en la tabla profiles con role "familiar"
+    And existe un perfil en la tabla profiles con role "family"
 
-  Scenario: Registro desde la app profesional crea perfil con rol profesional
-    Given APP_ROLE es "profesional"
+  Scenario: Registro desde la app professional crea perfil con rol professional
+    Given APP_ROLE es "professional"
     When llamo a signup con el email de prueba y contraseña válida
     Then el usuario existe en Supabase Auth
-    And existe un perfil en la tabla profiles con role "profesional"
+    And existe un perfil en la tabla profiles con role "professional"
 
   Scenario: Registro con email ya existente eleva un error claro
     Given un usuario ya registrado con el email de prueba
@@ -32,10 +32,10 @@ Feature: Registro y login con email y contraseña
     And no se crea un perfil duplicado en profiles
 
   Scenario: Login con credenciales correctas devuelve sesión y rol
-    Given un usuario registrado con el email de prueba y role "familiar"
+    Given un usuario registrado con el email de prueba y role "family"
     When llamo a login con el email de prueba y contraseña correcta
     Then la función devuelve una sesión Supabase válida
-    And la función devuelve el rol "familiar"
+    And la función devuelve el rol "family"
 
   Scenario: Login con credenciales incorrectas eleva un error claro
     When llamo a login con el email de prueba y contraseña incorrecta

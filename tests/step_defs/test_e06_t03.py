@@ -149,7 +149,7 @@ def chunk_incluye_metadatos_generados(chunks):
     for chunk in chunks:
         assert "language" in chunk.metadata
         assert chunk.metadata["date_indexed"] == date.today().isoformat()
-        assert chunk.metadata["profile"] == "familiar"
+        assert chunk.metadata["profile"] == "family"
 
 
 @then("se genera un único chunk con el contenido completo del documento")

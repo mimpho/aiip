@@ -10,9 +10,9 @@ Feature: Pipeline de ingesta end-to-end
   Background:
     Given data/raw/ contiene fuentes de fixture organizadas por carpeta
 
-  Scenario: Ejecución completa puebla la colección familiar
+  Scenario: Ejecución completa puebla la colección family
     When se ejecuta el pipeline de ingesta completo
-    Then la colección "familiar_test" queda poblada con chunks
+    Then la colección "family_test" queda poblada con chunks
     And cada chunk es trazable a su fichero de origen y a su idioma
 
   Scenario: Ejecución repetida no duplica chunks

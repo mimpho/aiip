@@ -7,7 +7,7 @@
 
 Feature: Login con Google OAuth mediado por Supabase
 
-  Como usuario (familiar o profesional)
+  Como usuario (family o professional)
   Quiero iniciar sesión con mi cuenta de Google
   Para acceder a AIIP sin crear una contraseña nueva
 
@@ -21,22 +21,22 @@ Feature: Login con Google OAuth mediado por Supabase
     And la URL empieza por "https://accounts.google.com"
 
   Scenario: Primer login OAuth crea perfil con el rol de la app
-    Given APP_ROLE es "familiar"
+    Given APP_ROLE es "family"
     And un user_id de prueba sin perfil en la tabla profiles
-    When llamo a get_or_create_profile con ese user_id y APP_ROLE "familiar"
-    Then se crea un perfil en la tabla profiles con role "familiar"
+    When llamo a get_or_create_profile con ese user_id y APP_ROLE "family"
+    Then se crea un perfil en la tabla profiles con role "family"
     And la función devuelve el perfil creado
 
   Scenario: Login OAuth repetido no duplica ni sobreescribe el perfil
-    Given APP_ROLE es "familiar"
-    And un user_id de prueba con perfil existente y role "familiar"
-    When llamo a get_or_create_profile con ese user_id y APP_ROLE "familiar"
+    Given APP_ROLE es "family"
+    And un user_id de prueba con perfil existente y role "family"
+    When llamo a get_or_create_profile con ese user_id y APP_ROLE "family"
     Then no se crea un perfil duplicado
-    And la función devuelve el perfil existente con role "familiar"
+    And la función devuelve el perfil existente con role "family"
 
-  Scenario: Login OAuth desde la app profesional crea perfil con rol profesional
-    Given APP_ROLE es "profesional"
+  Scenario: Login OAuth desde la app professional crea perfil con rol professional
+    Given APP_ROLE es "professional"
     And un user_id de prueba sin perfil en la tabla profiles
-    When llamo a get_or_create_profile con ese user_id y APP_ROLE "profesional"
-    Then se crea un perfil en la tabla profiles con role "profesional"
+    When llamo a get_or_create_profile con ese user_id y APP_ROLE "professional"
+    Then se crea un perfil en la tabla profiles con role "professional"
     And la función devuelve el perfil creado
