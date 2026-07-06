@@ -20,6 +20,13 @@ Feature: Pipeline de ingesta end-to-end
     When se ejecuta el pipeline de ingesta una segunda vez sobre las mismas fuentes
     Then el número total de chunks indexados no aumenta
 
+  Scenario: Un documento que cambia de número de chunks no deja huérfanos
+    Given un documento ya indexado con un número de chunks determinado
+    When el documento cambia de contenido y genera menos chunks tras el chunking
+    And se ejecuta el pipeline de ingesta de nuevo
+    Then el número de chunks de ese documento en la colección coincide con el nuevo número
+    And no quedan chunks huérfanos de la versión anterior del documento
+
   Scenario: Fallo en una fuente no detiene el procesamiento de las demás
     Given una de las fuentes de fixture está corrupta o no se puede leer
     When se ejecuta el pipeline de ingesta completo

@@ -32,6 +32,7 @@
 - [D-021 — Manifest de trazabilidad: detección híbrida automática/manual, sin disparo de reindexación](#d-021--manifest-de-trazabilidad-detección-híbrida-automáticamanual-sin-disparo-de-reindexación)
 - [D-022 — Chunking multiidioma: metadatos generados en T-03, tokenizer real de bge-m3, idioma detectado por documento](#d-022--chunking-multiidioma-metadatos-generados-en-t-03-tokenizer-real-de-bge-m3-idioma-detectado-por-documento)
 - [D-023 — Indexer ChromaDB: colección de producción en inglés, IDs deterministas y configuración reutilizada de E-04](#d-023--indexer-chromadb-colección-de-producción-en-inglés-ids-deterministas-y-configuración-reutilizada-de-e-04)
+- [D-024 — Pipeline de ingesta end-to-end: reprocesamiento completo con borrado por documento, aislamiento de fallos en el loader](#d-024--pipeline-de-ingesta-end-to-end-reprocesamiento-completo-con-borrado-por-documento-aislamiento-de-fallos-en-el-loader)
 
 ---
 
@@ -754,4 +755,34 @@ Al revisar T-04 se detectó que el nombre de la colección de producción de Chr
 
 ---
 
-*Próximas decisiones previstas: estrategia de chunking validada — tras primera evaluación RAGAS; estrategia de disparo de reindexación ante cambios detectados en el manifest — al definir T-05.*
+## D-024 — Pipeline de ingesta end-to-end: reprocesamiento completo con borrado por documento, aislamiento de fallos en el loader
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-05
+
+**Contexto**
+D-021 dejó explícitamente para T-05 decidir, a partir del estado del manifest, qué documentos requieren (re)procesarse en cada ejecución ("incremental, no todo el corpus en cada run"). D-023 dejó abierto qué pasa con los chunks huérfanos cuando un documento cambia de número de chunks entre ejecuciones — el indexer (T-04) solo escribe lo que se le pasa, sin decidir qué borrar. Además, el `.feature` stub de T-05 (Scenario "fallo en una fuente no detiene el procesamiento de las demás") no es implementable con `ingestion/loader.py` tal como quedó en T-02: hoy solo aísla el caso de formato no soportado (warning + continue); un fichero con formato soportado pero corrupto (p. ej. PDF ilegible) propaga la excepción y aborta la carga completa de `data/raw/`, no solo la de la fuente afectada.
+
+**Decisión**
+
+- **Estrategia de reprocesamiento: completo, no incremental.** Cada ejecución del pipeline recarga y re-trocea todas las fuentes de `data/raw/` (vía `load_documents()` + `chunk_documents()` ya existentes, sin cambios de contrato). Se descarta la lectura literal de D-021 ("incremental") por el coste de diseño/testing que añadiría antes del 10 de julio (habría que exponer desde el loader qué documentos son nuevos/cambiados, hoy solo emite warnings) frente al beneficio real dado el volumen de fuentes de este TFM — proceso offline por lotes, no en el path de latencia del chat.
+- **Borrado por documento antes de reinsertar (resuelve el hueco de D-023):** antes de indexar los chunks nuevos de un documento, el pipeline borra del vectorstore cualquier chunk existente con el mismo `source`+`filename` (nueva función en `ingestion/indexer.py`, p. ej. `delete_document_chunks(source, filename, embeddings, chroma_path, collection_name)`, usando `vectorstore.get(where=...)` + `vectorstore.delete(ids=...)`), y después llama a `index_chunks()` con el set completo de chunks recién troceados. Esto hace que un documento que pasa de N a M chunks (M < N) no deje chunks huérfanos de versiones antiguas, sin necesidad de lógica de diff explícita.
+- **Aislamiento de fallos en `ingestion/loader.py` (T-02), no en el pipeline:** se envuelve la llamada a `load_fn(file_path)` en un try/except, mismo patrón ya usado para formato no soportado — si falla, se emite `warnings.warn(...)` y se continúa con el resto de ficheros/fuentes. `load_documents()` mantiene su contrato actual (devuelve solo la lista de documentos cargados con éxito); el pipeline de T-05 construye el resumen final de la ejecución a partir de esos warnings, igual que ya hacen los tests de T-02 (`warnings.catch_warnings`).
+
+**Alternativas descartadas**
+
+- Incremental real basado en el manifest (saltar documentos sin cambios) — descartada para esta tarea por complejidad/tiempo; queda anotada como optimización futura si el volumen de la KB crece lo suficiente para que el coste de reembeber todo en cada run sea un problema real.
+- Aislar los fallos en el pipeline llamando al loader una vez por subcarpeta de fuente en vez de una vez sobre `data/raw/` — descartada: `load_documents()` ya gestiona `manifest.json` como una sola escritura compartida entre todas las fuentes; llamarlo por subcarpeta obligaría a reabrir/guardar el manifest una vez por fuente, con más riesgo de inconsistencia que extender el propio loader.
+- No borrar chunks huérfanos y dejarlo como deuda técnica — descartada: el principio de Falso Negativo Cero depende de que la KB no arrastre contenido obsoleto en retrieval; es más barato resolverlo ahora (una función de borrado por documento) que después.
+
+**Consecuencias**
+
+- `ingestion/loader.py` añade un try/except alrededor de `load_fn(file_path)`, con warning "no se pudo cargar el fichero" (o similar) + continuación — cambio aditivo, no rompe el contrato ni los tests ya cerrados de T-02.
+- `ingestion/indexer.py` añade `delete_document_chunks(source, filename, embeddings, chroma_path, collection_name)` — cambio aditivo, no modifica `index_chunks()` ni sus tests ya cerrados de T-04.
+- `ingestion/pipeline.py` (nuevo, T-05) orquesta: `load_documents()` → `chunk_documents()` → agrupar chunks por `(source, filename)` → por cada documento, `delete_document_chunks()` seguido de `index_chunks()` → construir resumen final (fuentes procesadas, chunks indexados, fallos capturados de los warnings del loader).
+- El `.feature` de T-05 se amplía con un escenario explícito que verifica que un documento que cambia de número de chunks entre ejecuciones no deja huérfanos en la colección.
+
+---
+
+*Próximas decisiones previstas: estrategia de chunking validada — tras primera evaluación RAGAS; estrategia incremental de reindexación basada en manifest, si el volumen de la KB lo justifica en el futuro (revisitar D-024).*
