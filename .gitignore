@@ -28,5 +28,8 @@ data/raw/*
 .idea/
 *.swp
 
+# Claude Code / Antigravity — permisos y settings locales de la máquina
+.claude/settings.local.json
+
 # Logs
 *.log
