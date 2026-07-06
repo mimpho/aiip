@@ -200,6 +200,7 @@ Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 - Fuentes ya reunidas en Google Drive (`AIIP/data/raw/`): UPIIP, IPOPI, IDF, AFPA/HAS — no es una lista cerrada, se puede ampliar/ajustar durante y después de esta épica.
 - La revisión de Jacques Rivière sobre estas fuentes es consultiva (¿es suficiente esta base para el perfil familias, cambiaría o ampliaría algo?), no bloqueante para arrancar la épica — construir el pipeline de ingesta no requiere validación clínica previa. Lo único que sí requiere su validación antes de darse por bueno es `config/alarm_triggers.json` (D-019), por estar enchufado a la capa de seguridad de Falso Negativo Cero.
 - Ronda 1 y 2 de feedback de Jacques sobre `alarm_triggers.json` ya aplicadas en la rama `docs/D019-alarm-triggers-jacques` (creada desde esta épica, sin integrar hasta que confirme la lista definitiva) — no bloquea el trabajo de esta épica. Ver actualización de D-019 en `decisions.md`.
+- T-07 nace de un hueco detectado tras T-04: ni los tests de E-04 (mocks/fixtures pequeños) ni el `.feature` de T-05 (fuentes de fixture en carpeta) validan el pipeline RAG con el contenido real de la KB. T-07 corre un script contra `RAGPipeline` real con preguntas representativas del perfil familias y deja el resultado para revisión manual — antes de arrancar E-05 (diseño/interfaz), para no construir la UI sobre un backend sin verificar con datos reales. Es deliberadamente más ligero que la evaluación RAGAS de E-07 (sin métricas, solo lectura humana de pregunta/respuesta/chunks recuperados).
 
 **Estado:** 🔵 En curso
 
@@ -210,9 +211,10 @@ Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 | T-01 | Setup de dependencias y estructura del módulo de ingesta | ✅ Completada |
 | T-02 | Loader de documentos fuente | ✅ Completada |
 | T-03 | Estrategia de chunking multiidioma | ✅ Completada |
-| T-04 | Indexer: indexación en ChromaDB (colección `familiar`) | ⚪ Pendiente |
+| T-04 | Indexer: indexación en ChromaDB (colección `family`) | ✅ Completada |
 | T-05 | Pipeline de ingesta end-to-end | ⚪ Pendiente |
 | T-06 | Datasheet DAIMS de la KB (documentación, sin TDD) | ⚪ Pendiente |
+| T-07 | Smoke test manual del pipeline RAG con datos reales de la KB (configuración, sin TDD) | ⚪ Pendiente |
 
 ---
 

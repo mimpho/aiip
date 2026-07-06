@@ -31,6 +31,7 @@
 - [D-020 — Pipeline end-to-end: comportamiento sin resultados de retrieval y estrategia de test híbrida](#d-020--pipeline-end-to-end-comportamiento-sin-resultados-de-retrieval-y-estrategia-de-test-híbrida)
 - [D-021 — Manifest de trazabilidad: detección híbrida automática/manual, sin disparo de reindexación](#d-021--manifest-de-trazabilidad-detección-híbrida-automáticamanual-sin-disparo-de-reindexación)
 - [D-022 — Chunking multiidioma: metadatos generados en T-03, tokenizer real de bge-m3, idioma detectado por documento](#d-022--chunking-multiidioma-metadatos-generados-en-t-03-tokenizer-real-de-bge-m3-idioma-detectado-por-documento)
+- [D-023 — Indexer ChromaDB: colección de producción en inglés, IDs deterministas y configuración reutilizada de E-04](#d-023--indexer-chromadb-colección-de-producción-en-inglés-ids-deterministas-y-configuración-reutilizada-de-e-04)
 
 ---
 
@@ -721,6 +722,35 @@ El stub de `.feature` de T-03 (creado en `epic-start`) exigía que cada chunk co
 - `.env.example` añade ambas variables bajo la sección de ingesta.
 - Cierra la nota abierta de `docs/kb-sources.md` ("idioma de la KB") — se elimina o se marca como resuelta al tocar ese fichero.
 - Cuando E-07/E-09 (evaluación RAGAS) den primeros resultados, esta estrategia de chunking (tamaño, overlap, separadores) es la primera candidata a revisarse — ya anticipado en `docs/tech-spec.md` sección 13.
+
+---
+
+## D-023 — Indexer ChromaDB: colección de producción en inglés, IDs deterministas y configuración reutilizada de E-04
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-04
+
+**Contexto**
+Al revisar T-04 se detectó que el nombre de la colección de producción de ChromaDB era inconsistente en cuatro sitios: `backlog/epics.md` y el `.feature` stub de T-04/T-05 decían "familiar" (singular); `rag/pipeline.py` (`_DEFAULT_COLLECTION`) y los tests ya cerrados de E-04 T-02/T-06 usaban "familias" (plural); `docs/tech-spec.md` decía "aiip_familiar". Además, "familiar"/"profesional" no son traducciones correctas al inglés (falso amigo: "familiar" en inglés significa "conocido/reconocible", no "de la familia"), mientras que los tokens CSS de E-02 (`design/public/tokens.css`) ya usaban `--color-accent-family`/`--color-accent-professional` en inglés desde el principio. Se decidió unificar todo el proyecto a `family`/`professional`, lo que implicó un refactor transversal (rama `refactor/E06-family-professional-naming`, PR #30 mergeado en esta épica) que tocó roles de Supabase, entrypoints Chainlit, rutas de ficheros, variables de entorno y tests de E-03/E-04 ya cerrados — ver detalle completo en la descripción de ese PR. Quedaban además dos decisiones propias de T-04 sin resolver: qué recibe `ingestion/indexer.py` para poder escribir en ChromaDB (el stub de T-01 solo aceptaba `chunks`), y qué esquema de ID evita duplicados al reindexar el mismo documento (Scenario 2 del `.feature` de T-04).
+
+**Decisión**
+
+- **Colección de producción:** `"family"` (antes `"familias"` en `rag/pipeline.py`, código ya cerrado de E-04). Unifica con el resto del sistema (rol de Supabase, `APP_ROLE`, `profile` del chunker), todos ya renombrados a `family`/`professional` en el mismo refactor.
+- **Esquema de ID determinista:** hash de `source + filename + índice de chunk`. Se pasa explícitamente a `add_documents()`/`add_texts()` de Chroma para que una reindexación del mismo documento sobreescriba (upsert) en vez de duplicar. Si el chunking de un documento cambia (distinto número de chunks), es responsabilidad de T-05 —no de T-04— decidir si hace falta borrar los chunks antiguos de ese documento antes de reindexar (continuidad directa de D-021: T-04 solo escribe lo que T-05 le pasa, no decide qué reindexar).
+- **Configuración de ChromaDB para el indexer:** reutiliza `rag.config.load_rag_config()` (mismo `CHROMA_PATH` que ya usa el retriever de E-04), en vez de añadir una entrada propia en `ingestion/config.py`.
+
+**Alternativas descartadas**
+
+- Colección `"familiar"` (coincidía con el `.feature` stub y `epics.md`, pero obligaba a tocar tests ya cerrados de E-04 T-02/T-06 de todas formas para una palabra que tampoco es inglés correcto) — descartada en favor de continuar el refactor completo a `family`/`professional`.
+- Hash del contenido del chunk como ID — descartado: un chunk editado se trataría como chunk nuevo en vez de una actualización, dejando basura de versiones antiguas en la colección sin que nada la limpie.
+- `CHROMA_PATH` propio en `ingestion/config.py` — descartado por duplicar configuración ya resuelta en `rag/config.py` para el mismo path físico de ChromaDB.
+
+**Consecuencias**
+
+- `ingestion/indexer.py` implementa `index_chunks(chunks, embeddings, chroma_path, collection_name="family")`, reutilizando `get_retriever()` de `rag/retriever.py` y generando IDs deterministas por chunk antes de llamar a `add_documents()`.
+- El `.feature` de T-04 (`tests/features/e06_t04_chromadb_indexer.feature`) se actualiza para reflejar la colección `"family"`/`"family_test"` y añade un escenario explícito sobre el esquema de IDs.
+- El refactor de nomenclatura (`family`/`professional`) queda documentado en el PR #30, no se duplica aquí — esta decisión cubre solo lo específico de T-04.
 
 ---
 

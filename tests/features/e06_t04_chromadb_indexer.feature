@@ -21,6 +21,11 @@ Feature: Indexación en ChromaDB
     When se ejecuta el indexer de nuevo sobre el mismo documento
     Then el número total de chunks de ese documento en la colección no aumenta
 
+  Scenario: El ID de cada chunk es determinista, no aleatorio
+    Given los mismos chunks de un documento (source, filename e índice de chunk sin cambios)
+    When se ejecuta el indexer en dos ejecuciones distintas
+    Then el ID asignado a cada chunk es idéntico en ambas ejecuciones
+
   Scenario: Fallo de escritura en ChromaDB se propaga con contexto
     Given una escritura en ChromaDB que falla durante la indexación
     When se ejecuta el indexer
