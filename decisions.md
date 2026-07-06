@@ -610,6 +610,19 @@ El stub `rag/safety.py` (creado en T-01) solo definía `apply_safety_filter(resp
 - La integración de estas dos funciones en `rag/pipeline.py` queda fuera de T-05 — es T-06, mismo patrón que D-016/D-017 establecieron para retriever y language.
 - Cuando llegue la validación clínica de Jacques Rivière, solo se sustituye el contenido de `config/alarm_triggers.json` — no requiere cambios de diseño ni de código.
 
+**Actualización — 6 de julio de 2026**
+
+Primera y segunda ronda de feedback de Jacques Rivière sobre `config/alarm_triggers.json` ya
+recibidas y aplicadas: ronda 1 (correcciones puntuales sobre el listado original) y ronda 2
+(propuesta de nuevos triggers a partir del panel de consenso experto PIDCAP — Rivière JG et al.,
+J Clin Immunol 2024, PMID 39432052, del que Jacques es coautor). Ambas rondas viven en la rama
+`docs/D019-alarm-triggers-jacques` (creada desde `epic/E06-kb-ingestion`), **sin integrar** en
+ninguna rama de trabajo activa hasta que Jacques confirme la lista definitiva — evita dar por
+cerrado contenido clínico aún no validado. La propuesta de ronda 2 se le compartió en
+`AIIP_propuesta_nuevos_signos_PIDCAP.docx`. Sigue pendiente: nombre de la categoría
+`emergencia_aguda` (¿redundante?, sin alternativa aún), si las plaquetas necesitan trigger propio,
+y confirmación de los 8 triggers nuevos de la ronda 2.
+
 ---
 
 ## D-020 — Pipeline end-to-end: comportamiento sin resultados de retrieval y estrategia de test híbrida

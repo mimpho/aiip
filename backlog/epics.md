@@ -199,6 +199,7 @@ Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 - Ficheros crudos (PDFs/guías de terceros) fuera del repo por copyright — viven en Drive/local (`data/raw/`, gitignored), indexados en `docs/kb-sources.md`. Trazabilidad vía `data/raw/manifest.json` (checksum, URL, fecha), este sí versionado.
 - Fuentes ya reunidas en Google Drive (`AIIP/data/raw/`): UPIIP, IPOPI, IDF, AFPA/HAS — no es una lista cerrada, se puede ampliar/ajustar durante y después de esta épica.
 - La revisión de Jacques Rivière sobre estas fuentes es consultiva (¿es suficiente esta base para el perfil familias, cambiaría o ampliaría algo?), no bloqueante para arrancar la épica — construir el pipeline de ingesta no requiere validación clínica previa. Lo único que sí requiere su validación antes de darse por bueno es `config/alarm_triggers.json` (D-019), por estar enchufado a la capa de seguridad de Falso Negativo Cero.
+- Ronda 1 y 2 de feedback de Jacques sobre `alarm_triggers.json` ya aplicadas en la rama `docs/D019-alarm-triggers-jacques` (creada desde esta épica, sin integrar hasta que confirme la lista definitiva) — no bloquea el trabajo de esta épica. Ver actualización de D-019 en `decisions.md`.
 
 **Estado:** 🔵 En curso
 

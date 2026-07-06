@@ -84,6 +84,12 @@ dermatología, linfoproliferativo, laboratorio) y un documento de la KB en franc
 > Jacques Rivière** (ver también sección 11 del PRD) — es deuda técnica documentada, no una
 > decisión clínica definitiva. El original aportado por Marcos no se conservó como fichero
 > aparte: se adaptó directamente a `config/alarm_triggers.json` durante T-05.
+>
+> **Estado a 6 de julio de 2026:** primera y segunda ronda de feedback de Jacques ya recibidas
+> y aplicadas (ronda 2 incorpora una propuesta de nuevos signos a partir del panel de consenso
+> experto PIDCAP, del que Jacques es coautor — PMID 39432052). Ambas rondas viven, sin integrar,
+> en la rama `docs/D019-alarm-triggers-jacques` hasta que confirme la lista definitiva. Detalle
+> completo en `decisions.md` → D-019 (actualización 2026-07-06).
 
 **Capa 3 — Disclaimer obligatorio (post-generación)**
 
