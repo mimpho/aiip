@@ -33,6 +33,9 @@
 - [D-022 — Chunking multiidioma: metadatos generados en T-03, tokenizer real de bge-m3, idioma detectado por documento](#d-022--chunking-multiidioma-metadatos-generados-en-t-03-tokenizer-real-de-bge-m3-idioma-detectado-por-documento)
 - [D-023 — Indexer ChromaDB: colección de producción en inglés, IDs deterministas y configuración reutilizada de E-04](#d-023--indexer-chromadb-colección-de-producción-en-inglés-ids-deterministas-y-configuración-reutilizada-de-e-04)
 - [D-024 — Pipeline de ingesta end-to-end: reprocesamiento completo con borrado por documento, aislamiento de fallos en el loader](#d-024--pipeline-de-ingesta-end-to-end-reprocesamiento-completo-con-borrado-por-documento-aislamiento-de-fallos-en-el-loader)
+- [D-025 — Generador LLM: desactivar thinking de gemini-2.5-flash y subir LLM_MAX_TOKENS](#d-025--generador-llm-desactivar-thinking-de-gemini-25-flash-y-subir-llm_max_tokens)
+- [D-026 — Citación de fuentes: listado determinista al final, no citación inline por el LLM](#d-026--citación-de-fuentes-listado-determinista-al-final-no-citación-inline-por-el-llm)
+- [D-027 — Modelo LLM: cambio de gemini-2.5-flash a gemini-2.5-flash-lite por límite de cuota](#d-027--modelo-llm-cambio-de-gemini-25-flash-a-gemini-25-flash-lite-por-límite-de-cuota)
 
 ---
 
@@ -782,6 +785,95 @@ D-021 dejó explícitamente para T-05 decidir, a partir del estado del manifest,
 - `ingestion/indexer.py` añade `delete_document_chunks(source, filename, embeddings, chroma_path, collection_name)` — cambio aditivo, no modifica `index_chunks()` ni sus tests ya cerrados de T-04.
 - `ingestion/pipeline.py` (nuevo, T-05) orquesta: `load_documents()` → `chunk_documents()` → agrupar chunks por `(source, filename)` → por cada documento, `delete_document_chunks()` seguido de `index_chunks()` → construir resumen final (fuentes procesadas, chunks indexados, fallos capturados de los warnings del loader).
 - El `.feature` de T-05 se amplía con un escenario explícito que verifica que un documento que cambia de número de chunks entre ejecuciones no deja huérfanos en la colección.
+
+---
+
+## D-025 — Generador LLM: desactivar thinking de gemini-2.5-flash y subir LLM_MAX_TOKENS
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-07
+
+**Contexto**
+El smoke test manual de T-07 (primera ejecución de `RAGPipeline` real, con API real de Gemini, tras cerrarse E-04/D-018) mostró las 5 respuestas generadas cortadas a pocas palabras (p. ej. "Hola. Con gusto te explico qué es una inmun"), pese a que el retrieval funcionaba correctamente (chunks relevantes, fuentes correctas, buena similitud). Los tests de E-04 (mock de T-04 y `@integration` de T-04/T-06) no detectaron el problema porque solo comprueban que la respuesta no está vacía, no su longitud — es exactamente el hueco que T-07 existía para cubrir (ver nota de la épica E-06). Investigación (issues públicos de `langchain-google-genai` y foro de Google AI) confirma que `gemini-2.5-flash` usa "thinking" (razonamiento interno) por defecto, y esos tokens de pensamiento consumen el mismo presupuesto que `max_output_tokens`: con `LLM_MAX_TOKENS=300` (D-018), el thinking se comía casi todo el presupuesto antes de generar la respuesta visible.
+
+**Decisión**
+- `rag/generator.py` pasa `thinking_budget=0` a `ChatGoogleGenerativeAI` para desactivar el thinking de `gemini-2.5-flash`.
+- Default de `LLM_MAX_TOKENS` sube de `300` a `1024` (en `rag/config.py` y `.env.example`), como margen adicional — algunos reportes de la comunidad indican que `thinking_budget=0` no siempre elimina el consumo de thinking al 100% según la versión del modelo, así que no se confía solo en desactivarlo.
+- Variable de entorno explícita en `.env` de cada desarrollador: quien ya tenga `LLM_MAX_TOKENS=300` fijado a mano debe actualizarlo también (el nuevo default de `rag/config.py` no aplica si la variable ya está definida en `.env`).
+
+**Alternativas descartadas**
+- Solo subir `LLM_MAX_TOKENS` sin desactivar thinking — descartado: no ataca la causa raíz (el thinking sigue consumiendo presupuesto de forma no determinista según la pregunta) y obligaría a un valor arbitrariamente alto para compensar.
+- Cambiar de modelo (p. ej. a una versión sin thinking) — descartado: fuera de alcance de un hallazgo de smoke test; D-004 ya fijó Gemini Flash como LLM de Fase 1 y esto no lo cuestiona.
+
+**Justificación**
+El fix ataca la causa raíz (thinking consumiendo el presupuesto de salida) confirmada con fuentes externas, y el margen adicional en `LLM_MAX_TOKENS` cubre la inconsistencia conocida de `thinking_budget=0` en algunas versiones del modelo. No requiere cambios de contrato en `RAGGenerator`/`RAGPipeline` ni en sus tests mockeados (E-04 T-04/T-06): los mocks no validan `thinking_budget` ni el valor exacto de `LLM_MAX_TOKENS`, y `_base_config()` de los tests define sus propios valores independientes del default de `rag/config.py`.
+
+**Consecuencias**
+- `rag/generator.py`: `ChatGoogleGenerativeAI(...)` incluye `thinking_budget=0`.
+- `rag/config.py` y `.env.example`: default de `LLM_MAX_TOKENS` pasa a `1024`.
+- No se han tocado los tests de E-04 T-04/T-06 — sus mocks no se ven afectados por este cambio.
+- Pendiente para Marcos: actualizar el valor de `LLM_MAX_TOKENS` en su `.env` personal (gitignored, no se sincroniza solo) si ya lo tenía fijado en `300`.
+
+---
+
+## D-026 — Citación de fuentes: listado determinista al final, no citación inline por el LLM
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-06 T-07
+
+**Contexto**
+El smoke test de T-07 (primeras respuestas completas tras D-025) mostró que el system prompt (`[FUENTES]`, `docs/tech-spec.md` sección 5, D-018) instruye al LLM a citar la fuente en cada afirmación: `"Según [fuente], sección [X]..."`. El modelo sigue la instrucción correctamente, pero el resultado es una respuesta muy verbosa para el perfil familiar (tono empático y accesible, D-018/tech-spec): cada frase queda precedida de "Según el documento...", dificultando la lectura. Marcos planteó dos alternativas: lista de fuentes al final, o marcadores numerados inline `[1][2]` vinculados a una lista.
+
+**Decisión**
+- El LLM deja de citar fuentes dentro de la respuesta — el system prompt (`prompts/system_prompt_family.txt` y `docs/tech-spec.md` sección 5) se actualiza para instruir una respuesta natural y fluida, sin nombrar documento ni sección.
+- `RAGPipeline.query()` (`rag/pipeline.py`) añade al final de la respuesta (tras `apply_safety_filter`) una sección de fuentes generada de forma **determinista** a partir de `metadata["source"]`/`metadata["filename"]` de los chunks efectivamente recuperados en esa consulta (`_build_sources_section`), deduplicada y en el idioma detectado (`es`/`en`/`ca` con encabezado propio, resto con fallback a `es`, mismo patrón que `_LANGUAGE_NAMES` de `rag/language.py`).
+- Si los chunks no traen `source`/`filename` en su metadata (p. ej. fixtures de test indexadas con `add_texts()`, sin metadata), no se añade ninguna sección — no rompe los tests mockeados ya cerrados de E-04 T-06, que no comprueban ausencia de una sección de fuentes.
+
+**Alternativas descartadas**
+- Marcadores numerados inline `[1][2]` vinculados a una lista final — descartado: depende de que el LLM coloque los marcadores correctamente y no se salte ninguno; con citación completamente delegada al LLM (como ya se vio con la cita inline actual) el riesgo de asignación incorrecta o alucinada es real, y el listado plano determinista no depende en absoluto del LLM para ser correcto.
+- Mantener la citación inline tal como estaba — descartado por verbosidad, señalada directamente por Marcos al revisar las respuestas reales de T-07.
+
+**Justificación**
+Construir el listado a partir de los metadatos reales de los chunks recuperados (no de lo que el LLM "dice" que citó) elimina el riesgo de que el modelo invente o mezcle fuentes — coherente con el principio general de grounding del sistema. Además anticipa el criterio de E-05 "Visualización de pasos intermedios del RAG (documentos recuperados, chunks usados)": una lista de fuentes ya separada de la prosa es más directa de renderizar en la UI que texto de citación embebido.
+
+**Consecuencias**
+- `prompts/system_prompt_family.txt` y `docs/tech-spec.md` sección 5: sección `[FUENTES]` actualizada.
+- `rag/pipeline.py`: nueva función `_build_sources_section(raw_results, language)` y `RAGPipeline.query()` la invoca tras `apply_safety_filter`.
+- No se han modificado los tests mockeados de E-04 T-04/T-06 — sus fixtures no tienen metadata `source`/`filename`, por lo que no se ve afectado su comportamiento actual.
+- Pendiente: si en el futuro se quiere referencia por párrafo (opción descartada aquí), revisar esta decisión — no está cerrada la puerta, solo se prioriza fiabilidad sobre granularidad para esta fase del TFM.
+
+---
+
+---
+
+## D-027 — Modelo LLM: cambio de gemini-2.5-flash a gemini-2.5-flash-lite por límite de cuota
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-07
+
+**Contexto**
+Durante el smoke test de T-07, la ejecución falló a mitad con `429 RESOURCE_EXHAUSTED` de la API de Gemini: `quotaId: GenerateRequestsPerDayPerProjectPerModel-FreeTier`, `quotaValue: 20` para `gemini-2.5-flash`. Esto contradice el límite oficial documentado para ese modelo en la free tier (1.500 RPD según la documentación de julio 2026), pero coincide con reportes públicos de límites efectivos bastante más bajos en la práctica para algunos proyectos. En cualquier caso, el volumen real disponible hoy no es suficiente para iterar con comodidad antes de la entrega del 10 de julio.
+
+**Decisión**
+Se cambia el modelo de generación de `gemini-2.5-flash` a `gemini-2.5-flash-lite`, manteniendo el mismo proveedor (Google) y sin tocar la arquitectura: mismo `ChatGoogleGenerativeAI`, mismo `GOOGLE_API_KEY`. Cambio de config, no de código — coherente con D-010 (modelo configurable por variable de entorno, nunca hardcodeado): default de `LLM_MODEL` en `rag/config.py`/`rag/generator.py` y en `.env.example` pasa a `gemini-2.5-flash-lite`.
+
+**Alternativas descartadas**
+- Activar facturación en el proyecto de Google Cloud manteniendo `gemini-2.5-flash` — descartado por ahora: añade un paso de gestión (tarjeta, billing) para un problema que `flash-lite` resuelve sin fricción ni coste añadido inmediato.
+- Cambiar de proveedor a Claude Haiku (Anthropic) vía `langchain-anthropic` — descartado por ahora: exige más cambios (nueva dependencia, nueva variable `LLM_PROVIDER`, adaptar `rag/generator.py` para instanciar el LLM según proveedor) que no se justifican solo para resolver un límite de cuota, a días de la entrega del 10 de julio. Quedaría como opción real si en el futuro se busca deliberadamente ejercitar el diseño agnóstico de D-010, o si `flash-lite` no da la calidad suficiente en la evaluación RAGAS de E-07.
+- Mantener `gemini-2.5-flash` y aceptar el límite — descartado: bloquea la iteración práctica sobre T-07/E-05 en los días previos a la entrega.
+
+**Justificación**
+`gemini-2.5-flash-lite` es el cambio de menor fricción: mismo proveedor, misma integración de código, free tier documentada de 1.500 RPD (muy por encima del límite que bloqueó hoy la ejecución), y más barato ($0.10/$0.40 por 1M tokens de entrada/salida). Es una decisión reversible en una línea de `.env` si en el futuro la calidad de `flash-lite` no fuese suficiente para el perfil familiar.
+
+**Consecuencias**
+- `rag/generator.py` y `rag/config.py`: default de `LLM_MODEL` pasa a `gemini-2.5-flash-lite`.
+- `.env.example`: `LLM_MODEL=gemini-2.5-flash-lite`.
+- Pendiente para Marcos: actualizar `LLM_MODEL` en su `.env` personal (gitignored) si ya lo tenía fijado a `gemini-2.5-flash`.
+- No se ha tocado `tests/features/e01_setup.feature` (checklist manual ya cerrado de E-01, que verificó `gemini-2.5-flash` como valor de `.env.example` en su momento) — es un registro histórico de lo verificado al cerrar esa tarea, no una especificación viva; el valor actual de `.env.example` es la fuente de verdad presente.
+- Si la calidad de `flash-lite` no es suficiente en la evaluación RAGAS de E-07, revisitar esta decisión y considerar activar facturación o cambiar de proveedor (alternativas descartadas arriba).
 
 ---
 
