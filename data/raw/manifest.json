@@ -1,0 +1,149 @@
+{
+  "documents": {
+    "afpa_has/HAS_deficits-immunitaires-hereditaires_PNDS-2023.pdf": {
+      "checksum": "sha256:f3e7e76ddd42e54217c136d168c6697c4977f0aff80ed52cc950f5b5047a3d00",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "cribado_neonatal/cribado-neonatal-IDCG-2021.pdf": {
+      "checksum": "sha256:2689fbef889334e2f5e0eaf161e6d4bf49b40f3ee4b7cf100184674080576ddc",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf": {
+      "checksum": "sha256:71283c61a838a8a2f58eadcdb50c532a5768ee80ca96cfd56397425fa991df0a",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "ipopi/TreatmentsForPIDs-Spanish.pdf": {
+      "checksum": "sha256:ac14884c54a46d2a90af4e9ddc929bf8e2e1570916b75bd70c0ef5c0d64fb7a8",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "ipopi/WEB_IPOPI_Classification.pdf": {
+      "checksum": "sha256:a4c68728925e3211345cbc06d7a7dddd286ef0e8859b92ed3c44d8088b61b15a",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/01_Sistema_Immunitari_ES.pdf": {
+      "checksum": "sha256:425e33218ada805573ff68e7de7ce717e27c5fdddeba3ac773c930380bc20988",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/02_Components_Sistema_Immunitari_ES.pdf": {
+      "checksum": "sha256:257f2be1018f77098c378345302dd0f34a2c9ca6d0bb6771d6f24a96f2e0e721",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/03_Immunodeficiencia_Comuna_Variable_ES.pdf": {
+      "checksum": "sha256:27338d4328893bb8cc57b6650866a193d7a4ee660720c3a18bb3da5ad684528d",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/04_Immunodeficiencia_Combinada_Greu_ES.pdf": {
+      "checksum": "sha256:74aa71853a02339ee677e33d99281ce2c8ba03a49785f6fd693695104416de3a",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/05_Deficit_IgA_ES.pdf": {
+      "checksum": "sha256:8b07677f99dfd8853823e31a44c52a22a8173eb4faac0a1c36f8585fbd0bc5e6",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/06_Malaltia_de_Bruton_ES.pdf": {
+      "checksum": "sha256:6779bb26ee3d6a80fa3d2dd3e2716cf3dd948399bfde91cbb589bf5a14c8a3d1",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/07_Malaltia_Granulomatosa_Cronica_ES.pdf": {
+      "checksum": "sha256:d5908b7e23a3235f2ec85e7309fcf6409810a5886f871f32f2a0ce8def6485b2",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/08_Sindrome_PFAPA_ES.pdf": {
+      "checksum": "sha256:5234b96b3ae26c83ebead081838ffc19ac2f51375bd70e2012ee5464697bbc9d",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/09_Sindrome_DiGeorge_ES.pdf": {
+      "checksum": "sha256:fdb5d1890f606432fc504494b03dbfff301f63c3f3510f26ea79411deae23eea",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/10_Terapia_Genica_ES.pdf": {
+      "checksum": "sha256:fa269097b79e341b8428b34963bfa0145f384b45e317ff1c54abcfb32c44dfbb",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/11_Transplantament_Progenitors_Hematopoetics_ES.pdf": {
+      "checksum": "sha256:88bb1bba54134f85ab7caf640783381569b3aa3e552d6854c36dc9fb747d481e",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/12_Immonoglobulines_Intravenoses_ES2.pdf": {
+      "checksum": "sha256:70db4ec834d7655557e59d9fdd30304f24aaaedbc3c383a66ae90a8a977ba4dd",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/13_Immonoglobulines_Subcutanies_ES2.pdf": {
+      "checksum": "sha256:5ee5af1f1b599817ca42f7aaa49a290e833043586f0e45fd36013586fa7b3aaa",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/14_Immonoglobulines_Subcutanies_Hialuronidasa_ES2.pdf": {
+      "checksum": "sha256:c6636b91aa5012ed40edd80b5656ab3fd84dc6f44f6047f363bd850998e3e430",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/15_Comparativa_Immonoglobulines_ES2.pdf": {
+      "checksum": "sha256:18e8f3b4b1dd820d8524ab0453e94847550d15e6017413c53d4b08f1fd5399b4",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/Deficit de LRBA. Información para pacientes y familiares.pdf": {
+      "checksum": "sha256:7e21b71b1bbc5ec471950f61b830dbab4cbb769b669fbede385813cf0c732c87",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/Diario del paciente. Tratamiento con gammaglobulina subcutánea_0.pdf": {
+      "checksum": "sha256:ffbd6aef5bbe7fd8aba9d339138fe5eb0539d12086a6afbdbe84a5c5a01f3ddc",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/INFORME DE TRANSICIÓN A ATENCIÓN PRIMARIA  DÉFICIT SELECTIVO DE IgA_CAST.pdf": {
+      "checksum": "sha256:a30cc2b433ac6d30a123acfbe63d3034125f8c24dda2c97d4eac82cdb2d3330a",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/La prova del taló. La detecció i el tractament precoços salven vides._0.pdf": {
+      "checksum": "sha256:27c10c156e3d79ad054c4038cfe143258e15465279fea99da4169cf2ede77aae",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/Manual de educación sanitaria. Tratamiento con gammaglobulina subcutánea.pdf": {
+      "checksum": "sha256:941409ca38e853edbd7a31cd548e9124ada38b380071ac9bdc15a9308cbff8bb",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/Protocol de transició_revPSP2_0.pdf": {
+      "checksum": "sha256:a1a30d78a449837cb3f2f0b755cce28b166152eea98cbc27b03e69140bff0d27",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/TRIPTIC IDCG (castella).pdf": {
+      "checksum": "sha256:efd36406c17d96577605702df9d62f9b4bb55d9c5119c7df2c5ce565ab2df5c3",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/guia_antibiotics_esp_0.pdf": {
+      "checksum": "sha256:d29c94618445b73f367dbb98f15b9ec722a9682f2b5e7a76e446ad84742d1f6a",
+      "url": null,
+      "fecha": "2026-07-07"
+    },
+    "upiip/triptic-traspas-digital_ES.pdf": {
+      "checksum": "sha256:391627a87f24448143d1af230ffcb8fc99700d03d59f2429ae722ee851a82e26",
+      "url": null,
+      "fecha": "2026-07-07"
+    }
+  }
+}

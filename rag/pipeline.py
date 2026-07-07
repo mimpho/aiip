@@ -6,6 +6,39 @@ from rag.safety import apply_safety_filter, check_alarm_signals
 
 _DEFAULT_COLLECTION = "family"
 
+_SOURCES_HEADINGS = {
+    "es": "Fuentes consultadas:",
+    "en": "Sources consulted:",
+    "ca": "Fonts consultades:",
+}
+
+
+def _build_sources_section(raw_results, language: str) -> str:
+    """Construye el listado de fuentes a partir de los metadatos de los chunks recuperados.
+
+    D-026: el LLM ya no cita el documento dentro de la respuesta (evitaba una
+    respuesta verbosa, citando en cada frase); el listado se genera de forma
+    determinista a partir de `source`/`filename`, no del texto generado por
+    el LLM. Si los chunks no traen esos metadatos (p. ej. fixtures de test
+    indexadas con `add_texts`, sin metadata), no se añade ninguna sección.
+    """
+    seen = []
+    for doc, _ in raw_results:
+        source = doc.metadata.get("source")
+        filename = doc.metadata.get("filename")
+        if not source or not filename:
+            continue
+        pair = (source, filename)
+        if pair not in seen:
+            seen.append(pair)
+
+    if not seen:
+        return ""
+
+    heading = _SOURCES_HEADINGS.get(language, _SOURCES_HEADINGS["es"])
+    lines = [heading] + [f"- {source}/{filename}" for source, filename in seen]
+    return "\n".join(lines)
+
 
 class RAGPipeline:
     """Orquestador del pipeline RAG end-to-end."""
@@ -30,4 +63,9 @@ class RAGPipeline:
         response = self._generator.generate(
             question=question, context=context, language=language
         )
-        return apply_safety_filter(response, has_alarm)
+        response = apply_safety_filter(response, has_alarm)
+
+        sources_section = _build_sources_section(raw, language)
+        if sources_section:
+            response = f"{response}\n\n{sources_section}"
+        return response
