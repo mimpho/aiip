@@ -78,7 +78,7 @@ def existe_perfil_con_role(admin_client, signup_result, role):
 
 @given("un usuario ya registrado con el email de prueba", target_fixture="signup_result")
 def usuario_ya_registrado(test_email, created_user_ids):
-    result = signup(test_email, TEST_PASSWORD, "familiar")
+    result = signup(test_email, TEST_PASSWORD, "family")
     created_user_ids.append(result["user_id"])
     return result
 
@@ -86,7 +86,7 @@ def usuario_ya_registrado(test_email, created_user_ids):
 @when("llamo a signup con el mismo email", target_fixture="signup_error")
 def llamo_a_signup_email_duplicado(test_email):
     with pytest.raises(AuthApiError) as exc_info:
-        signup(test_email, TEST_PASSWORD, "familiar")
+        signup(test_email, TEST_PASSWORD, "family")
     return exc_info.value
 
 

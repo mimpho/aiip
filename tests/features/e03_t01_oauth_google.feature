@@ -32,12 +32,12 @@ Feature: T-01 OAuth de Google operativo en Supabase Auth
   Scenario: Redirect URLs de ambas apps registradas en Supabase
     Given que el provider de Google está activo
     When accedo a Supabase Auth > URL Configuration > Redirect URLs
-    Then añado la URL de la app familiar
-    And añado la URL de la app profesional
+    Then añado la URL de la app family
+    And añado la URL de la app professional
     And ambas quedan en la allowlist de redirección
 
   Scenario: Verificación automatizada de la URL de autorización
     Given que el provider está activo y las redirect URLs están configuradas
-    When ejecuto el script de verificación de OAuth con la URL de la app familiar
+    When ejecuto el script de verificación de OAuth con la URL de la app family
     Then recibo una URL de autorización válida con host de Google y los parámetros client_id y redirect_uri presentes
-    And el mismo resultado se obtiene al ejecutar el script con la URL de la app profesional
+    And el mismo resultado se obtiene al ejecutar el script con la URL de la app professional

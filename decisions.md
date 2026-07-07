@@ -29,6 +29,15 @@
 - [D-018 — Generador LLM: nombres de variables agnósticos y estrategia de test mock + smoke real](#d-018--generador-llm-nombres-de-variables-agnósticos-y-estrategia-de-test-mock--smoke-real)
 - [D-019 — Módulo de seguridad: funciones separadas, triggers en JSON y lista placeholder pendiente de validación clínica](#d-019--módulo-de-seguridad-funciones-separadas-triggers-en-json-y-lista-placeholder-pendiente-de-validación-clínica)
 - [D-020 — Pipeline end-to-end: comportamiento sin resultados de retrieval y estrategia de test híbrida](#d-020--pipeline-end-to-end-comportamiento-sin-resultados-de-retrieval-y-estrategia-de-test-híbrida)
+- [D-021 — Manifest de trazabilidad: detección híbrida automática/manual, sin disparo de reindexación](#d-021--manifest-de-trazabilidad-detección-híbrida-automáticamanual-sin-disparo-de-reindexación)
+- [D-022 — Chunking multiidioma: metadatos generados en T-03, tokenizer real de bge-m3, idioma detectado por documento](#d-022--chunking-multiidioma-metadatos-generados-en-t-03-tokenizer-real-de-bge-m3-idioma-detectado-por-documento)
+- [D-023 — Indexer ChromaDB: colección de producción en inglés, IDs deterministas y configuración reutilizada de E-04](#d-023--indexer-chromadb-colección-de-producción-en-inglés-ids-deterministas-y-configuración-reutilizada-de-e-04)
+- [D-024 — Pipeline de ingesta end-to-end: reprocesamiento completo con borrado por documento, aislamiento de fallos en el loader](#d-024--pipeline-de-ingesta-end-to-end-reprocesamiento-completo-con-borrado-por-documento-aislamiento-de-fallos-en-el-loader)
+- [D-025 — Generador LLM: desactivar thinking de gemini-2.5-flash y subir LLM_MAX_TOKENS](#d-025--generador-llm-desactivar-thinking-de-gemini-25-flash-y-subir-llm_max_tokens)
+- [D-026 — Citación de fuentes: listado determinista al final, no citación inline por el LLM](#d-026--citación-de-fuentes-listado-determinista-al-final-no-citación-inline-por-el-llm)
+- [D-027 — Modelo LLM: cambio de gemini-2.5-flash a gemini-2.5-flash-lite por límite de cuota](#d-027--modelo-llm-cambio-de-gemini-25-flash-a-gemini-25-flash-lite-por-límite-de-cuota)
+- [D-028 — Runbook de mantenimiento de la KB: documento de procedimiento separado de decisions.md](#d-028--runbook-de-mantenimiento-de-la-kb-documento-de-procedimiento-separado-de-decisionsmd)
+- [D-029 — Citación con URL original: cadena de propagación manifest→loader→chunker→pipeline y fallback de 2 niveles](#d-029--citación-con-url-original-cadena-de-propagación-manifestloaderchunkerpipeline-y-fallback-de-2-niveles)
 
 ---
 
@@ -609,6 +618,19 @@ El stub `rag/safety.py` (creado en T-01) solo definía `apply_safety_filter(resp
 - La integración de estas dos funciones en `rag/pipeline.py` queda fuera de T-05 — es T-06, mismo patrón que D-016/D-017 establecieron para retriever y language.
 - Cuando llegue la validación clínica de Jacques Rivière, solo se sustituye el contenido de `config/alarm_triggers.json` — no requiere cambios de diseño ni de código.
 
+**Actualización — 6 de julio de 2026**
+
+Primera y segunda ronda de feedback de Jacques Rivière sobre `config/alarm_triggers.json` ya
+recibidas y aplicadas: ronda 1 (correcciones puntuales sobre el listado original) y ronda 2
+(propuesta de nuevos triggers a partir del panel de consenso experto PIDCAP — Rivière JG et al.,
+J Clin Immunol 2024, PMID 39432052, del que Jacques es coautor). Ambas rondas viven en la rama
+`docs/D019-alarm-triggers-jacques` (creada desde `epic/E06-kb-ingestion`), **sin integrar** en
+ninguna rama de trabajo activa hasta que Jacques confirme la lista definitiva — evita dar por
+cerrado contenido clínico aún no validado. La propuesta de ronda 2 se le compartió en
+`AIIP_propuesta_nuevos_signos_PIDCAP.docx`. Sigue pendiente: nombre de la categoría
+`emergencia_aguda` (¿redundante?, sin alternativa aún), si las plaquetas necesitan trigger propio,
+y confirmación de los 8 triggers nuevos de la ronda 2.
+
 ---
 
 ## D-020 — Pipeline end-to-end: comportamiento sin resultados de retrieval y estrategia de test híbrida
@@ -642,4 +664,336 @@ El stub de `.feature` de T-06 (creado en `epic-start`, sin revisión previa) ten
 
 ---
 
-*Próximas decisiones previstas: configuración definitiva de colecciones ChromaDB de producción — al arrancar E-06 (Ingesta KB, reutiliza métrica coseno de D-016), estrategia de chunking validada — tras primera evaluación RAGAS*
+## D-021 — Manifest de trazabilidad: detección híbrida automática/manual, sin disparo de reindexación
+
+**Fecha:** 6 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-02
+
+**Contexto**
+`data/raw/manifest.json` (previsto desde T-01, ver notas de `backlog/epics.md`) traza qué documentos crudos existen fuera del repo (checksum, URL, fecha) sin versionar los ficheros en sí (copyright). Al revisar T-02 surgieron dos preguntas sin resolver: si el loader debe generar/actualizar el manifest automáticamente o si es un fichero mantenido a mano, y qué hace el sistema cuando detecta que un documento es nuevo o ha cambiado — en concreto, si eso debe disparar una actualización de la KB (reindexación en ChromaDB).
+
+**Decisión**
+
+- **Detección híbrida:** el loader (T-02) calcula el checksum de cada fichero en `data/raw/` en cada ejecución. Si un fichero no tiene entrada en el manifest, crea una entrada nueva automáticamente con `checksum` y `fecha` de detección, dejando `url: null` y registrando un aviso de "fuente nueva sin URL — completar manualmente". Si la entrada ya existe pero el checksum no coincide, actualiza `checksum`/`fecha` y avisa de que el contenido cambió. La URL de origen es el único campo que requiere una entrada manual puntual (no se puede inferir de un fichero local).
+- **Alcance de T-02:** el loader solo detecta y registra estos cambios en el manifest — no dispara ninguna acción de reindexación. Qué hacer cuando el manifest indica un documento nuevo o modificado queda **explícitamente fuera de esta tarea**, asignado a **T-05 (pipeline de ingesta end-to-end)**: T-05 orquesta loader → chunker → indexer y es quien decide, a partir del estado del manifest, qué documentos requieren (re)procesarse en cada ejecución (incremental, no todo el corpus en cada run). T-04 (indexer) se limita a la mecánica de escritura en ChromaDB para los chunks que T-05 le pase — no decide qué reindexar, solo cómo.
+
+**Alternativas descartadas**
+
+- Manifest puramente manual (loader solo lee y avisa, nunca escribe) — descartado: Marcos prefiere que la detección de cambios sea automática en la medida de lo posible; el mantenimiento 100% manual no escala con el volumen de fuentes de E-06.
+- Que T-02 dispare directamente la reindexación al detectar un cambio — descartado: acopla el loader (carga en memoria) con el indexer (escritura en ChromaDB), dos responsabilidades separadas por diseño en `ingestion/` (T-01). Prematuro decidir la estrategia de reindexación sin haber implementado aún el indexer.
+
+**Justificación**
+El checksum y la fecha son datos que el propio sistema puede calcular sin intervención humana; la URL de origen no. Repartir la responsabilidad así minimiza el esfuerzo manual sin inventar procedencia que el sistema no puede conocer. Separar "detectar cambio" (T-02) de "decidir qué hacer con el cambio" (tarea futura) respeta la separación de responsabilidades ya establecida en `ingestion/` y evita comprometer una decisión de reindexación antes de tiempo.
+
+**Consecuencias**
+
+- `ingestion/loader.py` (T-02) lee y escribe `data/raw/manifest.json`: crea entradas nuevas (checksum + fecha, url null) y actualiza checksum/fecha cuando detecta cambios, además de avisar en ambos casos.
+- El `.feature` de T-02 (`tests/features/e06_t02_document_loader.feature`) se actualiza: el escenario existente de "fichero sin entrada en el manifest" pasa a verificar que se crea la entrada automáticamente (no solo que se avisa), y se añade un escenario de checksum desactualizado.
+- Queda abierto como nota de backlog: definir en T-05 la estrategia concreta de disparo (qué documentos entran en el run, cómo se le indica al indexer de T-04 qué actualizar/borrar/insertar).
+
+---
+
+## D-022 — Chunking multiidioma: metadatos generados en T-03, tokenizer real de bge-m3, idioma detectado por documento
+
+**Fecha:** 6 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-03
+
+**Contexto**
+El stub de `.feature` de T-03 (creado en `epic-start`) exigía que cada chunk conservara los metadatos `source`, `language`, `date_indexed` y `profile`, pero el loader de T-02 (ya cerrado) solo genera `source`/`filename` — el resto no existía en ningún punto del pipeline hasta ahora. El `.feature` de T-04 (indexer) tampoco los genera: asume que ya llegan puestos. Además, `docs/kb-sources.md` dejaba abierta explícitamente la pregunta de si la KB se indexa en el idioma original de cada fuente o se traduce a inglés (nota "idioma de la KB", pendiente desde antes de arrancar E-06) — pregunta que `backlog/epics.md` ya daba por resuelta en la práctica ("cada fuente indexada en su idioma original — amplía D-011") sin formalizarla nunca como decisión. Por último, `docs/tech-spec.md` (sección 3.2) fija el chunk size en 512 tokens, pero `RecursiveCharacterTextSplitter` cuenta caracteres por defecto — con un corpus mezclando español, inglés, catalán y francés, esa diferencia no es cosmética: 512 caracteres es ~4 veces más pequeño que 512 tokens, y el ratio caracteres/token varía por idioma.
+
+**Decisión**
+
+- **Generación de metadatos en T-03 (no en T-04):** el chunker añade `language`, `date_indexed` y `profile` a los metadatos que ya trae cada `Document` del loader (`source`, `filename`). El indexer (T-04) se limita a persistir lo que ya recibe — no genera metadatos nuevos.
+- **Idioma indexado en el original de cada fuente (formaliza la nota abierta de `kb-sources.md`, amplía D-011):** la KB de E-06 no se traduce. Cada fuente se indexa en su idioma nativo (inglés, español, catalán o francés según el documento), confiando en que bge-m3 resuelve el cross-lingual retrieval en cualquier dirección (no solo inglés→consulta, como ya preveía D-011).
+- **Detección de idioma por documento, no por chunk:** se detecta el idioma una única vez por `Document` cargado (antes de trocear), reutilizando `rag.language.detect_language()` sobre el texto completo del documento, y se propaga ese mismo valor a todos los chunks que resulten de él. Se descarta detectar por chunk individual: los fragmentos pequeños cercanos al límite del chunk son menos fiables para `langdetect` (ver D-017, mismo riesgo de falsa confianza en texto corto) y las fuentes de la KB son monolingües dentro de un mismo documento.
+- **`date_indexed` se rellena en T-03, no en T-04:** el nombre sugiere "fecha de indexación en ChromaDB", pero en la práctica coincide con la fecha de procesamiento porque T-05 orquestará loader→chunker→indexer en la misma ejecución (mismo patrón de ejecución conjunta que asume D-021 para el pipeline de ingesta). No se crea una responsabilidad nueva en el indexer para un dato que ya está disponible en el momento del chunking.
+- **`profile` fijo a `"familiar"`:** E-06 solo construye la colección familiar (ver `backlog/epics.md`, T-04: "colección `familiar`"). `chunk_documents()` expone `profile` como parámetro con default `"familiar"`, sin lógica de selección — no hay todavía un segundo perfil que indexar.
+- **Chunk size en tokens reales de bge-m3, no en caracteres:** `chunker.py` usa `RecursiveCharacterTextSplitter.from_huggingface_tokenizer(tokenizer, chunk_size=512, chunk_overlap=64, separators=["\n\n", "\n", ". ", " "])`, cargando el tokenizer con `transformers.AutoTokenizer.from_pretrained("BAAI/bge-m3")` (sin dependencia nueva — `transformers` ya está instalado vía `sentence-transformers`; solo se carga el tokenizer, no el modelo completo). Se descarta contar caracteres: el ratio caracteres/token no es constante entre español, inglés, catalán y francés, y aproximarlo a ciegas con un multiplicador fijo introduce un error de calibración que el tokenizer real evita sin coste relevante (la ingesta es un proceso offline por lotes, no el path de latencia del chat).
+- **Overlap = 64 tokens (12.5%):** dentro del rango 10–20% de `tech-spec.md` sección 3.2, y coherente con el orden de magnitud (50–100 tokens) de su bloque de ejemplo en sección 10 — se ajusta a 64 en vez de 50 porque 50 cae ligeramente por debajo del 10% mínimo declarado (50/512 ≈ 9.8%).
+- **Variables de entorno nuevas:** `RAG_CHUNK_SIZE=512` y `RAG_CHUNK_OVERLAP=64` se añaden a `.env.example` y a `ingestion/config.py` como opcionales con default, mismo patrón que `RAG_TOP_K` (D-016) — no bloquean el arranque si faltan.
+
+**Alternativas descartadas**
+
+- Detectar idioma por chunk en vez de por documento — descartado por el riesgo de falsos positivos de `langdetect` en fragmentos cortos (D-017).
+- `date_indexed` generado en el indexer (T-04) — descartado: obliga a tocar un `.feature` ya cerrado (T-04) para un dato que T-03 ya puede calcular, y no aporta más precisión real dado que ambas tareas corren en la misma ejecución de T-05.
+- Chunking por caracteres con un multiplicador caracteres/token fijo para aproximar 512 tokens — descartado: el corpus mezcla 4 idiomas con densidad de tokens distinta: cualquier multiplicador fijo es una aproximación no verificada, mientras que `from_huggingface_tokenizer` cuenta tokens reales sin necesidad de calibrar nada.
+- `RAG_CHUNK_OVERLAP=50` (valor literal del bloque de ejemplo de tech-spec sección 10) — descartado por caer ligeramente fuera del rango 10–20% que la misma tech-spec fija en la sección 3.2.
+
+**Consecuencias**
+
+- `ingestion/chunker.py` implementa `chunk_documents(documents, profile="familiar")`: detecta idioma por documento (`rag.language.detect_language`), trocea con `RecursiveCharacterTextSplitter.from_huggingface_tokenizer` usando el tokenizer de bge-m3, y añade `language`, `date_indexed`, `profile` a los metadatos de cada chunk resultante.
+- `ingestion/config.py` añade `RAG_CHUNK_SIZE` y `RAG_CHUNK_OVERLAP` como opcionales (default `512`/`64`).
+- `.env.example` añade ambas variables bajo la sección de ingesta.
+- Cierra la nota abierta de `docs/kb-sources.md` ("idioma de la KB") — se elimina o se marca como resuelta al tocar ese fichero.
+- Cuando E-07/E-09 (evaluación RAGAS) den primeros resultados, esta estrategia de chunking (tamaño, overlap, separadores) es la primera candidata a revisarse — ya anticipado en `docs/tech-spec.md` sección 13.
+
+---
+
+## D-023 — Indexer ChromaDB: colección de producción en inglés, IDs deterministas y configuración reutilizada de E-04
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-04
+
+**Contexto**
+Al revisar T-04 se detectó que el nombre de la colección de producción de ChromaDB era inconsistente en cuatro sitios: `backlog/epics.md` y el `.feature` stub de T-04/T-05 decían "familiar" (singular); `rag/pipeline.py` (`_DEFAULT_COLLECTION`) y los tests ya cerrados de E-04 T-02/T-06 usaban "familias" (plural); `docs/tech-spec.md` decía "aiip_familiar". Además, "familiar"/"profesional" no son traducciones correctas al inglés (falso amigo: "familiar" en inglés significa "conocido/reconocible", no "de la familia"), mientras que los tokens CSS de E-02 (`design/public/tokens.css`) ya usaban `--color-accent-family`/`--color-accent-professional` en inglés desde el principio. Se decidió unificar todo el proyecto a `family`/`professional`, lo que implicó un refactor transversal (rama `refactor/E06-family-professional-naming`, PR #30 mergeado en esta épica) que tocó roles de Supabase, entrypoints Chainlit, rutas de ficheros, variables de entorno y tests de E-03/E-04 ya cerrados — ver detalle completo en la descripción de ese PR. Quedaban además dos decisiones propias de T-04 sin resolver: qué recibe `ingestion/indexer.py` para poder escribir en ChromaDB (el stub de T-01 solo aceptaba `chunks`), y qué esquema de ID evita duplicados al reindexar el mismo documento (Scenario 2 del `.feature` de T-04).
+
+**Decisión**
+
+- **Colección de producción:** `"family"` (antes `"familias"` en `rag/pipeline.py`, código ya cerrado de E-04). Unifica con el resto del sistema (rol de Supabase, `APP_ROLE`, `profile` del chunker), todos ya renombrados a `family`/`professional` en el mismo refactor.
+- **Esquema de ID determinista:** hash de `source + filename + índice de chunk`. Se pasa explícitamente a `add_documents()`/`add_texts()` de Chroma para que una reindexación del mismo documento sobreescriba (upsert) en vez de duplicar. Si el chunking de un documento cambia (distinto número de chunks), es responsabilidad de T-05 —no de T-04— decidir si hace falta borrar los chunks antiguos de ese documento antes de reindexar (continuidad directa de D-021: T-04 solo escribe lo que T-05 le pasa, no decide qué reindexar).
+- **Configuración de ChromaDB para el indexer:** reutiliza `rag.config.load_rag_config()` (mismo `CHROMA_PATH` que ya usa el retriever de E-04), en vez de añadir una entrada propia en `ingestion/config.py`.
+
+**Alternativas descartadas**
+
+- Colección `"familiar"` (coincidía con el `.feature` stub y `epics.md`, pero obligaba a tocar tests ya cerrados de E-04 T-02/T-06 de todas formas para una palabra que tampoco es inglés correcto) — descartada en favor de continuar el refactor completo a `family`/`professional`.
+- Hash del contenido del chunk como ID — descartado: un chunk editado se trataría como chunk nuevo en vez de una actualización, dejando basura de versiones antiguas en la colección sin que nada la limpie.
+- `CHROMA_PATH` propio en `ingestion/config.py` — descartado por duplicar configuración ya resuelta en `rag/config.py` para el mismo path físico de ChromaDB.
+
+**Consecuencias**
+
+- `ingestion/indexer.py` implementa `index_chunks(chunks, embeddings, chroma_path, collection_name="family")`, reutilizando `get_retriever()` de `rag/retriever.py` y generando IDs deterministas por chunk antes de llamar a `add_documents()`.
+- El `.feature` de T-04 (`tests/features/e06_t04_chromadb_indexer.feature`) se actualiza para reflejar la colección `"family"`/`"family_test"` y añade un escenario explícito sobre el esquema de IDs.
+- El refactor de nomenclatura (`family`/`professional`) queda documentado en el PR #30, no se duplica aquí — esta decisión cubre solo lo específico de T-04.
+
+---
+
+## D-024 — Pipeline de ingesta end-to-end: reprocesamiento completo con borrado por documento, aislamiento de fallos en el loader
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-05
+
+**Contexto**
+D-021 dejó explícitamente para T-05 decidir, a partir del estado del manifest, qué documentos requieren (re)procesarse en cada ejecución ("incremental, no todo el corpus en cada run"). D-023 dejó abierto qué pasa con los chunks huérfanos cuando un documento cambia de número de chunks entre ejecuciones — el indexer (T-04) solo escribe lo que se le pasa, sin decidir qué borrar. Además, el `.feature` stub de T-05 (Scenario "fallo en una fuente no detiene el procesamiento de las demás") no es implementable con `ingestion/loader.py` tal como quedó en T-02: hoy solo aísla el caso de formato no soportado (warning + continue); un fichero con formato soportado pero corrupto (p. ej. PDF ilegible) propaga la excepción y aborta la carga completa de `data/raw/`, no solo la de la fuente afectada.
+
+**Decisión**
+
+- **Estrategia de reprocesamiento: completo, no incremental.** Cada ejecución del pipeline recarga y re-trocea todas las fuentes de `data/raw/` (vía `load_documents()` + `chunk_documents()` ya existentes, sin cambios de contrato). Se descarta la lectura literal de D-021 ("incremental") por el coste de diseño/testing que añadiría antes del 10 de julio (habría que exponer desde el loader qué documentos son nuevos/cambiados, hoy solo emite warnings) frente al beneficio real dado el volumen de fuentes de este TFM — proceso offline por lotes, no en el path de latencia del chat.
+- **Borrado por documento antes de reinsertar (resuelve el hueco de D-023):** antes de indexar los chunks nuevos de un documento, el pipeline borra del vectorstore cualquier chunk existente con el mismo `source`+`filename` (nueva función en `ingestion/indexer.py`, p. ej. `delete_document_chunks(source, filename, embeddings, chroma_path, collection_name)`, usando `vectorstore.get(where=...)` + `vectorstore.delete(ids=...)`), y después llama a `index_chunks()` con el set completo de chunks recién troceados. Esto hace que un documento que pasa de N a M chunks (M < N) no deje chunks huérfanos de versiones antiguas, sin necesidad de lógica de diff explícita.
+- **Aislamiento de fallos en `ingestion/loader.py` (T-02), no en el pipeline:** se envuelve la llamada a `load_fn(file_path)` en un try/except, mismo patrón ya usado para formato no soportado — si falla, se emite `warnings.warn(...)` y se continúa con el resto de ficheros/fuentes. `load_documents()` mantiene su contrato actual (devuelve solo la lista de documentos cargados con éxito); el pipeline de T-05 construye el resumen final de la ejecución a partir de esos warnings, igual que ya hacen los tests de T-02 (`warnings.catch_warnings`).
+
+**Alternativas descartadas**
+
+- Incremental real basado en el manifest (saltar documentos sin cambios) — descartada para esta tarea por complejidad/tiempo; queda anotada como optimización futura si el volumen de la KB crece lo suficiente para que el coste de reembeber todo en cada run sea un problema real.
+- Aislar los fallos en el pipeline llamando al loader una vez por subcarpeta de fuente en vez de una vez sobre `data/raw/` — descartada: `load_documents()` ya gestiona `manifest.json` como una sola escritura compartida entre todas las fuentes; llamarlo por subcarpeta obligaría a reabrir/guardar el manifest una vez por fuente, con más riesgo de inconsistencia que extender el propio loader.
+- No borrar chunks huérfanos y dejarlo como deuda técnica — descartada: el principio de Falso Negativo Cero depende de que la KB no arrastre contenido obsoleto en retrieval; es más barato resolverlo ahora (una función de borrado por documento) que después.
+
+**Consecuencias**
+
+- `ingestion/loader.py` añade un try/except alrededor de `load_fn(file_path)`, con warning "no se pudo cargar el fichero" (o similar) + continuación — cambio aditivo, no rompe el contrato ni los tests ya cerrados de T-02.
+- `ingestion/indexer.py` añade `delete_document_chunks(source, filename, embeddings, chroma_path, collection_name)` — cambio aditivo, no modifica `index_chunks()` ni sus tests ya cerrados de T-04.
+- `ingestion/pipeline.py` (nuevo, T-05) orquesta: `load_documents()` → `chunk_documents()` → agrupar chunks por `(source, filename)` → por cada documento, `delete_document_chunks()` seguido de `index_chunks()` → construir resumen final (fuentes procesadas, chunks indexados, fallos capturados de los warnings del loader).
+- El `.feature` de T-05 se amplía con un escenario explícito que verifica que un documento que cambia de número de chunks entre ejecuciones no deja huérfanos en la colección.
+
+---
+
+## D-025 — Generador LLM: desactivar thinking de gemini-2.5-flash y subir LLM_MAX_TOKENS
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-07
+
+**Contexto**
+El smoke test manual de T-07 (primera ejecución de `RAGPipeline` real, con API real de Gemini, tras cerrarse E-04/D-018) mostró las 5 respuestas generadas cortadas a pocas palabras (p. ej. "Hola. Con gusto te explico qué es una inmun"), pese a que el retrieval funcionaba correctamente (chunks relevantes, fuentes correctas, buena similitud). Los tests de E-04 (mock de T-04 y `@integration` de T-04/T-06) no detectaron el problema porque solo comprueban que la respuesta no está vacía, no su longitud — es exactamente el hueco que T-07 existía para cubrir (ver nota de la épica E-06). Investigación (issues públicos de `langchain-google-genai` y foro de Google AI) confirma que `gemini-2.5-flash` usa "thinking" (razonamiento interno) por defecto, y esos tokens de pensamiento consumen el mismo presupuesto que `max_output_tokens`: con `LLM_MAX_TOKENS=300` (D-018), el thinking se comía casi todo el presupuesto antes de generar la respuesta visible.
+
+**Decisión**
+- `rag/generator.py` pasa `thinking_budget=0` a `ChatGoogleGenerativeAI` para desactivar el thinking de `gemini-2.5-flash`.
+- Default de `LLM_MAX_TOKENS` sube de `300` a `1024` (en `rag/config.py` y `.env.example`), como margen adicional — algunos reportes de la comunidad indican que `thinking_budget=0` no siempre elimina el consumo de thinking al 100% según la versión del modelo, así que no se confía solo en desactivarlo.
+- Variable de entorno explícita en `.env` de cada desarrollador: quien ya tenga `LLM_MAX_TOKENS=300` fijado a mano debe actualizarlo también (el nuevo default de `rag/config.py` no aplica si la variable ya está definida en `.env`).
+
+**Alternativas descartadas**
+- Solo subir `LLM_MAX_TOKENS` sin desactivar thinking — descartado: no ataca la causa raíz (el thinking sigue consumiendo presupuesto de forma no determinista según la pregunta) y obligaría a un valor arbitrariamente alto para compensar.
+- Cambiar de modelo (p. ej. a una versión sin thinking) — descartado: fuera de alcance de un hallazgo de smoke test; D-004 ya fijó Gemini Flash como LLM de Fase 1 y esto no lo cuestiona.
+
+**Justificación**
+El fix ataca la causa raíz (thinking consumiendo el presupuesto de salida) confirmada con fuentes externas, y el margen adicional en `LLM_MAX_TOKENS` cubre la inconsistencia conocida de `thinking_budget=0` en algunas versiones del modelo. No requiere cambios de contrato en `RAGGenerator`/`RAGPipeline` ni en sus tests mockeados (E-04 T-04/T-06): los mocks no validan `thinking_budget` ni el valor exacto de `LLM_MAX_TOKENS`, y `_base_config()` de los tests define sus propios valores independientes del default de `rag/config.py`.
+
+**Consecuencias**
+- `rag/generator.py`: `ChatGoogleGenerativeAI(...)` incluye `thinking_budget=0`.
+- `rag/config.py` y `.env.example`: default de `LLM_MAX_TOKENS` pasa a `1024`.
+- No se han tocado los tests de E-04 T-04/T-06 — sus mocks no se ven afectados por este cambio.
+- Pendiente para Marcos: actualizar el valor de `LLM_MAX_TOKENS` en su `.env` personal (gitignored, no se sincroniza solo) si ya lo tenía fijado en `300`.
+
+---
+
+## D-026 — Citación de fuentes: listado determinista al final, no citación inline por el LLM
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-06 T-07
+
+**Contexto**
+El smoke test de T-07 (primeras respuestas completas tras D-025) mostró que el system prompt (`[FUENTES]`, `docs/tech-spec.md` sección 5, D-018) instruye al LLM a citar la fuente en cada afirmación: `"Según [fuente], sección [X]..."`. El modelo sigue la instrucción correctamente, pero el resultado es una respuesta muy verbosa para el perfil familiar (tono empático y accesible, D-018/tech-spec): cada frase queda precedida de "Según el documento...", dificultando la lectura. Marcos planteó dos alternativas: lista de fuentes al final, o marcadores numerados inline `[1][2]` vinculados a una lista.
+
+**Decisión**
+- El LLM deja de citar fuentes dentro de la respuesta — el system prompt (`prompts/system_prompt_family.txt` y `docs/tech-spec.md` sección 5) se actualiza para instruir una respuesta natural y fluida, sin nombrar documento ni sección.
+- `RAGPipeline.query()` (`rag/pipeline.py`) añade al final de la respuesta (tras `apply_safety_filter`) una sección de fuentes generada de forma **determinista** a partir de `metadata["source"]`/`metadata["filename"]` de los chunks efectivamente recuperados en esa consulta (`_build_sources_section`), deduplicada y en el idioma detectado (`es`/`en`/`ca` con encabezado propio, resto con fallback a `es`, mismo patrón que `_LANGUAGE_NAMES` de `rag/language.py`).
+- Si los chunks no traen `source`/`filename` en su metadata (p. ej. fixtures de test indexadas con `add_texts()`, sin metadata), no se añade ninguna sección — no rompe los tests mockeados ya cerrados de E-04 T-06, que no comprueban ausencia de una sección de fuentes.
+
+**Alternativas descartadas**
+- Marcadores numerados inline `[1][2]` vinculados a una lista final — descartado: depende de que el LLM coloque los marcadores correctamente y no se salte ninguno; con citación completamente delegada al LLM (como ya se vio con la cita inline actual) el riesgo de asignación incorrecta o alucinada es real, y el listado plano determinista no depende en absoluto del LLM para ser correcto.
+- Mantener la citación inline tal como estaba — descartado por verbosidad, señalada directamente por Marcos al revisar las respuestas reales de T-07.
+
+**Justificación**
+Construir el listado a partir de los metadatos reales de los chunks recuperados (no de lo que el LLM "dice" que citó) elimina el riesgo de que el modelo invente o mezcle fuentes — coherente con el principio general de grounding del sistema. Además anticipa el criterio de E-05 "Visualización de pasos intermedios del RAG (documentos recuperados, chunks usados)": una lista de fuentes ya separada de la prosa es más directa de renderizar en la UI que texto de citación embebido.
+
+**Consecuencias**
+- `prompts/system_prompt_family.txt` y `docs/tech-spec.md` sección 5: sección `[FUENTES]` actualizada.
+- `rag/pipeline.py`: nueva función `_build_sources_section(raw_results, language)` y `RAGPipeline.query()` la invoca tras `apply_safety_filter`.
+- No se han modificado los tests mockeados de E-04 T-04/T-06 — sus fixtures no tienen metadata `source`/`filename`, por lo que no se ve afectado su comportamiento actual.
+- Pendiente: si en el futuro se quiere referencia por párrafo (opción descartada aquí), revisar esta decisión — no está cerrada la puerta, solo se prioriza fiabilidad sobre granularidad para esta fase del TFM.
+
+---
+
+---
+
+## D-027 — Modelo LLM: cambio de gemini-2.5-flash a gemini-2.5-flash-lite por límite de cuota
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-07
+
+**Contexto**
+Durante el smoke test de T-07, la ejecución falló a mitad con `429 RESOURCE_EXHAUSTED` de la API de Gemini: `quotaId: GenerateRequestsPerDayPerProjectPerModel-FreeTier`, `quotaValue: 20` para `gemini-2.5-flash`. Esto contradice el límite oficial documentado para ese modelo en la free tier (1.500 RPD según la documentación de julio 2026), pero coincide con reportes públicos de límites efectivos bastante más bajos en la práctica para algunos proyectos. En cualquier caso, el volumen real disponible hoy no es suficiente para iterar con comodidad antes de la entrega del 10 de julio.
+
+**Decisión**
+Se cambia el modelo de generación de `gemini-2.5-flash` a `gemini-2.5-flash-lite`, manteniendo el mismo proveedor (Google) y sin tocar la arquitectura: mismo `ChatGoogleGenerativeAI`, mismo `GOOGLE_API_KEY`. Cambio de config, no de código — coherente con D-010 (modelo configurable por variable de entorno, nunca hardcodeado): default de `LLM_MODEL` en `rag/config.py`/`rag/generator.py` y en `.env.example` pasa a `gemini-2.5-flash-lite`.
+
+**Alternativas descartadas**
+- Activar facturación en el proyecto de Google Cloud manteniendo `gemini-2.5-flash` — descartado por ahora: añade un paso de gestión (tarjeta, billing) para un problema que `flash-lite` resuelve sin fricción ni coste añadido inmediato.
+- Cambiar de proveedor a Claude Haiku (Anthropic) vía `langchain-anthropic` — descartado por ahora: exige más cambios (nueva dependencia, nueva variable `LLM_PROVIDER`, adaptar `rag/generator.py` para instanciar el LLM según proveedor) que no se justifican solo para resolver un límite de cuota, a días de la entrega del 10 de julio. Quedaría como opción real si en el futuro se busca deliberadamente ejercitar el diseño agnóstico de D-010, o si `flash-lite` no da la calidad suficiente en la evaluación RAGAS de E-07.
+- Mantener `gemini-2.5-flash` y aceptar el límite — descartado: bloquea la iteración práctica sobre T-07/E-05 en los días previos a la entrega.
+
+**Justificación**
+`gemini-2.5-flash-lite` es el cambio de menor fricción: mismo proveedor, misma integración de código, free tier documentada de 1.500 RPD (muy por encima del límite que bloqueó hoy la ejecución), y más barato ($0.10/$0.40 por 1M tokens de entrada/salida). Es una decisión reversible en una línea de `.env` si en el futuro la calidad de `flash-lite` no fuese suficiente para el perfil familiar.
+
+**Consecuencias**
+- `rag/generator.py` y `rag/config.py`: default de `LLM_MODEL` pasa a `gemini-2.5-flash-lite`.
+- `.env.example`: `LLM_MODEL=gemini-2.5-flash-lite`.
+- Pendiente para Marcos: actualizar `LLM_MODEL` en su `.env` personal (gitignored) si ya lo tenía fijado a `gemini-2.5-flash`.
+- No se ha tocado `tests/features/e01_setup.feature` (checklist manual ya cerrado de E-01, que verificó `gemini-2.5-flash` como valor de `.env.example` en su momento) — es un registro histórico de lo verificado al cerrar esa tarea, no una especificación viva; el valor actual de `.env.example` es la fuente de verdad presente.
+- Si la calidad de `flash-lite` no es suficiente en la evaluación RAGAS de E-07, revisitar esta decisión y considerar activar facturación o cambiar de proveedor (alternativas descartadas arriba).
+
+---
+
+## D-028 — Runbook de mantenimiento de la KB: documento de procedimiento separado de decisions.md
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica / proceso
+**Épica:** E-06 T-08
+
+**Contexto**
+Al revisar T-08 se detectó que renombrar la carpeta de una fuente en `data/raw/` (caso real:
+`cribado_neonatal/` → `aedip/`, nueva fuente AEDIP) no es una operación trivial: además de
+`data/raw/manifest.json` (clave `{source}/{filename}`, D-021), afecta a ChromaDB. El indexer
+(`ingestion/indexer.py`) calcula IDs deterministas a partir de `source`+`filename`+índice, y
+`run_ingestion_pipeline()` (D-024) solo borra-antes-de-reindexar los documentos que carga *en
+esa ejecución* — los chunks ya indexados bajo el `source` antiguo no coinciden con la búsqueda
+del nuevo `source` y quedan huérfanos/duplicados en la colección `family` si no se borran
+explícitamente. El mismo problema aplica a eliminar un documento o una fuente completa (sus
+chunks tampoco se borran solos, porque el loader ya no los carga). Marcos pidió documentar esto
+como procedimiento reutilizable para cualquier operación futura sobre la KB (ampliar,
+reestructurar, renombrar, actualizar, eliminar), no como una entrada de registro puntual.
+
+**Decisión**
+Se crea `docs/kb-maintenance.md` como documento vivo de procedimiento (runbook), separado de
+`decisions.md`. `decisions.md` registra decisiones justificadas con contexto/alternativas — no
+es el formato adecuado para una checklist operativa que alguien sigue paso a paso. Tampoco vive
+en `docs/kb-sources.md`, que es un índice de fuentes (qué hay), no de procedimientos (cómo
+mantenerlo). El runbook cubre los cinco escenarios de mantenimiento de la KB: añadir fuente,
+añadir documento a fuente existente, actualizar contenido de un documento, renombrar/reestructurar
+una fuente, y eliminar documento/fuente — cada uno con pasos manuales, comando a ejecutar
+(`python scripts/smoke_test_rag.py --force-reingest`, único CLI existente que invoca
+`run_ingestion_pipeline()` contra la KB real, T-05) y verificación posterior.
+
+**Alternativas descartadas**
+- Añadirlo como nota dentro de D-024 — descartado: D-024 documenta por qué el reprocesamiento es
+  completo y borra por documento, no es el sitio para una guía operativa que crecerá con más
+  escenarios y comandos concretos.
+- Añadirlo a `docs/kb-sources.md` — descartado: ese fichero es un índice de fuentes candidatas
+  (qué y de dónde), mezclar procedimiento operativo ahí rompe su propósito único (D-003, sin
+  replicación / un rol por fichero).
+
+**Justificación**
+D-003 establece "cada fichero se ganó su sitio": un runbook de mantenimiento operativo tiene una
+audiencia y un ciclo de actualización distintos a un registro de decisiones o a un índice de
+fuentes — se actualiza cada vez que se descubre un caso nuevo, no cada vez que se toma una
+decisión de diseño.
+
+**Consecuencias**
+- Nuevo fichero `docs/kb-maintenance.md`.
+- `AGENTS.md` (árbol de `docs/`) referencia el nuevo fichero.
+- T-08 (enlazar URLs) añade el escenario "rellenar/actualizar URL en el manifest" a este runbook,
+  además de su propio `.feature` — el runbook documenta el paso manual, el `.feature` valida el
+  comportamiento de citación en el pipeline.
+- Acción pendiente para Marcos (fuera de T-08, resultado directo de este hallazgo): limpiar los
+  chunks huérfanos de `cribado_neonatal/cribado-neonatal-IDCG-2021.pdf` en la colección `family`
+  antes o durante el próximo `--force-reingest` (pasos exactos en el runbook, escenario
+  "Renombrar o reestructurar una fuente").
+
+---
+
+## D-029 — Citación con URL original: cadena de propagación manifest→loader→chunker→pipeline y fallback de 2 niveles
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-08
+
+**Contexto**
+La nota original de T-08 en `backlog/epics.md` (línea 204) describía la propagación como
+"manifest → metadata del chunk (toca `ingestion/chunker.py`, T-03)", pero al revisar el código
+`ingestion/loader.py` nunca copia `entry["url"]` del manifest a `doc.metadata` — solo copia
+`source`/`filename`. La propagación real necesita tocar también `loader.py`. Además, la nota
+proponía una cadena de fallback de 3 niveles (enlace directo → página de la fuente en
+`kb-sources.md` → solo nombre de fichero) para el caso de documentos sin URL documentada.
+
+**Decisión**
+- **Cadena de propagación:** `data/raw/manifest.json` (`url`) → `ingestion/loader.py` (nuevo:
+  `doc.metadata["url"] = entry.get("url")`, junto a `source`/`filename` ya existentes) →
+  `ingestion/chunker.py` (nuevo: copia `url` a cada chunk igual que ya hace con `language`,
+  `date_indexed`, `profile` — mismo patrón de D-022) → `rag/pipeline.py`
+  (`_build_sources_section` renderiza `- [{filename}]({url})` en vez de texto plano cuando hay
+  `url`; sin URL, cae al formato actual `- {source}/{filename}`).
+- **Fallback de 2 niveles, no 3:** con el manifest ya al 100% de URLs rellenadas a mano por
+  Marcos (7 jul 2026, 37/37 documentos), el nivel intermedio (enlace genérico a la página de la
+  fuente en `kb-sources.md`) no tiene ningún caso real que lo dispare hoy. Se descarta construir
+  el mapeo `source` → URL genérica que ese nivel requeriría. Queda solo: enlace directo (si hay
+  `url`) → nombre de fichero sin enlace (si no hay `url`, red de seguridad para documentos
+  futuros añadidos sin URL todavía documentada).
+- **Verificación de vida del enlace fuera de alcance:** el script de mantenimiento que
+  comprobaría periódicamente que las URLs siguen vivas (`url_status`/`url_checked_at` cacheados
+  en el manifest) queda anotado en `backlog/ideas.md`, no se construye en T-08.
+
+**Alternativas descartadas**
+- Implementar el fallback de nivel 2 (mapeo `source` → URL genérica) igualmente, por completitud
+  — descartado: no hay ningún documento hoy que lo necesite, y el mapeo requeriría mantener una
+  segunda fuente de verdad (además de `kb-sources.md` en prosa) sin caso de uso real que lo
+  justifique todavía.
+- Generar `doc.metadata["url"]` en `chunker.py` a partir de releer el manifest directamente ahí
+  — descartado: `chunker.py` no tiene hoy ninguna dependencia de I/O sobre `data/raw/`, y
+  `loader.py` ya lee el manifest en memoria para `sync_entry()` — añadir la lectura de `url` ahí
+  es coherente con la responsabilidad ya existente del fichero, sin duplicar acceso a disco.
+
+**Justificación**
+El coste de construir el nivel 2 del fallback hoy es puro trabajo especulativo — YAGNI, dado que
+el 100% de los documentos actuales tiene URL directa. Si en el futuro se añade un documento sin
+URL inmediata, el fallback de nombre de fichero (ya existente, sin cambios) sigue funcionando sin
+romper nada; el nivel 2 puede añadirse entonces con un caso de uso real que guíe su diseño.
+
+**Consecuencias**
+- `ingestion/loader.py`: añade `doc.metadata["url"]` a partir de la entrada del manifest.
+- `ingestion/chunker.py`: propaga `url` a los metadatos del chunk (mismo patrón que D-022).
+- `rag/pipeline.py`: `_build_sources_section` renderiza enlace markdown cuando hay `url`.
+- `tests/features/e06_t08_source_url_citation.feature` (a crear) cubre ambos escenarios: chunk
+  con `url` → enlace markdown; chunk sin `url` → nombre de fichero (comportamiento actual, sin
+  regresión).
+- Pendiente de reindexar la KB completa (`python scripts/smoke_test_rag.py --force-reingest`)
+  una vez el código esté en verde, para que los chunks ya indexados lleven `url` en sus metadatos
+  — los indexados antes de T-08 no la tienen aunque el manifest ya esté completo.
+
+---
+
+*Próximas decisiones previstas: estrategia de chunking validada — tras primera evaluación RAGAS; estrategia incremental de reindexación basada en manifest, si el volumen de la KB lo justifica en el futuro (revisitar D-024).*

@@ -11,13 +11,13 @@ Feature: Integración de autenticación en Chainlit
   Para que el pipeline futuro (E-04) sepa qué KB y tono aplicar
 
   Background:
-    Given la variable APP_ROLE es "familiar"
+    Given la variable APP_ROLE es "family"
 
   Scenario: Login con credenciales válidas devuelve cl.User con role
-    Given login() devuelve una sesión válida con role "familiar"
+    Given login() devuelve una sesión válida con role "family"
     When llamo a password_auth_callback con email "user@example.com" y contraseña correcta
     Then la función devuelve un cl.User con identifier "user@example.com"
-    And el metadata del cl.User contiene role "familiar"
+    And el metadata del cl.User contiene role "family"
 
   Scenario: Login con credenciales inválidas devuelve None
     Given login() eleva AuthApiError por credenciales inválidas

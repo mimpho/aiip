@@ -29,7 +29,7 @@ sys.modules.setdefault("chainlit", _fake_cl)
 # ── Import entrypoint under test ─────────────────────────────────────────────
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "chainlit"))
-import main_familiar  # noqa: E402
+import main_family  # noqa: E402
 
 scenarios("../features/e03_t05_chainlit_auth.feature")
 
@@ -49,7 +49,7 @@ def app_role_env(monkeypatch, role):
 def login_returns_valid_session(monkeypatch, role):
     mock_session = MagicMock()
     monkeypatch.setattr(
-        main_familiar,
+        main_family,
         "login",
         lambda email, password: {"session": mock_session, "role": role},
     )
@@ -62,7 +62,7 @@ def login_returns_valid_session(monkeypatch, role):
     target_fixture="auth_result",
 )
 def call_auth_callback_valid(email):
-    return main_familiar.auth_callback(email, "cualquier-pass")
+    return main_family.auth_callback(email, "cualquier-pass")
 
 
 @then(
@@ -86,7 +86,7 @@ def login_raises_auth_api_error(monkeypatch):
     def _raise(email, password):
         raise AuthApiError("Invalid login credentials", 400, "invalid_credentials")
 
-    monkeypatch.setattr(main_familiar, "login", _raise)
+    monkeypatch.setattr(main_family, "login", _raise)
 
 
 @when(
@@ -96,7 +96,7 @@ def login_raises_auth_api_error(monkeypatch):
     target_fixture="auth_result",
 )
 def call_auth_callback_invalid(email):
-    return main_familiar.auth_callback(email, "wrong-pass")
+    return main_family.auth_callback(email, "wrong-pass")
 
 
 @then("la función devuelve None")

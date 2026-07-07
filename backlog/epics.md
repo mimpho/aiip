@@ -38,7 +38,7 @@ Perfil familias. Pipeline RAG completo. Seguridad. Autenticación básica.
 | E-03 | Autenticación y separación de perfiles | E-02 |
 | E-04 | Pipeline RAG + módulo de seguridad | E-01 |
 | E-05 | Interfaz conversacional (Chainlit) | E-02, E-04 |
-| E-06 | Ingesta y procesamiento de la KB | E-01, Feedback Jacques Rivière |
+| E-06 | Ingesta y procesamiento de la KB | E-01 |
 | E-07 | Evaluación RAGAS parcial | E-06 |
 | E-08 | Memoria de perfil e histórico | E-03, E-04, E-06 |
 
@@ -189,28 +189,64 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 
 **Criterios de aceptación de alto nivel**
-- Fuentes procesadas: IPOPI, IDF, upiip.com, guías clínicas validadas — indexadas en inglés (ver D-011)
+- Fuentes procesadas: IPOPI, IDF, upiip.com, guías clínicas validadas — cada fuente indexada en su idioma original (amplía D-011: bge-m3 resuelve cross-lingual retrieval en cualquier dirección, no solo EN→consulta)
 - Estrategia de chunking definida y documentada
-- Colección de familias separada en ChromaDB
+- Colección `familiar` separada en ChromaDB (continuidad de métrica coseno de D-016)
 
 **Notas**
-- Revisar DAIMS (Datasheets for AI and Medical Datasets, arXiv 2501.14094) al formalizar la KB — checklist de 24 requisitos aplicable directamente a este dataset. Ver `backlog/ideas.md`.
-- Valorar si las reglas de seguridad clínica (Falso Negativo Cero) van como chunk indexado en ChromaDB, como system prompt, o en capas. Ver `backlog/ideas.md` → "Business rules como documento indexado en la KB".
+- Datasheet DAIMS (arXiv 2501.14094) de la KB formalizado como T-06 (documentación, sin TDD). Ver `backlog/ideas.md`.
+- "Business rules como chunk indexado en la KB" descartado para esta épica — redundante con D-019 (detección de alarma determinista por JSON+substring, no por retrieval). Ver `backlog/ideas.md`.
+- Ficheros crudos (PDFs/guías de terceros) fuera del repo por copyright — viven en Drive/local (`data/raw/`, gitignored), indexados en `docs/kb-sources.md`. Trazabilidad vía `data/raw/manifest.json` (checksum, URL, fecha), este sí versionado.
+- Fuentes ya reunidas en Google Drive (`AIIP/data/raw/`): UPIIP, IPOPI, IDF, AFPA/HAS — no es una lista cerrada, se puede ampliar/ajustar durante y después de esta épica.
+- La revisión de Jacques Rivière sobre estas fuentes es consultiva (¿es suficiente esta base para el perfil familias, cambiaría o ampliaría algo?), no bloqueante para arrancar la épica — construir el pipeline de ingesta no requiere validación clínica previa. Lo único que sí requiere su validación antes de darse por bueno es `config/alarm_triggers.json` (D-019), por estar enchufado a la capa de seguridad de Falso Negativo Cero.
+- Ronda 1 y 2 de feedback de Jacques sobre `alarm_triggers.json` ya aplicadas en la rama `docs/D019-alarm-triggers-jacques` (creada desde esta épica, sin integrar hasta que confirme la lista definitiva) — no bloquea el trabajo de esta épica. Ver actualización de D-019 en `decisions.md`.
+- T-07 nace de un hueco detectado tras T-04: ni los tests de E-04 (mocks/fixtures pequeños) ni el `.feature` de T-05 (fuentes de fixture en carpeta) validan el pipeline RAG con el contenido real de la KB. T-07 corre un script contra `RAGPipeline` real con preguntas representativas del perfil familias y deja el resultado para revisión manual — antes de arrancar E-05 (diseño/interfaz), para no construir la UI sobre un backend sin verificar con datos reales. Es deliberadamente más ligero que la evaluación RAGAS de E-07 (sin métricas, solo lectura humana de pregunta/respuesta/chunks recuperados). Durante T-07 surgieron tres hallazgos que se documentaron como D-025, D-026 y D-027 en `decisions.md` (thinking de gemini-2.5-flash truncando respuestas, citación inline verbosa, y cambio de modelo a gemini-2.5-flash-lite por límite de cuota).
+- T-08 nace de una propuesta de Marcos al revisar los resultados de T-07: la sección "Fuentes consultadas" (D-026) cita el fichero interno (ej. `idf/manual-....pdf`), no la URL pública original. `data/raw/manifest.json` (D-021) ya tiene un campo `url` por documento, hoy en `null` para los 29 documentos actuales — la infraestructura ya está pensada para esto, falta rellenar las URLs reales (Marcos, manualmente, documento por documento — no inventar enlaces) y propagarlas: manifest → metadata del chunk (toca `ingestion/chunker.py`, T-03 ya cerrado) → render como enlace markdown en `_build_sources_section` de `rag/pipeline.py` (fallback a nombre de fichero si no hay URL). Especificidad del enlace: preferir el enlace directo al documento sobre el dominio genérico cuando se tenga con confianza (el coste de un 404 es bajo — no es un fallo de Falso Negativo Cero, y el documento sigue trazable localmente vía checksum) — cadena de fallback en tres niveles: enlace directo → página de la fuente en `docs/kb-sources.md` → solo nombre de fichero. Verificación de que la URL sigue viva: en tiempo de ingesta o script de mantenimiento aparte (nunca en el path de latencia del chat, mismo principio que D-022 para el chunking) — guardar el resultado cacheado en el manifest (ej. `url_status`/`url_checked_at` junto a `url`), la citación en el chat solo lee ese estado cacheado, sin red por pregunta. Pendiente de que Marcos rellene el manifest antes de formalizar la tarea con `task-start`.
 
-**Estado:** ⚪ No iniciada — pendiente feedback de Jacques Rivière (validación de fuentes KB)
+**Estado:** ✅ Completada — 08 jul 2026
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Setup de dependencias y estructura del módulo de ingesta | ✅ Completada |
+| T-02 | Loader de documentos fuente | ✅ Completada |
+| T-03 | Estrategia de chunking multiidioma | ✅ Completada |
+| T-04 | Indexer: indexación en ChromaDB (colección `family`) | ✅ Completada |
+| T-05 | Pipeline de ingesta end-to-end | ✅ Completada |
+| T-06 | Datasheet DAIMS de la KB (documentación, sin TDD) | ✅ Completada |
+| T-07 | Smoke test manual del pipeline RAG con datos reales de la KB (configuración, sin TDD) | ✅ Completada |
+| T-08 | Enlazar fuentes citadas a su URL original (manifest → metadata de chunk → citación) | ✅ Completada |
+
+**Entregables**
+- `ingestion/loader.py`, `ingestion/chunker.py`, `ingestion/indexer.py`, `ingestion/pipeline.py`, `ingestion/manifest.py`, `ingestion/config.py` — módulo de ingesta completo (loader → chunking multiidioma con tokenizer real de bge-m3 → indexación ChromaDB con IDs deterministas → orquestación end-to-end con borrado-antes-de-reinsertar)
+- `data/raw/manifest.json` — trazabilidad de fuentes crudas (checksum, URL, fecha), 37 documentos, único fichero versionado de `data/raw/`
+- `docs/kb-datasheet.md` — datasheet DAIMS de la KB (T-06)
+- `docs/kb-maintenance.md` + `skills/kb-maintenance/SKILL.md` — runbook y skill de mantenimiento de fuentes de la KB
+- `scripts/smoke_test_rag.py` + `tests/results/e06_t07_smoke_test_results.md` — smoke test manual del pipeline RAG con datos reales de la KB indexada (T-07)
+- `rag/pipeline.py`, `rag/generator.py` — citación de fuentes con enlace a URL original, fallback a nombre de fichero (T-08)
+- `prompts/system_prompt_family.txt` — system prompt del perfil familiar (renombrado de `system_prompt_familiar.txt`, lenguaje inclusivo paciente/cuidador)
+- `supabase/migrations/20260706214852_rename_profile_roles_to_english.sql` — roles de perfil `familiar/profesional` → `family/professional`
+- `tests/features/e06_t01_*.feature` a `e06_t08_*.feature` — escenarios Gherkin por tarea
+- `tests/step_defs/test_e06_t01.py` a `test_e06_t08.py` — step definitions pytest-bdd
+- `tasks/E06-T01-plan.md` a `E06-T08-plan.md` — planes de implementación
+- `decisions.md` — D-021 a D-029 (manifest, chunking, indexer, pipeline de ingesta, thinking de Gemini, citación de fuentes, cambio de modelo, runbook de KB, citación con URL original)
 
 ---
 
 ### E-07 — Evaluación RAGAS (parcial)
-Dataset de prueba y métricas básicas funcionando para la entrega del 10 de julio.
+Dataset de prueba y métricas básicas funcionando, ejecutada inmediatamente después del hito del 10 de julio.
 
 **Criterios de aceptación de alto nivel**
 - Dataset de preguntas representativas del perfil familias definido
-- Las cuatro métricas RAGAS implementadas: Faithfulness, Answer Relevancy, Context Precision, Context Recall
+- Faithfulness y Answer Relevancy implementadas y funcionando contra el pipeline real (Context Precision y Context Recall quedan para E-09, Fase 1.5 — ver `docs/evaluation.md` sección 3)
+- Safety Compliance: primer resultado (baseline, sin ciclo de mejora todavía)
 - Primeros resultados documentados
 
 **Notas**
-- Hito de cierre de Fase 1 (10 jul). Al cerrar: ejecutar `pytest tests/ -v` sobre el sistema completo acumulado hasta este punto — primera validación de integración real del pipeline.
+- **Corrección (7 jul 2026):** el criterio original decía "las cuatro métricas RAGAS implementadas" — no coincidía con el plan de fases de `docs/evaluation.md` (sección 3), que solo asigna Faithfulness + Answer Relevancy a la Fase 1 parcial. Se alinea este criterio con `evaluation.md`, que es el documento con el desglose técnico detallado.
+- **Reprioridad (7 jul 2026):** E-05 (interfaz Chainlit) pasa por delante de E-07 en la ejecución. El hito del 10 de julio se llama "código funcional" (ver `README.md`) — lo entrega E-05, no E-07. El ciclo de mejora basado en RAGAS (la parte que realmente aporta valor de iteración) ya estaba asignado a Fase 1.5 (29 jul) en `evaluation.md`, así que ejecutar E-07 parcial unos días después del 10 de julio no compromete el hito. Única dependencia real a vigilar: E-09 (RAGAS completa, necesaria para la entrega final del 29 jul) está bloqueada por E-07 — no debe retrasarse mucho más allá del 10 de julio para no comprimir el margen antes del 29.
+- Hito de cierre de Fase 1 (10 jul, vía E-05). Al cerrar E-07: ejecutar `pytest tests/ -v` sobre el sistema completo acumulado hasta este punto — primera validación de integración real del pipeline.
 
 **Estado:** ⚪ No iniciada
 

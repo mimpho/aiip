@@ -5,6 +5,8 @@
 > `backlog/epics.md`).
 > Los documentos pesados (PDFs, exports) viven en Drive (`data/raw/`), no en este repo.
 > Este fichero es el único índice — no se duplica contenido, solo se referencia.
+> Para añadir/renombrar/eliminar fuentes o documentos, sigue el procedimiento de
+> `docs/kb-maintenance.md`.
 
 **Leyenda de estado**
 - `Validada` — confirmada explícitamente por Jacques (PRD v1.9 o comentarios)
@@ -28,6 +30,10 @@
 | [AEDIP — Clasificación de inmunodeficiencias](https://aedip.com/informacion-medica/clasificacion-de-inmunodeficiencias) | Guía divulgativa | ES | Propuesta | Jacques | |
 | [AEDIP — Tratamiento con inmunoglobulinas](https://aedip.com/informacion-medica/tratamiento-con-inmunoglobulinas) | Guía divulgativa | ES | Propuesta | Jacques | Relacionado con CU-02 (medicación prescrita). |
 | [AEDIP — Directorio de hospitales](https://aedip.com/informacion-medica/directorio-de-hospitales) | Directorio de contacto | ES | Propuesta | Jacques | Relacionado con CU-05 (canales de atención). |
+| [AEDIP — Diagnóstico de las inmunodeficiencias primarias](https://aedip.com/pdf/diagnostico-de-las-inmunodeficiencias-primarias.pdf) | Guía divulgativa (PDF) | ES | Validada | Marcos | |
+| [AEDIP — Infusiones de IGS subcutáneas](https://aedip.com/pdf/infusiones-de-IGS-subcutaneas.pdf) | Guía divulgativa (PDF) | ES | Validada | Marcos | Relacionado con CU-02 (medicación prescrita). |
+| [AEDIP — IDPS y trastornos gastrointestinales](https://aedip.com/pdf/IDPS-y-trastornos-gastrointestinales.pdf) | Guía divulgativa (PDF) | ES | Validada | Marcos | |
+| [AEDIP — IDPS y las enfermedades respiratorias](https://aedip.com/pdf/IDPS-y-las-enfermedades-respiratorias.pdf) | Guía divulgativa (PDF) | ES | Validada | Marcos | |
 | Protocolos del equipo de inmunología | Documentación interna | ES | Pendiente | PRD v1.9 §5 | Marcado como `[Pendiente]` en el PRD original. |
 
 ## Perfil Profesional (Fase 2B — condicional a decisión de alcance)
@@ -42,15 +48,12 @@
 
 ---
 
-## Nota abierta — idioma de la KB (D-011)
+## Idioma de la KB — resuelto (D-022, amplía D-011)
 
-D-011 fija la KB interna en inglés (bge-m3 resuelve el cross-lingual retrieval), asumiendo que
-las fuentes de referencia (IPOPI, IDF, Orphanet, ESID, PubMed) son nativamente en inglés. Varias
-de las fuentes nuevas de Jacques son nativas en español/catalán/francés (upiip.com, Acadip,
-AEDIP, PNDS de la HAS) y no tienen versión en inglés equivalente. Antes de cerrar la estrategia
-de chunking de E-06 conviene decidir explícitamente si estas fuentes se indexan en su idioma
-original (rompiendo la capa única en inglés de D-011) o si se traducen — impacta directamente en
-D-011 y merece registrarse como decisión en `decisions.md` cuando se arranque E-06.
+Cada fuente se indexa en su idioma original (inglés, español, catalán o francés según el
+documento), sin traducción. bge-m3 resuelve el cross-lingual retrieval en cualquier dirección,
+no solo inglés→consulta como preveía D-011 originalmente. El idioma de cada chunk se detecta
+automáticamente por documento durante el chunking (T-03) — ver D-022 en `decisions.md`.
 
 ## Organización de `data/raw/`
 

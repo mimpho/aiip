@@ -4,7 +4,7 @@ import chainlit as cl
 from auth.supabase_client import login
 from supabase_auth.errors import AuthApiError
 
-APP_ROLE = os.environ.get("APP_ROLE", "familiar")
+APP_ROLE = os.environ.get("APP_ROLE", "family")
 
 
 @cl.password_auth_callback

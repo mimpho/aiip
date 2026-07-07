@@ -24,6 +24,10 @@ Confirma con Marcos que:
 
 Si alguno de estos puntos falla, no continúes — la tarea no está cerrable.
 
+> Recuerda: no reejecutes los tests en el sandbox de Cowork (ver nota en
+> `task-start` — "Vuelta de Antigravity con tests en verde"). Verifica leyendo
+> el código y el `.feature`, no ejecutando la suite tú mismo.
+
 ---
 
 ## Paso 1 — Revisión del trabajo

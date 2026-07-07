@@ -24,7 +24,7 @@ Feature: Generador LLM Gemini Flash
     Then el modelo usa los valores del entorno, no valores hardcodeados
 
   Scenario: System prompt leído de fichero, no embebido en código
-    Given existe el fichero prompts/system_prompt_familiar.txt
+    Given existe el fichero prompts/system_prompt_family.txt
     When inicializo el generador
     Then el system prompt se carga desde el fichero
 

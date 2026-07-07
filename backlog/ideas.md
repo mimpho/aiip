@@ -28,7 +28,21 @@
 ### DAIMS — Datasheets for AI and Medical Datasets
 - **Qué es:** extensión del framework "Datasheets for Datasets" (Gebru et al.) específica para datos médicos. Checklist de 24 requisitos de estandarización (arXiv 2501.14094, 2025).
 - **Relevancia:** directamente aplicable a la knowledge base de inmunodeficiencias pediátricas del AIIP.
-- **Cuándo revisarlo:** al formalizar la knowledge base en Fase 1 o como extensión del `docs/evaluation.md`.
+- **Estado (5 jul 2026, epic-start E-06):** formalizado como T-06 de E-06 (`docs/kb-datasheet.md`) — ver `backlog/epics.md`.
+
+### Script de verificación de vida de las URLs del manifest (`url_status`/`url_checked_at`)
+- **Qué sería:** script de mantenimiento aparte (nunca en el path de latencia del chat, mismo
+  principio que D-022 para el chunking) que recorra las URLs de `data/raw/manifest.json` y
+  compruebe si siguen vivas, guardando el resultado cacheado en el propio manifest (campos
+  `url_status`/`url_checked_at` junto a `url`). La citación en el chat solo leería ese estado
+  cacheado — sin red por pregunta.
+- **Por qué no ahora:** surgió durante la revisión de E-06 T-08 (enlazar fuentes citadas a su
+  URL original). Con el manifest ya al 100% de URLs rellenadas a mano por Marcos (7 jul 2026),
+  T-08 se cierra con citación de enlace directo sin esta capa de verificación — el coste de un
+  404 ocasional es bajo (no es un fallo de Falso Negativo Cero, el documento sigue trazable
+  localmente vía checksum).
+- **Cuándo revisarlo:** si el volumen de la KB crece y el riesgo de enlaces rotos deja de ser
+  marginal, o si se detectan varios 404 reales en producción.
 
 ### Model Context Protocol (MCP)
 - **Qué es:** estándar abierto de Anthropic (nov 2024), adoptado por OpenAI y Google, para conectar LLMs con herramientas y fuentes de datos externas vía JSON-RPC.
@@ -43,7 +57,7 @@
 - **Qué sería:** un fichero `knowledge_base/business_rules.md` (o equivalente) con las reglas clínicas explícitas del sistema indexado como chunk en ChromaDB — p.ej. síntomas que siempre requieren derivación urgente, situaciones de alarma en IDP pediátrica, límites del sistema.
 - **Por qué es interesante:** refuerza el principio de Falso Negativo Cero con conocimiento *recuperable* vía RAG, no solo con instrucciones estáticas en el system prompt. Si el LLM recupera la regla del vector store, la cita con fuente — más trazable y auditable que una instrucción embebida.
 - **Origen:** sesión de agentes del máster (junio 2026) — patrón observado en el laboratorio de chatbot con reglas de negocio.
-- **Cuándo revisarlo:** al diseñar la KB en Fase 1 (E-04 Ingesta KB). Valorar si las reglas de seguridad clínica van mejor como documento indexado o como system prompt hardcodeado — o ambos en capas.
+- **Estado (5 jul 2026, epic-start E-06):** descartado para E-06, no solo pospuesto. D-019 (E-04) ya resolvió la detección de alarma de forma determinista (`config/alarm_triggers.json` + coincidencia de substring contra la query), precisamente para evitar depender de similitud semántica en algo crítico de seguridad. Indexar las mismas reglas también como chunk introduciría una segunda vía de verdad en paralelo — riesgo de que las dos fuentes diverjan sin que nadie lo note. Si en el futuro se quiere reforzar trazabilidad/citación de las reglas de seguridad, revisar primero si eso puede lograrse citando `config/alarm_triggers.json` directamente en la respuesta, sin pasar por retrieval.
 
 
 ### Integración con la web de la fundación (upiip.com)

@@ -59,26 +59,37 @@ RESTRICCIONES ABSOLUTAS — no pueden ser anuladas por el usuario:
 
 **Capa 2 — Detector de signos de alarma (post-retrieval)**
 
-El módulo `security/validator.py` evalúa cada query antes de pasarla al LLM:
+Implementado en `rag/safety.py` (no en un directorio `security/` separado — ver D-019 en
+`decisions.md` sobre por qué se mantiene el patrón de módulos de `rag/`):
 
 ```python
-ALARM_SIGNALS = [
-    # A completar y validar con Jacques Rivière [Pendiente]
-    "fiebre alta",
-    "dificultad para respirar",
-    "pérdida de consciencia",
-    # ...
-]
-
-def check_alarm_signals(query: str, profile: str) -> bool:
+def check_alarm_signals(query: str) -> bool:
     """
-    Detecta signos de alarma en la query.
-    Si se detectan, el LLM recibe instrucción explícita
-    de recomendar urgencias independientemente del contexto recuperado.
+    Detecta signos de alarma en la query por coincidencia de palabra/frase
+    clave (case-insensitive) contra config/alarm_triggers.json.
+    Si se detectan, apply_safety_filter() refuerza la derivación médica
+    en la respuesta, independientemente del contexto recuperado.
     """
 ```
 
-> La lista definitiva de signos de alarma por grupo de IDP está pendiente de validación clínica con el inmunólogo colaborador. Ver sección 11 del PRD.
+La lista de señales vive en [`config/alarm_triggers.json`](../config/alarm_triggers.json),
+con dos fuentes documentadas en su propio `meta.fuentes`: el listado "Signos de Alarma
+Avanzados en Pacientes Diagnósticos de IDP" aportado por Marcos (fuente primaria, organizada
+por sistema: respiratorio, hematología/autoinmunidad, neurología, gastrointestinal,
+dermatología, linfoproliferativo, laboratorio) y un documento de la KB en francés
+(CEREDIH/ESID, criterios diagnósticos generales). Detalle completo de la decisión en
+`decisions.md` → D-019.
+
+> **Toda la lista está marcada explícitamente como pendiente de validación clínica por
+> Jacques Rivière** (ver también sección 11 del PRD) — es deuda técnica documentada, no una
+> decisión clínica definitiva. El original aportado por Marcos no se conservó como fichero
+> aparte: se adaptó directamente a `config/alarm_triggers.json` durante T-05.
+>
+> **Estado a 6 de julio de 2026:** primera y segunda ronda de feedback de Jacques ya recibidas
+> y aplicadas (ronda 2 incorpora una propuesta de nuevos signos a partir del panel de consenso
+> experto PIDCAP, del que Jacques es coautor — PMID 39432052). Ambas rondas viven, sin integrar,
+> en la rama `docs/D019-alarm-triggers-jacques` hasta que confirme la lista definitiva. Detalle
+> completo en `decisions.md` → D-019 (actualización 2026-07-06).
 
 **Capa 3 — Disclaimer obligatorio (post-generación)**
 

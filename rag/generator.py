@@ -2,7 +2,7 @@ from pathlib import Path
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-_SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "system_prompt_familiar.txt"
+_SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "system_prompt_family.txt"
 
 _PROMPT_TEMPLATE = """{system_prompt}
 
@@ -24,11 +24,16 @@ class RAGGenerator:
             raise EnvironmentError("Variable de entorno requerida no definida: GOOGLE_API_KEY")
         self._system_prompt = self._load_system_prompt()
         self._llm = ChatGoogleGenerativeAI(
-            model=config.get("LLM_MODEL", "gemini-2.5-flash"),
+            model=config.get("LLM_MODEL", "gemini-2.5-flash-lite"),
             temperature=config.get("LLM_TEMPERATURE", 0.1),
             top_p=config.get("LLM_TOP_P", 0.1),
-            max_output_tokens=config.get("LLM_MAX_TOKENS", 300),
+            max_output_tokens=config.get("LLM_MAX_TOKENS", 1024),
             google_api_key=config["GOOGLE_API_KEY"],
+            # D-025: gemini-2.5-flash consume max_output_tokens en "thinking"
+            # interno antes de generar la respuesta visible, truncándola con
+            # LLM_MAX_TOKENS bajo (hallazgo de E-06 T-07 con datos/API reales).
+            # thinking_budget=0 lo desactiva.
+            thinking_budget=0,
         )
 
     def _load_system_prompt(self) -> str:

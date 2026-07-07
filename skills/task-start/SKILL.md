@@ -29,17 +29,29 @@ Para tareas de código:
 1. Identifica únicamente el nombre corto de la tarea leyendo **solo** la fila
    correspondiente en la tabla de tareas de `backlog/epics.md` (no leas el
    resto del fichero todavía — eso es parte de "Antes de empezar").
-2. Según la tabla de "Reparto git" de `AGENTS.md`, `checkout -b` es una acción
+2. Verifica el nombre real de la epic branch con un comando de solo lectura
+   (`git branch -a` o `git ls-remote --heads origin`) **antes** de proponer
+   los comandos de checkout. No lo derives ni lo memorices a partir del
+   título de la épica en `epics.md` — el nombre de rama puede no coincidir
+   (ej. la épica "Ingesta y procesamiento de la KB" usa `epic/E06-kb-ingestion`,
+   no `epic/E06-ingesta-procesamiento-kb`). Esta verificación es de solo
+   lectura, no choca con el reparto de git de `AGENTS.md`.
+3. Según la tabla de "Reparto git" de `AGENTS.md`, `checkout -b` es una acción
    de Marcos, no del agente. **Nunca ejecutes estos comandos tú mismo** —
-   preséntaselos a Marcos y pídele que los ejecute:
+   preséntaselos a Marcos y pídele que los ejecute, usando el nombre de rama
+   verificado en el paso anterior:
+
+   > Nombra la rama siempre en inglés, aunque el nombre corto de la tarea esté
+   > en castellano (ej. `task/E06-T03-multilingual-chunking-strategy`, no
+   > `chunking-multiidioma`).
 
    ```bash
-   git checkout epic/E[nn]-nombre
-   git pull origin epic/E[nn]-nombre
+   git checkout epic/E[nn]-nombre-real-verificado
+   git pull origin epic/E[nn]-nombre-real-verificado
    git checkout -b task/E[nn]-T[nn]-descripcion-corta
    ```
 
-3. **Espera confirmación explícita de Marcos de que la rama está creada**
+4. **Espera confirmación explícita de Marcos de que la rama está creada**
    antes de leer ningún otro fichero o proponer ningún cambio.
 
 ---
@@ -291,3 +303,17 @@ al arrancar la sesión de desarrollo.
 | 2 | Decisiones de arquitectura (si aplica) | Registra antes de implementar |
 | 3 | Fichero .feature | Define exactamente qué se valida |
 | 4 | Plan de implementación | El IDE ejecuta, no diseña |
+
+---
+
+## Vuelta de Antigravity con tests en verde
+
+Cuando Marcos vuelva a Cowork reportando que el ciclo TDD ha terminado en
+Antigravity y los tests pasan, **no los reejecutes en el sandbox de Cowork** —
+el entorno no tiene el proyecto configurado (venv, dependencias) para correr
+`pytest`. Esto aplica aunque todavía no se haya invocado `task-close`
+explícitamente: es el primer momento en que existe la tentación de
+"verificar" ejecutando la suite, y ya es tarde para hacerlo aquí. Confía en el
+resultado reportado y, si quieres revisar algo, hazlo leyendo el código y el
+`.feature`, no ejecutando tests. Cuando Marcos confirme que quiere cerrar la
+tarea, continúa con `task-close`.

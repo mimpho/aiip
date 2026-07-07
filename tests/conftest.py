@@ -49,20 +49,20 @@ def user_without_profile(admin_client):
 
 @pytest.fixture
 def test_user(admin_client):
-    """Usuario con perfil propio (role=familiar)."""
+    """Usuario con perfil propio (role=family)."""
     user = _create_auth_user(admin_client)
-    admin_client.table("profiles").insert({"id": user["id"], "role": "familiar"}).execute()
+    admin_client.table("profiles").insert({"id": user["id"], "role": "family"}).execute()
     yield user
     admin_client.auth.admin.delete_user(user["id"])
 
 
 @pytest.fixture
 def two_test_users(admin_client):
-    """Dos usuarios con perfiles distintos (familiar / profesional)."""
+    """Dos usuarios con perfiles distintos (family / professional)."""
     user_a = _create_auth_user(admin_client)
     user_b = _create_auth_user(admin_client)
-    admin_client.table("profiles").insert({"id": user_a["id"], "role": "familiar"}).execute()
-    admin_client.table("profiles").insert({"id": user_b["id"], "role": "profesional"}).execute()
+    admin_client.table("profiles").insert({"id": user_a["id"], "role": "family"}).execute()
+    admin_client.table("profiles").insert({"id": user_b["id"], "role": "professional"}).execute()
     yield user_a, user_b
     admin_client.auth.admin.delete_user(user_a["id"])
     admin_client.auth.admin.delete_user(user_b["id"])

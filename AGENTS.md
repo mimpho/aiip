@@ -27,6 +27,7 @@ Las skills en `skills/` cubren el workflow completo de épica a tarea. **Todas s
 | `task-start` | Antes de cada tarea de código | Revisión crítica, decisiones de arquitectura, `.feature`, plan en `tasks/` |
 | `task-close` | Al terminar una tarea (tests en verde) | PR description lista para copiar en GitHub |
 | `epic-close` | Al cerrar una épica | PR epic→main, registros actualizados, borrador prompts.md, retro |
+| `kb-maintenance` | Al añadir/actualizar/renombrar/eliminar fuentes o documentos de la KB | Pasos guiados según `docs/kb-maintenance.md`, sin ejecutar comandos reservados a Marcos |
 
 ---
 
@@ -93,6 +94,7 @@ aiip/
 │   ├── security.md        ← Seguridad: Falso Negativo Cero + OWASP + RGPD
 │   ├── evaluation.md      ← Evaluación: RAGAS + CHART
 │   ├── kb-sources.md      ← Índice de fuentes de la KB (E-06). No la dupliques en otro sitio.
+│   ├── kb-maintenance.md  ← Runbook: pasos para añadir/actualizar/renombrar/eliminar en la KB (D-028)
 │   └── design/            ← Screens de referencia (identity, auth, chat)
 ├── design/                ← Tokens CSS, temas Chainlit y Supabase Auth (E-02)
 │   ├── public/            ← tokens.css, style.css (Chainlit theme)
@@ -102,18 +104,22 @@ aiip/
 ├── rag/                   ← Pipeline RAG (E-04): embeddings, retriever, idioma, generador, seguridad
 ├── config/                ← Configuración de dominio, p. ej. alarm_triggers.json (E-04)
 ├── prompts/               ← System prompts por perfil, en fichero separado del código (E-04)
+├── ingestion/             ← Pipeline de ingesta de la KB (E-06): loader, chunker, indexer, manifest
+├── data/
+│   └── raw/manifest.json  ← Trazabilidad de fuentes crudas (checksum, URL, fecha). Único fichero versionado de data/raw/ — el resto vive local/Drive, gitignored (E-06, D-021)
 ├── backlog/
 │   ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
 │   └── ideas.md           ← Cajón de sastre
-├── scripts/               ← Scripts auxiliares (verificación, setup, etc.)
-├── skills/                ← Skills del proyecto (epic-start, task-start, task-close, epic-close)
+├── scripts/               ← Scripts auxiliares (verificación, setup, smoke tests, etc.)
+├── skills/                ← Skills del proyecto (epic-start, task-start, task-close, epic-close, kb-maintenance)
 ├── supabase/
 │   └── migrations/        ← Migraciones SQL de Supabase
 ├── tasks/                 ← Planes de implementación por tarea (E[nn]-T[nn]-plan.md)
 │                             Generados en Cowork por task-start. Léelos al arrancar en el IDE.
 └── tests/
     ├── features/          ← Escenarios Gherkin por tarea (eXX_tYY_nombre.feature)
-    └── step_defs/         ← Step definitions pytest-bdd (test_eXX_tYY.py)
+    ├── step_defs/         ← Step definitions pytest-bdd (test_eXX_tYY.py)
+    └── results/           ← Resultados de smoke tests manuales, revisión humana (p. ej. E-06 T-07)
 ```
 
 ---
