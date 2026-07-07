@@ -1,6 +1,6 @@
 # E-06 T-07 — Resultados del smoke test manual del pipeline RAG
 
-Generado: 2026-07-07
+Generado: 2026-07-08
 
 Resultado de ejecutar `RAGPipeline` real (sin mocks) contra la KB real indexada en la colección `family`. Ver `tests/features/e06_t07_rag_smoke_test.feature`.
 
@@ -18,28 +18,28 @@ Cada entrada queda pendiente de revisión manual de Marcos antes de dar por buen
 **Chunks recuperados:**
 
 1. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.7071) — 10 son comparables a los que se utilizan para las  inmunodeficiencias primarias. Las inmunodeficiencias primarias, o IP , son un grupo  de trastornos causados por defectos básicos en  la función inmun...
-2. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.7005) — 168 Capítulo 34 Inmunodeficiencias secundarias Dr. Javier Chinen, PhD, Hospital Infantil de Texas, Houston, Texas, EE. UU. Descripción general Las personas que padecen infecciones frecuentes  o inusua...
-3. `ipopi/TreatmentsForPIDs-Spanish.pdf` (similitud: 0.6966) — Tratamientos para Inmunodeficiencias Primarias: Guía para el paciente y sus familias. ¿Qué son las Inmunodeficiencias Primarias? Este folleto explica qué son las Inmunodeficiencias Primarias (IDP)   y...
-4. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.6931) — iii Manual de IDF para pacientes y familias Índice Sobre las enfermedades de inmunodeficiencia primaria  1.  El sistema inmune y las enfermedades de inmunodeficiencia primaria 1 Inmunodeficiencias de ...
-5. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.6703) — 156 Capítulo 32 Autoinmunidad en inmunodeficiencia primaria Dr. John Routes, Hospital Infantil de Wisconsin, Milwaukee, Wisconsin, EE. UU. Mary Hintermeyer, APNP , Hospital Infantil de Wisconsin, Milw...
+2. `aedip/10-senales-de-aviso.html` (similitud: 0.7043) — 10 Avisos de Peligro de la Inmunodeficiencia Primaria                             La inmunodeficiencia primaria (IDP) hace que los niños y los adultos tengan infecciones                               ...
+3. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.7005) — 168 Capítulo 34 Inmunodeficiencias secundarias Dr. Javier Chinen, PhD, Hospital Infantil de Texas, Houston, Texas, EE. UU. Descripción general Las personas que padecen infecciones frecuentes  o inusua...
+4. `aedip/clasificacion-de-inmunodeficiencias.html` (similitud: 0.6993) — Clasificación de inmunodeficiencias                                                                                  Cómo se presentan                                                                  ...
+5. `ipopi/TreatmentsForPIDs-Spanish.pdf` (similitud: 0.6966) — Tratamientos para Inmunodeficiencias Primarias: Guía para el paciente y sus familias. ¿Qué son las Inmunodeficiencias Primarias? Este folleto explica qué son las Inmunodeficiencias Primarias (IDP)   y...
 
 **Respuesta generada:**
 
-> Las inmunodeficiencias primarias (IP) son un grupo de trastornos que se originan por defectos en el funcionamiento del sistema inmunitario. Estos defectos son inherentes a las células y proteínas que forman parte de este sistema.
+> Las Inmunodeficiencias Primarias (IP) son un grupo de trastornos que se originan por defectos en la función del sistema inmunitario. Estos defectos son inherentes a las células y proteínas que componen este sistema. Existen más de 350 tipos de IP, algunas más comunes y otras más raras.
 
-Existen más de 350 tipos de IP, algunas más comunes y otras más raras. Pueden afectar a uno o varios componentes del sistema inmunitario, como las células T, las células B, las células NK, los neutrófilos, los monocitos, los anticuerpos, las citocinas o el sistema del complemento.
+Estas condiciones pueden afectar a una o varias partes del sistema inmunitario, como las células T, las células B, las células NK, los neutrófilos, los monocitos, los anticuerpos, las citocinas o el sistema del complemento. La mayoría de las IP son hereditarias y pueden transmitirse de padres a hijos. Sin embargo, en algunos casos, como en la Inmunodeficiencia Común Variable (IDCV) o la deficiencia selectiva de IgA, los patrones de herencia no son siempre claros y se cree que factores genéticos y ambientales interactúan en su desarrollo.
 
-La mayoría de las IP son hereditarias y pueden transmitirse de padres a hijos. Sin embargo, en algunos casos, como en la inmunodeficiencia común variable (IDCV) o la deficiencia selectiva de IgA, no siempre hay patrones de herencia claros. En estas situaciones, se cree que la interacción entre factores genéticos y ambientales podría ser la causa.
+La función principal del sistema inmunitario es proteger al cuerpo contra las infecciones. Por ello, las personas con IP son más susceptibles a ellas. Esto puede manifestarse como un número elevado de infecciones, infecciones difíciles de curar, infecciones inusualmente graves o causadas por organismos poco comunes. Las infecciones pueden afectar a cualquier parte del cuerpo, siendo comunes en los senos paranasales, los bronquios, los pulmones o el tracto intestinal.
 
-Debido a que una función principal del sistema inmunitario es defendernos de las infecciones, las personas con IP son más susceptibles a ellas. Esto puede manifestarse como un número elevado de infecciones, infecciones difíciles de curar, infecciones inusualmente graves o causadas por organismos poco comunes. Las infecciones pueden afectar a cualquier parte del cuerpo, siendo comunes en los senos paranasales, los bronquios, los pulmones o el tracto intestinal.
-
-Es importante recordar que soy un asistente informativo y no puedo diagnosticar ni recomendar tratamientos. Si tienes preocupaciones sobre tu salud o la de alguien más, te recomiendo consultar a un profesional médico.
+Si tú o la persona a tu cargo tenéis dudas sobre vuestra salud o presentáis señales de alerta relacionadas con infecciones frecuentes o graves, es importante consultar con un médico. Como asistente informativo, mi función es proporcionar información y no diagnosticar ni recomendar tratamientos.
 
 Fuentes consultadas:
-- idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf
-- ipopi/TreatmentsForPIDs-Spanish.pdf
+- [manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf](https://primaryimmune.org/resources/print-material/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta)
+- [10-senales-de-aviso.html](https://aedip.com/informacion-medica/10-senales-de-aviso/)
+- [clasificacion-de-inmunodeficiencias.html](https://aedip.com/informacion-medica/clasificacion-de-inmunodeficiencias)
+- [TreatmentsForPIDs-Spanish.pdf](https://ipopi.org/wp-content/uploads/2017/07/TreatmentsForPIDs-Spanish.pdf)
 
-**Revisión manual (Marcos):** ✅ Confirmado — 07/07/2026
+**Revisión manual (Marcos):** Validado
 
 ---
 
@@ -53,57 +53,32 @@ Fuentes consultadas:
 **Chunks recuperados:**
 
 1. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.6553) — 155 Manual de IDF para pacientes y familias Vacuna  Defecto primario Función de  la célula T Función de  la célula B Función  fagocítica Complemento Otra función  inmune innata Severa Leve Severa Leve...
-2. `ipopi/TreatmentsForPIDs-Spanish.pdf` (similitud: 0.641) — Inmunodeficiencias Primarias Inmunodeficiencias Primarias — Tratamientos para Inmunodeficiencias Primarias:  Guía para el paciente y sus familias, (1° Edición), Enero 2012 © International Patient Orga...
-3. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.6335) — 192 Capítulo 39: Salud de la mujer y enfermedades de inmunodeficiencia primaria la vacuna contra el rotavirus (2 meses) y la triple vírica y  la varicela (ambas un año). Se recomienda precaución al  c...
-4. `ipopi/TreatmentsForPIDs-Spanish.pdf` (similitud: 0.6231) — Tratamientos para Inmunodeficiencias Primarias: Guía para el paciente y sus familias. Inmunodeficiencias Primarias Tratamientos para  Inmunodeficiencias Primarias:  Guía para el paciente   y sus famil...
-5. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.6183) — 14 personas también pueden necesitar antibióticos  orales diarios para protegerlas de infecciones o para  tratar la sinusitis crónica o la bronquitis crónica. Las personas con deficiencia de anticuerp...
+2. `aedip/infusiones-de-IGS-subcutaneas.pdf` (similitud: 0.6453) — INMUNODEFICIENCIAS PRIMARIAS Inmunodeficiencias Primarias – Infusiones de Igs subcutáneas: una guía práctica para los  pacientes (1ª edición)   Diciembre 2014 © Organización Internacional de pacientes...
+3. `ipopi/TreatmentsForPIDs-Spanish.pdf` (similitud: 0.641) — Inmunodeficiencias Primarias Inmunodeficiencias Primarias — Tratamientos para Inmunodeficiencias Primarias:  Guía para el paciente y sus familias, (1° Edición), Enero 2012 © International Patient Orga...
+4. `aedip/10-senales-de-aviso.html` (similitud: 0.6339) — 10 Avisos de Peligro de la Inmunodeficiencia Primaria                             La inmunodeficiencia primaria (IDP) hace que los niños y los adultos tengan infecciones                               ...
+5. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.6335) — 192 Capítulo 39: Salud de la mujer y enfermedades de inmunodeficiencia primaria la vacuna contra el rotavirus (2 meses) y la triple vírica y  la varicela (ambas un año). Se recomienda precaución al  c...
 
 **Respuesta generada:**
 
-> Las recomendaciones de vacunación para personas con Inmunodeficiencias Primarias (IP) varían según el tipo específico de inmunodeficiencia.
+> Las recomendaciones de vacunación para personas con Inmunodeficiencias Primarias (IP) varían según el tipo y la gravedad de la deficiencia.
 
-En general, para las Inmunodeficiencias Primarias, se consideran las siguientes vacunas:
+En general, las vacunas inactivadas (no vivas) suelen ser recomendadas para la mayoría de las personas con IP, ya que no suelen representar un riesgo. Estas incluyen vacunas como la de la Hepatitis B, Difteria, tétanos, tos ferina acelular (DTaP), Haemophilus influenzae tipo B (Hib), Poliovirus inactivado (IPV), Influenza inactivada, Hepatitis A, Meningococo, Virus del papiloma humano (HPV), Polisacárido neumocócico (PPSV23) y la vacuna Zoster recombinante (Shingrix).
 
-**Vacunas no viables (generalmente recomendadas):**
-*   Hepatitis B (HepB)
-*   Difteria, tétanos, tos ferina acelular (DTaP)
-*   Haemophilus influenzae, tipo B (Hib)
-*   Conjugado neumocócico (PCV13)
-*   Poliovirus inactivado (IPV)
-*   Influenza inactivada (IIV)
-*   Hepatitis A (HepA)
-*   Meningococo (MenACWY)
-*   Virus del papiloma humano (HPV)
-*   Polisacárido neumocócico (PPSV23)
-*   Zoster recombinante (RZV)
+Por otro lado, las vacunas vivas atenuadas (que contienen el virus o bacteria debilitado) requieren mayor precaución. Algunas vacunas vivas, como la de Rotavirus, Paperas, sarampión, rubéola (MMR) y Varicela, pueden ser recomendadas en ciertos casos, pero la decisión depende de la inmunodeficiencia específica. Otras vacunas vivas, como la Influenza atenuada (la nasal), Zóster en vivo y Bacille Calmette-Guerin (BCG), generalmente no se recomiendan o su recomendación depende de la IP específica.
 
-**Vacunas viables (la recomendación puede depender de la inmunodeficiencia específica):**
-*   Rotavirus (RV)
-*   Paperas sarampión rubéola (MMR)
-*   Varicela (VAR)
-*   Zóster en vivo (ZVL)
-*   Bacille Calmette-Guerin (BCG)
+Es importante tener en cuenta que la recomendación de vacunas puede ser diferente para los contactos cercanos de personas con IP, especialmente si la persona con IP tiene una deficiencia de células T. En estos casos, se recomienda precaución al administrar vacunas virales vivas a los contactos.
 
-**Vacunas no recomendadas:**
-*   Influenza atenuada (LAIV)
+Si tú o la persona a tu cargo tenéis dudas sobre las vacunas, es fundamental consultarlo con vuestro equipo médico o inmunólogo. Ellos podrán ofrecer una orientación personalizada basada en la situación de salud específica.
 
-Es importante destacar que las personas con deficiencia de anticuerpos y ausencia de células B no deben recibir ninguna vacuna viral viva. Esto incluye la vacuna viva contra la polio, la vacuna contra el sarampión, las paperas y la rubéola (MMR), la vacuna contra la varicela, la vacuna contra el rotavirus, la fiebre amarilla, la fiebre tifoidea o la vacuna viva contra el herpes zóster.
-
-Si una persona con IP está recibiendo terapia de reemplazo de inmunoglobulina (Ig), esta terapia puede interferir con la respuesta a una vacuna. Por ello, es fundamental que se comunique con su proveedor de atención médica antes de recibir cualquier vacuna.
-
-Además, se recomienda precaución al considerar la administración de vacunas virales vivas a los contactos cercanos de personas con IP, especialmente en individuos con deficiencia de células T.
-
-Para los familiares y contactos cercanos de personas con deficiencia de anticuerpos y ausencia de células B, se recomienda que se vacunen para proporcionar un nivel de protección conocido como inmunidad colectiva o comunitaria.
-
-Es importante discutir las infecciones y las actividades infantiles con un inmunólogo, ya que ciertas exposiciones pueden ser relevantes según el tipo específico de IP.
-
-Este sistema tiene un rol informativo y no puede diagnosticar ni recomendar tratamientos. Si tiene dudas sobre su salud o la de sus hijos, le recomendamos que consulte con un profesional médico.
+Este sistema tiene un rol informativo y no puede diagnosticar ni recomendar tratamientos. Ante cualquier duda sobre salud, es importante consultar con un profesional médico.
 
 Fuentes consultadas:
-- idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf
-- ipopi/TreatmentsForPIDs-Spanish.pdf
+- [manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf](https://primaryimmune.org/resources/print-material/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta)
+- [infusiones-de-IGS-subcutaneas.pdf](https://aedip.com/pdf/infusiones-de-IGS-subcutaneas.pdf)
+- [TreatmentsForPIDs-Spanish.pdf](https://ipopi.org/wp-content/uploads/2017/07/TreatmentsForPIDs-Spanish.pdf)
+- [10-senales-de-aviso.html](https://aedip.com/informacion-medica/10-senales-de-aviso/)
 
-**Revisión manual (Marcos):** ✅ Confirmado — 07/07/2026
+**Revisión manual (Marcos):** Validado
 
 ---
 
@@ -119,24 +94,28 @@ Fuentes consultadas:
 1. `ipopi/WEB_IPOPI_Classification.pdf` (similitud: 0.6717) — PRIMARY IMMUNODEFICIENCIES How are primary immunodeficiency diseases classified? (1st edition)  © International Patient Organisation for Primary Immunodeficiencies (IPOPI), 2016 Published by IPOPI: ww...
 2. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.6559) — 10 son comparables a los que se utilizan para las  inmunodeficiencias primarias. Las inmunodeficiencias primarias, o IP , son un grupo  de trastornos causados por defectos básicos en  la función inmun...
 3. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.6499) — 168 Capítulo 34 Inmunodeficiencias secundarias Dr. Javier Chinen, PhD, Hospital Infantil de Texas, Houston, Texas, EE. UU. Descripción general Las personas que padecen infecciones frecuentes  o inusua...
-4. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.6414) — iii Manual de IDF para pacientes y familias Índice Sobre las enfermedades de inmunodeficiencia primaria  1.  El sistema inmune y las enfermedades de inmunodeficiencia primaria 1 Inmunodeficiencias de ...
-5. `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` (similitud: 0.634) — 115 Manual de IDF para pacientes y familias Capítulo 24 Herencia Dr. Joud Hajjar, MS, Texas Children's Hospital, Houston, Texas, EE. UU. Dr. Maha Syed, Hospital Infantil de Texas, Houston, Texas, EE. ...
+4. `aedip/clasificacion-de-inmunodeficiencias.html` (similitud: 0.6499) — Clasificación de inmunodeficiencias                                                                                  Cómo se presentan                                                                  ...
+5. `aedip/10-senales-de-aviso.html` (similitud: 0.6498) — 10 Avisos de Peligro de la Inmunodeficiencia Primaria                             La inmunodeficiencia primaria (IDP) hace que los niños y los adultos tengan infecciones                               ...
 
 **Respuesta generada:**
 
-> A primary immunodeficiency (PID) is a group of disorders caused by basic defects in immune function that are inherent to the cells and proteins of the immune system. There are over 350 forms of PIDs, some of which are relatively common and others quite rare. They can affect a single cell or protein of the immune system, or multiple components.
+> A primary immunodeficiency (PID) is a group of disorders caused by basic defects in immune function that are inherent to the cells and proteins of the immune system. There are over 350 forms of PIDs, some of which are relatively common, while others are quite rare. They can affect a single cell or protein of the immune system, or multiple components.
 
-While PIDs can differ in many ways, they all result from a defect in one or more elements or functions of the normal immune system, such as T cells, B cells, NK cells, neutrophils, monocytes, antibodies, cytokines, or the complement system. Most PIDs are hereditary and can run in families. However, some, like common variable immunodeficiency (CVID) and selective IgA deficiency, do not always have clear or predictable inheritance patterns. In these cases, the cause is unknown, but it is believed that a combination of genetic and environmental factors may play a causal role.
+All PIDs result from a defect in one or more elements or functions of the normal immune system, such as T cells, B cells, NK cells, neutrophils, monocytes, antibodies, cytokines, or the complement system. Most PIDs are hereditary and can run in families. However, some, like Common Variable Immunodeficiency (CVID) and selective IgA deficiency, do not always have clear or predictable inheritance patterns. In these cases, the cause is unknown but is believed to involve the interaction of genetic and environmental factors.
 
-Because the immune system's most important function is to protect against infections, individuals with PIDs have an increased susceptibility to infections. This can manifest as too many infections, infections that are difficult to cure, unusually severe infections, or infections with unusual organisms. Infections can occur anywhere in the body, with common sites including the sinuses (sinusitis), bronchi (bronchitis), lungs (pneumonia), or intestinal tract (infectious diarrhea).
+Because the immune system's most important function is to protect against infections, people with PIDs have an increased susceptibility to infections. This can manifest as too many infections, infections that are difficult to cure, unusually severe infections, or infections with unusual organisms. Infections can occur anywhere in the body, with common sites including the sinuses (sinusitis), bronchi (bronchitis), lungs (pneumonia), or intestinal tract (infectious diarrhea).
 
-It's important to remember that I am an AI assistant providing information about Primary Immunodeficiencies. I cannot diagnose conditions or recommend treatments. If you have concerns about your health or suspect a medical issue, please consult a healthcare professional.
+Another function of the immune system is to distinguish between healthy tissue ("self") and foreign material ("non-self").
+
+If you or someone you care for has concerns about their health, it is always best to consult with your medical team. This information is for educational purposes and does not substitute professional medical advice.
 
 Sources consulted:
-- ipopi/WEB_IPOPI_Classification.pdf
-- idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf
+- [WEB_IPOPI_Classification.pdf](https://ipopi.org/wp-content/uploads/2017/07/WEB_IPOPI_Classification.pdf)
+- [manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf](https://primaryimmune.org/resources/print-material/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta)
+- [clasificacion-de-inmunodeficiencias.html](https://aedip.com/informacion-medica/clasificacion-de-inmunodeficiencias)
+- [10-senales-de-aviso.html](https://aedip.com/informacion-medica/10-senales-de-aviso/)
 
-**Revisión manual (Marcos):** ✅ Confirmado — 07/07/2026
+**Revisión manual (Marcos):** Validado
 
 ---
 
@@ -157,20 +136,18 @@ Sources consulted:
 
 **Respuesta generada:**
 
-> Entiendo tu preocupación por la fiebre alta de tu hijo. En el contexto de las Inmunodeficiencias Primarias (IP), es importante saber que la fiebre persistente puede ser un signo de que el sistema inmunitario no está funcionando como debería.
+> Entiendo tu preocupación ante la fiebre alta y persistente de tu hijo. En el contexto de las inmunodeficiencias primarias (IP), es importante recordar que cada persona y cada situación son únicas.
 
-Si bien la información que tengo no especifica si una fiebre de 40 grados durante varios días es "normal" en una IP, sí señala que las personas con IP pueden tener un mayor riesgo de infecciones. Las infecciones pueden manifestarse con fiebre.
+Si bien las infecciones son más comunes en personas con IP, la fiebre alta y prolongada puede ser un indicativo de que se necesita una evaluación médica. Es fundamental que consultes con el equipo médico que atiende a tu hijo para que puedan valorar su situación específica. Ellos son los más indicados para determinar si estos síntomas son esperables dentro de su condición o si requieren una atención particular.
 
-Ante cualquier duda sobre la salud de tu hijo, especialmente con síntomas como fiebre alta y persistente, es fundamental que consultes con un profesional médico. Ellos son los únicos que pueden evaluar la situación de tu hijo y determinar la causa de la fiebre.
-
-Recuerda que soy un asistente informativo y no puedo diagnosticar ni recomendar tratamientos. Mi objetivo es ofrecerte información basada en los documentos que tengo. Si necesitas atención médica, por favor, contacta a tu médico o a los servicios de urgencias.
+Recuerda que mi función es ofrecer información general y no puedo interpretar síntomas ni diagnosticar. Ante cualquier duda sobre la salud de tu hijo, lo más recomendable es siempre buscar la opinión de profesionales de la salud.
 
 Ante esta situación, te recomendamos consultar con tu equipo médico cuanto antes.
 
 Fuentes consultadas:
-- idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf
+- [manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf](https://primaryimmune.org/resources/print-material/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta)
 
-**Revisión manual (Marcos):** ✅ Confirmado — 07/07/2026
+**Revisión manual (Marcos):** Validado
 
 ---
 
@@ -191,14 +168,14 @@ Fuentes consultadas:
 
 **Respuesta generada:**
 
-> No dispongo de información sobre cómo preparar una tortilla de patatas. Mi función es proporcionar información sobre Inmunodeficiencias Primarias.
+> Como AIIP, mi función es proporcionar información sobre Inmunodeficiencias Primarias basándome en los documentos que tengo. No tengo información sobre cómo preparar una tortilla de patatas.
 
-Si tienes dudas sobre tu salud o necesitas atención médica, te recomiendo que consultes con un profesional de la salud.
+Si tú o la persona a tu cargo tenéis dudas de salud o necesitáis información sobre Inmunodeficiencias Primarias, os recomiendo consultar con vuestro equipo médico.
 
 Fuentes consultadas:
-- upiip/guia_antibiotics_esp_0.pdf
-- idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf
+- [guia_antibiotics_esp_0.pdf](https://www.upiip.com/sites/upiip.com/files/guia_antibiotics_esp_0.pdf)
+- [manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf](https://primaryimmune.org/resources/print-material/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta)
 
-**Revisión manual (Marcos):** ✅ Confirmado — 07/07/2026
+**Revisión manual (Marcos):** Validado
 
 ---

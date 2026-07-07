@@ -30,6 +30,10 @@
 | [AEDIP — Clasificación de inmunodeficiencias](https://aedip.com/informacion-medica/clasificacion-de-inmunodeficiencias) | Guía divulgativa | ES | Propuesta | Jacques | |
 | [AEDIP — Tratamiento con inmunoglobulinas](https://aedip.com/informacion-medica/tratamiento-con-inmunoglobulinas) | Guía divulgativa | ES | Propuesta | Jacques | Relacionado con CU-02 (medicación prescrita). |
 | [AEDIP — Directorio de hospitales](https://aedip.com/informacion-medica/directorio-de-hospitales) | Directorio de contacto | ES | Propuesta | Jacques | Relacionado con CU-05 (canales de atención). |
+| [AEDIP — Diagnóstico de las inmunodeficiencias primarias](https://aedip.com/pdf/diagnostico-de-las-inmunodeficiencias-primarias.pdf) | Guía divulgativa (PDF) | ES | Validada | Marcos | |
+| [AEDIP — Infusiones de IGS subcutáneas](https://aedip.com/pdf/infusiones-de-IGS-subcutaneas.pdf) | Guía divulgativa (PDF) | ES | Validada | Marcos | Relacionado con CU-02 (medicación prescrita). |
+| [AEDIP — IDPS y trastornos gastrointestinales](https://aedip.com/pdf/IDPS-y-trastornos-gastrointestinales.pdf) | Guía divulgativa (PDF) | ES | Validada | Marcos | |
+| [AEDIP — IDPS y las enfermedades respiratorias](https://aedip.com/pdf/IDPS-y-las-enfermedades-respiratorias.pdf) | Guía divulgativa (PDF) | ES | Validada | Marcos | |
 | Protocolos del equipo de inmunología | Documentación interna | ES | Pendiente | PRD v1.9 §5 | Marcado como `[Pendiente]` en el PRD original. |
 
 ## Perfil Profesional (Fase 2B — condicional a decisión de alcance)

@@ -71,8 +71,8 @@ gantt
     E-02 Identidad visual             :done,    e02, 2026-06-25, 2026-06-27
     E-03 Autenticación                :done,    e03, 2026-06-27, 2026-06-30
     E-04 Pipeline RAG                 :done,    e04, 2026-06-27, 2026-07-05
-    E-05 Interfaz Chainlit            :         e05, 2026-07-07, 2026-07-10
-    E-06 Ingesta KB                   :         e06, 2026-06-27, 2026-07-07
+    E-05 Interfaz Chainlit            :         e05, 2026-07-08, 2026-07-10
+    E-06 Ingesta KB                   :done,    e06, 2026-06-27, 2026-07-07
     E-07 RAGAS parcial                :         e07, 2026-07-10, 2026-07-13
 
     section Fase 1.5 — MVP completo

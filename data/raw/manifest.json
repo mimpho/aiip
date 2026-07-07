@@ -11,44 +11,44 @@
       "fecha": "2026-07-07"
     },
     "aedip/10-senales-de-aviso.html": {
-      "checksum": "",
+      "checksum": "sha256:7d734da387cb693dfd2b5f8b03feea48e3dfdc24ef7fec2faa2a4a268c2eae15",
       "url": "https://aedip.com/informacion-medica/10-senales-de-aviso/",
-      "fecha": "2026-07-07"
+      "fecha": "2026-07-08"
     },
     "aedip/clasificacion-de-inmunodeficiencias.html": {
-      "checksum": "",
+      "checksum": "sha256:3ad9498d23b4e9572a6548cd1e8aa4b7568a63d1d914427ab591a6746bc2fbe6",
       "url": "https://aedip.com/informacion-medica/clasificacion-de-inmunodeficiencias",
-      "fecha": "2026-07-07"
+      "fecha": "2026-07-08"
     },
     "aedip/tratamiento-con-inmunoglobulinas.html": {
-      "checksum": "",
+      "checksum": "sha256:254bec9c65f0eea02077eb6be10c2d75d297ec629479c1b833ae80fe9ad65c2e",
       "url": "https://aedip.com/informacion-medica/tratamiento-con-inmunoglobulinas",
-      "fecha": "2026-07-07"
+      "fecha": "2026-07-08"
     },
     "aedip/Hospitales-con-Servicios-de-Inmunologia.html": {
-      "checksum": "",
+      "checksum": "sha256:35b4b420614e5c1dde785131d06e2da410ecc084f998463337ac9b3cd0f44978",
       "url": "https://aedip.com/informacion-medica/directorio-de-hospitales",
-      "fecha": "2026-07-07"
+      "fecha": "2026-07-08"
     },
     "aedip/diagnostico-de-las-inmunodeficiencias-primarias.pdf": {
-      "checksum": "",
+      "checksum": "sha256:3cfac9ad154eb8af5f6f48436827416c9bf34d9c9e6442f1a87a2a41aa7791cc",
       "url": "https://aedip.com/pdf/diagnostico-de-las-inmunodeficiencias-primarias.pdf",
-      "fecha": "2026-07-07"
+      "fecha": "2026-07-08"
     },
     "aedip/infusiones-de-IGS-subcutaneas.pdf": {
-      "checksum": "",
+      "checksum": "sha256:3c4b1a330323d34e781ca20072a644de9ca3caffc85ddabc27cf15939b6c920b",
       "url": "https://aedip.com/pdf/infusiones-de-IGS-subcutaneas.pdf",
-      "fecha": "2026-07-07"
+      "fecha": "2026-07-08"
     },
     "aedip/IDPS-y-trastornos-gastrointestinales.pdf": {
-      "checksum": "",
+      "checksum": "sha256:781559e2a8806bfe7191130f212673902bc355daccf5da93d2b59f806f22e83f",
       "url": "https://aedip.com/pdf/IDPS-y-trastornos-gastrointestinales.pdf",
-      "fecha": "2026-07-07"
+      "fecha": "2026-07-08"
     },
     "aedip/IDPS-y-las-enfermedades-respiratorias.pdf": {
-      "checksum": "",
+      "checksum": "sha256:09b496faacb81da772d0b8b312e2baf861fff66fe840f2cee7b30c8dec8028ab",
       "url": "https://aedip.com/pdf/IDPS-y-las-enfermedades-respiratorias.pdf",
-      "fecha": "2026-07-07"
+      "fecha": "2026-07-08"
     },
     "idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf": {
       "checksum": "sha256:71283c61a838a8a2f58eadcdb50c532a5768ee80ca96cfd56397425fa991df0a",
