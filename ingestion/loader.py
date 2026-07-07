@@ -66,7 +66,15 @@ def load_documents(source_path: str):
             if manifest_warning is not None:
                 warnings.warn(f"{manifest_warning}: {manifest_key}", UserWarning)
 
-            loaded_docs = load_fn(file_path)
+            try:
+                loaded_docs = load_fn(file_path)
+            except Exception as exc:
+                warnings.warn(
+                    f"Fallo al cargar el fichero, omitido: {file_path}: {exc}",
+                    UserWarning,
+                )
+                continue
+
             for doc in loaded_docs:
                 doc.metadata["source"] = source_dir.name
                 doc.metadata["filename"] = file_path.name
