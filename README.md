@@ -33,7 +33,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-03 | Autenticación y separación de perfiles | ✅ Completada — 30 jun 2026 | — |
 | E-04 | Pipeline RAG + módulo de seguridad | ✅ Completada — 05 jul 2026 | — |
 | E-05 | Interfaz conversacional (Chainlit) | ⚪ No iniciada | E-02, E-04 |
-| E-06 | Ingesta y procesamiento de la KB | 🔵 En curso | E-01 |
+| E-06 | Ingesta y procesamiento de la KB | ✅ Completada — 08 jul 2026 | E-01 |
 | E-07 | Evaluación RAGAS parcial | ⚪ No iniciada | E-06 |
 | E-08 | Memoria de perfil e histórico | ⚪ No iniciada | E-03, E-04, E-06 |
 | E-09 | Evaluación RAGAS completa | ⚪ No iniciada | E-07 |
@@ -72,7 +72,7 @@ gantt
     E-03 Autenticación                :done,    e03, 2026-06-27, 2026-06-30
     E-04 Pipeline RAG                 :done,    e04, 2026-06-27, 2026-07-05
     E-05 Interfaz Chainlit            :         e05, 2026-07-08, 2026-07-10
-    E-06 Ingesta KB                   :done,    e06, 2026-06-27, 2026-07-07
+    E-06 Ingesta KB                   :done,    e06, 2026-06-27, 2026-07-08
     E-07 RAGAS parcial                :         e07, 2026-07-10, 2026-07-13
 
     section Fase 1.5 — MVP completo
@@ -133,7 +133,8 @@ aiip/
 ├── tasks/                 ← Planes de implementación por tarea, generados en Cowork.
 ├── tests/
 │   ├── features/          ← Escenarios Gherkin por tarea (.feature).
-│   └── step_defs/         ← Step definitions pytest-bdd.
+│   ├── step_defs/         ← Step definitions pytest-bdd.
+│   └── results/           ← Resultados de smoke tests manuales (p. ej. E-06 T-07), revisión humana.
 │
 └── backlog/
     ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
@@ -170,4 +171,4 @@ Esta estructura responde a tres principios que se documentan y justifican en det
 
 ---
 
-*Última actualización: 7 julio 2026 — E-06 (Ingesta KB) en curso, T-08 en progreso*
+*Última actualización: 8 julio 2026 — E-06 (Ingesta KB) completada*

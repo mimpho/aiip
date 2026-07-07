@@ -587,3 +587,62 @@ Separar las dos capas es más robusto que depender solo de una: si el JS falla
 (por versión de Chainlit o CSP), el backend sigue bloqueando.
 La app profesional no importa nada de `auth/` — el stub es completamente
 independiente del módulo de autenticación real.
+
+---
+
+### P-020 — Generador LLM: thinking de Gemini 2.5 Flash agotando el presupuesto de tokens
+**Fecha:** 07 julio 2026
+**Fase:** E-06 (T-07)
+**Tipo:** razonamiento técnico
+**Herramienta:** Antigravity
+
+**Prompt / decisión:**
+El smoke test manual (T-07, primera ejecución real de `RAGPipeline` contra la API de Gemini)
+mostró las 5 respuestas cortadas a pocas palabras pese a un retrieval correcto. Los tests de E-04
+no lo detectaron porque solo comprueban que la respuesta no esté vacía. Investigación confirmó que
+`gemini-2.5-flash` usa "thinking" interno por defecto, y esos tokens consumen el mismo presupuesto
+que `max_output_tokens` — con `LLM_MAX_TOKENS=300` el thinking se comía casi todo antes de generar
+texto visible. Se desactivó el thinking y se subió `LLM_MAX_TOKENS`.
+
+**Resultado / aprendizaje:**
+Un test que solo valida "no vacío" no detecta truncamiento — falta cobertura de longitud/completitud
+de respuesta. Aplicable a cualquier LLM con modo "thinking"/razonamiento interno: verificar
+explícitamente el presupuesto de tokens visibles, no solo el total.
+
+---
+
+### P-021 — System prompt: citación de fuentes como lista determinista, no inline
+**Fecha:** 07 julio 2026
+**Fase:** E-06 (T-07, D-026)
+**Tipo:** decisión de prompting
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+El system prompt original instruía citar la fuente en cada afirmación ("Según [fuente],
+sección [X]..."). El LLM lo seguía correctamente, pero el resultado era muy verboso para el tono
+empático del perfil familiar. Se cambió la instrucción a: no citar inline, generar la lista de
+fuentes de forma determinista al final de la respuesta (código, no LLM), a partir de los chunks
+realmente recuperados.
+
+**Resultado / aprendizaje:**
+Separar "qué cita el LLM" de "qué se muestra como fuente" reduce verbosidad sin perder trazabilidad
+— la lista final es más fiable (determinista) que pedirle al LLM que la construya él mismo.
+
+---
+
+### P-022 — System prompt familiar: lenguaje inclusivo paciente/cuidador
+**Fecha:** 08 julio 2026
+**Fase:** E-06 (cierre)
+**Tipo:** decisión de prompting
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+El system prompt asumía implícitamente que quien escribe es el propio paciente ("tu salud",
+"tus síntomas"). Se ajustó para cubrir también al familiar/tutor que escribe en nombre de un
+paciente (niño o adulto), con formulaciones tipo "si tú o la persona a tu cargo tenéis dudas...".
+Cambio reflejado también en el cierre obligatorio de cada respuesta.
+
+**Resultado / aprendizaje:**
+El perfil "familiar" no es un único tipo de usuario (paciente adulto vs. familiar/tutor) — el
+prompt debe evitar segunda persona que asuma quién es el interlocutor cuando ambos casos son
+igual de probables.

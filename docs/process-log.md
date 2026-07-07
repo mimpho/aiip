@@ -107,3 +107,37 @@ desarrollo asistido por IA a lo largo del proyecto.
   proceso/workflow) — evita proponer entradas de proceso en el fichero equivocado.
 
 ---
+
+## E-06 — Ingesta y procesamiento de la KB
+**Periodo:** 27 jun – 08 jul 2026
+**Tareas:** T-01 a T-08 (8 tareas, todas completadas)
+
+### ¿Qué funcionó bien en el proceso?
+
+- **El reparto Cowork/Antigravity se mantuvo limpio en las 8 tareas** — decisiones y planes en
+  Cowork, TDD puro en Antigravity, sin fricción de `index.lock`.
+- **T-07 (smoke test manual contra datos reales, sin TDD) resultó clave.** Detectó dos problemas
+  reales que los mocks de E-04 no podían ver — thinking de Gemini agotando el presupuesto de
+  tokens (D-025) y verbosidad de citación inline (D-026) — justo entre T-05 (pipeline) y E-05
+  (UI), como estaba planeado en la nota de la épica. Confirma el patrón anticipado en la retro de
+  E-04: "reutilizable en cualquier tarea futura que integre un servicio de pago o con latencia".
+- **La skill `kb-maintenance` nueva** (runbook + skill) queda como infraestructura reutilizable
+  para futuras ampliaciones de fuentes sin necesidad de otra épica.
+
+### ¿Qué generó fricción o retraso?
+
+- **T-08 nació fuera del plan original de `epic-start`** — surgió de una propuesta de Marcos al
+  revisar los resultados de T-07. El manifest tenía checksums/URLs vacíos que había que rellenar
+  manualmente antes de poder formalizar la tarea, lo que la dejó pendiente un tiempo.
+- **Trabajo de última hora sin commitear en el cierre** — checksums de 4 fuentes AEDIP nuevas y
+  un ajuste de system prompt quedaron sin commitear al llegar a `epic-close`, lo que generó una
+  pausa para confirmar con Marcos si contaban como parte del alcance de E-06 antes de seguir.
+
+### ¿Qué cambió en las skills o el workflow?
+
+- Ninguna edición a las skills esta vez. El patrón de "smoke test real antes de construir UI
+  encima" (T-07) funcionó bien y merece repetirse en épicas futuras con integraciones externas
+  nuevas, pero ya está implícito en el criterio de la nota de E-06 — no hace falta formalizarlo
+  como regla de skill todavía.
+
+---

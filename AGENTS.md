@@ -104,11 +104,13 @@ aiip/
 ├── rag/                   ← Pipeline RAG (E-04): embeddings, retriever, idioma, generador, seguridad
 ├── config/                ← Configuración de dominio, p. ej. alarm_triggers.json (E-04)
 ├── prompts/               ← System prompts por perfil, en fichero separado del código (E-04)
-├── ingestion/             ← Pipeline de ingesta de la KB (E-06): loader, chunker, indexer
+├── ingestion/             ← Pipeline de ingesta de la KB (E-06): loader, chunker, indexer, manifest
+├── data/
+│   └── raw/manifest.json  ← Trazabilidad de fuentes crudas (checksum, URL, fecha). Único fichero versionado de data/raw/ — el resto vive local/Drive, gitignored (E-06, D-021)
 ├── backlog/
 │   ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
 │   └── ideas.md           ← Cajón de sastre
-├── scripts/               ← Scripts auxiliares (verificación, setup, etc.)
+├── scripts/               ← Scripts auxiliares (verificación, setup, smoke tests, etc.)
 ├── skills/                ← Skills del proyecto (epic-start, task-start, task-close, epic-close, kb-maintenance)
 ├── supabase/
 │   └── migrations/        ← Migraciones SQL de Supabase
@@ -116,7 +118,8 @@ aiip/
 │                             Generados en Cowork por task-start. Léelos al arrancar en el IDE.
 └── tests/
     ├── features/          ← Escenarios Gherkin por tarea (eXX_tYY_nombre.feature)
-    └── step_defs/         ← Step definitions pytest-bdd (test_eXX_tYY.py)
+    ├── step_defs/         ← Step definitions pytest-bdd (test_eXX_tYY.py)
+    └── results/           ← Resultados de smoke tests manuales, revisión humana (p. ej. E-06 T-07)
 ```
 
 ---
