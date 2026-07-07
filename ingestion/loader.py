@@ -13,8 +13,15 @@ def _load_pdf(file_path: Path):
 
 
 def _load_html(file_path: Path):
+    # get_text_separator="\n\n": el default de BSHTMLLoader es "" (sin separador),
+    # lo que pega sin espacio el texto de tags/nodos consecutivos si el HTML fuente
+    # no tiene whitespace entre ellos (típico al pegar varios <div> sueltos copiados
+    # del inspector del navegador). "\n\n" da salto de párrafo entre nodos, coherente
+    # con el separador que prioriza el chunker (D-022).
     return BSHTMLLoader(
-        str(file_path), bs_kwargs={"features": "html.parser"}
+        str(file_path),
+        bs_kwargs={"features": "html.parser"},
+        get_text_separator="\n\n",
     ).load()
 
 
@@ -30,8 +37,10 @@ def load_documents(source_path: str):
 
     Cada subcarpeta directa de `source_path` se trata como una fuente:
     su nombre sobrescribe metadata["source"] y metadata["filename"] se
-    añade a partir del nombre del fichero. Sincroniza cada fichero
-    cargado contra data/raw/manifest.json (ver ingestion.manifest).
+    añade a partir del nombre del fichero. metadata["url"] se añade a
+    partir de la entrada del manifest (None si no está documentada).
+    Sincroniza cada fichero cargado contra data/raw/manifest.json (ver
+    ingestion.manifest).
     """
     root = Path(source_path)
     if not root.exists():
@@ -65,6 +74,7 @@ def load_documents(source_path: str):
             manifest_warning = sync_entry(manifest, manifest_key, file_path)
             if manifest_warning is not None:
                 warnings.warn(f"{manifest_warning}: {manifest_key}", UserWarning)
+            url = manifest["documents"][manifest_key].get("url")
 
             try:
                 loaded_docs = load_fn(file_path)
@@ -78,6 +88,7 @@ def load_documents(source_path: str):
             for doc in loaded_docs:
                 doc.metadata["source"] = source_dir.name
                 doc.metadata["filename"] = file_path.name
+                doc.metadata["url"] = url
             documents.extend(loaded_docs)
 
     save_manifest(manifest_path, manifest)

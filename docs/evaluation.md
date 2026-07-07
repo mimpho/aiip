@@ -110,7 +110,7 @@ El subconjunto de seguridad (30 casos: alarmas + diagnóstico + casos límite + 
 
 | Tarea | Descripción |
 |---|---|
-| Dataset inicial | 30 casos (consultas informativas + signos de alarma) |
+| Dataset inicial | 35 casos (20 consultas informativas + 15 signos de alarma — ver 2.2) |
 | RAGAS setup | Faithfulness + Answer Relevancy funcionando |
 | Safety baseline | Primer resultado de Safety Compliance |
 | Informe parcial | Resultados documentados, problemas identificados |
@@ -240,4 +240,4 @@ CHART (Chatbot Assessment Reporting Tool) — guía de reporte para estudios de 
 
 ---
 
-*evaluation.md v1.0 — junio 2026*
+*evaluation.md v1.0 — junio 2026 (corrección de consistencia del dataset inicial, 7 jul 2026)*

@@ -27,6 +27,7 @@ Las skills en `skills/` cubren el workflow completo de épica a tarea. **Todas s
 | `task-start` | Antes de cada tarea de código | Revisión crítica, decisiones de arquitectura, `.feature`, plan en `tasks/` |
 | `task-close` | Al terminar una tarea (tests en verde) | PR description lista para copiar en GitHub |
 | `epic-close` | Al cerrar una épica | PR epic→main, registros actualizados, borrador prompts.md, retro |
+| `kb-maintenance` | Al añadir/actualizar/renombrar/eliminar fuentes o documentos de la KB | Pasos guiados según `docs/kb-maintenance.md`, sin ejecutar comandos reservados a Marcos |
 
 ---
 
@@ -93,6 +94,7 @@ aiip/
 │   ├── security.md        ← Seguridad: Falso Negativo Cero + OWASP + RGPD
 │   ├── evaluation.md      ← Evaluación: RAGAS + CHART
 │   ├── kb-sources.md      ← Índice de fuentes de la KB (E-06). No la dupliques en otro sitio.
+│   ├── kb-maintenance.md  ← Runbook: pasos para añadir/actualizar/renombrar/eliminar en la KB (D-028)
 │   └── design/            ← Screens de referencia (identity, auth, chat)
 ├── design/                ← Tokens CSS, temas Chainlit y Supabase Auth (E-02)
 │   ├── public/            ← tokens.css, style.css (Chainlit theme)
@@ -107,7 +109,7 @@ aiip/
 │   ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
 │   └── ideas.md           ← Cajón de sastre
 ├── scripts/               ← Scripts auxiliares (verificación, setup, etc.)
-├── skills/                ← Skills del proyecto (epic-start, task-start, task-close, epic-close)
+├── skills/                ← Skills del proyecto (epic-start, task-start, task-close, epic-close, kb-maintenance)
 ├── supabase/
 │   └── migrations/        ← Migraciones SQL de Supabase
 ├── tasks/                 ← Planes de implementación por tarea (E[nn]-T[nn]-plan.md)

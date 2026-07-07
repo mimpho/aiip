@@ -16,7 +16,7 @@ if [ ! -d "$PLUGIN_DIR" ]; then
   exit 1
 fi
 
-SKILLS=("epic-start" "epic-close" "task-start" "task-close")
+SKILLS=("epic-start" "epic-close" "task-start" "task-close" "kb-maintenance")
 
 for skill in "${SKILLS[@]}"; do
   src="$REPO_DIR/skills/$skill/SKILL.md"
@@ -28,8 +28,8 @@ for skill in "${SKILLS[@]}"; do
   fi
 
   if [ ! -f "$dst" ]; then
-    echo "⚠️  Skill no encontrada en plugin: $dst — saltando"
-    continue
+    echo "🆕 Skill nueva, creando destino en el plugin: $dst"
+    mkdir -p "$(dirname "$dst")"
   fi
 
   cp "$src" "$dst"

@@ -51,7 +51,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | Orquestación | LangChain v1.0 |
 | Frontend | Chainlit |
 | Autenticación + persistencia | Supabase |
-| Entorno de desarrollo | Google Colab + Drive |
+| Entorno de desarrollo | Antigravity IDE (código) + Claude Cowork (decisiones y debate) |
 
 ---
 
@@ -72,8 +72,8 @@ gantt
     E-03 Autenticación                :done,    e03, 2026-06-27, 2026-06-30
     E-04 Pipeline RAG                 :done,    e04, 2026-06-27, 2026-07-05
     E-05 Interfaz Chainlit            :         e05, 2026-07-07, 2026-07-10
-    E-06 Ingesta KB                   :         e06, 2026-06-27, 2026-07-05
-    E-07 RAGAS parcial                :         e07, 2026-07-05, 2026-07-10
+    E-06 Ingesta KB                   :         e06, 2026-06-27, 2026-07-07
+    E-07 RAGAS parcial                :         e07, 2026-07-10, 2026-07-13
 
     section Fase 1.5 — MVP completo
     E-08 Memoria + histórico          :         e08, 2026-07-10, 2026-07-18
@@ -103,11 +103,14 @@ aiip/
 ├── requirements.txt   ← Dependencias Python del proyecto.
 │
 ├── docs/
-│   ├── PRD.md         ← Product Requirements Document. El qué y el por qué.
-│   ├── tech-spec.md   ← Technical Design Document. El cómo.
-│   ├── security.md    ← Módulo de seguridad. Falso Negativo Cero en profundidad.
-│   ├── evaluation.md  ← Plan de evaluación. RAGAS, métricas, validación clínica.
-│   └── kb-sources.md  ← Índice de fuentes de la KB (E-06). No duplica los documentos — solo los referencia.
+│   ├── PRD.md             ← Product Requirements Document. El qué y el por qué.
+│   ├── tech-spec.md       ← Technical Design Document. El cómo.
+│   ├── security.md        ← Módulo de seguridad. Falso Negativo Cero en profundidad.
+│   ├── evaluation.md      ← Plan de evaluación. RAGAS, métricas, validación clínica.
+│   ├── kb-sources.md      ← Índice de fuentes de la KB (E-06). No duplica los documentos — solo los referencia.
+│   ├── kb-maintenance.md  ← Runbook: pasos para añadir/actualizar/renombrar/eliminar en la KB.
+│   ├── kb-datasheet.md    ← Datasheet DAIMS de la KB (E-06 T-06).
+│   └── process-log.md     ← Retrospectivas del workflow de desarrollo, una entrada por épica cerrada.
 │
 ├── chainlit/              ← Entrypoints y configuración Chainlit.
 │   ├── main_familiar.py   ← Entrypoint perfil familiar (puerto 8000).
@@ -118,12 +121,15 @@ aiip/
 │   └── profesional/       ← Stub JS/CSS del perfil profesional.
 ├── auth/                  ← Módulo de autenticación Python.
 ├── rag/                   ← Pipeline RAG: embeddings, retriever, idioma, generador, seguridad.
+├── ingestion/             ← Pipeline de ingesta de la KB (E-06): loader, chunker, indexer, manifest.
 ├── config/                ← Configuración de dominio (p. ej. triggers de alarma).
 ├── prompts/               ← System prompts por perfil, en fichero separado del código.
+├── data/
+│   └── raw/manifest.json  ← Trazabilidad de fuentes crudas (checksum, URL, fecha). Único fichero versionado de data/raw/ — el resto vive local/Drive, gitignored.
 ├── supabase/
 │   └── migrations/        ← Migraciones SQL de Supabase.
-├── scripts/               ← Scripts auxiliares de verificación y setup.
-├── skills/                ← Skills del workflow de desarrollo (epic/task start y close).
+├── scripts/               ← Scripts auxiliares de verificación, setup y smoke tests.
+├── skills/                ← Skills del workflow de desarrollo (epic/task start y close, kb-maintenance).
 ├── tasks/                 ← Planes de implementación por tarea, generados en Cowork.
 ├── tests/
 │   ├── features/          ← Escenarios Gherkin por tarea (.feature).
@@ -164,4 +170,4 @@ Esta estructura responde a tres principios que se documentan y justifican en det
 
 ---
 
-*Última actualización: junio 2026 — Fase 1 en desarrollo activo*
+*Última actualización: 7 julio 2026 — E-06 (Ingesta KB) en curso, T-08 en progreso*
