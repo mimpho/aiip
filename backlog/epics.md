@@ -221,15 +221,18 @@ Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 ---
 
 ### E-07 — Evaluación RAGAS (parcial)
-Dataset de prueba y métricas básicas funcionando para la entrega del 10 de julio.
+Dataset de prueba y métricas básicas funcionando, ejecutada inmediatamente después del hito del 10 de julio.
 
 **Criterios de aceptación de alto nivel**
 - Dataset de preguntas representativas del perfil familias definido
-- Las cuatro métricas RAGAS implementadas: Faithfulness, Answer Relevancy, Context Precision, Context Recall
+- Faithfulness y Answer Relevancy implementadas y funcionando contra el pipeline real (Context Precision y Context Recall quedan para E-09, Fase 1.5 — ver `docs/evaluation.md` sección 3)
+- Safety Compliance: primer resultado (baseline, sin ciclo de mejora todavía)
 - Primeros resultados documentados
 
 **Notas**
-- Hito de cierre de Fase 1 (10 jul). Al cerrar: ejecutar `pytest tests/ -v` sobre el sistema completo acumulado hasta este punto — primera validación de integración real del pipeline.
+- **Corrección (7 jul 2026):** el criterio original decía "las cuatro métricas RAGAS implementadas" — no coincidía con el plan de fases de `docs/evaluation.md` (sección 3), que solo asigna Faithfulness + Answer Relevancy a la Fase 1 parcial. Se alinea este criterio con `evaluation.md`, que es el documento con el desglose técnico detallado.
+- **Reprioridad (7 jul 2026):** E-05 (interfaz Chainlit) pasa por delante de E-07 en la ejecución. El hito del 10 de julio se llama "código funcional" (ver `README.md`) — lo entrega E-05, no E-07. El ciclo de mejora basado en RAGAS (la parte que realmente aporta valor de iteración) ya estaba asignado a Fase 1.5 (29 jul) en `evaluation.md`, así que ejecutar E-07 parcial unos días después del 10 de julio no compromete el hito. Única dependencia real a vigilar: E-09 (RAGAS completa, necesaria para la entrega final del 29 jul) está bloqueada por E-07 — no debe retrasarse mucho más allá del 10 de julio para no comprimir el margen antes del 29.
+- Hito de cierre de Fase 1 (10 jul, vía E-05). Al cerrar E-07: ejecutar `pytest tests/ -v` sobre el sistema completo acumulado hasta este punto — primera validación de integración real del pipeline.
 
 **Estado:** ⚪ No iniciada
 

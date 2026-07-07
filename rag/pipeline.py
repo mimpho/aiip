@@ -22,7 +22,7 @@ def _build_sources_section(raw_results, language: str) -> str:
     el LLM. Si los chunks no traen esos metadatos (p. ej. fixtures de test
     indexadas con `add_texts`, sin metadata), no se añade ninguna sección.
     """
-    seen = []
+    seen = {}
     for doc, _ in raw_results:
         source = doc.metadata.get("source")
         filename = doc.metadata.get("filename")
@@ -30,13 +30,18 @@ def _build_sources_section(raw_results, language: str) -> str:
             continue
         pair = (source, filename)
         if pair not in seen:
-            seen.append(pair)
+            seen[pair] = doc.metadata.get("url")
 
     if not seen:
         return ""
 
     heading = _SOURCES_HEADINGS.get(language, _SOURCES_HEADINGS["es"])
-    lines = [heading] + [f"- {source}/{filename}" for source, filename in seen]
+    lines = [heading]
+    for (source, filename), url in seen.items():
+        if url:
+            lines.append(f"- [{filename}]({url})")
+        else:
+            lines.append(f"- {source}/{filename}")
     return "\n".join(lines)
 
 
