@@ -39,7 +39,7 @@ Fuentes consultadas:
 - idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf
 - ipopi/TreatmentsForPIDs-Spanish.pdf
 
-**Revisión manual (Marcos):** _pendiente_
+**Revisión manual (Marcos):** ✅ Confirmado — 07/07/2026
 
 ---
 
@@ -103,7 +103,7 @@ Fuentes consultadas:
 - idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf
 - ipopi/TreatmentsForPIDs-Spanish.pdf
 
-**Revisión manual (Marcos):** _pendiente_
+**Revisión manual (Marcos):** ✅ Confirmado — 07/07/2026
 
 ---
 
@@ -136,7 +136,7 @@ Sources consulted:
 - ipopi/WEB_IPOPI_Classification.pdf
 - idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf
 
-**Revisión manual (Marcos):** _pendiente_
+**Revisión manual (Marcos):** ✅ Confirmado — 07/07/2026
 
 ---
 
@@ -170,7 +170,7 @@ Ante esta situación, te recomendamos consultar con tu equipo médico cuanto ant
 Fuentes consultadas:
 - idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf
 
-**Revisión manual (Marcos):** _pendiente_
+**Revisión manual (Marcos):** ✅ Confirmado — 07/07/2026
 
 ---
 
@@ -199,6 +199,6 @@ Fuentes consultadas:
 - upiip/guia_antibiotics_esp_0.pdf
 - idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf
 
-**Revisión manual (Marcos):** _pendiente_
+**Revisión manual (Marcos):** ✅ Confirmado — 07/07/2026
 
 ---
