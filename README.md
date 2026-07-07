@@ -129,7 +129,7 @@ aiip/
 ├── supabase/
 │   └── migrations/        ← Migraciones SQL de Supabase.
 ├── scripts/               ← Scripts auxiliares de verificación, setup y smoke tests.
-├── skills/                ← Skills del workflow de desarrollo (epic/task start y close).
+├── skills/                ← Skills del workflow de desarrollo (epic/task start y close, kb-maintenance).
 ├── tasks/                 ← Planes de implementación por tarea, generados en Cowork.
 ├── tests/
 │   ├── features/          ← Escenarios Gherkin por tarea (.feature).

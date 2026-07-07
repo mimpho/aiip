@@ -92,6 +92,14 @@ Sigue este orden exacto. Cada ítem = un ciclo rojo→verde antes de pasar al si
 - No introducir verificación de vida del enlace (`url_status`) — fuera de alcance, anotado en
   `backlog/ideas.md`.
 
+## Nota de cierre (post-implementación)
+
+`skills/kb-maintenance/SKILL.md` y `scripts/sync_skills.sh` se crearon durante la sesión de
+`task-start`/`task-close` de T-08, sin relación funcional con la citación de URLs, pero se
+incluyen en el mismo commit/PR por simplicidad (separarlos no compensaba el coste de staging
+por hunks). El backfill de checksums de `data/raw/manifest.json` sí queda fuera, para después
+del `--force-reingest` en `epic/E06-kb-ingestion` (ver `docs/kb-maintenance.md`).
+
 ## Lo que queda fuera de esta tarea
 
 - Reindexar la KB real (`python scripts/smoke_test_rag.py --force-reingest`) — acción manual de

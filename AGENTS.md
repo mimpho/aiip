@@ -27,6 +27,7 @@ Las skills en `skills/` cubren el workflow completo de épica a tarea. **Todas s
 | `task-start` | Antes de cada tarea de código | Revisión crítica, decisiones de arquitectura, `.feature`, plan en `tasks/` |
 | `task-close` | Al terminar una tarea (tests en verde) | PR description lista para copiar en GitHub |
 | `epic-close` | Al cerrar una épica | PR epic→main, registros actualizados, borrador prompts.md, retro |
+| `kb-maintenance` | Al añadir/actualizar/renombrar/eliminar fuentes o documentos de la KB | Pasos guiados según `docs/kb-maintenance.md`, sin ejecutar comandos reservados a Marcos |
 
 ---
 
@@ -108,7 +109,7 @@ aiip/
 │   ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
 │   └── ideas.md           ← Cajón de sastre
 ├── scripts/               ← Scripts auxiliares (verificación, setup, etc.)
-├── skills/                ← Skills del proyecto (epic-start, task-start, task-close, epic-close)
+├── skills/                ← Skills del proyecto (epic-start, task-start, task-close, epic-close, kb-maintenance)
 ├── supabase/
 │   └── migrations/        ← Migraciones SQL de Supabase
 ├── tasks/                 ← Planes de implementación por tarea (E[nn]-T[nn]-plan.md)

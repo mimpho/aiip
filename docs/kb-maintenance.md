@@ -3,7 +3,8 @@
 > Runbook operativo: qué pasos seguir cada vez que se añade, actualiza, reestructura o elimina
 > algo en las fuentes de la Knowledge Base (`data/raw/`). No es un registro de decisiones — para
 > el porqué de este documento, ver D-028 en `decisions.md`. No es un índice de fuentes — para
-> qué fuentes existen, ver `docs/kb-sources.md`.
+> qué fuentes existen, ver `docs/kb-sources.md`. Para invocar este runbook de forma guiada desde
+> Cowork, usa la skill `kb-maintenance` (`skills/kb-maintenance/SKILL.md`).
 
 **Por qué importa seguir estos pasos:** `ingestion/indexer.py` calcula el ID de cada chunk como
 `sha256(source/filename/índice)`, y `run_ingestion_pipeline()` (D-024) solo borra-antes-de-reindexar
