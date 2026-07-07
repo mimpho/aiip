@@ -23,6 +23,12 @@ Feature: Loader de documentos fuente
     Then se extrae el texto legible del documento sin marcado HTML
     And el metadato "source" refleja el nombre de la carpeta de fuente
 
+  Scenario: Carga de un fragmento HTML sin <html>/<body>, con varios nodos sueltos
+    Given un fichero HTML en data/raw/<fuente>/ con varios <div> sueltos sin envoltorio <html>/<body>
+    When se ejecuta el loader
+    Then se extrae el texto de cada nodo
+    And el texto de nodos distintos queda separado por un salto de párrafo
+
   Scenario: Fichero con formato no soportado se omite sin interrumpir la carga
     Given data/raw/<fuente>/ contiene un fichero de formato no soportado junto a ficheros válidos
     When se ejecuta el loader

@@ -5,6 +5,8 @@
 > `backlog/epics.md`).
 > Los documentos pesados (PDFs, exports) viven en Drive (`data/raw/`), no en este repo.
 > Este fichero es el único índice — no se duplica contenido, solo se referencia.
+> Para añadir/renombrar/eliminar fuentes o documentos, sigue el procedimiento de
+> `docs/kb-maintenance.md`.
 
 **Leyenda de estado**
 - `Validada` — confirmada explícitamente por Jacques (PRD v1.9 o comentarios)

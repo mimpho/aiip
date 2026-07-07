@@ -13,8 +13,15 @@ def _load_pdf(file_path: Path):
 
 
 def _load_html(file_path: Path):
+    # get_text_separator="\n\n": el default de BSHTMLLoader es "" (sin separador),
+    # lo que pega sin espacio el texto de tags/nodos consecutivos si el HTML fuente
+    # no tiene whitespace entre ellos (típico al pegar varios <div> sueltos copiados
+    # del inspector del navegador). "\n\n" da salto de párrafo entre nodos, coherente
+    # con el separador que prioriza el chunker (D-022).
     return BSHTMLLoader(
-        str(file_path), bs_kwargs={"features": "html.parser"}
+        str(file_path),
+        bs_kwargs={"features": "html.parser"},
+        get_text_separator="\n\n",
     ).load()
 
 

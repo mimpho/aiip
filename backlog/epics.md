@@ -216,7 +216,7 @@ Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 | T-05 | Pipeline de ingesta end-to-end | ✅ Completada |
 | T-06 | Datasheet DAIMS de la KB (documentación, sin TDD) | ✅ Completada |
 | T-07 | Smoke test manual del pipeline RAG con datos reales de la KB (configuración, sin TDD) | ✅ Completada |
-| T-08 | Enlazar fuentes citadas a su URL original (manifest → metadata de chunk → citación) | ⚪ Pendiente |
+| T-08 | Enlazar fuentes citadas a su URL original (manifest → metadata de chunk → citación) | 🔄 En progreso |
 
 ---
 

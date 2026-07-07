@@ -36,6 +36,8 @@
 - [D-025 — Generador LLM: desactivar thinking de gemini-2.5-flash y subir LLM_MAX_TOKENS](#d-025--generador-llm-desactivar-thinking-de-gemini-25-flash-y-subir-llm_max_tokens)
 - [D-026 — Citación de fuentes: listado determinista al final, no citación inline por el LLM](#d-026--citación-de-fuentes-listado-determinista-al-final-no-citación-inline-por-el-llm)
 - [D-027 — Modelo LLM: cambio de gemini-2.5-flash a gemini-2.5-flash-lite por límite de cuota](#d-027--modelo-llm-cambio-de-gemini-25-flash-a-gemini-25-flash-lite-por-límite-de-cuota)
+- [D-028 — Runbook de mantenimiento de la KB: documento de procedimiento separado de decisions.md](#d-028--runbook-de-mantenimiento-de-la-kb-documento-de-procedimiento-separado-de-decisionsmd)
+- [D-029 — Citación con URL original: cadena de propagación manifest→loader→chunker→pipeline y fallback de 2 niveles](#d-029--citación-con-url-original-cadena-de-propagación-manifestloaderchunkerpipeline-y-fallback-de-2-niveles)
 
 ---
 
@@ -874,6 +876,123 @@ Se cambia el modelo de generación de `gemini-2.5-flash` a `gemini-2.5-flash-lit
 - Pendiente para Marcos: actualizar `LLM_MODEL` en su `.env` personal (gitignored) si ya lo tenía fijado a `gemini-2.5-flash`.
 - No se ha tocado `tests/features/e01_setup.feature` (checklist manual ya cerrado de E-01, que verificó `gemini-2.5-flash` como valor de `.env.example` en su momento) — es un registro histórico de lo verificado al cerrar esa tarea, no una especificación viva; el valor actual de `.env.example` es la fuente de verdad presente.
 - Si la calidad de `flash-lite` no es suficiente en la evaluación RAGAS de E-07, revisitar esta decisión y considerar activar facturación o cambiar de proveedor (alternativas descartadas arriba).
+
+---
+
+## D-028 — Runbook de mantenimiento de la KB: documento de procedimiento separado de decisions.md
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica / proceso
+**Épica:** E-06 T-08
+
+**Contexto**
+Al revisar T-08 se detectó que renombrar la carpeta de una fuente en `data/raw/` (caso real:
+`cribado_neonatal/` → `aedip/`, nueva fuente AEDIP) no es una operación trivial: además de
+`data/raw/manifest.json` (clave `{source}/{filename}`, D-021), afecta a ChromaDB. El indexer
+(`ingestion/indexer.py`) calcula IDs deterministas a partir de `source`+`filename`+índice, y
+`run_ingestion_pipeline()` (D-024) solo borra-antes-de-reindexar los documentos que carga *en
+esa ejecución* — los chunks ya indexados bajo el `source` antiguo no coinciden con la búsqueda
+del nuevo `source` y quedan huérfanos/duplicados en la colección `family` si no se borran
+explícitamente. El mismo problema aplica a eliminar un documento o una fuente completa (sus
+chunks tampoco se borran solos, porque el loader ya no los carga). Marcos pidió documentar esto
+como procedimiento reutilizable para cualquier operación futura sobre la KB (ampliar,
+reestructurar, renombrar, actualizar, eliminar), no como una entrada de registro puntual.
+
+**Decisión**
+Se crea `docs/kb-maintenance.md` como documento vivo de procedimiento (runbook), separado de
+`decisions.md`. `decisions.md` registra decisiones justificadas con contexto/alternativas — no
+es el formato adecuado para una checklist operativa que alguien sigue paso a paso. Tampoco vive
+en `docs/kb-sources.md`, que es un índice de fuentes (qué hay), no de procedimientos (cómo
+mantenerlo). El runbook cubre los cinco escenarios de mantenimiento de la KB: añadir fuente,
+añadir documento a fuente existente, actualizar contenido de un documento, renombrar/reestructurar
+una fuente, y eliminar documento/fuente — cada uno con pasos manuales, comando a ejecutar
+(`python scripts/smoke_test_rag.py --force-reingest`, único CLI existente que invoca
+`run_ingestion_pipeline()` contra la KB real, T-05) y verificación posterior.
+
+**Alternativas descartadas**
+- Añadirlo como nota dentro de D-024 — descartado: D-024 documenta por qué el reprocesamiento es
+  completo y borra por documento, no es el sitio para una guía operativa que crecerá con más
+  escenarios y comandos concretos.
+- Añadirlo a `docs/kb-sources.md` — descartado: ese fichero es un índice de fuentes candidatas
+  (qué y de dónde), mezclar procedimiento operativo ahí rompe su propósito único (D-003, sin
+  replicación / un rol por fichero).
+
+**Justificación**
+D-003 establece "cada fichero se ganó su sitio": un runbook de mantenimiento operativo tiene una
+audiencia y un ciclo de actualización distintos a un registro de decisiones o a un índice de
+fuentes — se actualiza cada vez que se descubre un caso nuevo, no cada vez que se toma una
+decisión de diseño.
+
+**Consecuencias**
+- Nuevo fichero `docs/kb-maintenance.md`.
+- `AGENTS.md` (árbol de `docs/`) referencia el nuevo fichero.
+- T-08 (enlazar URLs) añade el escenario "rellenar/actualizar URL en el manifest" a este runbook,
+  además de su propio `.feature` — el runbook documenta el paso manual, el `.feature` valida el
+  comportamiento de citación en el pipeline.
+- Acción pendiente para Marcos (fuera de T-08, resultado directo de este hallazgo): limpiar los
+  chunks huérfanos de `cribado_neonatal/cribado-neonatal-IDCG-2021.pdf` en la colección `family`
+  antes o durante el próximo `--force-reingest` (pasos exactos en el runbook, escenario
+  "Renombrar o reestructurar una fuente").
+
+---
+
+## D-029 — Citación con URL original: cadena de propagación manifest→loader→chunker→pipeline y fallback de 2 niveles
+
+**Fecha:** 7 de julio de 2026
+**Fase:** técnica
+**Épica:** E-06 T-08
+
+**Contexto**
+La nota original de T-08 en `backlog/epics.md` (línea 204) describía la propagación como
+"manifest → metadata del chunk (toca `ingestion/chunker.py`, T-03)", pero al revisar el código
+`ingestion/loader.py` nunca copia `entry["url"]` del manifest a `doc.metadata` — solo copia
+`source`/`filename`. La propagación real necesita tocar también `loader.py`. Además, la nota
+proponía una cadena de fallback de 3 niveles (enlace directo → página de la fuente en
+`kb-sources.md` → solo nombre de fichero) para el caso de documentos sin URL documentada.
+
+**Decisión**
+- **Cadena de propagación:** `data/raw/manifest.json` (`url`) → `ingestion/loader.py` (nuevo:
+  `doc.metadata["url"] = entry.get("url")`, junto a `source`/`filename` ya existentes) →
+  `ingestion/chunker.py` (nuevo: copia `url` a cada chunk igual que ya hace con `language`,
+  `date_indexed`, `profile` — mismo patrón de D-022) → `rag/pipeline.py`
+  (`_build_sources_section` renderiza `- [{filename}]({url})` en vez de texto plano cuando hay
+  `url`; sin URL, cae al formato actual `- {source}/{filename}`).
+- **Fallback de 2 niveles, no 3:** con el manifest ya al 100% de URLs rellenadas a mano por
+  Marcos (7 jul 2026, 37/37 documentos), el nivel intermedio (enlace genérico a la página de la
+  fuente en `kb-sources.md`) no tiene ningún caso real que lo dispare hoy. Se descarta construir
+  el mapeo `source` → URL genérica que ese nivel requeriría. Queda solo: enlace directo (si hay
+  `url`) → nombre de fichero sin enlace (si no hay `url`, red de seguridad para documentos
+  futuros añadidos sin URL todavía documentada).
+- **Verificación de vida del enlace fuera de alcance:** el script de mantenimiento que
+  comprobaría periódicamente que las URLs siguen vivas (`url_status`/`url_checked_at` cacheados
+  en el manifest) queda anotado en `backlog/ideas.md`, no se construye en T-08.
+
+**Alternativas descartadas**
+- Implementar el fallback de nivel 2 (mapeo `source` → URL genérica) igualmente, por completitud
+  — descartado: no hay ningún documento hoy que lo necesite, y el mapeo requeriría mantener una
+  segunda fuente de verdad (además de `kb-sources.md` en prosa) sin caso de uso real que lo
+  justifique todavía.
+- Generar `doc.metadata["url"]` en `chunker.py` a partir de releer el manifest directamente ahí
+  — descartado: `chunker.py` no tiene hoy ninguna dependencia de I/O sobre `data/raw/`, y
+  `loader.py` ya lee el manifest en memoria para `sync_entry()` — añadir la lectura de `url` ahí
+  es coherente con la responsabilidad ya existente del fichero, sin duplicar acceso a disco.
+
+**Justificación**
+El coste de construir el nivel 2 del fallback hoy es puro trabajo especulativo — YAGNI, dado que
+el 100% de los documentos actuales tiene URL directa. Si en el futuro se añade un documento sin
+URL inmediata, el fallback de nombre de fichero (ya existente, sin cambios) sigue funcionando sin
+romper nada; el nivel 2 puede añadirse entonces con un caso de uso real que guíe su diseño.
+
+**Consecuencias**
+- `ingestion/loader.py`: añade `doc.metadata["url"]` a partir de la entrada del manifest.
+- `ingestion/chunker.py`: propaga `url` a los metadatos del chunk (mismo patrón que D-022).
+- `rag/pipeline.py`: `_build_sources_section` renderiza enlace markdown cuando hay `url`.
+- `tests/features/e06_t08_source_url_citation.feature` (a crear) cubre ambos escenarios: chunk
+  con `url` → enlace markdown; chunk sin `url` → nombre de fichero (comportamiento actual, sin
+  regresión).
+- Pendiente de reindexar la KB completa (`python scripts/smoke_test_rag.py --force-reingest`)
+  una vez el código esté en verde, para que los chunks ya indexados lleven `url` en sus metadatos
+  — los indexados antes de T-08 no la tienen aunque el manifest ya esté completo.
 
 ---
 

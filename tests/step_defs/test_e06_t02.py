@@ -88,6 +88,22 @@ def html_valido(ctx):
 
 
 @given(
+    "un fichero HTML en data/raw/<fuente>/ con varios <div> sueltos sin envoltorio"
+    " <html>/<body>"
+)
+def html_fragmento_sin_envoltorio(ctx):
+    source_dir = ctx["root"] / "aedip"
+    source_dir.mkdir()
+    (source_dir / "fragmento.html").write_text(
+        "<div><p>Primer bloque interesante.</p></div>"
+        "<div><p>Segundo bloque, nodo suelto.</p></div>",
+        encoding="utf-8",
+    )
+    ctx["source_name"] = "aedip"
+    ctx["file_name"] = "fragmento.html"
+
+
+@given(
     "data/raw/<fuente>/ contiene un fichero de formato no soportado junto a"
     " ficheros válidos"
 )
@@ -222,6 +238,24 @@ def texto_legible_sin_html(load_result, ctx):
     assert ctx["expected_text"] in full_text
     assert "<p>" not in full_text
     assert "<html>" not in full_text
+
+
+@then("se extrae el texto de cada nodo")
+def texto_de_cada_nodo(load_result):
+    docs = load_result["documents"]
+    assert docs
+    full_text = "\n".join(d.page_content for d in docs)
+    assert "Primer bloque interesante." in full_text
+    assert "Segundo bloque, nodo suelto." in full_text
+
+
+@then("el texto de nodos distintos queda separado por un salto de párrafo")
+def texto_separado_por_parrafo(load_result):
+    docs = load_result["documents"]
+    assert docs
+    full_text = "\n".join(d.page_content for d in docs)
+    assert "interesante.\n\nSegundo" in full_text
+    assert "interesante.Segundo" not in full_text
 
 
 @then("se registra un aviso indicando el fichero omitido")

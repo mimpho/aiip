@@ -93,6 +93,7 @@ aiip/
 │   ├── security.md        ← Seguridad: Falso Negativo Cero + OWASP + RGPD
 │   ├── evaluation.md      ← Evaluación: RAGAS + CHART
 │   ├── kb-sources.md      ← Índice de fuentes de la KB (E-06). No la dupliques en otro sitio.
+│   ├── kb-maintenance.md  ← Runbook: pasos para añadir/actualizar/renombrar/eliminar en la KB (D-028)
 │   └── design/            ← Screens de referencia (identity, auth, chat)
 ├── design/                ← Tokens CSS, temas Chainlit y Supabase Auth (E-02)
 │   ├── public/            ← tokens.css, style.css (Chainlit theme)
