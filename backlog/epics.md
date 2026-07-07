@@ -212,7 +212,7 @@ Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 | T-02 | Loader de documentos fuente | ✅ Completada |
 | T-03 | Estrategia de chunking multiidioma | ✅ Completada |
 | T-04 | Indexer: indexación en ChromaDB (colección `family`) | ✅ Completada |
-| T-05 | Pipeline de ingesta end-to-end | ⚪ Pendiente |
+| T-05 | Pipeline de ingesta end-to-end | ✅ Completada |
 | T-06 | Datasheet DAIMS de la KB (documentación, sin TDD) | ⚪ Pendiente |
 | T-07 | Smoke test manual del pipeline RAG con datos reales de la KB (configuración, sin TDD) | ⚪ Pendiente |
 

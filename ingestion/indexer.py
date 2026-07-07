@@ -38,3 +38,20 @@ def index_chunks(chunks, embeddings, chroma_path, collection_name="family"):
         ids.append(chunk_id)
 
     return ids
+
+
+def delete_document_chunks(source, filename, embeddings, chroma_path, collection_name="family"):
+    """Borra de la colección los chunks ya indexados de un documento (source, filename).
+
+    Se ejecuta antes de reindexar el documento (D-024, reprocesamiento completo)
+    para que, si el número de chunks cambia entre ejecuciones, no queden
+    huérfanos los IDs que ya no genera el chunking actual.
+    """
+    vectorstore = get_retriever(embeddings, chroma_path, collection_name)
+    existing = vectorstore.get(
+        where={"$and": [{"source": source}, {"filename": filename}]}
+    )
+    ids = existing["ids"]
+    if ids:
+        vectorstore.delete(ids=ids)
+    return ids
