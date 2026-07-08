@@ -41,6 +41,7 @@
 - [D-030 — TDD por tarea dentro de E-05: aplicar el criterio de D-015 a nivel de tarea, no de épica completa](#d-030--tdd-por-tarea-dentro-de-e-05-aplicar-el-criterio-de-d-015-a-nivel-de-tarea-no-de-épica-completa)
 - [D-031 — Reconciliación de D-013: superficie de auth dentro de Chainlit, no separada](#d-031--reconciliación-de-d-013-superficie-de-auth-dentro-de-chainlit-no-separada)
 - [D-032 — Login con Google: OAuth nativo de Chainlit + sincronización server-side con Supabase (reabre D-014)](#d-032--login-con-google-oauth-nativo-de-chainlit--sincronización-server-side-con-supabase-reabre-d-014)
+- [D-033 — Integración del pipeline RAG en Chainlit: instancia singleton y ejecución no bloqueante](#d-033--integración-del-pipeline-rag-en-chainlit-instancia-singleton-y-ejecución-no-bloqueante)
 
 ---
 
@@ -1094,6 +1095,33 @@ Esto reabre y sustituye la alternativa descartada en D-014 ("Chainlit OAuth nati
 - `auth/supabase_client.py` gana una función de sincronización (get-or-create de `auth.users` por email vía Admin API) para usar dentro del callback — a diseñar en `task-start` de T-06.
 - El `.feature` de E-03 T-04 (`sign_in_with_oauth`) queda como código no usado en el flujo real de la app familiar — se mantiene por ahora (la función es correcta y testeada, podría reutilizarse si se cambia de estrategia más adelante), pero deja de ser el mecanismo activo de login con Google.
 - D-031 queda desactualizada en el punto concreto del mecanismo de login con Google (se mantiene sin editar, como registro histórico) — esta entrada la sustituye en ese aspecto.
+
+---
+
+## D-033 — Integración del pipeline RAG en Chainlit: instancia singleton y ejecución no bloqueante
+
+**Fecha:** 8 de julio de 2026
+**Fase:** técnica / arquitectura
+**Épica:** E-05 (task-start T-01)
+
+**Contexto**
+El `.feature` de T-01 (`e05_t01_chat_pipeline_integration.feature`) da por hecho que "existe una instancia de RAGPipeline disponible para la sesión", sin precisar su ciclo de vida. `RAGPipeline.__init__` carga el modelo de embeddings `bge-m3` y abre la conexión a ChromaDB — coste no trivial de tiempo y memoria. Además, `RAGPipeline.query()` es síncrono y bloqueante (sin streaming, eso es T-02): invocarlo directamente dentro de un handler `async` de Chainlit (`on_message`) bloquearía el event loop para todas las sesiones activas mientras se genera una respuesta, incluido el indicador de "escribiendo" del Escenario 2.
+
+**Decisión**
+- El `RAGPipeline` se instancia una única vez a nivel de módulo en `chainlit/main_family.py` (singleton cargado al arrancar la app), no por sesión en `on_chat_start`. Todas las sesiones reutilizan la misma instancia.
+- La llamada a `pipeline.query()` dentro de `on_message` se envuelve con `cl.make_async()` (utilidad de Chainlit para ejecutar código síncrono en un executor) para no bloquear el event loop.
+
+**Alternativas descartadas**
+- Instancia de `RAGPipeline` por sesión (`on_chat_start`) — descartado: recarga `bge-m3` y reabre Chroma en cada login, coste innecesario sin beneficio de aislamiento (el pipeline no tiene estado mutable por usuario).
+- Llamada directa y síncrona a `pipeline.query()` sin `cl.make_async()` — descartado: bloquearía el servidor Chainlit completo (todas las sesiones) mientras el LLM genera, y el indicador de carga del Escenario 2 dejaría de ser fiable.
+
+**Justificación**
+El pipeline es stateless respecto al usuario (no guarda historial ni contexto de sesión dentro de `RAGPipeline`), por lo que compartir una instancia entre sesiones es seguro y evita el coste de recarga. `cl.make_async()` es el mecanismo estándar de Chainlit para este caso — evita introducir un executor custom.
+
+**Consecuencias**
+- `chainlit/main_family.py` gana una instancia de módulo `_pipeline = RAGPipeline(load_rag_config())` (o construcción lazy en el primer uso) y un handler `on_message` que la invoca vía `cl.make_async()`.
+- T-02 (streaming) tendrá que revisar si `cl.make_async()` sigue siendo el patrón correcto cuando el pipeline exponga generación por tokens, o si pasa a usar un generador async nativo — a decidir en el `task-start` de T-02.
+- Si en el futuro `RAGPipeline` gana estado por sesión (p. ej. historial conversacional), esta decisión de singleton habría que revisitarla.
 
 ---
 
