@@ -192,7 +192,7 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 | T-01 | Integración del pipeline RAG en el chat | Sí | ✅ Completada |
 | T-02 | Streaming nativo de tokens | Sí | ✅ Completada |
 | T-03 | Visualización de pasos intermedios del RAG | Sí | ✅ Completada |
-| T-04 | Onboarding y disclaimers de seguridad | No | ⚪ Pendiente |
+| T-04 | Onboarding y disclaimers de seguridad | No | ✅ Completada |
 | T-05 | Theming completo (tokens E-02) + responsive del chat | No | ⚪ Pendiente |
 | T-06 | UI de autenticación en Chainlit: signup + login Google + fusión de auth/style.css | Parcial | ⚪ Pendiente |
 | T-07 | Smoke test manual E2E — chat + signup + login Google (configuración, sin TDD) | No | ⚪ Pendiente |
@@ -269,7 +269,34 @@ Dataset de prueba y métricas básicas funcionando, ejecutada inmediatamente des
 ### E-08 — Memoria de perfil e histórico de conversaciones
 Onboarding, datos estables del paciente y persistencia de conversaciones entre sesiones.
 
+**Nota de alcance (8 jul 2026):** al hacer QA manual de E-05 T-04 se confirmó
+que `rag/pipeline.py` (`retrieve()`/`aquery_stream()`) no recibe ningún
+historial — cada turno del chat se procesa de forma aislada, incluso dentro
+de una misma sesión abierta (el chat "olvida" lo dicho dos mensajes antes,
+aunque siga visible en pantalla). Marcos señaló que esto son en realidad
+**tres capas distintas**, y el criterio original las mezclaba en una sola:
+1. **Memoria conversacional de corto plazo (intra-sesión):** pasar el
+   historial reciente del chat abierto al LLM para que pueda seguir la
+   conversación de forma natural (ej. resolver referencias como "¿recuerdas
+   a quién quiero visitar?"). No implica persistencia en BBDD — puede vivir
+   en memoria de la sesión de Chainlit (`cl.user_session`).
+2. **Memoria de perfil:** datos estables del paciente (tipo de IDP, edad,
+   contexto) capturados en onboarding y usados para contextualizar
+   respuestas — precisa de persistencia porque debe sobrevivir a cerrar el
+   chat.
+3. **Persistencia entre sesiones:** histórico de conversaciones guardado por
+   usuario en Supabase — implica autenticación (ya resuelta en E-03) +
+   escritura en BBDD, y es lo único de las tres que requiere ambas cosas.
+
+Al descomponer esta épica en tareas, evaluar si (1) debe resolverse antes o
+de forma independiente de (2)/(3) — la memoria de corto plazo mejora la
+experiencia de chat ya con la arquitectura actual, sin depender de diseño de
+esquema en Supabase ni de UI de borrado de datos.
+
 **Criterios de aceptación de alto nivel**
+- Memoria conversacional de corto plazo: el agente mantiene el hilo de la
+  conversación dentro de una misma sesión de chat abierta (sin necesidad de
+  persistencia en BBDD)
 - Onboarding captura datos del paciente: tipo de IDP, edad, contexto relevante
 - El agente usa la memoria de perfil para contextualizar respuestas
 - Histórico de conversaciones persistente por usuario en Supabase

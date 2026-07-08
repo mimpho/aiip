@@ -18,6 +18,24 @@ _ERROR_MESSAGE = (
 _RETRIEVAL_STEP_NAME = "Documentos consultados"
 _EXCERPT_LENGTH = 200
 
+_WELCOME_MESSAGE = (
+    "¡Hola! Soy AIIP, tu asistente sobre Inmunodeficiencias Primarias. "
+    "Estoy aquí para acompañarte, ya sea que convivas tú mismo con una IDP o "
+    "la de un familiar, y ayudarte a resolver dudas y a encontrar información "
+    "de confianza.\n\n"
+    "Recuerda: **AIIP acompaña e informa, nunca diagnostica**. Ante cualquier "
+    "duda sobre síntomas o decisiones médicas, consulta siempre con tu "
+    "equipo sanitario.\n\n"
+    "¿En qué puedo ayudarte hoy?"
+)
+
+_STARTER_QUESTIONS = (
+    "¿Qué es una Inmunodeficiencia Primaria?",
+    "¿Cómo puedo cuidar el día a día de mi familiar?",
+    "¿Cuándo deberíamos acudir a urgencias?",
+    "¿Qué preguntas puedo llevar a la próxima cita médica?",
+)
+
 
 def _get_pipeline() -> RAGPipeline:
     """Instancia el RAGPipeline en el primer uso y lo reutiliza (D-033)."""
@@ -68,19 +86,12 @@ def auth_callback(username: str, password: str) -> cl.User | None:
         return None
 
 
-@cl.on_chat_start
-async def on_chat_start():
-    user = cl.user_session.get("user")
-    role = user.metadata.get("role") if user else "unknown"
-    await cl.Message(content=f"Sesión iniciada. Perfil: {role}").send()
+async def _answer(question: str) -> None:
+    """Ejecuta el pipeline RAG para `question` y envía la respuesta en streaming.
 
-
-@cl.on_message
-async def on_message(message: cl.Message):
-    question = message.content.strip()
-    if not question:
-        return
-
+    Compartido por `on_message` y por el callback de las preguntas sugeridas
+    (D-036): ambos caminos deben comportarse igual ante la misma pregunta.
+    """
     thinking_message = cl.Message(content="")
     await thinking_message.send()
 
@@ -101,3 +112,39 @@ async def on_message(message: cl.Message):
         return
 
     await thinking_message.update()
+
+
+@cl.on_chat_start
+async def on_chat_start():
+    """Envía el mensaje de bienvenida y el recordatorio de seguridad (D-036).
+
+    Se repite en cada apertura de chat, no solo la primera vez: no hay
+    estado persistido que distinga un primer login real de sesiones
+    posteriores (D-036).
+
+    Las preguntas sugeridas se adjuntan como `cl.Action` sobre este mismo
+    mensaje, no vía `cl.set_starters`: los starters nativos de Chainlit solo
+    se muestran en un hilo sin mensajes, y este mensaje de bienvenida ya
+    cuenta como el primer mensaje del hilo (D-036 exige enviarlo desde
+    `on_chat_start`, no desde `chainlit.md`).
+    """
+    actions = [
+        cl.Action(name="starter_question", payload={"question": q}, label=q)
+        for q in _STARTER_QUESTIONS
+    ]
+    await cl.Message(content=_WELCOME_MESSAGE, actions=actions).send()
+
+
+@cl.action_callback("starter_question")
+async def on_starter_question(action: cl.Action):
+    question = action.payload["question"]
+    await cl.Message(content=question, type="user_message").send()
+    await _answer(question)
+
+
+@cl.on_message
+async def on_message(message: cl.Message):
+    question = message.content.strip()
+    if not question:
+        return
+    await _answer(question)
