@@ -20,15 +20,18 @@ class _FakeUser:
 _fake_cl = types.ModuleType("chainlit")
 _fake_cl.password_auth_callback = lambda f: f
 _fake_cl.on_chat_start = lambda f: f
+_fake_cl.on_message = lambda f: f
 _fake_cl.User = _FakeUser
 _fake_cl.user_session = MagicMock()
 _fake_cl.Message = MagicMock()
+_fake_cl.make_async = lambda f: f
 
-sys.modules.setdefault("chainlit", _fake_cl)
-
-# ── Import entrypoint under test ─────────────────────────────────────────────
-
+# Overwrite (not setdefault) and drop any cached main_family: other test
+# modules register their own fake "chainlit", and main_family must be
+# (re)imported bound to *this* file's fake, not whichever ran first.
+sys.modules["chainlit"] = _fake_cl
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "chainlit"))
+sys.modules.pop("main_family", None)
 import main_family  # noqa: E402
 
 scenarios("../features/e03_t05_chainlit_auth.feature")
