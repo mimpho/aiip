@@ -130,3 +130,7 @@ Durante la validación de E-05 T-03 (visualización de pasos intermedios) se evi
 ### 2. Ruido en Dense Vector Search (Falta de coincidencia exacta)
 - **Problema:** El modelo de embeddings BGE-M3 (búsqueda semántica pura) asocia la pregunta de "hospitales en Barcelona" a cualquier chunk de la lista de hospitales de España (recuperando Alicante, Gran Canaria, Oviedo) porque semánticamente todos hablan de hospitales con inmunología. La palabra "Barcelona" no tiene fuerza suficiente para hacer de filtro.
 - **Idea/Solución:** Implementar **Hybrid Search** (combinando Dense Search para semántica con BM25 para coincidencias exactas por palabra clave), de forma que nombres propios o geográficos fuercen la coincidencia estricta y eliminen el ruido.
+
+### 3. Registro lingüístico no siempre accesible (8 jul 2026)
+- **Problema:** detectado al hacer QA manual de E-05 T-04 — algunas respuestas generadas (ej. sobre el proceso de trasplante de médula) usan vocabulario clínico ("acondicionamiento", "recuperación del sistema inmunitario") que puede no ser comprensible para cualquier familiar sin formación médica, pese a que `[TONO — PERFIL FAMILIAR]` en `prompts/system_prompt_family.txt` ya pide "lenguaje accesible... sin tecnicismos innecesarios".
+- **Idea/Solución:** revisar en E-07/E-09 si el registro lingüístico real generado por el LLM es consistente con la instrucción de tono del system prompt — posible ítem adicional a evaluar junto a Faithfulness/Answer Relevancy (métrica de legibilidad, o revisión cualitativa dirigida como parte del ciclo de mejora).

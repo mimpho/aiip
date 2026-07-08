@@ -44,6 +44,8 @@
 - [D-033 — Integración del pipeline RAG en Chainlit: instancia singleton y ejecución no bloqueante](#d-033--integración-del-pipeline-rag-en-chainlit-instancia-singleton-y-ejecución-no-bloqueante)
 - [D-034 — Streaming de tokens: generador async nativo en lugar de `cl.make_async()`, y preservación de listado de fuentes y método `query()` no-streaming](#d-034--streaming-de-tokens-generador-async-nativo-en-lugar-de-clmake_async-y-preservación-de-listado-de-fuentes-y-método-query-no-streaming)
 - [D-035 — Visualización de pasos intermedios: `retrieve()` público, `raw_results` opcional en `aquery_stream()` y `cl.Step` en Chainlit](#d-035--visualización-de-pasos-intermedios-retrieve-público-raw_results-opcional-en-aquery_stream-y-clstep-en-chainlit)
+- [D-036 — Onboarding y disclaimer: mensaje en cada apertura de chat, ubicado en `on_chat_start`, sin color de warning](#d-036--onboarding-y-disclaimer-mensaje-en-cada-apertura-de-chat-ubicado-en-on_chat_start-sin-color-de-warning)
+- [D-037 — Protocolos de tratamiento específicos citados de la KB sin contexto: ajuste de prompt (pendiente de verificación por cuota)](#d-037--protocolos-de-tratamiento-específicos-citados-de-la-kb-sin-contexto-ajuste-de-prompt-pendiente-de-verificación-por-cuota)
 
 ---
 
@@ -1226,6 +1228,133 @@ que empiece el `async for` del streaming.
   se modifican (retrocompatibilidad garantizada).
 - `tests/features/e05_t03_rag_steps_visualization.feature`: actualizado con el 4.º escenario
   de wiring Chainlit.
+
+---
+
+## D-036 — Onboarding y disclaimer: mensaje en cada apertura de chat, ubicado en `on_chat_start`, sin color de warning
+
+**Fecha:** 8 de julio de 2026
+**Fase:** técnica / diseño
+**Épica:** E-05 (task-start T-04)
+
+**Contexto**
+T-04 (D-030: sin TDD, validación manual) implementa el mensaje de bienvenida y
+el recordatorio de que AIIP no diagnostica (PRD 6.1). Al revisar la tarea
+surgieron dos puntos abiertos: (1) el `.feature` hablaba de "primera vez",
+pero `on_chat_start` en `chainlit/main_family.py` no tiene ningún estado
+persistido que distinga el primer login real de sesiones siguientes; (2) dónde
+vive el contenido — `chainlit.md` (boilerplate de Chainlit por defecto, sin
+personalizar) se lee del mismo directorio raíz para las apps family y
+professional, mientras que `on_chat_start` ya existe como código específico
+de family (hoy solo envía `"Sesión iniciada. Perfil: {role}"`).
+
+Además, Marcos señaló que existen plantillas de diseño (Claude Design,
+`docs/design/screens-chat.html`) que usan los tokens de `design/public/tokens.css`
+ya establecidos en E-02. Esos mockups muestran un recordatorio persistente
+("Informational — does not replace medical judgment.") en color de texto
+muted, y un banner de escalada en ámbar ("When in doubt, always contact your
+medical team.") reservado explícitamente en `tokens.css` — comentario
+`--color-warning: reserved — Zero False Negative only` — para las respuestas
+donde `rag/safety.py` detecta un trigger de alarma, no para recordatorios
+rutinarios.
+
+**Decisión**
+1. El mensaje de onboarding se muestra en **cada apertura de chat** (cada
+   `on_chat_start`), no solo en el primer login real — sin añadir estado
+   nuevo en Supabase/`profiles` para esto.
+2. Se implementa **extendiendo `on_chat_start` en `chainlit/main_family.py`**
+   (sustituyendo el placeholder actual), no en `chainlit.md` — evita acoplar
+   el contenido de family con el stub de professional.
+3. El mensaje se envía como `cl.Message` de texto/markdown plano, **sin**
+   usar el color de warning/ámbar (`--color-warning` está reservado a
+   Falso Negativo Cero) — el tono visual, si se necesita alguno más allá del
+   texto plano, debe tratarse como informativo neutro (mismo registro que el
+   footer "Informational — does not replace medical judgment." de los
+   mockups), y su estilo final lo aplica T-05 (theming), no T-04.
+
+**Consecuencias**
+- `tests/features/e05_t04_onboarding_disclaimers.feature` se actualiza: el
+  Given pasa de "inicio sesión por primera vez" a "abro el chat", coherente
+  con el punto 1.
+- `chainlit.md` queda sin tocar en esta tarea.
+- Antigravity no debe introducir estilos ámbar/warning al implementar el
+  mensaje de T-04; si T-05 necesita revisar el tratamiento visual del
+  onboarding, parte de este mismo criterio.
+
+**Addendum (8 jul 2026) — preguntas sugeridas (starters)**
+Ampliación de alcance decidida por Marcos dentro de la misma tarea: se añaden
+preguntas sugeridas bajo el mensaje de bienvenida. Las cuatro preguntas
+iniciales son informativas y coherentes con `[TONO — PERFIL FAMILIAR]`; una de
+ellas ("¿Cuándo deberíamos acudir a urgencias?") ejercita a propósito la
+filosofía de Falso Negativo Cero (PRD 6.2) desde el primer contacto con la app.
+
+Primer intento: mecanismo nativo `@cl.set_starters` de Chainlit (2.11.1). Se
+descartó tras verificar en el bundle del frontend (`chainlit/frontend/dist/assets/index-*.js`)
+que la pantalla de starters solo se pinta cuando el hilo no tiene ningún
+mensaje (`assistant_message`/`user_message`) — y `on_chat_start` ya manda el
+mensaje de bienvenida como `assistant_message`, así que los starters nativos
+nunca llegaban a mostrarse. Implementación final: los starters se adjuntan
+como `cl.Action` al propio mensaje de bienvenida (`chainlit/main_family.py`),
+con un `@cl.action_callback` que ejecuta la misma lógica compartida
+(`_answer()`) que `on_message`.
+
+---
+
+## D-037 — Protocolos de tratamiento específicos citados de la KB sin contexto: ajuste de prompt (pendiente de verificación por cuota)
+
+**Fecha:** 8 de julio de 2026
+**Fase:** técnica / seguridad
+**Épica:** E-05 (detectado durante QA manual de T-04, afecta a `rag/generator.py` — E-04)
+
+**Contexto**
+Al probar la pregunta sugerida "¿Cuándo deberíamos acudir a urgencias?"
+(añadida en el addendum de starters de D-036), la respuesta incluyó un
+párrafo con instrucciones de actuación muy específicas — "administra un
+antitérmico y acude a Urgencias", "detén la administración [de la infusión]",
+"administra analgesia" — tomadas de `guia_antibiotics_esp_0.pdf` e
+`infusiones-de-IGS-subcutaneas.pdf`. Esos documentos describen protocolos de
+actuación **condicionados a estar recibiendo una infusión de inmunoglobulina
+subcutánea pautada por el equipo médico**, no información general sobre
+cuándo acudir a urgencias — el contexto que scopeaba esas instrucciones en el
+PDF original (la sección/cabecera del documento) se pierde en el chunking, y
+el LLM las presenta como si aplicaran a cualquier persona.
+
+Se valoró filtrar esto en la capa de retrieval (similar a `alarm_triggers.json`,
+D-019), pero se descarta un filtro por patrón/palabra clave como mecanismo
+único: distinguir "protocolo condicionado a una prescripción/diagnóstico
+previo" de "información general de seguridad" es un juicio clínico, no un
+patrón léxico fiable — mismo tipo de límite que motivó que D-019 exigiera
+validación de Jacques en vez de una lista escrita solo por el equipo técnico.
+Una capa de metadatos por chunk curada clínicamente queda como posible mejora
+de medio plazo (no abordada en esta decisión).
+
+**Decisión**
+Como primera mitigación, se añade una restricción explícita a
+`[RESTRICCIONES ABSOLUTAS]` en `prompts/system_prompt_family.txt`: si el
+contexto recuperado incluye instrucciones de actuación de un tratamiento
+concreto (medicación, cuándo detener una infusión, reacción a un
+procedimiento pautado), el LLM no debe repetirlas como pauta general —debe
+indicar que son un protocolo específico del equipo médico del paciente y
+remitir a seguirlo/confirmarlo con él, en vez de listar los pasos como
+recomendación propia.
+
+**Sin verificar todavía:** no se pudo confirmar el efecto contra una
+respuesta real — la cuota diaria gratuita de `gemini-2.5-flash-lite` estaba
+agotada en el momento de este cambio (mismo límite de D-027, 20
+peticiones/día). Pendiente de repetir la pregunta "¿Cuándo deberíamos acudir
+a urgencias?" cuando se reponga la cuota y confirmar si el párrafo problemático
+desaparece o se reformula con el descargo adecuado.
+
+**Consecuencias**
+- Si la verificación manual muestra que el ajuste de prompt no es suficiente
+  (el LLM sigue repitiendo instrucciones de tratamiento sin descargo), la
+  capa de metadatos curada clínicamente pasa a ser la vía a explorar, no un
+  filtro por palabras clave.
+- Este hallazgo es distinto de los ya registrados en `backlog/ideas.md`
+  ("Hallazgos del RAG para optimización en E-07"): aquellos son de retrieval
+  puro (ruido semántico), este es de generación/seguridad — el contexto
+  recuperado puede ser correcto y aun así requerir que el LLM no lo repita
+  literalmente.
 
 ---
 
