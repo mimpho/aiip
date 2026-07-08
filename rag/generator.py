@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import AsyncIterator
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -50,3 +51,17 @@ class RAGGenerator:
         )
         response = self._llm.invoke(prompt)
         return response.content
+
+    async def agenerate_stream(
+        self, question: str, context: str, language: str
+    ) -> AsyncIterator[str]:
+        from rag.language import build_language_instruction
+
+        prompt = _PROMPT_TEMPLATE.format(
+            system_prompt=self._system_prompt,
+            context=context,
+            question=question,
+            language_instruction=build_language_instruction(language),
+        )
+        async for chunk in self._llm.astream(prompt):
+            yield chunk.content

@@ -1,3 +1,5 @@
+from typing import AsyncIterator
+
 from rag.embeddings import get_embeddings
 from rag.generator import RAGGenerator
 from rag.language import detect_language
@@ -74,3 +76,32 @@ class RAGPipeline:
         if sources_section:
             response = f"{response}\n\n{sources_section}"
         return response
+
+    async def aquery_stream(self, question: str) -> AsyncIterator[str]:
+        """Recibe una pregunta y emite la respuesta generada en streaming.
+
+        El filtro de seguridad y el listado de fuentes se aplican sobre el
+        texto completo ya ensamblado (D-030): se yield-ean como fragmentos
+        finales tras agotar el streaming del cuerpo, nunca intercalados.
+        """
+        language = detect_language(question)
+        raw = self._vectorstore.similarity_search_with_score(question, k=self._top_k)
+        context = "\n\n".join(doc.page_content for doc, _ in raw)
+        has_alarm = check_alarm_signals(question)
+
+        chunks = []
+        async for token in self._generator.agenerate_stream(
+            question=question, context=context, language=language
+        ):
+            chunks.append(token)
+            yield token
+
+        full_text = "".join(chunks)
+        filtered = apply_safety_filter(full_text, has_alarm)
+        safety_suffix = filtered[len(full_text):]
+        if safety_suffix:
+            yield safety_suffix
+
+        sources_section = _build_sources_section(raw, language)
+        if sources_section:
+            yield f"\n\n{sources_section}"

@@ -14,7 +14,7 @@ Feature: Integración del pipeline RAG en el chat familiar
   Scenario: Pregunta del usuario devuelve la respuesta del pipeline
     Given un usuario autenticado con perfil "family"
     When el usuario envía el mensaje "¿qué es una inmunodeficiencia primaria?"
-    Then se invoca RAGPipeline.query() con esa pregunta
+    Then se invoca la generación en streaming del pipeline con esa pregunta
     And el chat muestra la respuesta devuelta por el pipeline
 
   Scenario: Indicador de "escribiendo" mientras se genera la respuesta
