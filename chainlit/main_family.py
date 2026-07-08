@@ -54,11 +54,11 @@ async def on_message(message: cl.Message):
 
     try:
         pipeline = _get_pipeline()
-        answer = await cl.make_async(pipeline.query)(question)
+        async for token in pipeline.aquery_stream(question):
+            await thinking_message.stream_token(token)
     except Exception:
         thinking_message.content = _ERROR_MESSAGE
         await thinking_message.update()
         return
 
-    thinking_message.content = answer
     await thinking_message.update()

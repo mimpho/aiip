@@ -24,12 +24,9 @@ class _FakeMessage:
     async def update(self):
         return self
 
-
-def _fake_make_async(func):
-    async def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
+    async def stream_token(self, token: str):
+        self.content += token
+        return self
 
 
 class _FakeUser:
@@ -45,7 +42,6 @@ _fake_cl.on_message = lambda f: f
 _fake_cl.User = _FakeUser
 _fake_cl.user_session = MagicMock()
 _fake_cl.Message = _FakeMessage
-_fake_cl.make_async = _fake_make_async
 
 # Overwrite (not setdefault) and drop any cached main_family: other test
 # modules register their own fake "chainlit", and main_family must be
@@ -78,12 +74,22 @@ def app_initialized():
     return {}
 
 
+def _make_stream_mock(text: str) -> MagicMock:
+    """Fake de aquery_stream(): emite `text` como único fragmento."""
+
+    async def _gen(question):
+        yield text
+
+    return MagicMock(side_effect=_gen)
+
+
 @given("existe una instancia de RAGPipeline disponible para la sesión")
 def rag_pipeline_available(monkeypatch, ctx):
     mock_pipeline = MagicMock()
-    mock_pipeline.query.return_value = "respuesta fake"
+    mock_pipeline.aquery_stream = _make_stream_mock("respuesta fake")
     monkeypatch.setattr(main_family, "_get_pipeline", lambda: mock_pipeline)
     ctx["pipeline"] = mock_pipeline
+    ctx["expected_answer"] = "respuesta fake"
 
 
 # ── Scenario 1: Pregunta del usuario devuelve la respuesta del pipeline ──────
@@ -100,15 +106,15 @@ def usuario_envia_mensaje(ctx, message):
     _run_on_message(message)
 
 
-@then("se invoca RAGPipeline.query() con esa pregunta")
+@then("se invoca la generación en streaming del pipeline con esa pregunta")
 def se_invoca_query_con_pregunta(ctx):
-    ctx["pipeline"].query.assert_called_once_with(ctx["question"])
+    ctx["pipeline"].aquery_stream.assert_called_once_with(ctx["question"])
 
 
 @then("el chat muestra la respuesta devuelta por el pipeline")
 def chat_muestra_respuesta(ctx):
     assert _sent_messages, "No se envió ningún mensaje al chat"
-    assert _sent_messages[-1].content == ctx["pipeline"].query.return_value
+    assert _sent_messages[-1].content == ctx["expected_answer"]
 
 
 # ── Scenario 2: Indicador de "escribiendo" ────────────────────────────────────
@@ -123,13 +129,16 @@ def usuario_autenticado_envia_pregunta(ctx):
 def pipeline_no_ha_respondido(ctx):
     indicator_seen_before_query = {"value": False}
 
-    def _query_side_effect(question):
+    async def _gen(question):
+        # El cuerpo del generador async solo se ejecuta al consumir el primer
+        # token (lazy), es decir, después de que on_message haya enviado el
+        # indicador de "escribiendo".
         indicator_seen_before_query["value"] = any(
             m.content == "" for m in _sent_messages
         )
-        return "respuesta fake"
+        yield "respuesta fake"
 
-    ctx["pipeline"].query.side_effect = _query_side_effect
+    ctx["pipeline"].aquery_stream = MagicMock(side_effect=_gen)
     _run_on_message(ctx["question"])
     ctx["indicator_seen_before_query"] = indicator_seen_before_query["value"]
 
@@ -148,7 +157,11 @@ def chat_muestra_indicador(ctx):
     "RAGPipeline.query() lanza una excepción, por ejemplo porque el LLM no está disponible"
 )
 def pipeline_lanza_excepcion(ctx):
-    ctx["pipeline"].query.side_effect = Exception("LLM no disponible")
+    async def _gen(question):
+        raise Exception("LLM no disponible")
+        yield  # pragma: no cover — inalcanzable, necesario para que sea un generador async
+
+    ctx["pipeline"].aquery_stream = MagicMock(side_effect=_gen)
     _run_on_message(ctx["question"])
 
 
@@ -160,8 +173,7 @@ def chat_muestra_error(ctx):
 
 @then("la sesión de chat sigue activa para la siguiente pregunta")
 def sesion_sigue_activa(ctx):
-    ctx["pipeline"].query.side_effect = None
-    ctx["pipeline"].query.return_value = "segunda respuesta fake"
+    ctx["pipeline"].aquery_stream = _make_stream_mock("segunda respuesta fake")
     _run_on_message("otra pregunta")
     assert _sent_messages[-1].content == "segunda respuesta fake"
 
@@ -182,4 +194,4 @@ def envia_mensaje_vacio(ctx):
 
 @then("no se invoca RAGPipeline.query()")
 def no_se_invoca_query(ctx):
-    assert not ctx["pipeline"].query.called
+    assert not ctx["pipeline"].aquery_stream.called
