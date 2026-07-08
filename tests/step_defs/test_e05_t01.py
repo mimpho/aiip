@@ -29,6 +29,18 @@ class _FakeMessage:
         return self
 
 
+class _FakeStep:
+    def __init__(self, name: str = "", **kwargs):
+        self.name = name
+        self.output = ""
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return False
+
+
 class _FakeUser:
     def __init__(self, identifier: str, metadata: dict | None = None):
         self.identifier = identifier
@@ -42,6 +54,7 @@ _fake_cl.on_message = lambda f: f
 _fake_cl.User = _FakeUser
 _fake_cl.user_session = MagicMock()
 _fake_cl.Message = _FakeMessage
+_fake_cl.Step = _FakeStep
 
 # Overwrite (not setdefault) and drop any cached main_family: other test
 # modules register their own fake "chainlit", and main_family must be
@@ -77,7 +90,7 @@ def app_initialized():
 def _make_stream_mock(text: str) -> MagicMock:
     """Fake de aquery_stream(): emite `text` como único fragmento."""
 
-    async def _gen(question):
+    async def _gen(question, raw_results=None):
         yield text
 
     return MagicMock(side_effect=_gen)
@@ -87,6 +100,7 @@ def _make_stream_mock(text: str) -> MagicMock:
 def rag_pipeline_available(monkeypatch, ctx):
     mock_pipeline = MagicMock()
     mock_pipeline.aquery_stream = _make_stream_mock("respuesta fake")
+    mock_pipeline.retrieve.return_value = []
     monkeypatch.setattr(main_family, "_get_pipeline", lambda: mock_pipeline)
     ctx["pipeline"] = mock_pipeline
     ctx["expected_answer"] = "respuesta fake"
@@ -108,7 +122,9 @@ def usuario_envia_mensaje(ctx, message):
 
 @then("se invoca la generación en streaming del pipeline con esa pregunta")
 def se_invoca_query_con_pregunta(ctx):
-    ctx["pipeline"].aquery_stream.assert_called_once_with(ctx["question"])
+    ctx["pipeline"].aquery_stream.assert_called_once_with(
+        ctx["question"], raw_results=[]
+    )
 
 
 @then("el chat muestra la respuesta devuelta por el pipeline")
@@ -129,7 +145,7 @@ def usuario_autenticado_envia_pregunta(ctx):
 def pipeline_no_ha_respondido(ctx):
     indicator_seen_before_query = {"value": False}
 
-    async def _gen(question):
+    async def _gen(question, raw_results=None):
         # El cuerpo del generador async solo se ejecuta al consumir el primer
         # token (lazy), es decir, después de que on_message haya enviado el
         # indicador de "escribiendo".
@@ -157,10 +173,11 @@ def chat_muestra_indicador(ctx):
     "RAGPipeline.query() lanza una excepción, por ejemplo porque el LLM no está disponible"
 )
 def pipeline_lanza_excepcion(ctx):
-    async def _gen(question):
+    async def _gen(question, raw_results=None):
         raise Exception("LLM no disponible")
         yield  # pragma: no cover — inalcanzable, necesario para que sea un generador async
 
+    ctx["pipeline"].retrieve.return_value = []
     ctx["pipeline"].aquery_stream = MagicMock(side_effect=_gen)
     _run_on_message(ctx["question"])
 

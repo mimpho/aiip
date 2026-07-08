@@ -116,3 +116,17 @@ Repo: https://github.com/msitarzewski/agency-agents
 - **Qué es:** agente PM con plantilla de PRD estructurada con evidencia, PRFAQ y gestión de scope creep.
 - **Relevancia para AIIP:** útil si hay cambios de alcance por feedback de Jacques Rivière o decisiones de scope durante el desarrollo.
 - **Cuándo usarlo:** cuando llegue feedback clínico que obligue a iterar el PRD.
+
+---
+
+## Hallazgos del RAG para optimización en E-07
+
+Durante la validación de E-05 T-03 (visualización de pasos intermedios) se evidenciaron dos áreas de mejora para el motor RAG que deberán resolverse y evaluarse formalmente en la épica E-07 (Evaluación RAGAS):
+
+### 1. Grounding estricto vs. Conocimiento del mundo (Alucinación)
+- **Problema:** El LLM está instruido para usar "exclusivamente" el contexto. Si se pregunta por un hospital cerca de "Vic", y el chunk recuperado dice "Barcelona", el LLM se niega a deducir que están cerca porque "Vic" no aparece en el texto. Ante la duda, se escuda en el "Falso Negativo Cero" dando una respuesta genérica.
+- **Idea/Solución:** Refinar el System Prompt para permitir el uso de conocimiento del mundo general (como geografía básica o distancias) para conectar conceptos, manteniendo el grounding estricto únicamente para datos clínicos y médicos.
+
+### 2. Ruido en Dense Vector Search (Falta de coincidencia exacta)
+- **Problema:** El modelo de embeddings BGE-M3 (búsqueda semántica pura) asocia la pregunta de "hospitales en Barcelona" a cualquier chunk de la lista de hospitales de España (recuperando Alicante, Gran Canaria, Oviedo) porque semánticamente todos hablan de hospitales con inmunología. La palabra "Barcelona" no tiene fuerza suficiente para hacer de filtro.
+- **Idea/Solución:** Implementar **Hybrid Search** (combinando Dense Search para semántica con BM25 para coincidencias exactas por palabra clave), de forma que nombres propios o geográficos fuercen la coincidencia estricta y eliminen el ruido.

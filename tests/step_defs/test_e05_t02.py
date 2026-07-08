@@ -93,6 +93,18 @@ class _FakeMessage:
         return self
 
 
+class _FakeStep:
+    def __init__(self, name: str = "", **kwargs):
+        self.name = name
+        self.output = ""
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return False
+
+
 class _FakeUser:
     def __init__(self, identifier: str, metadata: dict | None = None):
         self.identifier = identifier
@@ -106,6 +118,7 @@ _fake_cl.on_message = lambda f: f
 _fake_cl.User = _FakeUser
 _fake_cl.user_session = MagicMock()
 _fake_cl.Message = _FakeMessage
+_fake_cl.Step = _FakeStep
 
 # Igual que en test_e05_t01.py: cada fichero de test registra su propia
 # fake "chainlit" y (re)importa main_family bound a esa fake.
@@ -277,11 +290,12 @@ def no_se_anade_recordatorio(stream_result):
     target_fixture="chat_result",
 )
 def streaming_lanza_excepcion(ctx, monkeypatch):
-    async def _gen(question):
+    async def _gen(question, raw_results=None):
         yield "Fragmento parcial "
         raise Exception("LLM no disponible")
 
     mock_pipeline = MagicMock()
+    mock_pipeline.retrieve.return_value = []
     mock_pipeline.aquery_stream = MagicMock(side_effect=_gen)
     monkeypatch.setattr(main_family, "_get_pipeline", lambda: mock_pipeline)
 
@@ -297,7 +311,7 @@ def chat_muestra_error_legible(chat_result):
 
 @then("la sesión de chat sigue activa para la siguiente pregunta")
 def sesion_activa_para_siguiente(chat_result):
-    async def _gen_ok(question):
+    async def _gen_ok(question, raw_results=None):
         yield "segunda "
         yield "respuesta"
 
