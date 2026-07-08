@@ -43,6 +43,7 @@
 - [D-032 — Login con Google: OAuth nativo de Chainlit + sincronización server-side con Supabase (reabre D-014)](#d-032--login-con-google-oauth-nativo-de-chainlit--sincronización-server-side-con-supabase-reabre-d-014)
 - [D-033 — Integración del pipeline RAG en Chainlit: instancia singleton y ejecución no bloqueante](#d-033--integración-del-pipeline-rag-en-chainlit-instancia-singleton-y-ejecución-no-bloqueante)
 - [D-034 — Streaming de tokens: generador async nativo en lugar de `cl.make_async()`, y preservación de listado de fuentes y método `query()` no-streaming](#d-034--streaming-de-tokens-generador-async-nativo-en-lugar-de-clmake_async-y-preservación-de-listado-de-fuentes-y-método-query-no-streaming)
+- [D-035 — Visualización de pasos intermedios: `retrieve()` público, `raw_results` opcional en `aquery_stream()` y `cl.Step` en Chainlit](#d-035--visualización-de-pasos-intermedios-retrieve-público-raw_results-opcional-en-aquery_stream-y-clstep-en-chainlit)
 
 ---
 
@@ -1151,6 +1152,80 @@ D-033 dejó explícitamente abierto si `cl.make_async()` (patrón usado en T-01 
 - `chainlit/main_family.py::on_message` pasa a ser un `async for` sobre `aquery_stream()`, usando `cl.Message.stream_token()`.
 - `tests/step_defs/test_e05_t01.py` y el Scenario 1 de `e05_t01_chat_pipeline_integration.feature` se ajustan como excepción justificada (ver arriba).
 - `tests/features/e05_t02_streaming.feature` se amplía con dos escenarios: error durante el streaming, y preservación del listado de fuentes.
+
+---
+
+## D-035 — Visualización de pasos intermedios: `retrieve()` público, `raw_results` opcional en `aquery_stream()` y `cl.Step` en Chainlit
+
+**Fecha:** 8 de julio de 2026  
+**Fase:** técnica / arquitectura  
+**Épica:** E-05 (task-start T-03)
+
+**Contexto**  
+El criterio de E-05 T-03 ("Visualización de pasos intermedios del RAG") requiere que el usuario vea
+qué documentos ha recuperado el sistema *antes* de recibir la respuesta. El `.feature` original
+(creado en `epic-start`) solo cubría que `RAGPipeline` expone los documentos como estructura de
+datos; no cubría el wiring en `chainlit/main_family.py` ni el componente de UI. Además, `aquery_stream()`
+hace internamente la llamada a `similarity_search_with_score` — si `main_family.py` quisiera
+renderizar los documentos *antes* de llamar a `aquery_stream()`, necesitaría llamar al vectorstore
+de nuevo, duplicando la consulta (violación del Scenario 3 del `.feature`). Había que decidir cómo
+extraer el retrieval sin romper la retrocompatibilidad con los tests de T-01 y T-02.
+
+**Decisión**  
+Tres cambios coordinados, todos con mínimo diff y retrocompatibles:
+
+1. **`RAGPipeline.retrieve(question: str) -> list[tuple[Document, float]]`** — nuevo método público
+   que encapsula exactamente la llamada a `self._vectorstore.similarity_search_with_score(question,
+   k=self._top_k)`. No añade lógica nueva; solo extrae lo que ya existía inline en `query()` y
+   `aquery_stream()`. El tipo de retorno es idéntico al de Chroma, sin wrappers adicionales.
+
+2. **`aquery_stream(question, raw_results=None)`** — añade parámetro opcional. Si `raw_results`
+   es `None` (default), hace la llamada al vectorstore internamente como siempre — sin cambio
+   de comportamiento para todos los tests y el código de T-01/T-02. Si el llamador pasa
+   `raw_results`, los reutiliza sin segunda consulta.
+
+3. **`main_family.on_message` usa `cl.Step`** — llama primero a `pipeline.retrieve(question)`,
+   abre un `cl.Step` con los documentos recuperados (fuente/filename, score, extracto de ~200
+   caracteres de `page_content`), y pasa esos resultados como `raw_results` a `aquery_stream()`.
+   El step se cierra antes de que empiece el streaming de la respuesta.
+
+**Alternativas descartadas**  
+- *Callback `on_retrieval`* (opción B propuesta en la revisión de Marcos): más indirecto, sin
+  ventaja real aquí — el llamador ya tiene el control del flujo en `on_message`, un callback
+  añade una capa de indirección sin simplificar nada.
+- *Segunda llamada al vectorstore desde `main_family.py` sin cambiar `aquery_stream()`* —
+  descartado: viola el Scenario 3 del `.feature` ("sin una segunda consulta al vectorstore") y
+  duplica un coste no trivial (búsqueda semántica en ChromaDB) en cada mensaje.
+- *Exponer `raw_results` como atributo de instancia del pipeline* — descartado: introduce estado
+  mutable entre llamadas en un singleton sin protección de concurrencia (D-033 fija que el
+  pipeline es stateless respecto al usuario).
+
+**Justificación**  
+Opción A (mínimo diff) resuelve el problema con el menor impacto sobre el código ya probado:
+`retrieve()` es una extracción pura de código existente, y el parámetro opcional en `aquery_stream()`
+es retrocompatible por diseño. El patrón de inyectar resultados ya calculados es más directo que
+cualquier mecanismo de callback para un flujo donde el llamador ya tiene control secuencial.
+
+**Componente UI: `cl.Step`**  
+El componente natural de Chainlit para pasos intermedios de un agente. Aparece en la UI como
+burbuja colapsable con nombre propio, antes del mensaje de respuesta. Se abre como context manager
+async (`async with cl.Step(...) as step:`), lo que garantiza que se cierra y renderiza antes de
+que empiece el `async for` del streaming.
+
+**Contenido del paso (aprobado por Marcos):**
+- `source/filename` por documento (metadatos garantizados por D-022/D-029)
+- Score de similitud (float, redondeado a 2 decimales)
+- Extracto: primeros ~200 caracteres de `page_content` (no el chunk completo)
+
+**Consecuencias**
+- `rag/pipeline.py`: nuevo método `retrieve()`, firma ampliada de `aquery_stream()` (parámetro
+  `raw_results=None`). `query()` no se toca (D-034).
+- `chainlit/main_family.py`: nuevo helper `_format_retrieval_step()` + uso de `cl.Step` en
+  `on_message`.
+- `tests/step_defs/test_e05_t03.py`: nuevo fichero con 4 escenarios. Los tests de T-01/T-02 no
+  se modifican (retrocompatibilidad garantizada).
+- `tests/features/e05_t03_rag_steps_visualization.feature`: actualizado con el 4.º escenario
+  de wiring Chainlit.
 
 ---
 

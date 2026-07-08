@@ -1,6 +1,7 @@
 # E-05 T-03 — Visualización de pasos intermedios del RAG
-# Criterio: el pipeline expone los documentos recuperados como paso intermedio,
-# reutilizando la misma llamada de retrieval que usa la citación final (sin doble consulta)
+# Criterio: el pipeline expone los documentos recuperados como paso intermedio reutilizando
+# la misma llamada de retrieval que usa la citación final (sin doble consulta), y main_family.py
+# los renderiza con cl.Step antes de emitir el streaming de la respuesta (D-035)
 
 Feature: Visualización de los pasos intermedios del pipeline RAG
 
@@ -24,3 +25,9 @@ Feature: Visualización de los pasos intermedios del pipeline RAG
     Given una pregunta con resultados de retrieval
     When se comparan los documentos expuestos como paso intermedio con los usados en _build_sources_section
     Then ambos provienen de la misma llamada a similarity_search_with_score, sin una segunda consulta al vectorstore
+
+  Scenario: El chat muestra el paso de recuperación antes de la respuesta
+    Given una pregunta de un usuario autenticado
+    When se procesa el mensaje en main_family.on_message
+    Then se envía un paso (cl.Step) con los documentos recuperados antes de completar el streaming de la respuesta
+    And el paso usa los mismos resultados de retrieval que la respuesta final, sin una segunda consulta al vectorstore
