@@ -1,0 +1,155 @@
+/* ============================================================
+   AIIP — Supabase Auth UI theme
+   Maps AIIP tokens → Supabase Auth UI CSS variables.
+   Pass this stylesheet via the appearance.extend.variables
+   mechanism, or inject it as a global CSS override.
+
+   See: https://supabase.com/docs/guides/auth/auth-helpers/auth-ui
+   ============================================================ */
+
+@import url('../public/tokens.css');
+@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── Supabase Auth UI variable overrides ─────────────────── */
+:root {
+  /* Brand */
+  --colors-brand:             var(--color-accent);
+  --colors-brandAccent:       var(--color-accent-hover);
+  --colors-brandButtonText:   #ffffff;
+
+  /* Backgrounds */
+  --colors-defaultButtonBackground:      var(--color-surface);
+  --colors-defaultButtonBackgroundHover: var(--color-surface-raised);
+  --colors-defaultButtonBorder:          var(--color-border);
+  --colors-defaultButtonText:            var(--color-text-primary);
+
+  /* Inputs */
+  --colors-inputBackground:       var(--color-bg);
+  --colors-inputBorder:           var(--color-border);
+  --colors-inputBorderHover:      var(--color-accent);
+  --colors-inputBorderFocus:      var(--color-accent);
+  --colors-inputText:             var(--color-text-primary);
+  --colors-inputLabelText:        var(--color-text-muted);
+  --colors-inputPlaceholder:      var(--color-text-muted);
+
+  /* Anchors / links */
+  --colors-anchorTextColor:       var(--color-accent);
+  --colors-anchorTextHoverColor:  var(--color-accent-hover);
+
+  /* Dividers */
+  --colors-dividerBackground:     var(--color-border);
+
+  /* Messages */
+  --colors-messageText:           var(--color-text-secondary);
+  --colors-messageTextDanger:     var(--color-error);
+
+  /* Typography */
+  --fonts-bodyFontFamily:         var(--font-body);
+  --fonts-buttonFontFamily:       var(--font-body);
+  --fonts-inputFontFamily:        var(--font-body);
+  --fonts-labelFontFamily:        var(--font-body);
+
+  /* Font sizes */
+  --fontSizes-baseBodySize:       var(--text-base);
+  --fontSizes-baseLabelSize:      var(--text-sm);
+  --fontSizes-baseInputSize:      var(--text-sm);
+  --fontSizes-baseButtonSize:     var(--text-base);
+
+  /* Border radius */
+  --borderWidths-buttonBorderWidth: 0px;
+  --radii-borderRadiusButton:     var(--radius-md);
+  --radii-inputBorderRadius:      var(--radius-md);
+
+  /* Space */
+  --space-inputPadding:           12px 14px;
+  --space-buttonPadding:          12px 20px;
+  --space-anchorBottomPadding:    8px;
+  --space-socialAuthSpacing:      8px;
+  --space-labelBottomMargin:      6px;
+  --space-formHeaderPadding:      24px;
+}
+
+/* ── Additional overrides ────────────────────────────────── */
+[data-supabase-auth-ui] body,
+.sbui-auth,
+.supabase-auth-ui_ui-container {
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+}
+
+/* Card container */
+.sbui-auth .sbui-card,
+.supabase-auth-ui_ui-container > div {
+  background:    var(--color-surface);
+  border:        1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow:    0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+/* Primary CTA button */
+.sbui-btn-primary,
+[data-supabase-button-type="submit"] {
+  background:    var(--color-accent) !important;
+  color:         #fff !important;
+  font-family:   var(--font-body) !important;
+  font-weight:   var(--font-weight-semibold) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow:    0 6px 18px rgba(110, 139, 255, 0.28);
+  transition:    background 0.15s ease, box-shadow 0.15s ease;
+}
+.sbui-btn-primary:hover,
+[data-supabase-button-type="submit"]:hover {
+  background: var(--color-accent-hover) !important;
+}
+
+/* Input fields */
+.sbui-input,
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+  background:    var(--color-bg) !important;
+  border:        1px solid var(--color-border) !important;
+  border-radius: var(--radius-md) !important;
+  color:         var(--color-text-primary) !important;
+  font-family:   var(--font-body) !important;
+  font-size:     var(--text-sm) !important;
+}
+.sbui-input:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+  border-color:  var(--color-accent) !important;
+  outline:       none !important;
+  box-shadow:    0 0 0 3px rgba(110, 139, 255, 0.16) !important;
+}
+
+/* ── Professional profile — swap accent to green ──────────
+   Apply class="professional" or data-profile="professional"
+   on the auth container to activate the green accent.
+   ─────────────────────────────────────────────────────── */
+.professional,
+[data-profile="professional"] {
+  --color-accent:       var(--color-accent-professional);
+  --color-accent-hover: var(--color-accent-professional-hover);
+  --colors-brand:       var(--color-accent-professional);
+  --colors-brandAccent: var(--color-accent-professional-hover);
+}
+[data-profile="professional"] .sbui-btn-primary,
+.professional [data-supabase-button-type="submit"] {
+  box-shadow: 0 6px 18px rgba(47, 193, 140, 0.24);
+}
+[data-profile="professional"] .sbui-input:focus,
+.professional input:focus {
+  box-shadow: 0 0 0 3px rgba(47, 193, 140, 0.14) !important;
+}
+
+/* ── Light mode ──────────────────────────────────────────── */
+[data-theme="light"] .sbui-card,
+.light .supabase-auth-ui_ui-container > div {
+  box-shadow: 0 8px 32px rgba(26, 33, 41, 0.08);
+}
+[data-theme="light"] .sbui-input,
+.light input[type="email"],
+.light input[type="password"] {
+  background: var(--color-surface-raised) !important;
+}

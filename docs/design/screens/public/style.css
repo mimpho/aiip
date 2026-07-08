@@ -1,0 +1,147 @@
+/* ============================================================
+   AIIP — Chainlit theme
+   Maps AIIP tokens → Chainlit CSS custom properties.
+   Import this file via Chainlit's custom_css config key.
+
+   Requires public/tokens.css to be loaded first, OR inline the
+   :root block from tokens.css above this file.
+   ============================================================ */
+
+@import url('./tokens.css');
+@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── Chainlit root variables ─────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --cl-color-background:         var(--color-bg);
+  --cl-color-surface:            var(--color-surface);
+  --cl-color-background-paper:   var(--color-surface-raised);
+
+  /* Text */
+  --cl-color-text-primary:       var(--color-text-primary);
+  --cl-color-text-secondary:     var(--color-text-secondary);
+
+  /* Brand / accent */
+  --cl-color-primary:            var(--color-accent);
+  --cl-color-primary-hover:      var(--color-accent-hover);
+  --cl-color-primary-dark:       var(--color-accent);
+
+  /* Border */
+  --cl-color-border:             var(--color-border);
+  --cl-color-divider:            var(--color-border-subtle);
+
+  /* Status */
+  --cl-color-success:            var(--color-success);
+  --cl-color-error:              var(--color-error);
+  --cl-color-warning:            var(--color-warning);
+
+  /* Typography */
+  --cl-font-family:              var(--font-body);
+  --cl-font-family-mono:         var(--font-mono);
+
+  /* Radius */
+  --cl-shape-border-radius:      var(--radius-lg);
+  --cl-shape-border-radius-sm:   var(--radius-sm);
+  --cl-shape-border-radius-md:   var(--radius-md);
+}
+
+/* ── Base resets ─────────────────────────────────────────── */
+body {
+  font-family: var(--font-body);
+  background:  var(--color-bg);
+  color:        var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Chat message bubbles ────────────────────────────────── */
+/* User message */
+.cl-message-user .cl-message-content {
+  background:    var(--color-accent);
+  color:         #fff;
+  border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
+  font-size:     var(--text-base);
+  line-height:   var(--line-height-base);
+}
+
+/* Assistant message */
+.cl-message-assistant .cl-message-content {
+  background:    var(--color-surface);
+  border:        1px solid var(--color-border);
+  border-radius: 4px var(--radius-lg) var(--radius-lg) var(--radius-lg);
+  font-size:     var(--text-base);
+  line-height:   var(--line-height-base);
+  color:         var(--color-text-primary);
+}
+
+/* ── Source / citation tags ──────────────────────────────── */
+.cl-source-reference {
+  font-family: var(--font-mono);
+  font-size:   var(--text-xs);
+  color:       var(--color-text-muted);
+  background:  var(--color-surface-raised);
+  border:      1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding:     3px 8px;
+}
+
+/* ── Safety / warning alert ──────────────────────────────── */
+.cl-alert-warning,
+[data-safety-alert] {
+  background:    var(--color-warning-bg);
+  border:        1px solid rgba(242, 169, 59, 0.38);
+  border-radius: var(--radius-md);
+  color:         var(--color-warning);
+}
+
+/* ── Input area (glassmorphism) ──────────────────────────── */
+.cl-input-wrapper,
+.cl-chat-input {
+  background:     var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border:        1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color:         var(--color-text-primary);
+  font-family:   var(--font-body);
+  font-size:     var(--text-base);
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.cl-sidebar {
+  background:  var(--color-surface);
+  border-right: 1px solid var(--color-border-subtle);
+}
+
+/* ── Suggested question chips ───────────────────────────── */
+.cl-suggestion-chip,
+.cl-starter-message {
+  background:    var(--color-surface-raised);
+  border:        1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color:         var(--color-text-secondary);
+  font-size:     var(--text-sm);
+  font-family:   var(--font-body);
+  transition:    border-color 0.15s ease;
+}
+.cl-suggestion-chip:hover,
+.cl-starter-message:hover {
+  border-color: var(--color-accent);
+  color:        var(--color-text-primary);
+}
+
+/* ── Send button ─────────────────────────────────────────── */
+.cl-send-button {
+  background:    var(--color-accent);
+  border-radius: var(--radius-md);
+  color:         #fff;
+  font-family:   var(--font-body);
+  font-weight:   var(--font-weight-semibold);
+}
+.cl-send-button:hover {
+  background: var(--color-accent-hover);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
