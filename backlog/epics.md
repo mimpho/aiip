@@ -179,9 +179,23 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 - Tono y UX adaptados al perfil familiar según PRD
 - Theming completo basado en tokens de E-02
 
-**Nota metodológica:** E-05 no aplica TDD. Los criterios son de UX y presentación visual — streaming, responsive, theming — que no son verificables con pytest de forma significativa. La validación es manual (revisión visual + prueba funcional en browser). Los tests automatizados del pipeline RAG subyacente se cubren en E-04.
+**Nota metodológica:** D-015 clasificó E-05 como "sin TDD" a nivel de épica. Tras la descomposición en tareas (8 jul 2026), D-030 refina ese criterio a nivel de tarea: T-01/T-02/T-03 (lógica de integración del pipeline, streaming, exposición de pasos intermedios) sí aplican TDD; T-04/T-05/T-07 (onboarding estático, theming/CSS, smoke test) siguen sin TDD, con validación manual (revisión visual + prueba funcional en browser). T-06 (UI de auth) es TDD parcial: la lógica de wiring es testeable, el redirect completo de Google OAuth se verifica manualmente (mismo patrón que E-03 T-04).
 
-**Estado:** ⚪ No iniciada
+**Nota de alcance (8 jul 2026):** al revisar la épica se detectó que E-03 dejó sin construir la UI de signup y de login con Google dentro de la app (solo las funciones de backend, testeadas de forma aislada) y que `design/auth/style.css` (E-02) nunca llegó a cargarse — Chainlit solo admite un `custom_css` por app. D-031 reconcilia esto: toda la autenticación vive dentro de Chainlit, sin superficie separada. D-032 fija el mecanismo concreto de login con Google: `@cl.oauth_callback` nativo de Chainlit + sincronización server-side con Supabase (reabre D-014), no el `sign_in_with_oauth()` client-side que D-031 planteaba inicialmente. Se añade T-06 para resolverlo; el antiguo T-06 (smoke test) pasa a T-07 y amplía su alcance a signup y login Google.
+
+**Estado:** 🔵 En curso
+
+### Tareas
+
+| ID | Tarea | TDD | Estado |
+|---|---|---|---|
+| T-01 | Integración del pipeline RAG en el chat | Sí | ⚪ Pendiente |
+| T-02 | Streaming nativo de tokens | Sí | ⚪ Pendiente |
+| T-03 | Visualización de pasos intermedios del RAG | Sí | ⚪ Pendiente |
+| T-04 | Onboarding y disclaimers de seguridad | No | ⚪ Pendiente |
+| T-05 | Theming completo (tokens E-02) + responsive del chat | No | ⚪ Pendiente |
+| T-06 | UI de autenticación en Chainlit: signup + login Google + fusión de auth/style.css | Parcial | ⚪ Pendiente |
+| T-07 | Smoke test manual E2E — chat + signup + login Google (configuración, sin TDD) | No | ⚪ Pendiente |
 
 ---
 

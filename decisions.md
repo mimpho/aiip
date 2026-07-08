@@ -38,6 +38,9 @@
 - [D-027 — Modelo LLM: cambio de gemini-2.5-flash a gemini-2.5-flash-lite por límite de cuota](#d-027--modelo-llm-cambio-de-gemini-25-flash-a-gemini-25-flash-lite-por-límite-de-cuota)
 - [D-028 — Runbook de mantenimiento de la KB: documento de procedimiento separado de decisions.md](#d-028--runbook-de-mantenimiento-de-la-kb-documento-de-procedimiento-separado-de-decisionsmd)
 - [D-029 — Citación con URL original: cadena de propagación manifest→loader→chunker→pipeline y fallback de 2 niveles](#d-029--citación-con-url-original-cadena-de-propagación-manifestloaderchunkerpipeline-y-fallback-de-2-niveles)
+- [D-030 — TDD por tarea dentro de E-05: aplicar el criterio de D-015 a nivel de tarea, no de épica completa](#d-030--tdd-por-tarea-dentro-de-e-05-aplicar-el-criterio-de-d-015-a-nivel-de-tarea-no-de-épica-completa)
+- [D-031 — Reconciliación de D-013: superficie de auth dentro de Chainlit, no separada](#d-031--reconciliación-de-d-013-superficie-de-auth-dentro-de-chainlit-no-separada)
+- [D-032 — Login con Google: OAuth nativo de Chainlit + sincronización server-side con Supabase (reabre D-014)](#d-032--login-con-google-oauth-nativo-de-chainlit--sincronización-server-side-con-supabase-reabre-d-014)
 
 ---
 
@@ -993,6 +996,104 @@ romper nada; el nivel 2 puede añadirse entonces con un caso de uso real que gu�
 - Pendiente de reindexar la KB completa (`python scripts/smoke_test_rag.py --force-reingest`)
   una vez el código esté en verde, para que los chunks ya indexados lleven `url` en sus metadatos
   — los indexados antes de T-08 no la tienen aunque el manifest ya esté completo.
+
+---
+
+## D-030 — TDD por tarea dentro de E-05: aplicar el criterio de D-015 a nivel de tarea, no de épica completa
+
+**Fecha:** 8 de julio de 2026
+**Fase:** proceso / metodología
+**Épica:** E-05 (epic-start)
+
+**Contexto**
+D-015 clasificó E-05 completa como "sin TDD" por tratarse de una épica de interfaz (Chainlit) con validación mayoritariamente visual (streaming, responsive, theming). Al descomponer la épica en tareas (epic-start, 8 jul 2026), Marcos señaló que, más allá del chat en sí, hay interacción de usuario con lógica real y verificable — señalando el paralelismo con E-03 (autenticación), que sí tiene TDD.
+
+**Decisión**
+Se mantiene el criterio de D-015 ("si el comportamiento es verificable automáticamente y el fallo tiene consecuencias, TDD aplica; si requiere juicio humano, no aplica"), pero aplicado a nivel de tarea dentro de E-05, no como veredicto único para toda la épica — mismo patrón ya usado en E-06 (T-06/T-07 sin TDD dentro de una épica con TDD).
+
+| Tarea | TDD | Justificación |
+|---|---|---|
+| T-01 — Integración del pipeline RAG en el chat | Sí | Lógica de `on_message` (llamada a `RAGPipeline`, manejo de error) verificable sin renderizar browser |
+| T-02 — Streaming nativo de tokens | Sí | Ensamblado del streaming + aplicación diferida de `apply_safety_filter` es lógica pura |
+| T-03 — Visualización de pasos intermedios del RAG | Sí | Estructura de documentos recuperados expuesta por el pipeline es verificable sin `cl.Step` real |
+| T-04 — Onboarding y disclaimers de seguridad | No | Contenido estático, verificación de tono es juicio humano |
+| T-05 — Theming completo + responsive | No | CSS puro, validación visual |
+| T-06 — Smoke test manual E2E | No | Verificación manual por diseño, mismo patrón que E-06 T-07 |
+
+**Alternativas descartadas**
+- Mantener E-05 íntegramente sin TDD (aplicar D-015 literal, sin revisar) — descartado: la propia justificación de D-015 es sobre el tipo de comportamiento, no sobre el nombre de la épica; T-01/T-02/T-03 sí cumplen el criterio.
+- Aplicar TDD a toda la épica, incluyendo T-04/T-05/T-06 — descartado: theming/responsive/contenido estático no ganan cobertura real con pytest, solo coste de mantenimiento (mismo argumento que la alternativa descartada en D-015 original).
+
+**Justificación**
+D-015 no fue una excepción a su propio criterio para E-05 — fue una clasificación a nivel de épica hecha antes de descomponerla en tareas. Con el desglose ya hecho (epic-start E-05), aplicar el criterio original al grano correcto (tarea) es continuidad de D-015, no una decisión nueva contradictoria.
+
+**Consecuencias**
+- T-01, T-02 y T-03 llevan `.feature` (`tests/features/e05_t01_*.feature` a `e05_t03_*.feature`) y step definitions pytest-bdd, formalizados en el Paso 2 de `epic-start`.
+- T-02 y T-03 tocan `rag/pipeline.py` y `rag/generator.py` (código de E-04, ya con TDD) para exponer streaming y documentos recuperados — extensión de la interfaz pública, sin modificar `check_alarm_signals`/`apply_safety_filter`.
+- T-04, T-05 y el smoke test final también llevan `.feature` como checklist de verificación manual (mismo patrón que E-01 y E-06 T-06/T-07: cabecera "Tipo: Configuración manual", escenarios sin step definitions pytest-bdd). El smoke test además deja constancia escrita en `tests/results/`.
+  > Nota (D-031): tras esta decisión se detectó una tarea adicional (UI de auth) que se insertó como T-06, renumerando el smoke test a T-07 — ver D-031 y D-032. El reparto TDD/no-TDD de esta tabla no cambia, solo los números.
+
+---
+
+## D-031 — Reconciliación de D-013: superficie de auth dentro de Chainlit, no separada
+
+**Fecha:** 8 de julio de 2026
+**Fase:** proceso / arquitectura
+**Épica:** E-05 (epic-start)
+
+**Contexto**
+D-013 (E-02) diseñó `tokens.css` asumiendo dos superficies de frontend separadas: Chainlit (chat) y "Auth UI de Supabase", esta última descrita explícitamente como algo que "vive fuera del frontend de Chainlit". E-03 implementó el login con `@cl.password_auth_callback` — el formulario nativo de Chainlit, dentro de la misma SPA que el chat — no una superficie separada. `design/auth/style.css` (creado en E-02) nunca llegó a cargarse: Chainlit solo admite un `custom_css` por app (`config.toml`), y esa ranura ya la ocupa `public/style.css`. Además, no existe hoy ninguna UI de signup ni de login con Google dentro de la app — solo las funciones de backend (`signup()`, `sign_in_with_oauth()`), testeadas de forma aislada en E-03 T-03/T-04.
+
+**Decisión**
+Se abandona la premisa de D-013 de una superficie de auth externa a Chainlit. Toda la autenticación (login, signup, login con Google) vive dentro de la SPA de Chainlit, extendiendo lo ya construido en E-03:
+- Login por email/password: ya resuelto (`password_auth_callback`), sin cambios.
+- Signup: se construye como UI dentro de Chainlit (acción/formulario que llama a `signup()`), no como página separada.
+- Login con Google: se construye como acción dentro de Chainlit que dispara `sign_in_with_oauth("google")` y gestiona el retorno de la sesión de Supabase — sin usar el `@cl.oauth_callback` nativo de Chainlit (eso contradiría D-014, que exige a Supabase como único broker).
+- `design/auth/style.css` se fusiona en `design/public/style.css` (o se retira si resulta redundante con los tokens ya aplicados) — no se mantiene como fichero separado sin consumidor.
+
+**Alternativas descartadas**
+- Construir una página de auth genuinamente separada (HTML/JS con el widget `@supabase/auth-ui-react` o un formulario custom), honrando D-013 al pie de la letra — descartado por plazo: el hito de "código funcional" es el 10 de julio (2 días), y esto añadiría una pieza de frontend nueva fuera del stack Python ya establecido, sin tiempo para validarla con solidez.
+
+**Justificación**
+D-013 fue una decisión de theming tomada antes de que E-03 resolviera cómo se implementaría técnicamente la autenticación. La implementación real (Chainlit nativo) hace innecesaria — y ahora mismo inviable en plazo — la superficie separada que D-013 anticipaba. Mantener dos fuentes de theming cuando solo hay una superficie real de auth introduce un fichero huérfano (`auth/style.css`) sin beneficio.
+
+**Riesgo abierto**
+El login con Google combinando el flujo de Supabase (D-014) con la autenticación no nativa de Chainlit no se ha probado nunca de extremo a extremo — el `.feature` de E-03 T-04 lo dejó explícitamente fuera de alcance ("requiere e2e con Playwright"). La función `sign_in_with_oauth()` genera la URL de Google correctamente (testeado), pero el tramo de vuelta (Supabase → sesión → Chainlit reconoce al usuario) es terreno no verificado. Se investiga y resuelve en `task-start` de la nueva T-06.
+
+**Consecuencias**
+- Nueva tarea T-06 en E-05: UI de autenticación dentro de Chainlit (signup + login Google) + fusión/retirada de `auth/style.css`.
+- La antigua T-06 (smoke test manual E2E) se renumera a T-07, y amplía su alcance para cubrir también signup y login Google, además del chat.
+- `tests/features/e05_t06_e2e_smoke_test.feature` se sustituye por `e05_t07_e2e_smoke_test.feature` (ampliado); se crea `e05_t06_auth_ui.feature`.
+
+---
+
+## D-032 — Login con Google: OAuth nativo de Chainlit + sincronización server-side con Supabase (reabre D-014)
+
+**Fecha:** 8 de julio de 2026
+**Fase:** técnica / arquitectura
+**Épica:** E-05 (epic-start, previo a T-06)
+
+**Contexto**
+D-031 asumió que el login con Google se construiría dentro de Chainlit disparando `sign_in_with_oauth()` (Supabase como broker, sin usar `@cl.oauth_callback` nativo, para no contradecir D-014). Al analizar cómo portar la sesión de Supabase (creada en el navegador) hacia el modelo de sesión de Chainlit, se confirma que Chainlit no tiene ningún punto de extensión soportado para aceptar una sesión externa ya establecida — sus mecanismos de auth (`password_auth_callback`, `oauth_callback`, `header_auth_callback`) están diseñados para que sea Chainlit quien verifique la identidad. Portar la sesión de Supabase requeriría una ruta custom en el backend de Chainlit para el intercambio de código (documentado por Supabase para backends no-Supabase, pero no soportado de forma nativa por Chainlit) — riesgo real de ingeniería para el hito del 10 de julio.
+
+**Decisión**
+Se usa `@cl.oauth_callback` de Chainlit (feature oficial, documentada, con soporte directo para Google) como mecanismo de login con Google. Chainlit gestiona el intercambio OAuth completo con su propio Client ID/Secret de Google (mismo proyecto de Google Cloud ya usado para Supabase — se añade `CHAINLIT_URL/auth/oauth/google/callback` como redirect URI adicional en el mismo Client ID, no se crea una app nueva). Dentro del callback, con el perfil de Google ya verificado (`raw_user_data`), se sincroniza contra Supabase server-side: se busca o crea el usuario en `auth.users` por email vía la Admin API (mismo patrón idempotente que `get_or_create_profile`), y se obtiene/crea su perfil con el role de la app.
+
+Esto reabre y sustituye la alternativa descartada en D-014 ("Chainlit OAuth nativo + sincronización manual a Supabase") — con una matización: la sincronización no es manual, es código automático ejecutado en cada login, con el mismo patrón idempotente ya usado y testeado en `get_or_create_profile` (E-03 T-02).
+
+**Alternativas descartadas**
+- Supabase como broker con ruta custom de intercambio de código en Chainlit (plan original D-014/D-031) — descartado por riesgo de ingeniería no acotado para el plazo del 10 de julio: no es un patrón soportado de forma nativa por Chainlit, exigiría construir y validar una integración sin precedente en el proyecto.
+- Aplazar el login con Google fuera del hito — descartado: Marcos prioriza tenerlo funcional ahora que se ha identificado que E-03 lo dejó a medias.
+
+**Justificación**
+`@cl.oauth_callback` es infraestructura ya construida y mantenida por Chainlit, de bajo riesgo de implementación. El coste que D-014 quería evitar (mantener dos sistemas de identidad sincronizados a mano) se reduce a unas pocas líneas de sincronización automática e idempotente, ya con precedente probado en el propio repo (`get_or_create_profile`). Supabase sigue siendo la fuente de verdad de `auth.users`/`profiles` — lo que cambia es quién orquesta el handshake con Google, no dónde vive la identidad.
+
+**Consecuencias**
+- T-06 de E-05 implementa `@cl.oauth_callback` en `chainlit/main_family.py` (y `main_professional.py` si aplica, aunque el perfil profesional está bloqueado — a confirmar en `task-start`).
+- Nueva configuración: Client ID y Secret de Google para Chainlit (variables estándar de Chainlit para OAuth) — a añadir en `.env.example`. Reutilizan el mismo Client ID ya creado para Supabase (D-014); solo se añade un redirect URI nuevo en Google Cloud Console.
+- `auth/supabase_client.py` gana una función de sincronización (get-or-create de `auth.users` por email vía Admin API) para usar dentro del callback — a diseñar en `task-start` de T-06.
+- El `.feature` de E-03 T-04 (`sign_in_with_oauth`) queda como código no usado en el flujo real de la app familiar — se mantiene por ahora (la función es correcta y testeada, podría reutilizarse si se cambia de estrategia más adelante), pero deja de ser el mecanismo activo de login con Google.
+- D-031 queda desactualizada en el punto concreto del mecanismo de login con Google (se mantiene sin editar, como registro histórico) — esta entrada la sustituye en ese aspecto.
 
 ---
 

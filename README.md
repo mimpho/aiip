@@ -32,7 +32,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-02 | Identidad visual mínima | ✅ Completada | — |
 | E-03 | Autenticación y separación de perfiles | ✅ Completada — 30 jun 2026 | — |
 | E-04 | Pipeline RAG + módulo de seguridad | ✅ Completada — 05 jul 2026 | — |
-| E-05 | Interfaz conversacional (Chainlit) | ⚪ No iniciada | E-02, E-04 |
+| E-05 | Interfaz conversacional (Chainlit) | 🔵 En curso | E-02, E-04 |
 | E-06 | Ingesta y procesamiento de la KB | ✅ Completada — 08 jul 2026 | E-01 |
 | E-07 | Evaluación RAGAS parcial | ⚪ No iniciada | E-06 |
 | E-08 | Memoria de perfil e histórico | ⚪ No iniciada | E-03, E-04, E-06 |
