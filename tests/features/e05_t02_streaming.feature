@@ -34,3 +34,15 @@ Feature: Streaming nativo de tokens en la respuesta del chat
     Given una pregunta informativa sin alarma y sin frases tranquilizadoras en la respuesta
     When el streaming termina
     Then no se añade ningún recordatorio adicional al final de la respuesta
+
+  Scenario: Error durante el streaming no rompe la sesión de chat
+    Given una pregunta sin señales de alarma
+    When el streaming lanza una excepción antes de completarse, por ejemplo porque el LLM no está disponible
+    Then el chat muestra un mensaje de error legible en español
+    And la sesión de chat sigue activa para la siguiente pregunta
+
+  Scenario: El listado de fuentes se añade tras el streaming, después del recordatorio de seguridad si aplica
+    Given una pregunta cuyos documentos recuperados tienen metadatos de fuente
+    When el streaming termina y se aplica apply_safety_filter
+    Then se añade el listado de fuentes como fragmento final
+    And si hay recordatorio de seguridad, el listado de fuentes aparece después de él

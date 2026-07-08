@@ -190,7 +190,7 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 | ID | Tarea | TDD | Estado |
 |---|---|---|---|
 | T-01 | Integración del pipeline RAG en el chat | Sí | ✅ Completada |
-| T-02 | Streaming nativo de tokens | Sí | ⚪ Pendiente |
+| T-02 | Streaming nativo de tokens | Sí | 🔄 En progreso |
 | T-03 | Visualización de pasos intermedios del RAG | Sí | ⚪ Pendiente |
 | T-04 | Onboarding y disclaimers de seguridad | No | ⚪ Pendiente |
 | T-05 | Theming completo (tokens E-02) + responsive del chat | No | ⚪ Pendiente |

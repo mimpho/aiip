@@ -42,6 +42,7 @@
 - [D-031 — Reconciliación de D-013: superficie de auth dentro de Chainlit, no separada](#d-031--reconciliación-de-d-013-superficie-de-auth-dentro-de-chainlit-no-separada)
 - [D-032 — Login con Google: OAuth nativo de Chainlit + sincronización server-side con Supabase (reabre D-014)](#d-032--login-con-google-oauth-nativo-de-chainlit--sincronización-server-side-con-supabase-reabre-d-014)
 - [D-033 — Integración del pipeline RAG en Chainlit: instancia singleton y ejecución no bloqueante](#d-033--integración-del-pipeline-rag-en-chainlit-instancia-singleton-y-ejecución-no-bloqueante)
+- [D-034 — Streaming de tokens: generador async nativo en lugar de `cl.make_async()`, y preservación de listado de fuentes y método `query()` no-streaming](#d-034--streaming-de-tokens-generador-async-nativo-en-lugar-de-clmake_async-y-preservación-de-listado-de-fuentes-y-método-query-no-streaming)
 
 ---
 
@@ -1122,6 +1123,34 @@ El pipeline es stateless respecto al usuario (no guarda historial ni contexto de
 - `chainlit/main_family.py` gana una instancia de módulo `_pipeline = RAGPipeline(load_rag_config())` (o construcción lazy en el primer uso) y un handler `on_message` que la invoca vía `cl.make_async()`.
 - T-02 (streaming) tendrá que revisar si `cl.make_async()` sigue siendo el patrón correcto cuando el pipeline exponga generación por tokens, o si pasa a usar un generador async nativo — a decidir en el `task-start` de T-02.
 - Si en el futuro `RAGPipeline` gana estado por sesión (p. ej. historial conversacional), esta decisión de singleton habría que revisitarla.
+
+---
+
+## D-034 — Streaming de tokens: generador async nativo en lugar de `cl.make_async()`, y preservación de listado de fuentes y método `query()` no-streaming
+
+**Fecha:** 8 de julio de 2026
+**Fase:** técnica / arquitectura
+**Épica:** E-05 (task-start T-02)
+
+**Contexto**
+D-033 dejó explícitamente abierto si `cl.make_async()` (patrón usado en T-01 para envolver `RAGPipeline.query()` síncrono) seguía siendo el patrón correcto una vez el pipeline expone generación por tokens, o si convenía pasar a un generador async nativo. Además, al diseñar T-02 surgieron dos puntos no cubiertos por el `.feature` original de T-02 (`e05_t02_streaming.feature`): qué pasa con el listado de fuentes (D-026), presente hoy en `RAGPipeline.query()` pero no mencionado en ningún escenario de streaming; y qué pasa con `RAGPipeline.query()` en sí, dado que cambiar `on_message` a streaming invalida las aserciones actuales de `tests/step_defs/test_e05_t01.py` (mockean `.query()`).
+
+**Decisión**
+- **Streaming nativo, no `cl.make_async()`:** `RAGGenerator` gana `agenerate_stream()` (usa `self._llm.astream(prompt)` de LangChain) y `RAGPipeline` gana `aquery_stream()`, ambos generadores async. `chainlit/main_family.py` consume `aquery_stream()` con `async for token in ...: await message.stream_token(token)` directamente en `on_message`, sin envolver nada en `cl.make_async()`. Chainlit es async-first y `astream()` es I/O async nativo — no hay código síncrono bloqueante que envolver.
+- **Listado de fuentes se preserva:** `aquery_stream()` reproduce el comportamiento de `query()` — tras ensamblar el texto completo y aplicar `apply_safety_filter`, si `_build_sources_section()` devuelve contenido, se emite como fragmento final adicional (después del recordatorio de seguridad si lo hay). Sin este paso, el usuario dejaría de ver de qué documentos sale la respuesta — regresión respecto a T-01.
+- **`RAGPipeline.query()` se mantiene intacto, sin tocar:** no se elimina ni se reimplementa en términos de `aquery_stream()`. Lo seguirá usando la evaluación RAGAS de E-07/E-09 (necesita respuesta completa, no streaming). `aquery_stream()` es un método nuevo y paralelo, no un reemplazo.
+- **Ajuste mínimo a T-01 (excepción al criterio de "no tocar tareas cerradas"):** dado que `on_message` deja de invocar `.query()`, se actualiza `tests/step_defs/test_e05_t01.py` (mocks de `.query` → ya no aplican al flujo real) y la redacción del paso "se invoca RAGPipeline.query() con esa pregunta" en `e05_t01_chat_pipeline_integration.feature`, sin cambiar el comportamiento que ese escenario valida.
+
+**Alternativas descartadas**
+- Mantener `cl.make_async()` envolviendo un generador síncrono (`self._llm.stream()` consumido dentro de una función síncrona) — descartado: reintroduce el problema que `cl.make_async()` resuelve para llamadas puntuales pero no para iteración token a token; consumir un iterador síncrono lento dentro de un executor sigue bloqueando ese hilo del pool por sesión activa, sin ganar nada frente a `astream()` nativo.
+- Dejar el listado de fuentes fuera de T-02 (diferirlo a una tarea futura) — descartado: regresión funcional visible inmediatamente en producción en cuanto se mergee T-02.
+- Reimplementar `query()` como wrapper síncrono sobre `aquery_stream()` (para no mantener dos rutas) — descartado: añade complejidad de puente async→sync innecesaria; ambos métodos comparten la lógica de retrieval/filtro por composición interna simple, no vale la pena forzar una única implementación.
+
+**Consecuencias**
+- Nuevos métodos: `RAGGenerator.agenerate_stream()`, `RAGPipeline.aquery_stream()`.
+- `chainlit/main_family.py::on_message` pasa a ser un `async for` sobre `aquery_stream()`, usando `cl.Message.stream_token()`.
+- `tests/step_defs/test_e05_t01.py` y el Scenario 1 de `e05_t01_chat_pipeline_integration.feature` se ajustan como excepción justificada (ver arriba).
+- `tests/features/e05_t02_streaming.feature` se amplía con dos escenarios: error durante el streaming, y preservación del listado de fuentes.
 
 ---
 
