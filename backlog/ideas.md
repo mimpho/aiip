@@ -75,6 +75,35 @@
 - **Nota:** la autenticación básica está resuelta en Fase 1 via Supabase (ver D-008). Los enrutados avanzados para multi-plataforma son decisión post-TFM.
 - **Cuándo revisarlo:** al planificar la evolución web responsive (post-TFM).
 
+### Edición de perfil: cambiar correo, contraseña y nombre estando ya autenticado
+- **Qué sería:** una forma de editar, ya logueado, los tres datos que hoy solo se fijan en el
+  momento del signup/login: contraseña (`update_user({"password": ...})`, sin correo de por
+  medio a diferencia de "olvidé mi contraseña"), correo (`type="email_change"` de Supabase,
+  misma familia de `verify_otp` que confirmación/recuperación), y nombre (ya hay wiring para
+  esto desde E-05 T-06 — `update_user_metadata`, solo falta un comando en el chat para
+  reeditarlo, hoy solo se pregunta una vez).
+- **Por qué no ahora:** mencionado como pendiente ya en E-03 T-03 (jun 2026) y otra vez en E-05
+  T-06 (9 jul 2026) sin llegar a capturarse — anotado ahora para que no se vuelva a perder.
+  Chainlit no tiene pantalla de "ajustes de cuenta" nativa, así que requeriría el mismo patrón
+  de rutas propias que T-06 (o comandos dentro del chat para el nombre).
+- **Cuándo revisarlo:** cuando haya señal real de que hace falta (usuario con contraseña débil
+  que quiere cambiarla, correo mal escrito en el signup, etc.) — no hay urgencia sin esa señal.
+
+### Acceso como invitado (sin cuenta)
+- **Qué sería:** un modo de usar el chat sin registrarse — Chainlit no soporta auth "mixta"
+  (algunos logueados, otros no; `require_login()` es todo o nada en cuanto hay
+  `password_auth_callback`), así que la única vía realista es una credencial fija conocida que
+  `password_auth_callback` reconozca y autentique sin pasar por Supabase.
+- **Por qué no ahora (9 jul 2026, task-start E-05 T-06):** riesgo de cuota de Gemini — D-025 y
+  D-027 ya documentan que el proyecto se quedó corto de cuota durante las pruebas. Una
+  credencial de invitado conocida es una puerta sin límite de uso por persona, justo el
+  escenario que ya causó problemas antes. Si se retoma, valorar algún límite de uso básico antes
+  de exponerlo. A favor: cero PII almacenada para invitados, alineado con D-009. Identidad
+  compartida entre todos los invitados — inofensivo hoy (D-033, pipeline sin estado), pero hay
+  que excluir explícitamente al invitado de cualquier persistencia cuando llegue E-08.
+- **Cuándo revisarlo:** si hay señal de que el registro es una barrera real de adopción, y con
+  algún control de cuota/rate-limit ya pensado.
+
 ---
 
 ## Referencias académicas pendientes de leer

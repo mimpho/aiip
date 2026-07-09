@@ -147,7 +147,11 @@ body::before {
    message of the thread. [data-step-type="assistant_message"]:first-child
    is a reliable hook for exactly that message (not :first-of-type,
    which would match on tag name across unrelated siblings). Strip the
-   card/avatar treatment and render as a plain display heading instead. */
+   card/avatar treatment and render as a plain display heading instead.
+   Text uses a family→professional gradient (both accent tokens, not
+   just the active profile's) rather than flat --foreground, per Marcos
+   — the greeting is the one place the brand's two profile colors
+   appear together. */
 [data-step-type="assistant_message"]:first-child .ai-message {
   gap: 0;
 }
@@ -155,17 +159,33 @@ body::before {
   display: none;
 }
 [data-step-type="assistant_message"]:first-child .message-content {
-  background:     none;
+  background:              linear-gradient(154deg, var(--color-accent-family), var(--color-accent-professional));
+  -webkit-background-clip: text;
+  background-clip:         text;
+  -webkit-text-fill-color: transparent;
+  color:          transparent;
   border:         none;
   padding:        0 0 0 2rem;
   box-shadow:     none;
-  color:          hsl(var(--foreground));
   font-family:    var(--font-display);
   font-weight:    500;
   font-size:      46px;
-  line-height:    1.05;
+  line-height:    1.2;
   letter-spacing: -0.01em;
-  margin-bottom:  3rem;
+  margin-bottom:  1rem;
+}
+/* The markdown paragraph Chainlit renders inside .message-content
+   (role="article", Tailwind's "leading-7" utility → line-height: 28px)
+   sets its own line-height directly, which wins over the inherited
+   1.2 above regardless of selector specificity — inheritance never
+   overrides an explicit declaration on the element itself. With plain
+   solid-color text that's invisible (ink simply overflows the tight
+   line box), but background-clip: text only paints the gradient
+   within that box's height, so the top of the 46px glyphs fell in the
+   unpainted area above it and looked clipped. Override line-height on
+   the actual element instead of relying on cascade from the ancestor. */
+[data-step-type="assistant_message"]:first-child .message-content [role="article"] {
+  line-height: 1.2;
 }
 
 /* ── User message bubble ──────────────────────────────────── */

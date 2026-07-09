@@ -48,6 +48,7 @@
 - [D-037 — Protocolos de tratamiento específicos citados de la KB sin contexto: ajuste de prompt (pendiente de verificación por cuota)](#d-037--protocolos-de-tratamiento-específicos-citados-de-la-kb-sin-contexto-ajuste-de-prompt-pendiente-de-verificación-por-cuota)
 - [D-038 — Theming real de Chainlit: `public/theme.json` como mecanismo de base, `style.css` de E-02 reescrito sobre selectores reales](#d-038--theming-real-de-chainlit-publictheme-json-como-mecanismo-de-base-stylecss-de-e-02-reescrito-sobre-selectores-reales)
 - [D-039 — Arranque de Chainlit vía `CHAINLIT_APP_ROOT` + symlinks, y saludo dinámico como mensaje real para poder themarlo](#d-039--arranque-de-chainlit-vía-chainlit_app_root--symlinks-y-saludo-dinámico-como-mensaje-real-para-poder-themarlo)
+- [D-040 — Flujo completo de autenticación en Chainlit: signup con confirmación de email, recuperación de contraseña vía rutas propias, y descubribilidad del enlace](#d-040--flujo-completo-de-autenticación-en-chainlit-signup-con-confirmación-de-email-recuperación-de-contraseña-vía-rutas-propias-y-descubribilidad-del-enlace)
 
 ---
 
@@ -298,6 +299,37 @@ No se requiere implementar un sistema de compliance completo, pero sí demostrar
 
 **Implicaciones en la documentación**  
 - `docs/security.md` incluirá una sección dedicada a protección de datos además de OWASP y Falso Negativo Cero.
+
+**Actualización — 9 de julio de 2026**
+
+Al formalizar E-05 T-06 (D-040) se detectó que "formulario de registro" (fila de
+"Consentimiento explícito" de la tabla anterior) ya no es un momento estable y único al que
+enganchar el consentimiento: el signup queda mergeado con el login en el mismo formulario fijo
+de Chainlit (sin campos propios, sin saber de antemano si la petición acabará siendo login o
+alta), y ese formulario tampoco puede llevar un texto de consentimiento específico de salud sin
+romper la experiencia de quien solo quiere iniciar sesión.
+
+Revisando el flujo real de datos: `profiles` no guarda ningún dato de salud en el momento de
+crear la cuenta (solo `id`/`role`, ver tabla de "Minimización de datos" arriba) — el dato de
+categoría especial (Art. 9) empieza a fluir en el primer mensaje real del chat, no en el alta.
+Eso permite separar dos eventos que la redacción original de esta decisión daba por unidos:
+**autenticarse** (probar identidad) y **consentir el tratamiento de datos de salud** (autorizar
+esa categoría especial de dato antes de que empiece a circular).
+
+En vez de forzar el consentimiento dentro del formulario de auth, se plantea un gate explícito
+en `on_chat_start`, antes del saludo y de cualquier mensaje — una acción afirmativa real (no
+solo texto informativo, a diferencia del disclaimer de D-036), con el texto específico de
+tratamiento de datos de salud que exige esta decisión. Se registra una vez (mismo mecanismo que
+`user_metadata.full_name` de D-040) y no se repite en logins posteriores. Aplica igual a
+cualquier usuario sin importar si llegó por login, por el signup mergeado, o por Google — el
+gate vive después de la autenticación, no dentro de ella, así que no depende de cómo se resolvió
+D-040.
+
+Esto es una propuesta de arquitectura razonada, no un análisis legal cerrado — antes de
+cualquier uso real más allá del TFM, el texto, el momento exacto y el registro de la prueba de
+consentimiento deben revisarse con criterio legal. Sigue sin implementarse: se documenta aquí
+para que la próxima vez que se aborde (posiblemente junto con el resto de E-08, onboarding) no
+se parta de cero.
 
 ---
 
@@ -1513,6 +1545,52 @@ del comp de referencia no tiene dónde enganchar un selector CSS válido.
   dedicado al saludo en sí, más allá de su theming).
 - Si en el futuro se añade zona horaria por perfil (E-08, memoria de
   perfil), `_greeting()` es el punto a revisar.
+
+---
+
+## D-040 — Flujo completo de autenticación en Chainlit: signup con confirmación de email, recuperación de contraseña vía rutas propias, y descubribilidad del enlace
+
+**Fecha:** 9 de julio de 2026
+**Fase:** técnica / arquitectura
+**Épica:** E-05 (task-start T-06)
+
+**Contexto**
+Al formalizar T-06 se detectó que `e05_t06_auth_ui.feature` (creado en `epic-start`) daba por buenos dos mecanismos que Chainlit 2.11.1 no soporta: una acción de signup independiente del login, y un mensaje de error personalizado en la pantalla de login. Verificado contra el código fuente instalado (`.venv/.../chainlit`), la documentación oficial (`docs.chainlit.io/authentication/password`) y las traducciones (`.chainlit/translations/es.json`): `password_auth_callback` es un formulario fijo (email + password + submit) que solo devuelve `cl.User` o `None`, sin canal de mensajes custom, sin campo de confirmación de contraseña y sin enlace de "olvidé mi contraseña". Además, ni la confirmación de email de signup ni la recuperación de contraseña de Supabase tienen dónde aterrizar dentro de Chainlit: ambos son flujos basados en un enlace de correo que Supabase espera resolver contra una URL propia de la aplicación (`{{ .ConfirmationURL }}` / `verifyOtp`), y Chainlit no expone ninguna ruta para ello.
+
+**Decisión**
+
+1. **Signup mergeado en `password_auth_callback`** (ya aprobado): intenta `login()`; si falla, intenta `signup()` con las mismas credenciales. Sin campo de confirmación de contraseña ni mensaje distinguible en la UI — limitación aceptada del formulario único de Chainlit.
+2. **"Confirm email" se mantiene activado** en el proyecto Supabase (verificar/activar en el dashboard si no lo estuviera ya — paso manual de Marcos). Se descarta desactivarlo: la única razón para hacerlo era evitar construir una pantalla de "revisa tu correo", y el punto 3 la construye de todos modos para la recuperación de contraseña, así que ya no supone ahorro real. Mantenerlo activado es más coherente con el espíritu de D-009 (no ser descuidados dando de alta cuentas sobre datos de salud) sin coste adicional.
+3. **Rutas propias registradas sobre la misma app de Chainlit**, no una sub-aplicación aparte: `chainlit run <target>` hace internamente `from chainlit.server import app` y carga el módulo objetivo sobre esa instancia antes de arrancar uvicorn — así que `chainlit/main_family.py` puede hacer `from chainlit.server import app` y añadir `@app.get/post(...)` directamente, sin `mount_chainlit()`, sin prefijo de path nuevo y sin tocar el comando de arranque de D-039. Dos rutas:
+   - `GET/POST /auth/forgot-password` — formulario mínimo (email) que dispara `reset_password_for_email()`. Punto de entrada inevitablemente distinto: es el único paso sin token todavía.
+   - `GET/POST /auth/confirm` — recibe `token_hash` + `type` (`signup` | `recovery`) y llama a `verify_otp({token_hash, type})`, patrón server-side recomendado por la documentación oficial de Supabase para evitar depender de JS/fragmentos de URL. Compartida entre signup y recovery — la verificación es idéntica, solo cambia la rama final: `type=signup` muestra "cuenta confirmada" con enlace a `/login`; `type=recovery` muestra un formulario de nueva contraseña que hace `POST` a la misma ruta y llama a `update_user({"password": ...})`.
+4. **Plantillas de email de Supabase reescritas** (Auth > Email Templates, dashboard — paso manual de Marcos) para que "Confirm signup" y "Reset password" apunten a `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup|recovery` en vez del `{{ .ConfirmationURL }}` por defecto.
+5. **Descubribilidad del "olvidé mi contraseña"**: `custom_js` (nuevo, p. ej. `/public/auth.js`) inyecta un enlace a `/auth/forgot-password` en la pantalla de login de Chainlit. Única superficie de personalización JS del proyecto además de la que D-038 evitó explícitamente — allí se descartó por existir una alternativa nativa (un `cl.Message` real); aquí no existe ninguna, es la única vía para que el enlace sea descubrible sin salir del flujo del producto.
+6. **Login con Google:** sin cambios — D-032 sigue vigente tal cual.
+7. **Nombre para personalización, pedido en el chat, no en el formulario de signup:** el formulario de Chainlit no admite un campo de nombre (límite duro, ver contexto). En vez de eso, `on_chat_start` comprueba si el usuario ya tiene `full_name` en su `user_metadata` de Supabase Auth; si no lo tiene (primer login), lo pide con `cl.AskUserMessage` antes del saludo/bienvenida y lo persiste vía `update_user_by_id()` (Admin API, mismo patrón de `get_or_create_profile`) usando el `user_id` propagado en `cl.User.metadata` desde `login()`/`signup()`/`oauth_callback`. Para cuentas de Google, `raw_user_data` ya trae el nombre — se guarda igual en `user_metadata.full_name` en el primer login, sin preguntar nunca en el chat. `_greeting()` (D-039) pasa a usar `full_name` si existe; si no (p. ej. el usuario no respondió a `cl.AskUserMessage` en ese primer `on_chat_start`), el saludo se muestra sin nombre — no se usa `identifier` (email) como sustituto, resulta impersonal mostrar un correo en un saludo.
+
+8. **Frontend de las rutas propias (`/auth/forgot-password`, `/auth/confirm`):** implementación con criterio de frontend senior — plantilla base compartida (tarjeta, campo de formulario con su propio slot de mensaje de error, botón) reutilizada entre las tres variantes de pantalla (solicitar recuperación, confirmar signup, fijar nueva contraseña), CSS propio sin estilos en línea, usando los mismos tokens de `design/public/tokens.css` que el resto de la app para que el look&feel sea coherente con la maqueta (`docs/design/standalone-html/screens-auth.html`, solo como guía visual, no HTML a portar literalmente) y con la pantalla de login nativa de Chainlit. Esta última, al ser HTML fijo de Chainlit, solo admite coherencia vía `design/public/style.css` (selectores reales, mismo patrón D-038) — no hay componentización posible ahí, es la única superficie de las cuatro donde no aplica.
+
+**Alternativas descartadas**
+- Desactivar "Confirm email" para signup — más simple, pero deja de aportar nada una vez se construyen las rutas de recuperación, y es menos coherente con D-009.
+- `mount_chainlit()` con una sub-aplicación FastAPI separada — más aislado, pero introduce un prefijo de path nuevo que obligaría a revisar las URLs ya registradas en Google Cloud Console (D-032) y en la configuración de Supabase, y cambia el comando de arranque que fija D-039 sin necesidad.
+- Una ruta de verificación distinta por caso (`/auth/confirm-signup` vs `/auth/reset-password`) en vez de compartir `/auth/confirm` — descartado: la llamada a `verify_otp()` es idéntica en ambos casos, solo cambia qué se muestra después; mantenerlas separadas duplicaría lógica sin beneficio.
+- No ofrecer descubribilidad del "olvidé mi contraseña" en la UI (URL sin enlazar, solo documentada) — descartado: un familiar real no la encontraría nunca; el coste de un `custom_js` mínimo es bajo frente a dejar la funcionalidad inutilizable en la práctica.
+- No pedir nombre nunca (mantener el signup mínimo tal cual, sin personalización) — descartado por Marcos: aunque es lo más alineado con D-009, prefiere personalizar el saludo.
+- Añadir columna `profiles.full_name` en vez de usar `user_metadata` de Supabase Auth — descartado: requiere una migración SQL nueva y una segunda tabla con dato de usuario que mantener sincronizada, cuando `user_metadata` ya resuelve lo mismo sin cambio de esquema.
+
+**Justificación**
+Todas las piezas nuevas cuelgan del mismo proceso Chainlit ya existente (sin sub-aplicación, sin cambiar D-039) y comparten mecanismo (`verify_otp` con `token_hash`) entre signup y recovery en vez de duplicar rutas. Mantener "Confirm email" activado no cuesta nada extra una vez que `/auth/confirm` existe de todas formas, y es el comportamiento más defendible dado D-009.
+
+**Consecuencias**
+- Reescribe el Scenario 1 de `tests/features/e05_t06_auth_ui.feature` (ya aprobado): deja de prometer "sin segundo login manual"; pasa a "recibe correo de confirmación, confirma, accede con login normal".
+- Nuevos escenarios en el `.feature`: solicitud y confirmación de recuperación de contraseña, y manejo de fallos (token expirado/ya usado, email no confirmado al intentar login, OAuth cancelado por el usuario) — a redactar en el `task-start` de T-06.
+- `auth/supabase_client.py` gana funciones nuevas: para disparar `reset_password_for_email`, para `verify_otp`, y para `update_user` con la nueva contraseña — además de la función de sincronización de Google ya prevista en D-032.
+- `chainlit/main_family.py` gana las rutas `/auth/forgot-password` y `/auth/confirm`, y un `custom_js` nuevo (`design/public/auth.js` o similar) para el enlace de la pantalla de login.
+- `.env.example` gana `OAUTH_GOOGLE_CLIENT_ID`/`OAUTH_GOOGLE_CLIENT_SECRET` (ya anticipado en D-032); no se necesitan variables adicionales para las rutas propias (reutilizan `SUPABASE_URL`/`SUPABASE_ANON_KEY`).
+- Paso manual pendiente de Marcos: confirmar que "Confirm email" está activado en el proyecto Supabase, y reescribir las plantillas "Confirm signup" y "Reset password" en el dashboard.
+- `design/auth/style.css` se retira (ya acordado en la revisión de la tarea, sin relación directa con esta decisión).
+- El consentimiento informado específico de datos de salud (D-009) no se resuelve en esta tarea, pero sí se le encuentra un lugar en el diseño sin reabrir D-031: ver la actualización del 9 de julio de 2026 en D-009 (gate explícito post-autenticación en `on_chat_start`, separado del formulario de login/signup).
 
 ---
 
