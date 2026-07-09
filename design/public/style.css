@@ -25,8 +25,13 @@
      frontend renders as data-step-type="undefined".
    - ::-webkit-scrollbar: generic pseudo-element, not Chainlit-specific.
 
-   Do not add new color/spacing *values* here — tokens.css remains
-   the single source of truth (D-013). Only var(--token) references.
+   Colors reuse tokens.css / theme.json vars — no new brand colors get
+   invented here (D-013). Fine-grained one-off dimensions (shadows,
+   alpha tints, the greeting title's type scale) that don't have a
+   token equivalent are literal values taken from
+   docs/design/screens/AIIP Phase 2 - Chat.dc.html or specified
+   directly by Marcos during live QA — not a second source of truth
+   for brand color, just component-specific polish.
    ============================================================ */
 
 @import url('./tokens.css');
@@ -83,23 +88,13 @@ body::before {
 }
 
 /* Send button — real id="chat-submit", ships as an icon-only circle
-   (h-8 w-8, rounded-full). Reference is a pill with a "Send" label
-   (screens-chat.html:75 dark / :128 light). There's no <span> in the
-   real DOM to put a label on, so the text is added as decorative CSS
-   content — the button already has a real tooltip
-   (chat.input.actions.send) for accessibility, this is visual only. */
-#chat-submit {
-  width:         auto;
-  height:        auto;
-  padding:       9px 16px;
-  border-radius: var(--radius-md);
-}
-#chat-submit::before {
-  content:     "Send";
-  font:        var(--font-weight-semibold) var(--text-sm) var(--font-body);
-  color:       hsl(var(--primary-foreground));
-}
-/* The real icon is a filled arrow-up (Chainlit's own glyph), not the
+   (h-8 w-8, rounded-full) — kept as-is. Reference has a "Send" text
+   label (screens-chat.html:75 dark / :128 light), but the app is
+   multilingual (langdetect, D-011) and hardcoding a label in one
+   language would be wrong in others, so no CSS text content — icon
+   only, same shape Chainlit already ships. The button already has a
+   real tooltip (chat.input.actions.send) for accessibility.
+   The real icon is a filled arrow-up (Chainlit's own glyph), not the
    reference's outlined paper-plane (Lucide "send", screens-chat.html:75/128).
    CSS can't swap an inline <svg>'s path, so hide it and redraw the
    reference glyph as a CSS mask — mask-image only reads the shape's
