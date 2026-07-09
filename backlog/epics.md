@@ -183,6 +183,8 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 
 **Nota de alcance (8 jul 2026):** al revisar la épica se detectó que E-03 dejó sin construir la UI de signup y de login con Google dentro de la app (solo las funciones de backend, testeadas de forma aislada) y que `design/auth/style.css` (E-02) nunca llegó a cargarse — Chainlit solo admite un `custom_css` por app. D-031 reconcilia esto: toda la autenticación vive dentro de Chainlit, sin superficie separada. D-032 fija el mecanismo concreto de login con Google: `@cl.oauth_callback` nativo de Chainlit + sincronización server-side con Supabase (reabre D-014), no el `sign_in_with_oauth()` client-side que D-031 planteaba inicialmente. Se añade T-06 para resolverlo; el antiguo T-06 (smoke test) pasa a T-07 y amplía su alcance a signup y login Google.
 
+**Nota de alcance (9 jul 2026):** al arrancar T-05 (task-start) se detectó, inspeccionando el CSS compilado real de Chainlit 2.11.1 y `chainlit/server.py`, que `design/public/style.css` (entregable de E-02) define variables `--cl-color-*` y clases `.cl-*` que no existen en el DOM/CSS real de Chainlit (que usa el esquema shadcn/Tailwind: `--primary`, `--background`, `--foreground`, `--accent`, `--border`, `--sidebar-*`, `--radius`, `--font-sans`/`--font-mono`) ni se usa el mecanismo oficial de theming (`public/theme.json`, inyectado por Chainlit como `window.theme`). Con alta probabilidad el theming de E-02 nunca se aplicó al chat real — nunca se verificó visualmente contra un servidor Chainlit corriendo, solo contra comps de v0/Claude Design. D-038 documenta el hallazgo y amplía el alcance de T-05: no es solo "repasar y hacer responsive" sino crear `design/public/theme.json` + corregir selectores de `style.css` a clases reales (verificación de clases exactas se hace en Antigravity con devtools durante la implementación, dado que Cowork no tiene navegador conectado al Chainlit local).
+
 **Estado:** 🔵 En curso
 
 ### Tareas
@@ -193,7 +195,7 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 | T-02 | Streaming nativo de tokens | Sí | ✅ Completada |
 | T-03 | Visualización de pasos intermedios del RAG | Sí | ✅ Completada |
 | T-04 | Onboarding y disclaimers de seguridad | No | ✅ Completada |
-| T-05 | Theming completo (tokens E-02) + responsive del chat | No | ⚪ Pendiente |
+| T-05 | Theming completo (tokens E-02) + responsive del chat | No | ✅ Completada |
 | T-06 | UI de autenticación en Chainlit: signup + login Google + fusión de auth/style.css | Parcial | ⚪ Pendiente |
 | T-07 | Smoke test manual E2E — chat + signup + login Google (configuración, sin TDD) | No | ⚪ Pendiente |
 

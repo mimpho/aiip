@@ -1,0 +1,23 @@
+[project]
+# App familiar — perfil real del TFM
+name = "AIIP — Perfil Familiar"
+
+[UI]
+# Nombre del asistente (obligatorio para Chainlit — UISettings.name)
+name = "AIIP"
+# Modo de tema por defecto
+default_theme = "dark"
+# Hoja de estilos con los tokens de diseño de E-02
+custom_css = "/public/style.css"
+# Chain of Thought (CoT) display mode — necesario para que cl.Step
+# ("Documentos consultados", D-035/T-03) se muestre en la UI.
+cot = "full"
+
+[features]
+# Deshabilitar telemetría de Chainlit
+telemetry = false
+
+[meta]
+# Requerido por Chainlit — chainlit/config.py::load_settings() rechaza
+# cualquier config.toml sin [meta].generated_by > "0.3.0" (D-038/T-05).
+generated_by = "2.11.1"

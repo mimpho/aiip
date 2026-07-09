@@ -46,6 +46,8 @@
 - [D-035 — Visualización de pasos intermedios: `retrieve()` público, `raw_results` opcional en `aquery_stream()` y `cl.Step` en Chainlit](#d-035--visualización-de-pasos-intermedios-retrieve-público-raw_results-opcional-en-aquery_stream-y-clstep-en-chainlit)
 - [D-036 — Onboarding y disclaimer: mensaje en cada apertura de chat, ubicado en `on_chat_start`, sin color de warning](#d-036--onboarding-y-disclaimer-mensaje-en-cada-apertura-de-chat-ubicado-en-on_chat_start-sin-color-de-warning)
 - [D-037 — Protocolos de tratamiento específicos citados de la KB sin contexto: ajuste de prompt (pendiente de verificación por cuota)](#d-037--protocolos-de-tratamiento-específicos-citados-de-la-kb-sin-contexto-ajuste-de-prompt-pendiente-de-verificación-por-cuota)
+- [D-038 — Theming real de Chainlit: `public/theme.json` como mecanismo de base, `style.css` de E-02 reescrito sobre selectores reales](#d-038--theming-real-de-chainlit-publictheme-json-como-mecanismo-de-base-stylecss-de-e-02-reescrito-sobre-selectores-reales)
+- [D-039 — Arranque de Chainlit vía `CHAINLIT_APP_ROOT` + symlinks, y saludo dinámico como mensaje real para poder themarlo](#d-039--arranque-de-chainlit-vía-chainlit_app_root--symlinks-y-saludo-dinámico-como-mensaje-real-para-poder-themarlo)
 
 ---
 
@@ -1355,6 +1357,162 @@ desaparece o se reformula con el descargo adecuado.
   puro (ruido semántico), este es de generación/seguridad — el contexto
   recuperado puede ser correcto y aun así requerir que el LLM no lo repita
   literalmente.
+
+---
+
+## D-038 — Theming real de Chainlit: `public/theme.json` como mecanismo de base, `style.css` de E-02 reescrito sobre selectores reales
+
+**Fecha:** 9 de julio de 2026
+**Fase:** técnica / UI
+**Épica:** E-05 (detectado en task-start de T-05)
+
+**Contexto**
+Al arrancar T-05 (theming completo + responsive) se inspeccionó el CSS
+compilado real de Chainlit 2.11.1 (`chainlit/frontend/dist/assets/index-*.css`
+del paquete instalado) y `chainlit/server.py`, para verificar que
+`design/public/style.css` (entregable de E-02) efectivamente aplica sobre el
+chat real. El resultado: no aplica. `style.css` define variables
+`--cl-color-background`, `--cl-color-primary`, etc. y clases como
+`.cl-message-user`, `.cl-input-wrapper`, `.cl-source-reference`,
+`.cl-sidebar`, `.cl-send-button` — ninguna de ellas existe en el CSS/DOM real
+de Chainlit. El bundle compilado no contiene ni una sola clase `.cl-*`; usa el
+esquema de variables shadcn/Tailwind con el que se construye su frontend:
+`--primary`, `--background`, `--foreground`, `--accent`, `--border`,
+`--sidebar-*`, `--radius`, `--font-sans`, `--font-mono`.
+
+Chainlit expone un mecanismo oficial para mapear estas variables que E-02 no
+usó: un fichero `public/theme.json`, que `chainlit/server.py`
+(`get_html_template`) lee y expone como `window.theme = {variables}`
+inyectado en el HTML — es la vía soportada para fijar la paleta de marca.
+`custom_css` (lo único configurado hoy, `.chainlit/config.toml` →
+`custom_css = "/public/style.css"`) es un `<link>` adicional pensado para
+extras (el borde animado del input, ajustes puntuales), no para redefinir la
+paleta base.
+
+Con alta probabilidad esto significa que el theming de E-02 nunca se aplicó
+al chat real — E-02 se dio por completada validando contra comps generados
+con v0/Claude Design, no contra un servidor Chainlit corriendo con
+inspección de navegador.
+
+**Decisión**
+T-05 amplía su alcance más allá de "repasar y hacer responsive":
+1. Crear `design/public/theme.json` mapeando los tokens de `tokens.css` al
+   esquema real de Chainlit (`primary`, `background`, `foreground`, `accent`,
+   `border`, `sidebar-*`, `radius`, fonts vía `custom_fonts`).
+2. Reescribir los selectores de `design/public/style.css` que hoy apuntan a
+   clases `.cl-*` inexistentes, sustituyéndolos por las clases reales del DOM
+   de Chainlit (message bubbles, input composer, sidebar, `cl.Step`,
+   `cl.Action`/chips, alerta de warning).
+3. La identificación exacta de esas clases reales requiere arrancar Chainlit
+   local + inspección con devtools — no se puede completar en Cowork sin
+   navegador conectado. Se hace en Antigravity durante la implementación,
+   como parte del ciclo de validación manual de T-05 (D-030: T-05 es "sin
+   TDD", pero sigue llevando rama + PR propia — ver excepción de
+   `skills/task-start`).
+
+**Alternativas descartadas**
+- Dar T-05 por un simple "pulido visual" sobre un theming que se asume
+  funcional — descartado tras confirmar con evidencia (bundle CSS real) que
+  el theming base no se aplica; construir responsive/polish sobre una base
+  que no renderiza sería trabajo perdido.
+- Resolver la identificación de selectores reales desde Cowork inspeccionando
+  solo el JS/CSS minificado sin arrancar servidor — descartado como método
+  principal: es indicativo pero no fiable al 100% sin ver el DOM renderizado;
+  se usa como apoyo, no como sustituto de la inspección en Antigravity.
+
+**Justificación**
+El bundle CSS compilado es la fuente de verdad de qué selectores/variables
+existen realmente — no hay ambigüedad en que `.cl-*` no aparece ni una vez.
+Usar el mecanismo oficial (`theme.json`) en vez de seguir intentando forzar
+variables inventadas via `custom_css` es la vía soportada por el framework y
+evita mantenimiento futuro sobre una integración que nunca funcionó.
+
+**Consecuencias**
+- `design/public/style.css` de E-02 pasa a tener que revisarse en T-05 —
+  no se toca `tokens.css` (sigue siendo la fuente de verdad de valores), pero
+  sí el fichero que los traduce a Chainlit.
+- E-02 no se reabre formalmente (sus tokens y el enfoque "CSS custom
+  properties como fuente de verdad" de D-013 siguen vigentes); lo que cambia
+  es únicamente el mecanismo de traducción hacia Chainlit.
+- `design/auth/style.css` (Supabase Auth UI) no está afectado por este
+  hallazgo — es un sistema de theming distinto (D-031 ya lo dejó fuera de
+  Chainlit); se revisa por separado si hace falta, no en T-05.
+
+---
+
+## D-039 — Arranque de Chainlit vía `CHAINLIT_APP_ROOT` + symlinks, y saludo dinámico como mensaje real para poder themarlo
+
+**Fecha:** 9 de julio de 2026
+**Fase:** técnica / UI
+**Épica:** E-05 (implementación de T-05 en Antigravity)
+
+**Contexto**
+Al implementar D-038 (theme.json + selectores reales) surgieron dos
+decisiones de arquitectura no anticipadas en el plan de T-05
+(`tasks/E05-T05-plan.md`), tomadas durante el ciclo de validación manual con
+Marcos.
+
+**1. Resolución de `CHAINLIT_APP_ROOT`**
+
+El plan dejaba abierto cómo `public_dir` de Chainlit (`APP_ROOT/public`)
+llega a resolver a `design/public/`, dado que `chainlit/family/config.toml`
+vive en un directorio distinto y el repo no documentaba el comando de
+arranque. Se resuelve así:
+- La app se lanza con `CHAINLIT_APP_ROOT=chainlit/family` (fija tanto
+  `.chainlit/config.toml` como `public/` relativos a ese directorio).
+- `chainlit/family/config.toml` se mueve a `chainlit/family/.chainlit/config.toml`
+  (ubicación que Chainlit espera dentro de `APP_ROOT`).
+- `chainlit/family/public` es un symlink a `../../design/public` — evita
+  duplicar los assets de diseño (D-013: `tokens.css` sigue siendo la única
+  fuente de verdad).
+- `chainlit/family/.chainlit/translations` es un symlink a
+  `../../../.chainlit/translations` — reutiliza las traducciones ya
+  existentes en la raíz del repo sin duplicarlas.
+- Comando completo documentado en `README.md` → "Setup local":
+  `CHAINLIT_APP_ROOT=chainlit/family PYTHONPATH=. chainlit run chainlit/main_family.py -w --port ${PORT_FAMILY:-8000}`.
+- Efecto colateral: Chainlit exige `CHAINLIT_AUTH_SECRET` con esta
+  configuración — añadido a `.env.example` como placeholder.
+
+**2. Saludo dinámico (`_greeting()`) como mensaje real, no solo CSS**
+
+El comp de referencia (`docs/design/screens/AIIP Phase 2 - Chat.dc.html`)
+incluye un título tipográfico grande sobre el chat que Chainlit no tiene
+como componente nativo — no hay forma de inyectarlo solo con CSS sin
+`custom_js` (descartado: D-038 ya fija `theme.json` + `custom_css` como
+mecanismo, sin añadir una superficie de JS nueva para esto). Se opta por
+generar contenido real: `chainlit/main_family.py` añade `_greeting()`, que
+compone un saludo por hora del día del servidor ("Buenos días" / "Buenas
+tardes" / "Buenas noches", con el identifier del usuario si hay sesión) y lo
+envía como un `cl.Message` propio, antes del mensaje de bienvenida de D-036.
+`style.css` lo detecta con `[data-step-type="assistant_message"]:first-child`
+(siempre el primer mensaje del hilo) y lo despoja del tratamiento de tarjeta
+para renderizarlo como texto de título.
+
+**Alternativas descartadas**
+- Añadir `custom_js` para inyectar un elemento de título vía DOM — descartado
+  por introducir una superficie de personalización adicional (JS) para un
+  único elemento de texto, cuando un mensaje real de Chainlit ya resuelve lo
+  mismo sin código nuevo del lado cliente.
+- Hardcodear el saludo sin franja horaria por usuario — aceptado como
+  limitación conocida (no hay zona horaria por perfil todavía); usa la hora
+  del servidor.
+
+**Justificación**
+Ambas decisiones resuelven bloqueos reales encontrados al verificar T-05 con
+la app corriendo de verdad (no contra mocks): sin `CHAINLIT_APP_ROOT` ningún
+cambio de `theme.json`/`style.css` es visible; sin un mensaje real, el título
+del comp de referencia no tiene dónde enganchar un selector CSS válido.
+
+**Consecuencias**
+- El perfil profesional (`chainlit/professional/`) necesitará el mismo
+  cableado de `CHAINLIT_APP_ROOT` + symlinks cuando se aborde (F-01) — no
+  verificado todavía, ver nota en `README.md`.
+- `on_chat_start` ahora envía dos mensajes (saludo + bienvenida) en vez de
+  uno — cambio de comportamiento observable para el usuario, cubierto solo
+  implícitamente por el `.feature` de T-05 (no hay escenario Gherkin
+  dedicado al saludo en sí, más allá de su theming).
+- Si en el futuro se añade zona horaria por perfil (E-08, memoria de
+  perfil), `_greeting()` es el punto a revisar.
 
 ---
 
