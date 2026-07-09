@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 import chainlit as cl
 from auth.supabase_client import login
@@ -35,6 +36,28 @@ _STARTER_QUESTIONS = (
     "¿Cuándo deberíamos acudir a urgencias?",
     "¿Qué preguntas puedo llevar a la próxima cita médica?",
 )
+
+
+def _greeting() -> str:
+    """Saludo por hora del día, con el nombre si hay usuario autenticado.
+
+    "Buenos días" / "Buenas tardes" / "Buenas noches" según la hora del
+    servidor — no hay zona horaria por usuario que consultar hoy.
+    """
+    hour = datetime.now().hour
+    if hour < 6:
+        greeting = "Buenas noches"
+    elif hour < 12:
+        greeting = "Buenos días"
+    elif hour < 20:
+        greeting = "Buenas tardes"
+    else:
+        greeting = "Buenas noches"
+
+    user = cl.context.session.user
+    if user and user.identifier:
+        greeting = f"{greeting}, {user.identifier}"
+    return greeting
 
 
 def _get_pipeline() -> RAGPipeline:
@@ -127,7 +150,13 @@ async def on_chat_start():
     se muestran en un hilo sin mensajes, y este mensaje de bienvenida ya
     cuenta como el primer mensaje del hilo (D-036 exige enviarlo desde
     `on_chat_start`, no desde `chainlit.md`).
+
+    El saludo (T-05) se envía como mensaje aparte, antes del de
+    bienvenida — style.css lo detecta por ser el primer assistant_message
+    del hilo y lo pinta como título, no como burbuja.
     """
+    await cl.Message(content=_greeting()).send()
+
     actions = [
         cl.Action(name="starter_question", payload={"question": q}, label=q)
         for q in _STARTER_QUESTIONS

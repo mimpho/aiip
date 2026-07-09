@@ -158,9 +158,17 @@ Esta estructura responde a tres principios que se documentan y justifican en det
 
 ## Setup local
 
-> 🚧 En construcción — se documentará al finalizar la Fase 1 (MVP core).
->
-> La intención es que cualquier persona pueda levantar AIIP en local con los servicios externos necesarios (Supabase, Google AI API, Hugging Face). Ver `.env.example` para las variables de entorno requeridas.
+1. Copia `.env.example` a `.env` y rellena las variables (Supabase, Google AI API, Hugging Face) — ver `.env.example`.
+2. Instala dependencias: `pip install -r requirements.txt` (o usa el `.venv` del repo).
+3. Arranca la app familiar:
+
+   ```bash
+   CHAINLIT_APP_ROOT=chainlit/family PYTHONPATH=. chainlit run chainlit/main_family.py -w --port ${PORT_FAMILY:-8000}
+   ```
+
+`CHAINLIT_APP_ROOT` es obligatorio: Chainlit resuelve tanto su config (`.chainlit/config.toml`) como los estáticos de `custom_css`/`theme.json` (carpeta `public/`) relativos a esa variable (por defecto, el cwd — ver `chainlit/config.py`). `chainlit/family/public` es un symlink a `design/public/` (D-013: `design/public/tokens.css` sigue siendo la única fuente de verdad de los valores de diseño; no se duplica). `PYTHONPATH=.` es necesario porque `main_family.py` importa `auth.*` y `rag.*` como paquetes del repo raíz.
+
+El perfil profesional (`chainlit/professional/`) es un stub fuera de alcance del TFM (F-01) y no tiene aún este mismo cableado verificado.
 
 ---
 

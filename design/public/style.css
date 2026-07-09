@@ -1,194 +1,298 @@
 /* ============================================================
-   AIIP — Chainlit theme
-   Maps AIIP tokens → Chainlit CSS custom properties.
-   Import this file via Chainlit's custom_css config key.
+   AIIP — Chainlit theme (D-038 / E-05 T-05)
 
-   Requires public/tokens.css to be loaded first, OR inline the
-   :root block from tokens.css above this file.
+   The base palette (colors, fonts, radius) is set by theme.json,
+   which Chainlit injects as window.theme → CSS custom properties
+   on :root using its own shadcn/Tailwind variable names
+   (--primary, --background, --card, --sidebar-*, etc). That covers
+   message bubbles, buttons, chips and the sidebar automatically —
+   they're all built with Tailwind utilities that already consume
+   those variables, so no selector overrides are needed for them.
+
+   This file only targets the handful of real, verified selectors
+   (confirmed against a live DOM dump of chainlit==2.11.1 plus its
+   compiled frontend bundle, `chainlit/frontend/dist/assets/index-*.js`)
+   where a custom visual treatment or a fix is needed on top of that
+   base theme:
+   - #message-composer: the chat input's glass background/border,
+     matching docs/design/screens/AIIP Phase 2 - Chat.dc.html exactly
+     (no animation — the reference doesn't have one).
+   - [data-sidebar="sidebar"]: sidebar border, for when E-08 (data
+     layer) makes Chainlit's native thread-history sidebar appear —
+     inert today, nothing mounts this element yet.
+   - [data-step-type="undefined"]: the "Documentos consultados" step
+     (D-035/T-03) uses cl.Step() with no explicit type, which the
+     frontend renders as data-step-type="undefined".
+   - ::-webkit-scrollbar: generic pseudo-element, not Chainlit-specific.
+
+   Do not add new color/spacing *values* here — tokens.css remains
+   the single source of truth (D-013). Only var(--token) references.
    ============================================================ */
 
 @import url('./tokens.css');
 @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* ── Chainlit root variables ─────────────────────────────── */
-:root {
-  /* Backgrounds */
-  --cl-color-background:         var(--color-bg);
-  --cl-color-surface:            var(--color-surface);
-  --cl-color-background-paper:   var(--color-surface-raised);
+/* ── Ambient background glow ──────────────────────────────── */
+/* CSS can't insert a real <div> into Chainlit's DOM without custom_js
+   — a fixed-position ::before on body gets the identical visual
+   result (radial glow, doesn't intercept clicks) with no JS. Paints
+   behind #root by default DOM/stacking order, no z-index games needed.
 
-  /* Text */
-  --cl-color-text-primary:       var(--color-text-primary);
-  --cl-color-text-secondary:     var(--color-text-secondary);
-
-  /* Brand / accent */
-  --cl-color-primary:            var(--color-accent);
-  --cl-color-primary-hover:      var(--color-accent-hover);
-  --cl-color-primary-dark:       var(--color-accent);
-
-  /* Border */
-  --cl-color-border:             var(--color-border);
-  --cl-color-divider:            var(--color-border-subtle);
-
-  /* Status */
-  --cl-color-success:            var(--color-success);
-  --cl-color-error:              var(--color-error);
-  --cl-color-warning:            var(--color-warning);
-
-  /* Typography */
-  --cl-font-family:              var(--font-body);
-  --cl-font-family-mono:         var(--font-mono);
-
-  /* Radius */
-  --cl-shape-border-radius:      var(--radius-lg);
-  --cl-shape-border-radius-sm:   var(--radius-sm);
-  --cl-shape-border-radius-md:   var(--radius-md);
+   Drift: the gradient itself stays fixed; what moves is
+   background-position over an oversized canvas (inset: -20% / size
+   140% keeps the glow within an area larger than the viewport, so
+   panning never reveals a hard edge). Uneven keyframe stops (not
+   0/25/50/75) avoid an obviously mechanical back-and-forth; a long,
+   eased duration keeps the motion close to imperceptible. */
+body::before {
+  content:            '';
+  position:           fixed;
+  inset:              -20%;
+  background:         radial-gradient(85% 55% at 50% 0%, hsl(var(--primary) / 0.20), transparent 62%);
+  background-size:    140% 140%;
+  background-repeat:  no-repeat;
+  animation:          aiip-glow-drift 150s ease-in-out infinite;
+  pointer-events:     none;
+}
+@keyframes aiip-glow-drift {
+  0%   { background-position: 50% 10%; }
+  22%  { background-position: 63% 22%; }
+  41%  { background-position: 58% 38%; }
+  63%  { background-position: 39% 30%; }
+  79%  { background-position: 44% 14%; }
+  100% { background-position: 50% 10%; }
 }
 
-/* ── Base resets ─────────────────────────────────────────── */
-body {
-  font-family: var(--font-body);
-  background:  var(--color-bg);
-  color:        var(--color-text-primary);
-  -webkit-font-smoothing: antialiased;
+/* ── Input area ───────────────────────────────────────────── */
+/* #message-composer is the real wrapper Chainlit renders for the
+   chat input (verified: id="message-composer" in the compiled
+   bundle). Values match the reference exactly — glass background +
+   blur + a static 1px border, no animation
+   (docs/design/screens/AIIP Phase 2 - Chat.dc.html:72 dark / :125 light). */
+#message-composer {
+  background:       var(--glass-bg);
+  backdrop-filter:  blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border:           1px solid var(--color-border);
+  border-radius:    var(--radius-lg);
 }
 
-/* ── Chat message bubbles ────────────────────────────────── */
-/* User message */
-.cl-message-user .cl-message-content {
-  background:    var(--color-accent);
-  color:         #fff;
-  border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
-  font-size:     var(--text-base);
-  line-height:   var(--line-height-base);
+/* Light mode only: subtle lift shadow, per the reference. */
+.light #message-composer {
+  box-shadow: 0 4px 14px rgba(26, 33, 41, 0.05);
 }
 
-/* Assistant message */
-.cl-message-assistant .cl-message-content {
+/* Send button — real id="chat-submit", ships as an icon-only circle
+   (h-8 w-8, rounded-full). Reference is a pill with a "Send" label
+   (screens-chat.html:75 dark / :128 light). There's no <span> in the
+   real DOM to put a label on, so the text is added as decorative CSS
+   content — the button already has a real tooltip
+   (chat.input.actions.send) for accessibility, this is visual only. */
+#chat-submit {
+  width:         auto;
+  height:        auto;
+  padding:       9px 16px;
+  border-radius: var(--radius-md);
+}
+#chat-submit::before {
+  content:     "Send";
+  font:        var(--font-weight-semibold) var(--text-sm) var(--font-body);
+  color:       hsl(var(--primary-foreground));
+}
+/* The real icon is a filled arrow-up (Chainlit's own glyph), not the
+   reference's outlined paper-plane (Lucide "send", screens-chat.html:75/128).
+   CSS can't swap an inline <svg>'s path, so hide it and redraw the
+   reference glyph as a CSS mask — mask-image only reads the shape's
+   alpha, so it recolors with background-color like a real icon font. */
+#chat-submit svg {
+  display: none;
+}
+#chat-submit::after {
+  content:      "";
+  display:      inline-block;
+  width:        14px;
+  height:       14px;
+  background-color: hsl(var(--primary-foreground));
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 2 11 13'/%3E%3Cpath d='M22 2 15 22l-4-9-9-4Z'/%3E%3C/svg%3E");
+  mask-image:   url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 2 11 13'/%3E%3Cpath d='M22 2 15 22l-4-9-9-4Z'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size:    contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat:  no-repeat;
+}
+
+/* ── Assistant message card ──────────────────────────────── */
+/* Chainlit's default skin puts no background around the assistant's
+   reply — .ai-message and .message-content are real classes but
+   render as plain text. Reference gives it a card (screens-chat.html:
+   66 dark / :119 light): sharp top-left corner (points at the
+   avatar), soft lift shadow in light mode only. The avatar stays in
+   its native position (left of the message row) rather than the
+   reference's "avatar + AIIP label above the card" — that would need
+   restructuring the row into a column plus decorative label text.
+   Border/text colors here use the closest existing tokens
+   (--color-border / --color-text-secondary) rather than the
+   reference's exact one-off hex — per D-013, tokens.css stays the
+   only place new color values get introduced. */
+.ai-message .message-content {
   background:    var(--color-surface);
   border:        1px solid var(--color-border);
   border-radius: 4px var(--radius-lg) var(--radius-lg) var(--radius-lg);
+  padding:       14px 17px;
+  color:         hsl(var(--card-foreground));
   font-size:     var(--text-base);
-  line-height:   var(--line-height-base);
-  color:         var(--color-text-primary);
+}
+.light .ai-message .message-content {
+  box-shadow: 0 1px 2px rgba(26, 33, 41, 0.04);
 }
 
-/* ── Source / citation tags ──────────────────────────────── */
-.cl-source-reference {
-  font-family: var(--font-mono);
-  font-size:   var(--text-xs);
-  color:       var(--color-text-muted);
-  background:  var(--color-surface-raised);
-  border:      1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding:     3px 8px;
+/* ── Greeting title ───────────────────────────────────────── */
+/* main_family.py sends the time-of-day greeting (D-036/T-05) as its
+   own cl.Message, before the welcome card — always the very first
+   message of the thread. [data-step-type="assistant_message"]:first-child
+   is a reliable hook for exactly that message (not :first-of-type,
+   which would match on tag name across unrelated siblings). Strip the
+   card/avatar treatment and render as a plain display heading instead. */
+[data-step-type="assistant_message"]:first-child .ai-message {
+  gap: 0;
 }
-
-/* ── Safety / warning alert ──────────────────────────────── */
-.cl-alert-warning,
-[data-safety-alert] {
-  background:    var(--color-warning-bg);
-  border:        1px solid rgba(242, 169, 59, 0.38);
-  border-radius: var(--radius-md);
-  color:         var(--color-warning);
+[data-step-type="assistant_message"]:first-child span:has(> img[alt^="Avatar for"]) {
+  display: none;
 }
-
-/* ── Input area — gradient border sweep ──────────────────── */
-/* Technique: wrapper with animated gradient background +
-   inner element with solid fill creates the border effect. */
-
-@keyframes aiip-sweep {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.cl-input-wrapper {
-  position:      relative;
-  padding:       2px; /* border thickness */
-  border-radius: calc(var(--radius-lg) + 2px);
-  background:    linear-gradient(
-    90deg,
-    var(--color-accent-family),
-    var(--color-accent-professional),
-    var(--color-accent-family)
-  );
-  background-size: 200% 200%;
-  animation:     aiip-sweep 3s ease-in-out infinite;
-  border:        none;
-}
-
-/* Soft glow behind the border */
-.cl-input-wrapper::before {
-  content:       '';
-  position:      absolute;
-  inset:         -1px;
-  border-radius: calc(var(--radius-lg) + 3px);
-  background:    inherit;
-  filter:        blur(10px);
-  opacity:       0.3;
-  z-index:       0;
-  animation:     aiip-sweep 3s ease-in-out infinite;
-}
-
-.cl-chat-input {
-  position:       relative;
-  z-index:        1;
-  background:     var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
+[data-step-type="assistant_message"]:first-child .message-content {
+  background:     none;
   border:         none;
-  border-radius:  var(--radius-lg);
-  color:          var(--color-text-primary);
-  font-family:    var(--font-body);
-  font-size:      var(--text-base);
+  padding:        0 0 0 2rem;
+  box-shadow:     none;
+  color:          hsl(var(--foreground));
+  font-family:    var(--font-display);
+  font-weight:    500;
+  font-size:      46px;
+  line-height:    1.05;
+  letter-spacing: -0.01em;
+  margin-bottom:  3rem;
 }
 
-/* Pause animation while typing (reduce distraction) */
-.cl-input-wrapper:focus-within {
-  animation-play-state: paused;
+/* ── User message bubble ──────────────────────────────────── */
+/* Real bubble is div.bg-accent inside the user_message step (verified
+   in the live DOM) — Chainlit uses --accent for it, not --primary, so
+   it rendered as a neutral gray box instead of brand blue. Scoped to
+   the user_message ancestor rather than changing --accent globally,
+   since --accent also drives hover states elsewhere (header buttons,
+   starter chips) that should stay neutral.
+   screens-chat.html:62 dark / :115 light (identical in both modes). */
+[data-step-type="user_message"] .bg-accent {
+  background:    hsl(var(--primary));
+  color:         hsl(var(--primary-foreground));
+  border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
+  padding:       11px 16px;
+  font-size:     var(--text-base);
 }
-.cl-input-wrapper:focus-within::before {
-  animation-play-state: paused;
-  opacity: 0.5; /* slightly more visible on focus */
+
+/* While the answer has no tokens yet (main_family.py sends an empty
+   cl.Message before streaming starts, D-035), .message-content has
+   literally zero children — verified live in devtools, no .prose
+   wrapper even gets rendered for an empty string. :empty is a direct,
+   reliable match. Hide the card entirely and pulse the avatar instead
+   of showing an empty padded box. */
+.ai-message .message-content:empty {
+  display: none;
+}
+@keyframes aiip-avatar-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+.ai-message:has(.message-content:empty) img[alt^="Avatar for"] {
+  animation: aiip-avatar-pulse 1.6s ease-in-out infinite;
+}
+
+/* The "Documentos consultados" step (D-035/T-03) uses the same Avatar
+   component as messages, looking up /avatars/{step name} — since no
+   file matches that name, it falls back to Chainlit's own default
+   logo. Rather than adding a file for it, remove the icon and its
+   reserved layout space, then pull the label left to line up with the
+   assistant card's text inset (14px 17px padding) above it. */
+[data-step-type="undefined"] span:has(> img[alt^="Avatar for"]) {
+  display: none;
+}
+[data-step-type="undefined"] [id^="step-"] {
+  padding-left: 17px;
+}
+/* Defensive: if the step's expanded body reuses .message-content
+   internally, strip the card treatment so it doesn't nest a card
+   inside the step's own collapsible panel. */
+[data-step-type="undefined"] .message-content {
+  background:    none;
+  border:        none;
+  padding:       0;
+  box-shadow:    none;
+  border-radius: 0;
+  color:         inherit;
 }
 
 /* ── Sidebar ─────────────────────────────────────────────── */
-.cl-sidebar {
-  background:  var(--color-surface);
+[data-sidebar="sidebar"] {
   border-right: 1px solid var(--color-border-subtle);
 }
 
-/* ── Suggested question chips ───────────────────────────── */
-.cl-suggestion-chip,
-.cl-starter-message {
-  background:    var(--color-surface-raised);
-  border:        1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  color:         var(--color-text-secondary);
-  font-size:     var(--text-sm);
-  font-family:   var(--font-body);
-  transition:    border-color 0.15s ease;
+/* ── RAG intermediate step ("Documentos consultados", D-035) ── */
+/* cl.Step() with no explicit `type=` renders as
+   data-step-type="undefined" — this is the real, verified selector,
+   not a guess. Base colors already come from theme.json (--card,
+   --border, --muted-foreground); this only tightens the excerpt
+   typography to match the rest of the app. */
+[data-step-type="undefined"] {
+  font-family: var(--font-body);
+  font-size:   var(--text-sm);
 }
-.cl-suggestion-chip:hover,
-.cl-starter-message:hover {
-  border-color: var(--color-accent);
-  color:        var(--color-text-primary);
-}
-
-/* ── Send button ─────────────────────────────────────────── */
-.cl-send-button {
-  background:    var(--color-accent);
-  border-radius: var(--radius-md);
-  color:         #fff;
-  font-family:   var(--font-body);
-  font-weight:   var(--font-weight-semibold);
-}
-.cl-send-button:hover {
-  background: var(--color-accent-hover);
+[data-step-type="undefined"] code {
+  font-family: var(--font-mono);
 }
 
 /* ── Scrollbar ───────────────────────────────────────────── */
 ::-webkit-scrollbar       { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+
+/* ── Starter question chips ──────────────────────────────── */
+/* Starter questions (cl.Action, on_chat_start) and the message
+   copy/edit icon buttons share the exact same wrapper classes
+   (`-ml-1.5 flex items-center flex-wrap`) and button base classes —
+   there's no dedicated selector for "this is a starter chip". Was
+   using :not(:has(svg)) to tell them apart from icon-only buttons,
+   but the real button component (WYn in the bundle) swaps its icon
+   slot for a loading spinner <svg> while the click is in flight —
+   that momentarily added an svg and made the clicked chip fall out of
+   the pill styling. Icon-only buttons (copy/edit) use the "icon" size
+   variant (literal class token "w-9", a fixed square); starter chips
+   use "sm" (auto width, no "w-9") — stable regardless of loading
+   state, so select on that instead.
+   Pill treatment mirrors the reference's tag/badge pattern (translucent
+   primary tint + border, same 10%/24% alpha as the header logo badge
+   in screens-chat.html), sized up from its 11px reference to --text-sm
+   since these are tappable questions, not a small label. */
+.-ml-1\.5.flex.items-center.flex-wrap {
+  margin-left: 0;
+  margin-top:  10px;
+  gap:         16px 12px;
+}
+.-ml-1\.5.flex.items-center.flex-wrap > button:not([class~="w-9"]) {
+  background:    none;
+  color:         hsl(var(--primary));
+  border:        1px solid hsl(var(--primary) / 0.24);
+  border-radius: 999px;
+  padding:       6px 14px;
+  font-size:     var(--text-base);
+  font-weight:   var(--font-weight-semibold);
+  height:        auto;
+  white-space:   normal;
+}
+.-ml-1\.5.flex.items-center.flex-wrap > button:not([class~="w-9"]):hover {
+  background: hsl(var(--primary) / 0.1);
+  color:      hsl(var(--primary));
+}
+/* Hide the click-loading spinner — the avatar pulse above is now the
+   only "waiting" indicator, per Marcos. */
+.-ml-1\.5.flex.items-center.flex-wrap > button:not([class~="w-9"]) svg {
+  display: none;
+}
