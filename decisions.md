@@ -47,6 +47,7 @@
 - [D-036 — Onboarding y disclaimer: mensaje en cada apertura de chat, ubicado en `on_chat_start`, sin color de warning](#d-036--onboarding-y-disclaimer-mensaje-en-cada-apertura-de-chat-ubicado-en-on_chat_start-sin-color-de-warning)
 - [D-037 — Protocolos de tratamiento específicos citados de la KB sin contexto: ajuste de prompt (pendiente de verificación por cuota)](#d-037--protocolos-de-tratamiento-específicos-citados-de-la-kb-sin-contexto-ajuste-de-prompt-pendiente-de-verificación-por-cuota)
 - [D-038 — Theming real de Chainlit: `public/theme.json` como mecanismo de base, `style.css` de E-02 reescrito sobre selectores reales](#d-038--theming-real-de-chainlit-publictheme-json-como-mecanismo-de-base-stylecss-de-e-02-reescrito-sobre-selectores-reales)
+- [D-039 — Arranque de Chainlit vía `CHAINLIT_APP_ROOT` + symlinks, y saludo dinámico como mensaje real para poder themarlo](#d-039--arranque-de-chainlit-vía-chainlit_app_root--symlinks-y-saludo-dinámico-como-mensaje-real-para-poder-themarlo)
 
 ---
 
@@ -1436,6 +1437,82 @@ evita mantenimiento futuro sobre una integración que nunca funcionó.
 - `design/auth/style.css` (Supabase Auth UI) no está afectado por este
   hallazgo — es un sistema de theming distinto (D-031 ya lo dejó fuera de
   Chainlit); se revisa por separado si hace falta, no en T-05.
+
+---
+
+## D-039 — Arranque de Chainlit vía `CHAINLIT_APP_ROOT` + symlinks, y saludo dinámico como mensaje real para poder themarlo
+
+**Fecha:** 9 de julio de 2026
+**Fase:** técnica / UI
+**Épica:** E-05 (implementación de T-05 en Antigravity)
+
+**Contexto**
+Al implementar D-038 (theme.json + selectores reales) surgieron dos
+decisiones de arquitectura no anticipadas en el plan de T-05
+(`tasks/E05-T05-plan.md`), tomadas durante el ciclo de validación manual con
+Marcos.
+
+**1. Resolución de `CHAINLIT_APP_ROOT`**
+
+El plan dejaba abierto cómo `public_dir` de Chainlit (`APP_ROOT/public`)
+llega a resolver a `design/public/`, dado que `chainlit/family/config.toml`
+vive en un directorio distinto y el repo no documentaba el comando de
+arranque. Se resuelve así:
+- La app se lanza con `CHAINLIT_APP_ROOT=chainlit/family` (fija tanto
+  `.chainlit/config.toml` como `public/` relativos a ese directorio).
+- `chainlit/family/config.toml` se mueve a `chainlit/family/.chainlit/config.toml`
+  (ubicación que Chainlit espera dentro de `APP_ROOT`).
+- `chainlit/family/public` es un symlink a `../../design/public` — evita
+  duplicar los assets de diseño (D-013: `tokens.css` sigue siendo la única
+  fuente de verdad).
+- `chainlit/family/.chainlit/translations` es un symlink a
+  `../../../.chainlit/translations` — reutiliza las traducciones ya
+  existentes en la raíz del repo sin duplicarlas.
+- Comando completo documentado en `README.md` → "Setup local":
+  `CHAINLIT_APP_ROOT=chainlit/family PYTHONPATH=. chainlit run chainlit/main_family.py -w --port ${PORT_FAMILY:-8000}`.
+- Efecto colateral: Chainlit exige `CHAINLIT_AUTH_SECRET` con esta
+  configuración — añadido a `.env.example` como placeholder.
+
+**2. Saludo dinámico (`_greeting()`) como mensaje real, no solo CSS**
+
+El comp de referencia (`docs/design/screens/AIIP Phase 2 - Chat.dc.html`)
+incluye un título tipográfico grande sobre el chat que Chainlit no tiene
+como componente nativo — no hay forma de inyectarlo solo con CSS sin
+`custom_js` (descartado: D-038 ya fija `theme.json` + `custom_css` como
+mecanismo, sin añadir una superficie de JS nueva para esto). Se opta por
+generar contenido real: `chainlit/main_family.py` añade `_greeting()`, que
+compone un saludo por hora del día del servidor ("Buenos días" / "Buenas
+tardes" / "Buenas noches", con el identifier del usuario si hay sesión) y lo
+envía como un `cl.Message` propio, antes del mensaje de bienvenida de D-036.
+`style.css` lo detecta con `[data-step-type="assistant_message"]:first-child`
+(siempre el primer mensaje del hilo) y lo despoja del tratamiento de tarjeta
+para renderizarlo como texto de título.
+
+**Alternativas descartadas**
+- Añadir `custom_js` para inyectar un elemento de título vía DOM — descartado
+  por introducir una superficie de personalización adicional (JS) para un
+  único elemento de texto, cuando un mensaje real de Chainlit ya resuelve lo
+  mismo sin código nuevo del lado cliente.
+- Hardcodear el saludo sin franja horaria por usuario — aceptado como
+  limitación conocida (no hay zona horaria por perfil todavía); usa la hora
+  del servidor.
+
+**Justificación**
+Ambas decisiones resuelven bloqueos reales encontrados al verificar T-05 con
+la app corriendo de verdad (no contra mocks): sin `CHAINLIT_APP_ROOT` ningún
+cambio de `theme.json`/`style.css` es visible; sin un mensaje real, el título
+del comp de referencia no tiene dónde enganchar un selector CSS válido.
+
+**Consecuencias**
+- El perfil profesional (`chainlit/professional/`) necesitará el mismo
+  cableado de `CHAINLIT_APP_ROOT` + symlinks cuando se aborde (F-01) — no
+  verificado todavía, ver nota en `README.md`.
+- `on_chat_start` ahora envía dos mensajes (saludo + bienvenida) en vez de
+  uno — cambio de comportamiento observable para el usuario, cubierto solo
+  implícitamente por el `.feature` de T-05 (no hay escenario Gherkin
+  dedicado al saludo en sí, más allá de su theming).
+- Si en el futuro se añade zona horaria por perfil (E-08, memoria de
+  perfil), `_greeting()` es el punto a revisar.
 
 ---
 

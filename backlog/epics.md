@@ -195,7 +195,7 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 | T-02 | Streaming nativo de tokens | Sí | ✅ Completada |
 | T-03 | Visualización de pasos intermedios del RAG | Sí | ✅ Completada |
 | T-04 | Onboarding y disclaimers de seguridad | No | ✅ Completada |
-| T-05 | Theming completo (tokens E-02) + responsive del chat | No | 🔄 En progreso |
+| T-05 | Theming completo (tokens E-02) + responsive del chat | No | ✅ Completada |
 | T-06 | UI de autenticación en Chainlit: signup + login Google + fusión de auth/style.css | Parcial | ⚪ Pendiente |
 | T-07 | Smoke test manual E2E — chat + signup + login Google (configuración, sin TDD) | No | ⚪ Pendiente |
 
