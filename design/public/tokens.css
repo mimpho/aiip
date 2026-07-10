@@ -6,122 +6,125 @@
    ============================================================ */
 
 :root {
-  /* ── Fonts ──────────────────────────────────────────────── */
-  /* --font-display was Spectral; PT Serif (10 jul 2026) per Marcos —
-     used for titles (login h1, login heading, greeting title) and, via
-     the same variable, for chat message content (see
-     .ai-message .message-content / [data-step-type="user_message"] in
-     style.css). --font-body is left as-is: it's only used for a couple
-     of secondary/metadata spots (the "Documentos consultados" step),
-     not the actual message bubbles, so the chat-content change is
-     applied directly where the content lives rather than by repointing
-     this token. */
-  --font-display:  'PT Serif', Georgia, serif;
-  --font-body:     'Hanken Grotesk', system-ui, sans-serif;
-  --font-mono:     'JetBrains Mono', 'Courier New', monospace;
+   /* ── Fonts ──────────────────────────────────────────────── */
+   /* --font-display was Spectral, then PT Serif, now Merriweather
+     (10 jul 2026) per Marcos, at weight 500 (--font-weight-medium)
+     wherever it's used — used for titles (login h1, login heading,
+     greeting title) and, via the same variable, for chat message
+     content (see .ai-message .message-content /
+     [data-step-type="user_message"] in style.css). --font-body is left
+     as-is: it's only used for a couple of secondary/metadata spots (the
+     "Documentos consultados" step), not the actual message bubbles, so
+     the chat-content change is applied directly where the content
+     lives rather than by repointing this token. */
+   --font-display: 'Merriweather', Georgia, serif;
+   --font-body: 'Hanken Grotesk', system-ui, sans-serif;
+   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
 
-  /* ── Type scale ─────────────────────────────────────────── */
-  --text-xs:   12px;
-  --text-sm:   14px;
-  --text-base: 17px;
-  --text-lg:   18px;
-  --text-xl:   24px;
-  --text-2xl:  32px;
+   /* ── Type scale ─────────────────────────────────────────── */
+   --text-xs: 12px;
+   --text-sm: 14px;
+   --text-base: 17px;
+   --text-lg: 18px;
+   --text-xl: 24px;
+   --text-2xl: 32px;
 
-  /* ── Font weights ───────────────────────────────────────── */
-  --font-weight-normal:   400;
-  --font-weight-medium:   500;
-  --font-weight-semibold: 600;
-  --font-weight-bold:     700;
+   /* ── Font weights ───────────────────────────────────────── */
+   --font-weight-normal: 400;
+   --font-weight-medium: 500;
+   --font-weight-semibold: 600;
+   --font-weight-bold: 700;
 
-  /* ── Line heights ───────────────────────────────────────── */
-  --line-height-tight:   1.1;
-  --line-height-base:    1.55;
-  --line-height-relaxed: 1.65;
+   /* ── Line heights ───────────────────────────────────────── */
+   --line-height-tight: 1.1;
+   --line-height-base: 1.55;
+   --line-height-relaxed: 1.65;
 
-  /* ── Spacing (4 px base) ────────────────────────────────── */
-  --space-1:  4px;
-  --space-2:  8px;
-  --space-3:  12px;
-  --space-4:  16px;
-  --space-5:  20px;
-  --space-6:  24px;
-  --space-7:  28px;
-  --space-8:  32px;
-  --space-10: 40px;
-  --space-12: 48px;
+   /* ── Spacing (4 px base) ────────────────────────────────── */
+   --space-1: 4px;
+   --space-2: 8px;
+   --space-3: 12px;
+   --space-4: 16px;
+   --space-5: 20px;
+   --space-6: 24px;
+   --space-7: 28px;
+   --space-8: 32px;
+   --space-10: 40px;
+   --space-12: 48px;
 
-  /* ── Border radius ──────────────────────────────────────── */
-  --radius-sm:  6px;
-  --radius-md:  10px;
-  --radius-lg:  14px;
-  --radius-xl:  20px;
+   /* ── Border radius ──────────────────────────────────────── */
+   --radius-sm: 6px;
+   --radius-md: 10px;
+   --radius-lg: 14px;
+   --radius-xl: 20px;
 
-  /* ── Base surfaces — DARK (default) ─────────────────────── */
-  --color-bg:             #0F1419;
-  --color-surface:        #171D25;
-  --color-surface-raised: #1F2731;
-  --color-border:         #2B343F;
-  --color-border-subtle:  #20272F;
+   /* ── Base surfaces — DARK (default) ─────────────────────── */
+   --color-bg: #0F1419;
+   --color-surface: #171D25;
+   --color-surface-raised: #1F2731;
+   --color-border: #2B343F;
+   --color-border-subtle: #20272F;
 
-  /* ── Text — DARK ────────────────────────────────────────── */
-  --color-text-primary:   #EEF2F7;
-  --color-text-secondary: #A6B2BF;
-  --color-text-muted:     #6B7682;
+   /* ── Text — DARK ────────────────────────────────────────── */
+   --color-text-primary: #EEF2F7;
+   --color-text-secondary: #A6B2BF;
+   --color-text-muted: #6B7682;
 
-  /* ── Accent — shared base ───────────────────────────────── */
-  /* Profile accent is set by layering --color-accent-family or
+   /* ── Accent — shared base ───────────────────────────────── */
+   /* Profile accent is set by layering --color-accent-family or
      --color-accent-professional on top of this base.          */
-  --color-accent:            #6E8BFF;   /* family (default) */
-  --color-accent-hover:      #8FA6FF;
+   --color-accent: #6E8BFF;
+   /* family (default) */
+   --color-accent-hover: #8FA6FF;
 
-  --color-accent-family:     #6E8BFF;
-  --color-accent-family-hover: #8FA6FF;
+   --color-accent-family: #6E8BFF;
+   --color-accent-family-hover: #8FA6FF;
 
-  --color-accent-professional:       #2FC18C;
-  --color-accent-professional-hover: #4FD6A3;
+   --color-accent-professional: #2FC18C;
+   --color-accent-professional-hover: #4FD6A3;
 
-  /* ── Semantic ────────────────────────────────────────────── */
-  --color-warning:    #F2A93B;   /* reserved — Zero False Negative only */
-  --color-warning-bg: rgba(242, 169, 59, 0.12);
-  --color-success:    #36C28B;
-  --color-error:      #E5565B;
+   /* ── Semantic ────────────────────────────────────────────── */
+   --color-warning: #F2A93B;
+   /* reserved — Zero False Negative only */
+   --color-warning-bg: rgba(242, 169, 59, 0.12);
+   --color-success: #36C28B;
+   --color-error: #E5565B;
 
-  /* ── Glassmorphism input ─────────────────────────────────── */
-  --glass-bg:     rgba(23, 29, 37, 0.58);
-  --glass-blur:   16px;
+   /* ── Glassmorphism input ─────────────────────────────────── */
+   --glass-bg: rgba(23, 29, 37, 0.58);
+   --glass-blur: 16px;
 }
 
 /* ── Light mode overrides ────────────────────────────────── */
 [data-theme="light"],
 .light {
-  --color-bg:             #F4F6F9;
-  --color-surface:        #FFFFFF;
-  --color-surface-raised: #F8FAFC;
-  --color-border:         #E2E7ED;
-  --color-border-subtle:  #ECEFF3;
+   --color-bg: #F4F6F9;
+   --color-surface: #FFFFFF;
+   --color-surface-raised: #F8FAFC;
+   --color-border: #E2E7ED;
+   --color-border-subtle: #ECEFF3;
 
-  --color-text-primary:   #1A2129;
-  --color-text-secondary: #5A6573;
-  --color-text-muted:     #8A94A0;
+   --color-text-primary: #2D3946;
+   --color-text-secondary: #5A6573;
+   --color-text-muted: #8A94A0;
 
-  --color-accent:            #5570E8;
-  --color-accent-hover:      #4A63D6;
-  --color-accent-family:     #5570E8;
-  --color-accent-family-hover: #4A63D6;
-  --color-accent-professional:       #1F9468;
-  --color-accent-professional-hover: #178055;
+   --color-accent: #5570E8;
+   --color-accent-hover: #4A63D6;
+   --color-accent-family: #5570E8;
+   --color-accent-family-hover: #4A63D6;
+   --color-accent-professional: #1F9468;
+   --color-accent-professional-hover: #178055;
 
-  --color-warning-bg: rgba(253, 244, 227, 1);
-  --glass-bg:         rgba(255, 255, 255, 0.72);
+   --color-warning-bg: rgba(253, 244, 227, 1);
+   --glass-bg: rgba(255, 255, 255, 0.72);
 }
 
 /* ── Professional profile — accent swap ─────────────────── */
 [data-profile="professional"] {
-  --color-accent:       var(--color-accent-professional);
-  --color-accent-hover: var(--color-accent-professional-hover);
+   --color-accent: var(--color-accent-professional);
+   --color-accent-hover: var(--color-accent-professional-hover);
 }
 
 /* ── Google Fonts import (reference; load in <head>) ──────
-   @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=PT+Serif:ital,wght@0,400;1,400&display=swap');
+   @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Merriweather:ital,wght@0,500;1,500&display=swap');
    ──────────────────────────────────────────────────────── */

@@ -166,6 +166,24 @@
     }
   }
 
+  // Chainlit's /logo endpoint (chainlit/server.py get_logo, a plain
+  // route on the shared FastAPI app — not SPA-only) is what both
+  // injectLoginHeading's badge and auth_base.html's static logo use to
+  // stay theme-aware, since neither can rely on a hardcoded file for
+  // both palettes. Called once at setup (so a page loaded already in
+  // light mode doesn't show the dark-mode logo until the first click)
+  // and again on every toggle click.
+  function syncThemeAwareLogos(themeName) {
+    var badgeLogo = document.querySelector("#aiip-login-logo-badge img");
+    if (badgeLogo) {
+      badgeLogo.src = "/logo?theme=" + themeName;
+    }
+    var authLogo = document.getElementById("aiip-auth-logo");
+    if (authLogo) {
+      authLogo.src = "/logo?theme=" + themeName;
+    }
+  }
+
   function injectThemeToggle() {
     var existing = document.getElementById("aiip-theme-toggle");
     if (existing) {
@@ -190,17 +208,11 @@
       var next = currentTheme() === "light" ? "dark" : "light";
       applyTheme(next);
       render();
-
-      // injectLoginHeading's badge <img> picks its theme once, at
-      // insertion time (see file header) — keep it in sync so it
-      // doesn't go stale relative to the toggle it sits right next to.
-      var badgeLogo = document.querySelector("#aiip-login-logo-badge img");
-      if (badgeLogo) {
-        badgeLogo.src = "/logo?theme=" + next;
-      }
+      syncThemeAwareLogos(next);
     });
 
     render();
+    syncThemeAwareLogos(currentTheme());
     positionThemeToggle(btn);
 
     // Corrects a wrong first guess from currentTheme()'s last resort
@@ -208,7 +220,10 @@
     // class — attributeFilter keeps this to just that one signal,
     // ignoring the unrelated childList churn the other observers below
     // deal with.
-    new MutationObserver(render).observe(document.documentElement, {
+    new MutationObserver(function () {
+      render();
+      syncThemeAwareLogos(currentTheme());
+    }).observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
     });
