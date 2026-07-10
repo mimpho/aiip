@@ -83,6 +83,8 @@ aiip/
 ├── decisions.md           ← Registro de decisiones. Leerlo antes de tomar decisiones de diseño.
 ├── requirements.txt       ← Dependencias Python del proyecto
 ├── .env.example           ← Variables de entorno necesarias (nunca commitear .env)
+├── .chainlit/              ← Traducciones i18n de Chainlit (reutilizadas vía symlink desde chainlit/family/.chainlit/); config.toml es boilerplate sin uso real (E-05, D-039)
+├── chainlit.md             ← Stub de bienvenida de Chainlit sin uso (real: chainlit/family/chainlit.md, vacío por diseño — E-05, D-039)
 ├── chainlit/              ← Entrypoints y configuración Chainlit
 │   ├── main_familiar.py   ← Entrypoint perfil familiar (puerto 8000)
 │   ├── main_profesional.py← Entrypoint perfil profesional stub (puerto 8001)
@@ -128,7 +130,7 @@ aiip/
 
 - **Prompts:** ficheros bajo `prompts/`. Nunca embebidos en código Python.
 - **Configuración:** toda variable sensible o configurable en `.env`. Nunca en código.
-- **Tests:** bajo `tests/`. Escenarios Gherkin ejecutables en `tests/features/` (pytest-bdd).
+- **Tests:** bajo `tests/`. Escenarios Gherkin ejecutables en `tests/features/` (pytest-bdd). Ejecutar siempre con `PYTHONPATH=. pytest tests/ -v` — sin `PYTHONPATH=.`, cualquier step_def que importe `main_family` (que a su vez importa `auth.*`/`rag.*` como paquetes de raíz) falla la colección y aborta la suite completa, no solo esos tests.
 - **Commits:** mensajes en inglés. Una responsabilidad por commit.
 
 ---
@@ -183,10 +185,17 @@ flowchart TD
 
 | Acción | Quién |
 |---|---|
-| `status`, `log`, `diff`, `branch` | Agente |
-| `checkout -b`, `push`, `merge`, `tag` | Marcos |
+| `status`, `log`, `diff`, `branch` (listar) | Agente |
+| `checkout` (a secas o `-b`), `push`, `merge`, `tag`, `commit` | Marcos |
 
 > **`main` está protegida.** Nunca proponer commits directos a main. Todo el trabajo va en rama + PR.
+
+> **Ni siquiera `checkout` de solo lectura.** El sandbox de Cowork monta el repo real de
+> Marcos, no un clon aislado — cualquier cambio de HEAD (aunque la intención sea solo
+> inspeccionar una rama) puede dejar un `.git/index.lock` huérfano que el agente no puede
+> limpiar por permisos del mount. Para consultar el estado de otra rama sin moverte de la
+> activa: `git log <rama>`, `git diff <rama>`, `git show <rama>:<fichero>`, o
+> `git log ramaA..ramaB` — nunca `git checkout <rama>`, ni para mirar.
 
 ---
 

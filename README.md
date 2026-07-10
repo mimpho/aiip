@@ -32,7 +32,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-02 | Identidad visual mínima | ✅ Completada | — |
 | E-03 | Autenticación y separación de perfiles | ✅ Completada — 30 jun 2026 | — |
 | E-04 | Pipeline RAG + módulo de seguridad | ✅ Completada — 05 jul 2026 | — |
-| E-05 | Interfaz conversacional (Chainlit) | 🔵 En curso | E-02, E-04 |
+| E-05 | Interfaz conversacional (Chainlit) | ✅ Completada — 10 jul 2026 | E-02, E-04 |
 | E-06 | Ingesta y procesamiento de la KB | ✅ Completada — 08 jul 2026 | E-01 |
 | E-07 | Evaluación RAGAS parcial | ⚪ No iniciada | E-06 |
 | E-08 | Memoria de perfil e histórico | ⚪ No iniciada | E-03, E-04, E-06 |
@@ -71,7 +71,7 @@ gantt
     E-02 Identidad visual             :done,    e02, 2026-06-25, 2026-06-27
     E-03 Autenticación                :done,    e03, 2026-06-27, 2026-06-30
     E-04 Pipeline RAG                 :done,    e04, 2026-06-27, 2026-07-05
-    E-05 Interfaz Chainlit            :active,  e05, 2026-07-08, 2026-07-10
+    E-05 Interfaz Chainlit            :done,    e05, 2026-07-08, 2026-07-10
     E-06 Ingesta KB                   :done,    e06, 2026-06-27, 2026-07-08
     E-07 RAGAS parcial                :         e07, 2026-07-10, 2026-07-13
 
@@ -101,6 +101,8 @@ aiip/
 ├── prompts.md         ← Prompts operativos usados en el desarrollo. Append-only.
 ├── decisions.md       ← Registro de decisiones relevantes del proyecto.
 ├── requirements.txt   ← Dependencias Python del proyecto.
+├── .chainlit/         ← Traducciones i18n de Chainlit (reutilizadas vía symlink desde chainlit/family/.chainlit/); config.toml es boilerplate de `chainlit init` sin uso real (config real: chainlit/family/.chainlit/config.toml).
+├── chainlit.md        ← Stub de bienvenida de Chainlit sin uso (real: chainlit/family/chainlit.md, vacío por diseño — D-039).
 │
 ├── docs/
 │   ├── PRD.md             ← Product Requirements Document. El qué y el por qué.
@@ -168,6 +170,14 @@ Esta estructura responde a tres principios que se documentan y justifican en det
 
 `CHAINLIT_APP_ROOT` es obligatorio: Chainlit resuelve tanto su config (`.chainlit/config.toml`) como los estáticos de `custom_css`/`theme.json` (carpeta `public/`) relativos a esa variable (por defecto, el cwd — ver `chainlit/config.py`). `chainlit/family/public` es un symlink a `design/public/` (D-013: `design/public/tokens.css` sigue siendo la única fuente de verdad de los valores de diseño; no se duplica). `PYTHONPATH=.` es necesario porque `main_family.py` importa `auth.*` y `rag.*` como paquetes del repo raíz.
 
+4. Ejecuta los tests:
+
+   ```bash
+   PYTHONPATH=. pytest tests/ -v
+   ```
+
+   `PYTHONPATH=.` es obligatorio aquí también — varios step_defs (`test_e03_t05.py`, `test_e05_t01.py`, `test_e05_t02.py`, `test_e05_t03.py`, `test_e05_t06.py`) importan `main_family`, que a su vez importa `auth.*`/`rag.*` como paquetes de raíz. Sin ello, la colección falla y aborta la suite completa (`ModuleNotFoundError: No module named 'auth'`), no solo los tests afectados.
+
 El perfil profesional (`chainlit/professional/`) es un stub fuera de alcance del TFM (F-01) y no tiene aún este mismo cableado verificado.
 
 ---
@@ -179,4 +189,4 @@ El perfil profesional (`chainlit/professional/`) es un stub fuera de alcance del
 
 ---
 
-*Última actualización: 8 julio 2026 — E-06 (Ingesta KB) completada*
+*Última actualización: 10 julio 2026 — E-05 (Interfaz conversacional Chainlit) completada*

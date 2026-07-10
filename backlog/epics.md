@@ -174,7 +174,7 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 
 **Criterios de aceptación de alto nivel**
 - Chat funcional con streaming nativo de tokens
-- Visualización de pasos intermedios del RAG (documentos recuperados, chunks usados)
+- Visualización de pasos intermedios del RAG (documentos recuperados, chunks usados) — retirada de la UI en T-07 (D-041): redundante con el listado de fuentes ya existente (D-026), se resuelve vía logging server-side + reutilización de resultados sin segunda consulta, no vía `cl.Step` visible
 - Diseño responsive desde el inicio (D-007)
 - Tono y UX adaptados al perfil familiar según PRD
 - Theming completo basado en tokens de E-02
@@ -187,7 +187,9 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 
 **Nota de alcance (9 jul 2026):** al formalizar T-06 (task-start) se detectó que Chainlit no soporta signup ni recuperación de contraseña de forma nativa (solo login vía `password_auth_callback`, formulario fijo sin mensajes custom). D-040 amplía el alcance original de T-06 (que solo cubría signup + login Google + `auth/style.css`) para incluir también la recuperación de contraseña completa: rutas propias sobre la misma app de Chainlit (`/auth/forgot-password`, `/auth/confirm` compartida con la confirmación de signup), plantillas de email de Supabase reescritas, y un `custom_js` mínimo para la descubribilidad del enlace.
 
-**Estado:** 🔵 En curso
+**Nota de cierre (10 jul 2026):** `pytest tests/ -v` al cerrar la épica reveló una regresión real sobre código de E-03: `signup()` (`auth/supabase_client.py`) no detectaba emails ya registrados y confirmados desde que D-040 activó "Confirm email" — Supabase, por protección anti-enumeración, deja de elevar error en ese caso y devuelve un usuario ofuscado, lo que producía un 500 en vez de un mensaje claro. D-042 documenta el hallazgo y el fix. De paso, las precondiciones de `test_e03_t03.py` que hacían `signup()` público innecesariamente se cambiaron a Admin API, eliminando también un rate limit de Supabase que enmascaraba el bug.
+
+**Estado:** ✅ Completada — 10 jul 2026
 
 ### Tareas
 
@@ -199,7 +201,22 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 | T-04 | Onboarding y disclaimers de seguridad | No | ✅ Completada |
 | T-05 | Theming completo (tokens E-02) + responsive del chat | No | ✅ Completada |
 | T-06 | UI de autenticación en Chainlit: signup + login Google + fusión de auth/style.css | Parcial | ✅ Completada |
-| T-07 | Smoke test manual E2E — chat + signup + login Google (configuración, sin TDD) | No | 🔄 En progreso |
+| T-07 | Smoke test manual E2E — chat + signup + login Google (configuración, sin TDD) | No | ✅ Completada |
+
+**Entregables**
+- `chainlit/main_family.py` — pipeline RAG cableado al chat con streaming nativo (`aquery_stream`), saludo dinámico (`_greeting()`, D-039), onboarding con disclaimers de seguridad, `@cl.oauth_callback` para login Google, `_ensure_full_name()`; sin `cl.Step` de retrieval (retirado en D-041)
+- `rag/pipeline.py`, `rag/generator.py` — `RAGPipeline.retrieve()` público + `aquery_stream(question, raw_results=None)` retrocompatible (T-01/T-03)
+- `design/public/theme.json`, `design/public/style.css`, `design/public/tokens.css` — theming real de Chainlit sobre selectores shadcn/Tailwind reales, responsive (D-038)
+- `chainlit/family/.chainlit/config.toml`, `chainlit/family/public` (symlink a `design/public/`), `.chainlit/translations/` — arranque vía `CHAINLIT_APP_ROOT` + symlinks (D-039)
+- `auth/supabase_client.py` — sincronización server-side de usuarios de Google OAuth con Supabase
+- `chainlit/family/templates/{auth_base,confirm,forgot_password}.html`, `design/public/auth-pages.css`, `design/public/auth.js` — signup con confirmación por email y recuperación de contraseña sobre rutas propias de Chainlit (D-031/D-032/D-040)
+- `prompts/system_prompt_family.txt` — ajustes de tono/onboarding del perfil familiar
+- `tests/features/e05_t01_*.feature` a `e05_t07_*.feature`, `tests/step_defs/test_e05_t01.py` a `test_e05_t06.py` — escenarios TDD/parcial por tarea
+- `tests/results/e05_t07_smoke_test_results.md` — smoke test manual E2E: chat con KB real, signup + confirmación de email, login Google, recuperación de contraseña, responsive — todo validado sin incidencias; 3 hallazgos no bloqueantes documentados en `backlog/ideas.md` para E-07/E-09
+- `tasks/E05-T01-plan.md` a `E05-T06-plan.md` — planes de implementación por tarea
+- `auth/supabase_client.py::signup()` — fix de regresión: detecta emails ya registrados y confirmados tras D-040 (D-042)
+- `tests/step_defs/test_e03_t03.py` — precondiciones movidas a Admin API, evita rate limit propio del test
+- `decisions.md` — D-030 a D-042
 
 ---
 
