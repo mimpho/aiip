@@ -38,6 +38,19 @@
 - [D-027 — Modelo LLM: cambio de gemini-2.5-flash a gemini-2.5-flash-lite por límite de cuota](#d-027--modelo-llm-cambio-de-gemini-25-flash-a-gemini-25-flash-lite-por-límite-de-cuota)
 - [D-028 — Runbook de mantenimiento de la KB: documento de procedimiento separado de decisions.md](#d-028--runbook-de-mantenimiento-de-la-kb-documento-de-procedimiento-separado-de-decisionsmd)
 - [D-029 — Citación con URL original: cadena de propagación manifest→loader→chunker→pipeline y fallback de 2 niveles](#d-029--citación-con-url-original-cadena-de-propagación-manifestloaderchunkerpipeline-y-fallback-de-2-niveles)
+- [D-030 — TDD por tarea dentro de E-05: aplicar el criterio de D-015 a nivel de tarea, no de épica completa](#d-030--tdd-por-tarea-dentro-de-e-05-aplicar-el-criterio-de-d-015-a-nivel-de-tarea-no-de-épica-completa)
+- [D-031 — Reconciliación de D-013: superficie de auth dentro de Chainlit, no separada](#d-031--reconciliación-de-d-013-superficie-de-auth-dentro-de-chainlit-no-separada)
+- [D-032 — Login con Google: OAuth nativo de Chainlit + sincronización server-side con Supabase (reabre D-014)](#d-032--login-con-google-oauth-nativo-de-chainlit--sincronización-server-side-con-supabase-reabre-d-014)
+- [D-033 — Integración del pipeline RAG en Chainlit: instancia singleton y ejecución no bloqueante](#d-033--integración-del-pipeline-rag-en-chainlit-instancia-singleton-y-ejecución-no-bloqueante)
+- [D-034 — Streaming de tokens: generador async nativo en lugar de `cl.make_async()`, y preservación de listado de fuentes y método `query()` no-streaming](#d-034--streaming-de-tokens-generador-async-nativo-en-lugar-de-clmake_async-y-preservación-de-listado-de-fuentes-y-método-query-no-streaming)
+- [D-035 — Visualización de pasos intermedios: `retrieve()` público, `raw_results` opcional en `aquery_stream()` y `cl.Step` en Chainlit](#d-035--visualización-de-pasos-intermedios-retrieve-público-raw_results-opcional-en-aquery_stream-y-clstep-en-chainlit)
+- [D-036 — Onboarding y disclaimer: mensaje en cada apertura de chat, ubicado en `on_chat_start`, sin color de warning](#d-036--onboarding-y-disclaimer-mensaje-en-cada-apertura-de-chat-ubicado-en-on_chat_start-sin-color-de-warning)
+- [D-037 — Protocolos de tratamiento específicos citados de la KB sin contexto: ajuste de prompt (pendiente de verificación por cuota)](#d-037--protocolos-de-tratamiento-específicos-citados-de-la-kb-sin-contexto-ajuste-de-prompt-pendiente-de-verificación-por-cuota)
+- [D-038 — Theming real de Chainlit: `public/theme.json` como mecanismo de base, `style.css` de E-02 reescrito sobre selectores reales](#d-038--theming-real-de-chainlit-publictheme-json-como-mecanismo-de-base-stylecss-de-e-02-reescrito-sobre-selectores-reales)
+- [D-039 — Arranque de Chainlit vía `CHAINLIT_APP_ROOT` + symlinks, y saludo dinámico como mensaje real para poder themarlo](#d-039--arranque-de-chainlit-vía-chainlit_app_root--symlinks-y-saludo-dinámico-como-mensaje-real-para-poder-themarlo)
+- [D-040 — Flujo completo de autenticación en Chainlit: signup con confirmación de email, recuperación de contraseña vía rutas propias, y descubribilidad del enlace](#d-040--flujo-completo-de-autenticación-en-chainlit-signup-con-confirmación-de-email-recuperación-de-contraseña-vía-rutas-propias-y-descubribilidad-del-enlace)
+- [D-041 — Paso "Documentos consultados" (D-035): se deja de mostrar en el chat, redundante con el listado de fuentes de D-026](#d-041--paso-documentos-consultados-d-035-se-deja-de-mostrar-en-el-chat-redundante-con-el-listado-de-fuentes-de-d-026)
+- [D-042 — signup() no detectaba emails ya registrados y confirmados tras activar "Confirm email" (D-040)](#d-042--signup-no-detectaba-emails-ya-registrados-y-confirmados-tras-activar-confirm-email-d-040)
 
 ---
 
@@ -288,6 +301,37 @@ No se requiere implementar un sistema de compliance completo, pero sí demostrar
 
 **Implicaciones en la documentación**  
 - `docs/security.md` incluirá una sección dedicada a protección de datos además de OWASP y Falso Negativo Cero.
+
+**Actualización — 9 de julio de 2026**
+
+Al formalizar E-05 T-06 (D-040) se detectó que "formulario de registro" (fila de
+"Consentimiento explícito" de la tabla anterior) ya no es un momento estable y único al que
+enganchar el consentimiento: el signup queda mergeado con el login en el mismo formulario fijo
+de Chainlit (sin campos propios, sin saber de antemano si la petición acabará siendo login o
+alta), y ese formulario tampoco puede llevar un texto de consentimiento específico de salud sin
+romper la experiencia de quien solo quiere iniciar sesión.
+
+Revisando el flujo real de datos: `profiles` no guarda ningún dato de salud en el momento de
+crear la cuenta (solo `id`/`role`, ver tabla de "Minimización de datos" arriba) — el dato de
+categoría especial (Art. 9) empieza a fluir en el primer mensaje real del chat, no en el alta.
+Eso permite separar dos eventos que la redacción original de esta decisión daba por unidos:
+**autenticarse** (probar identidad) y **consentir el tratamiento de datos de salud** (autorizar
+esa categoría especial de dato antes de que empiece a circular).
+
+En vez de forzar el consentimiento dentro del formulario de auth, se plantea un gate explícito
+en `on_chat_start`, antes del saludo y de cualquier mensaje — una acción afirmativa real (no
+solo texto informativo, a diferencia del disclaimer de D-036), con el texto específico de
+tratamiento de datos de salud que exige esta decisión. Se registra una vez (mismo mecanismo que
+`user_metadata.full_name` de D-040) y no se repite en logins posteriores. Aplica igual a
+cualquier usuario sin importar si llegó por login, por el signup mergeado, o por Google — el
+gate vive después de la autenticación, no dentro de ella, así que no depende de cómo se resolvió
+D-040.
+
+Esto es una propuesta de arquitectura razonada, no un análisis legal cerrado — antes de
+cualquier uso real más allá del TFM, el texto, el momento exacto y el registro de la prueba de
+consentimiento deben revisarse con criterio legal. Sigue sin implementarse: se documenta aquí
+para que la próxima vez que se aborde (posiblemente junto con el resto de E-08, onboarding) no
+se parta de cero.
 
 ---
 
@@ -550,6 +594,12 @@ El stub de `rag/retriever.py` creado en T-01 (`get_retriever(embeddings, chroma_
 - `rag/language.py` (nuevo módulo, sin stub previo de T-01) expone `detect_language(text: str, default: str = "es") -> str` y `build_language_instruction(language: str) -> str`.
 - La integración real en `rag/pipeline.py` queda fuera de esta tarea — es T-06, mismo patrón que D-016 estableció para el retriever.
 - Si en el futuro se añade un selector explícito de idioma en interfaz (evolución futura de D-011), este fallback deja de ser crítico pero puede mantenerse como red de seguridad.
+
+**Actualización — 9 de julio de 2026:** QA manual sobre el chat real (durante E-05 T-06) encontró
+fallos de detección en frases declarativas cortas de síntomas en español (confianza >0.999,
+mismo patrón de "confianza falsa" ya descrito arriba, pero en frases muy por encima del umbral de
+10 caracteres — el umbral no protege de este caso). Detalle, muestra de pruebas y propuestas de
+mitigación en `backlog/ideas.md` → "Hallazgos del RAG para optimización en E-07", punto 4.
 
 ---
 
@@ -993,6 +1043,653 @@ romper nada; el nivel 2 puede añadirse entonces con un caso de uso real que gu�
 - Pendiente de reindexar la KB completa (`python scripts/smoke_test_rag.py --force-reingest`)
   una vez el código esté en verde, para que los chunks ya indexados lleven `url` en sus metadatos
   — los indexados antes de T-08 no la tienen aunque el manifest ya esté completo.
+
+---
+
+## D-030 — TDD por tarea dentro de E-05: aplicar el criterio de D-015 a nivel de tarea, no de épica completa
+
+**Fecha:** 8 de julio de 2026
+**Fase:** proceso / metodología
+**Épica:** E-05 (epic-start)
+
+**Contexto**
+D-015 clasificó E-05 completa como "sin TDD" por tratarse de una épica de interfaz (Chainlit) con validación mayoritariamente visual (streaming, responsive, theming). Al descomponer la épica en tareas (epic-start, 8 jul 2026), Marcos señaló que, más allá del chat en sí, hay interacción de usuario con lógica real y verificable — señalando el paralelismo con E-03 (autenticación), que sí tiene TDD.
+
+**Decisión**
+Se mantiene el criterio de D-015 ("si el comportamiento es verificable automáticamente y el fallo tiene consecuencias, TDD aplica; si requiere juicio humano, no aplica"), pero aplicado a nivel de tarea dentro de E-05, no como veredicto único para toda la épica — mismo patrón ya usado en E-06 (T-06/T-07 sin TDD dentro de una épica con TDD).
+
+| Tarea | TDD | Justificación |
+|---|---|---|
+| T-01 — Integración del pipeline RAG en el chat | Sí | Lógica de `on_message` (llamada a `RAGPipeline`, manejo de error) verificable sin renderizar browser |
+| T-02 — Streaming nativo de tokens | Sí | Ensamblado del streaming + aplicación diferida de `apply_safety_filter` es lógica pura |
+| T-03 — Visualización de pasos intermedios del RAG | Sí | Estructura de documentos recuperados expuesta por el pipeline es verificable sin `cl.Step` real |
+| T-04 — Onboarding y disclaimers de seguridad | No | Contenido estático, verificación de tono es juicio humano |
+| T-05 — Theming completo + responsive | No | CSS puro, validación visual |
+| T-06 — Smoke test manual E2E | No | Verificación manual por diseño, mismo patrón que E-06 T-07 |
+
+**Alternativas descartadas**
+- Mantener E-05 íntegramente sin TDD (aplicar D-015 literal, sin revisar) — descartado: la propia justificación de D-015 es sobre el tipo de comportamiento, no sobre el nombre de la épica; T-01/T-02/T-03 sí cumplen el criterio.
+- Aplicar TDD a toda la épica, incluyendo T-04/T-05/T-06 — descartado: theming/responsive/contenido estático no ganan cobertura real con pytest, solo coste de mantenimiento (mismo argumento que la alternativa descartada en D-015 original).
+
+**Justificación**
+D-015 no fue una excepción a su propio criterio para E-05 — fue una clasificación a nivel de épica hecha antes de descomponerla en tareas. Con el desglose ya hecho (epic-start E-05), aplicar el criterio original al grano correcto (tarea) es continuidad de D-015, no una decisión nueva contradictoria.
+
+**Consecuencias**
+- T-01, T-02 y T-03 llevan `.feature` (`tests/features/e05_t01_*.feature` a `e05_t03_*.feature`) y step definitions pytest-bdd, formalizados en el Paso 2 de `epic-start`.
+- T-02 y T-03 tocan `rag/pipeline.py` y `rag/generator.py` (código de E-04, ya con TDD) para exponer streaming y documentos recuperados — extensión de la interfaz pública, sin modificar `check_alarm_signals`/`apply_safety_filter`.
+- T-04, T-05 y el smoke test final también llevan `.feature` como checklist de verificación manual (mismo patrón que E-01 y E-06 T-06/T-07: cabecera "Tipo: Configuración manual", escenarios sin step definitions pytest-bdd). El smoke test además deja constancia escrita en `tests/results/`.
+  > Nota (D-031): tras esta decisión se detectó una tarea adicional (UI de auth) que se insertó como T-06, renumerando el smoke test a T-07 — ver D-031 y D-032. El reparto TDD/no-TDD de esta tabla no cambia, solo los números.
+
+---
+
+## D-031 — Reconciliación de D-013: superficie de auth dentro de Chainlit, no separada
+
+**Fecha:** 8 de julio de 2026
+**Fase:** proceso / arquitectura
+**Épica:** E-05 (epic-start)
+
+**Contexto**
+D-013 (E-02) diseñó `tokens.css` asumiendo dos superficies de frontend separadas: Chainlit (chat) y "Auth UI de Supabase", esta última descrita explícitamente como algo que "vive fuera del frontend de Chainlit". E-03 implementó el login con `@cl.password_auth_callback` — el formulario nativo de Chainlit, dentro de la misma SPA que el chat — no una superficie separada. `design/auth/style.css` (creado en E-02) nunca llegó a cargarse: Chainlit solo admite un `custom_css` por app (`config.toml`), y esa ranura ya la ocupa `public/style.css`. Además, no existe hoy ninguna UI de signup ni de login con Google dentro de la app — solo las funciones de backend (`signup()`, `sign_in_with_oauth()`), testeadas de forma aislada en E-03 T-03/T-04.
+
+**Decisión**
+Se abandona la premisa de D-013 de una superficie de auth externa a Chainlit. Toda la autenticación (login, signup, login con Google) vive dentro de la SPA de Chainlit, extendiendo lo ya construido en E-03:
+- Login por email/password: ya resuelto (`password_auth_callback`), sin cambios.
+- Signup: se construye como UI dentro de Chainlit (acción/formulario que llama a `signup()`), no como página separada.
+- Login con Google: se construye como acción dentro de Chainlit que dispara `sign_in_with_oauth("google")` y gestiona el retorno de la sesión de Supabase — sin usar el `@cl.oauth_callback` nativo de Chainlit (eso contradiría D-014, que exige a Supabase como único broker).
+- `design/auth/style.css` se fusiona en `design/public/style.css` (o se retira si resulta redundante con los tokens ya aplicados) — no se mantiene como fichero separado sin consumidor.
+
+**Alternativas descartadas**
+- Construir una página de auth genuinamente separada (HTML/JS con el widget `@supabase/auth-ui-react` o un formulario custom), honrando D-013 al pie de la letra — descartado por plazo: el hito de "código funcional" es el 10 de julio (2 días), y esto añadiría una pieza de frontend nueva fuera del stack Python ya establecido, sin tiempo para validarla con solidez.
+
+**Justificación**
+D-013 fue una decisión de theming tomada antes de que E-03 resolviera cómo se implementaría técnicamente la autenticación. La implementación real (Chainlit nativo) hace innecesaria — y ahora mismo inviable en plazo — la superficie separada que D-013 anticipaba. Mantener dos fuentes de theming cuando solo hay una superficie real de auth introduce un fichero huérfano (`auth/style.css`) sin beneficio.
+
+**Riesgo abierto**
+El login con Google combinando el flujo de Supabase (D-014) con la autenticación no nativa de Chainlit no se ha probado nunca de extremo a extremo — el `.feature` de E-03 T-04 lo dejó explícitamente fuera de alcance ("requiere e2e con Playwright"). La función `sign_in_with_oauth()` genera la URL de Google correctamente (testeado), pero el tramo de vuelta (Supabase → sesión → Chainlit reconoce al usuario) es terreno no verificado. Se investiga y resuelve en `task-start` de la nueva T-06.
+
+**Consecuencias**
+- Nueva tarea T-06 en E-05: UI de autenticación dentro de Chainlit (signup + login Google) + fusión/retirada de `auth/style.css`.
+- La antigua T-06 (smoke test manual E2E) se renumera a T-07, y amplía su alcance para cubrir también signup y login Google, además del chat.
+- `tests/features/e05_t06_e2e_smoke_test.feature` se sustituye por `e05_t07_e2e_smoke_test.feature` (ampliado); se crea `e05_t06_auth_ui.feature`.
+
+---
+
+## D-032 — Login con Google: OAuth nativo de Chainlit + sincronización server-side con Supabase (reabre D-014)
+
+**Fecha:** 8 de julio de 2026
+**Fase:** técnica / arquitectura
+**Épica:** E-05 (epic-start, previo a T-06)
+
+**Contexto**
+D-031 asumió que el login con Google se construiría dentro de Chainlit disparando `sign_in_with_oauth()` (Supabase como broker, sin usar `@cl.oauth_callback` nativo, para no contradecir D-014). Al analizar cómo portar la sesión de Supabase (creada en el navegador) hacia el modelo de sesión de Chainlit, se confirma que Chainlit no tiene ningún punto de extensión soportado para aceptar una sesión externa ya establecida — sus mecanismos de auth (`password_auth_callback`, `oauth_callback`, `header_auth_callback`) están diseñados para que sea Chainlit quien verifique la identidad. Portar la sesión de Supabase requeriría una ruta custom en el backend de Chainlit para el intercambio de código (documentado por Supabase para backends no-Supabase, pero no soportado de forma nativa por Chainlit) — riesgo real de ingeniería para el hito del 10 de julio.
+
+**Decisión**
+Se usa `@cl.oauth_callback` de Chainlit (feature oficial, documentada, con soporte directo para Google) como mecanismo de login con Google. Chainlit gestiona el intercambio OAuth completo con su propio Client ID/Secret de Google (mismo proyecto de Google Cloud ya usado para Supabase — se añade `CHAINLIT_URL/auth/oauth/google/callback` como redirect URI adicional en el mismo Client ID, no se crea una app nueva). Dentro del callback, con el perfil de Google ya verificado (`raw_user_data`), se sincroniza contra Supabase server-side: se busca o crea el usuario en `auth.users` por email vía la Admin API (mismo patrón idempotente que `get_or_create_profile`), y se obtiene/crea su perfil con el role de la app.
+
+Esto reabre y sustituye la alternativa descartada en D-014 ("Chainlit OAuth nativo + sincronización manual a Supabase") — con una matización: la sincronización no es manual, es código automático ejecutado en cada login, con el mismo patrón idempotente ya usado y testeado en `get_or_create_profile` (E-03 T-02).
+
+**Alternativas descartadas**
+- Supabase como broker con ruta custom de intercambio de código en Chainlit (plan original D-014/D-031) — descartado por riesgo de ingeniería no acotado para el plazo del 10 de julio: no es un patrón soportado de forma nativa por Chainlit, exigiría construir y validar una integración sin precedente en el proyecto.
+- Aplazar el login con Google fuera del hito — descartado: Marcos prioriza tenerlo funcional ahora que se ha identificado que E-03 lo dejó a medias.
+
+**Justificación**
+`@cl.oauth_callback` es infraestructura ya construida y mantenida por Chainlit, de bajo riesgo de implementación. El coste que D-014 quería evitar (mantener dos sistemas de identidad sincronizados a mano) se reduce a unas pocas líneas de sincronización automática e idempotente, ya con precedente probado en el propio repo (`get_or_create_profile`). Supabase sigue siendo la fuente de verdad de `auth.users`/`profiles` — lo que cambia es quién orquesta el handshake con Google, no dónde vive la identidad.
+
+**Consecuencias**
+- T-06 de E-05 implementa `@cl.oauth_callback` en `chainlit/main_family.py` (y `main_professional.py` si aplica, aunque el perfil profesional está bloqueado — a confirmar en `task-start`).
+- Nueva configuración: Client ID y Secret de Google para Chainlit (variables estándar de Chainlit para OAuth) — a añadir en `.env.example`. Reutilizan el mismo Client ID ya creado para Supabase (D-014); solo se añade un redirect URI nuevo en Google Cloud Console.
+- `auth/supabase_client.py` gana una función de sincronización (get-or-create de `auth.users` por email vía Admin API) para usar dentro del callback — a diseñar en `task-start` de T-06.
+- El `.feature` de E-03 T-04 (`sign_in_with_oauth`) queda como código no usado en el flujo real de la app familiar — se mantiene por ahora (la función es correcta y testeada, podría reutilizarse si se cambia de estrategia más adelante), pero deja de ser el mecanismo activo de login con Google.
+- D-031 queda desactualizada en el punto concreto del mecanismo de login con Google (se mantiene sin editar, como registro histórico) — esta entrada la sustituye en ese aspecto.
+
+---
+
+## D-033 — Integración del pipeline RAG en Chainlit: instancia singleton y ejecución no bloqueante
+
+**Fecha:** 8 de julio de 2026
+**Fase:** técnica / arquitectura
+**Épica:** E-05 (task-start T-01)
+
+**Contexto**
+El `.feature` de T-01 (`e05_t01_chat_pipeline_integration.feature`) da por hecho que "existe una instancia de RAGPipeline disponible para la sesión", sin precisar su ciclo de vida. `RAGPipeline.__init__` carga el modelo de embeddings `bge-m3` y abre la conexión a ChromaDB — coste no trivial de tiempo y memoria. Además, `RAGPipeline.query()` es síncrono y bloqueante (sin streaming, eso es T-02): invocarlo directamente dentro de un handler `async` de Chainlit (`on_message`) bloquearía el event loop para todas las sesiones activas mientras se genera una respuesta, incluido el indicador de "escribiendo" del Escenario 2.
+
+**Decisión**
+- El `RAGPipeline` se instancia una única vez a nivel de módulo en `chainlit/main_family.py` (singleton cargado al arrancar la app), no por sesión en `on_chat_start`. Todas las sesiones reutilizan la misma instancia.
+- La llamada a `pipeline.query()` dentro de `on_message` se envuelve con `cl.make_async()` (utilidad de Chainlit para ejecutar código síncrono en un executor) para no bloquear el event loop.
+
+**Alternativas descartadas**
+- Instancia de `RAGPipeline` por sesión (`on_chat_start`) — descartado: recarga `bge-m3` y reabre Chroma en cada login, coste innecesario sin beneficio de aislamiento (el pipeline no tiene estado mutable por usuario).
+- Llamada directa y síncrona a `pipeline.query()` sin `cl.make_async()` — descartado: bloquearía el servidor Chainlit completo (todas las sesiones) mientras el LLM genera, y el indicador de carga del Escenario 2 dejaría de ser fiable.
+
+**Justificación**
+El pipeline es stateless respecto al usuario (no guarda historial ni contexto de sesión dentro de `RAGPipeline`), por lo que compartir una instancia entre sesiones es seguro y evita el coste de recarga. `cl.make_async()` es el mecanismo estándar de Chainlit para este caso — evita introducir un executor custom.
+
+**Consecuencias**
+- `chainlit/main_family.py` gana una instancia de módulo `_pipeline = RAGPipeline(load_rag_config())` (o construcción lazy en el primer uso) y un handler `on_message` que la invoca vía `cl.make_async()`.
+- T-02 (streaming) tendrá que revisar si `cl.make_async()` sigue siendo el patrón correcto cuando el pipeline exponga generación por tokens, o si pasa a usar un generador async nativo — a decidir en el `task-start` de T-02.
+- Si en el futuro `RAGPipeline` gana estado por sesión (p. ej. historial conversacional), esta decisión de singleton habría que revisitarla.
+
+---
+
+## D-034 — Streaming de tokens: generador async nativo en lugar de `cl.make_async()`, y preservación de listado de fuentes y método `query()` no-streaming
+
+**Fecha:** 8 de julio de 2026
+**Fase:** técnica / arquitectura
+**Épica:** E-05 (task-start T-02)
+
+**Contexto**
+D-033 dejó explícitamente abierto si `cl.make_async()` (patrón usado en T-01 para envolver `RAGPipeline.query()` síncrono) seguía siendo el patrón correcto una vez el pipeline expone generación por tokens, o si convenía pasar a un generador async nativo. Además, al diseñar T-02 surgieron dos puntos no cubiertos por el `.feature` original de T-02 (`e05_t02_streaming.feature`): qué pasa con el listado de fuentes (D-026), presente hoy en `RAGPipeline.query()` pero no mencionado en ningún escenario de streaming; y qué pasa con `RAGPipeline.query()` en sí, dado que cambiar `on_message` a streaming invalida las aserciones actuales de `tests/step_defs/test_e05_t01.py` (mockean `.query()`).
+
+**Decisión**
+- **Streaming nativo, no `cl.make_async()`:** `RAGGenerator` gana `agenerate_stream()` (usa `self._llm.astream(prompt)` de LangChain) y `RAGPipeline` gana `aquery_stream()`, ambos generadores async. `chainlit/main_family.py` consume `aquery_stream()` con `async for token in ...: await message.stream_token(token)` directamente en `on_message`, sin envolver nada en `cl.make_async()`. Chainlit es async-first y `astream()` es I/O async nativo — no hay código síncrono bloqueante que envolver.
+- **Listado de fuentes se preserva:** `aquery_stream()` reproduce el comportamiento de `query()` — tras ensamblar el texto completo y aplicar `apply_safety_filter`, si `_build_sources_section()` devuelve contenido, se emite como fragmento final adicional (después del recordatorio de seguridad si lo hay). Sin este paso, el usuario dejaría de ver de qué documentos sale la respuesta — regresión respecto a T-01.
+- **`RAGPipeline.query()` se mantiene intacto, sin tocar:** no se elimina ni se reimplementa en términos de `aquery_stream()`. Lo seguirá usando la evaluación RAGAS de E-07/E-09 (necesita respuesta completa, no streaming). `aquery_stream()` es un método nuevo y paralelo, no un reemplazo.
+- **Ajuste mínimo a T-01 (excepción al criterio de "no tocar tareas cerradas"):** dado que `on_message` deja de invocar `.query()`, se actualiza `tests/step_defs/test_e05_t01.py` (mocks de `.query` → ya no aplican al flujo real) y la redacción del paso "se invoca RAGPipeline.query() con esa pregunta" en `e05_t01_chat_pipeline_integration.feature`, sin cambiar el comportamiento que ese escenario valida.
+
+**Alternativas descartadas**
+- Mantener `cl.make_async()` envolviendo un generador síncrono (`self._llm.stream()` consumido dentro de una función síncrona) — descartado: reintroduce el problema que `cl.make_async()` resuelve para llamadas puntuales pero no para iteración token a token; consumir un iterador síncrono lento dentro de un executor sigue bloqueando ese hilo del pool por sesión activa, sin ganar nada frente a `astream()` nativo.
+- Dejar el listado de fuentes fuera de T-02 (diferirlo a una tarea futura) — descartado: regresión funcional visible inmediatamente en producción en cuanto se mergee T-02.
+- Reimplementar `query()` como wrapper síncrono sobre `aquery_stream()` (para no mantener dos rutas) — descartado: añade complejidad de puente async→sync innecesaria; ambos métodos comparten la lógica de retrieval/filtro por composición interna simple, no vale la pena forzar una única implementación.
+
+**Consecuencias**
+- Nuevos métodos: `RAGGenerator.agenerate_stream()`, `RAGPipeline.aquery_stream()`.
+- `chainlit/main_family.py::on_message` pasa a ser un `async for` sobre `aquery_stream()`, usando `cl.Message.stream_token()`.
+- `tests/step_defs/test_e05_t01.py` y el Scenario 1 de `e05_t01_chat_pipeline_integration.feature` se ajustan como excepción justificada (ver arriba).
+- `tests/features/e05_t02_streaming.feature` se amplía con dos escenarios: error durante el streaming, y preservación del listado de fuentes.
+
+---
+
+## D-035 — Visualización de pasos intermedios: `retrieve()` público, `raw_results` opcional en `aquery_stream()` y `cl.Step` en Chainlit
+
+**Fecha:** 8 de julio de 2026  
+**Fase:** técnica / arquitectura  
+**Épica:** E-05 (task-start T-03)
+
+**Contexto**  
+El criterio de E-05 T-03 ("Visualización de pasos intermedios del RAG") requiere que el usuario vea
+qué documentos ha recuperado el sistema *antes* de recibir la respuesta. El `.feature` original
+(creado en `epic-start`) solo cubría que `RAGPipeline` expone los documentos como estructura de
+datos; no cubría el wiring en `chainlit/main_family.py` ni el componente de UI. Además, `aquery_stream()`
+hace internamente la llamada a `similarity_search_with_score` — si `main_family.py` quisiera
+renderizar los documentos *antes* de llamar a `aquery_stream()`, necesitaría llamar al vectorstore
+de nuevo, duplicando la consulta (violación del Scenario 3 del `.feature`). Había que decidir cómo
+extraer el retrieval sin romper la retrocompatibilidad con los tests de T-01 y T-02.
+
+**Decisión**  
+Tres cambios coordinados, todos con mínimo diff y retrocompatibles:
+
+1. **`RAGPipeline.retrieve(question: str) -> list[tuple[Document, float]]`** — nuevo método público
+   que encapsula exactamente la llamada a `self._vectorstore.similarity_search_with_score(question,
+   k=self._top_k)`. No añade lógica nueva; solo extrae lo que ya existía inline en `query()` y
+   `aquery_stream()`. El tipo de retorno es idéntico al de Chroma, sin wrappers adicionales.
+
+2. **`aquery_stream(question, raw_results=None)`** — añade parámetro opcional. Si `raw_results`
+   es `None` (default), hace la llamada al vectorstore internamente como siempre — sin cambio
+   de comportamiento para todos los tests y el código de T-01/T-02. Si el llamador pasa
+   `raw_results`, los reutiliza sin segunda consulta.
+
+3. **`main_family.on_message` usa `cl.Step`** — llama primero a `pipeline.retrieve(question)`,
+   abre un `cl.Step` con los documentos recuperados (fuente/filename, score, extracto de ~200
+   caracteres de `page_content`), y pasa esos resultados como `raw_results` a `aquery_stream()`.
+   El step se cierra antes de que empiece el streaming de la respuesta.
+
+**Alternativas descartadas**  
+- *Callback `on_retrieval`* (opción B propuesta en la revisión de Marcos): más indirecto, sin
+  ventaja real aquí — el llamador ya tiene el control del flujo en `on_message`, un callback
+  añade una capa de indirección sin simplificar nada.
+- *Segunda llamada al vectorstore desde `main_family.py` sin cambiar `aquery_stream()`* —
+  descartado: viola el Scenario 3 del `.feature` ("sin una segunda consulta al vectorstore") y
+  duplica un coste no trivial (búsqueda semántica en ChromaDB) en cada mensaje.
+- *Exponer `raw_results` como atributo de instancia del pipeline* — descartado: introduce estado
+  mutable entre llamadas en un singleton sin protección de concurrencia (D-033 fija que el
+  pipeline es stateless respecto al usuario).
+
+**Justificación**  
+Opción A (mínimo diff) resuelve el problema con el menor impacto sobre el código ya probado:
+`retrieve()` es una extracción pura de código existente, y el parámetro opcional en `aquery_stream()`
+es retrocompatible por diseño. El patrón de inyectar resultados ya calculados es más directo que
+cualquier mecanismo de callback para un flujo donde el llamador ya tiene control secuencial.
+
+**Componente UI: `cl.Step`**  
+El componente natural de Chainlit para pasos intermedios de un agente. Aparece en la UI como
+burbuja colapsable con nombre propio, antes del mensaje de respuesta. Se abre como context manager
+async (`async with cl.Step(...) as step:`), lo que garantiza que se cierra y renderiza antes de
+que empiece el `async for` del streaming.
+
+**Contenido del paso (aprobado por Marcos):**
+- `source/filename` por documento (metadatos garantizados por D-022/D-029)
+- Score de similitud (float, redondeado a 2 decimales)
+- Extracto: primeros ~200 caracteres de `page_content` (no el chunk completo)
+
+**Consecuencias**
+- `rag/pipeline.py`: nuevo método `retrieve()`, firma ampliada de `aquery_stream()` (parámetro
+  `raw_results=None`). `query()` no se toca (D-034).
+- `chainlit/main_family.py`: nuevo helper `_format_retrieval_step()` + uso de `cl.Step` en
+  `on_message`.
+- `tests/step_defs/test_e05_t03.py`: nuevo fichero con 4 escenarios. Los tests de T-01/T-02 no
+  se modifican (retrocompatibilidad garantizada).
+- `tests/features/e05_t03_rag_steps_visualization.feature`: actualizado con el 4.º escenario
+  de wiring Chainlit.
+
+---
+
+## D-036 — Onboarding y disclaimer: mensaje en cada apertura de chat, ubicado en `on_chat_start`, sin color de warning
+
+**Fecha:** 8 de julio de 2026
+**Fase:** técnica / diseño
+**Épica:** E-05 (task-start T-04)
+
+**Contexto**
+T-04 (D-030: sin TDD, validación manual) implementa el mensaje de bienvenida y
+el recordatorio de que AIIP no diagnostica (PRD 6.1). Al revisar la tarea
+surgieron dos puntos abiertos: (1) el `.feature` hablaba de "primera vez",
+pero `on_chat_start` en `chainlit/main_family.py` no tiene ningún estado
+persistido que distinga el primer login real de sesiones siguientes; (2) dónde
+vive el contenido — `chainlit.md` (boilerplate de Chainlit por defecto, sin
+personalizar) se lee del mismo directorio raíz para las apps family y
+professional, mientras que `on_chat_start` ya existe como código específico
+de family (hoy solo envía `"Sesión iniciada. Perfil: {role}"`).
+
+Además, Marcos señaló que existen plantillas de diseño (Claude Design,
+`docs/design/screens-chat.html`) que usan los tokens de `design/public/tokens.css`
+ya establecidos en E-02. Esos mockups muestran un recordatorio persistente
+("Informational — does not replace medical judgment.") en color de texto
+muted, y un banner de escalada en ámbar ("When in doubt, always contact your
+medical team.") reservado explícitamente en `tokens.css` — comentario
+`--color-warning: reserved — Zero False Negative only` — para las respuestas
+donde `rag/safety.py` detecta un trigger de alarma, no para recordatorios
+rutinarios.
+
+**Decisión**
+1. El mensaje de onboarding se muestra en **cada apertura de chat** (cada
+   `on_chat_start`), no solo en el primer login real — sin añadir estado
+   nuevo en Supabase/`profiles` para esto.
+2. Se implementa **extendiendo `on_chat_start` en `chainlit/main_family.py`**
+   (sustituyendo el placeholder actual), no en `chainlit.md` — evita acoplar
+   el contenido de family con el stub de professional.
+3. El mensaje se envía como `cl.Message` de texto/markdown plano, **sin**
+   usar el color de warning/ámbar (`--color-warning` está reservado a
+   Falso Negativo Cero) — el tono visual, si se necesita alguno más allá del
+   texto plano, debe tratarse como informativo neutro (mismo registro que el
+   footer "Informational — does not replace medical judgment." de los
+   mockups), y su estilo final lo aplica T-05 (theming), no T-04.
+
+**Consecuencias**
+- `tests/features/e05_t04_onboarding_disclaimers.feature` se actualiza: el
+  Given pasa de "inicio sesión por primera vez" a "abro el chat", coherente
+  con el punto 1.
+- `chainlit.md` queda sin tocar en esta tarea.
+- Antigravity no debe introducir estilos ámbar/warning al implementar el
+  mensaje de T-04; si T-05 necesita revisar el tratamiento visual del
+  onboarding, parte de este mismo criterio.
+
+**Addendum (8 jul 2026) — preguntas sugeridas (starters)**
+Ampliación de alcance decidida por Marcos dentro de la misma tarea: se añaden
+preguntas sugeridas bajo el mensaje de bienvenida. Las cuatro preguntas
+iniciales son informativas y coherentes con `[TONO — PERFIL FAMILIAR]`; una de
+ellas ("¿Cuándo deberíamos acudir a urgencias?") ejercita a propósito la
+filosofía de Falso Negativo Cero (PRD 6.2) desde el primer contacto con la app.
+
+Primer intento: mecanismo nativo `@cl.set_starters` de Chainlit (2.11.1). Se
+descartó tras verificar en el bundle del frontend (`chainlit/frontend/dist/assets/index-*.js`)
+que la pantalla de starters solo se pinta cuando el hilo no tiene ningún
+mensaje (`assistant_message`/`user_message`) — y `on_chat_start` ya manda el
+mensaje de bienvenida como `assistant_message`, así que los starters nativos
+nunca llegaban a mostrarse. Implementación final: los starters se adjuntan
+como `cl.Action` al propio mensaje de bienvenida (`chainlit/main_family.py`),
+con un `@cl.action_callback` que ejecuta la misma lógica compartida
+(`_answer()`) que `on_message`.
+
+---
+
+## D-037 — Protocolos de tratamiento específicos citados de la KB sin contexto: ajuste de prompt (pendiente de verificación por cuota)
+
+**Fecha:** 8 de julio de 2026
+**Fase:** técnica / seguridad
+**Épica:** E-05 (detectado durante QA manual de T-04, afecta a `rag/generator.py` — E-04)
+
+**Contexto**
+Al probar la pregunta sugerida "¿Cuándo deberíamos acudir a urgencias?"
+(añadida en el addendum de starters de D-036), la respuesta incluyó un
+párrafo con instrucciones de actuación muy específicas — "administra un
+antitérmico y acude a Urgencias", "detén la administración [de la infusión]",
+"administra analgesia" — tomadas de `guia_antibiotics_esp_0.pdf` e
+`infusiones-de-IGS-subcutaneas.pdf`. Esos documentos describen protocolos de
+actuación **condicionados a estar recibiendo una infusión de inmunoglobulina
+subcutánea pautada por el equipo médico**, no información general sobre
+cuándo acudir a urgencias — el contexto que scopeaba esas instrucciones en el
+PDF original (la sección/cabecera del documento) se pierde en el chunking, y
+el LLM las presenta como si aplicaran a cualquier persona.
+
+Se valoró filtrar esto en la capa de retrieval (similar a `alarm_triggers.json`,
+D-019), pero se descarta un filtro por patrón/palabra clave como mecanismo
+único: distinguir "protocolo condicionado a una prescripción/diagnóstico
+previo" de "información general de seguridad" es un juicio clínico, no un
+patrón léxico fiable — mismo tipo de límite que motivó que D-019 exigiera
+validación de Jacques en vez de una lista escrita solo por el equipo técnico.
+Una capa de metadatos por chunk curada clínicamente queda como posible mejora
+de medio plazo (no abordada en esta decisión).
+
+**Decisión**
+Como primera mitigación, se añade una restricción explícita a
+`[RESTRICCIONES ABSOLUTAS]` en `prompts/system_prompt_family.txt`: si el
+contexto recuperado incluye instrucciones de actuación de un tratamiento
+concreto (medicación, cuándo detener una infusión, reacción a un
+procedimiento pautado), el LLM no debe repetirlas como pauta general —debe
+indicar que son un protocolo específico del equipo médico del paciente y
+remitir a seguirlo/confirmarlo con él, en vez de listar los pasos como
+recomendación propia.
+
+**Sin verificar todavía:** no se pudo confirmar el efecto contra una
+respuesta real — la cuota diaria gratuita de `gemini-2.5-flash-lite` estaba
+agotada en el momento de este cambio (mismo límite de D-027, 20
+peticiones/día). Pendiente de repetir la pregunta "¿Cuándo deberíamos acudir
+a urgencias?" cuando se reponga la cuota y confirmar si el párrafo problemático
+desaparece o se reformula con el descargo adecuado.
+
+**Consecuencias**
+- Si la verificación manual muestra que el ajuste de prompt no es suficiente
+  (el LLM sigue repitiendo instrucciones de tratamiento sin descargo), la
+  capa de metadatos curada clínicamente pasa a ser la vía a explorar, no un
+  filtro por palabras clave.
+- Este hallazgo es distinto de los ya registrados en `backlog/ideas.md`
+  ("Hallazgos del RAG para optimización en E-07"): aquellos son de retrieval
+  puro (ruido semántico), este es de generación/seguridad — el contexto
+  recuperado puede ser correcto y aun así requerir que el LLM no lo repita
+  literalmente.
+
+---
+
+## D-038 — Theming real de Chainlit: `public/theme.json` como mecanismo de base, `style.css` de E-02 reescrito sobre selectores reales
+
+**Fecha:** 9 de julio de 2026
+**Fase:** técnica / UI
+**Épica:** E-05 (detectado en task-start de T-05)
+
+**Contexto**
+Al arrancar T-05 (theming completo + responsive) se inspeccionó el CSS
+compilado real de Chainlit 2.11.1 (`chainlit/frontend/dist/assets/index-*.css`
+del paquete instalado) y `chainlit/server.py`, para verificar que
+`design/public/style.css` (entregable de E-02) efectivamente aplica sobre el
+chat real. El resultado: no aplica. `style.css` define variables
+`--cl-color-background`, `--cl-color-primary`, etc. y clases como
+`.cl-message-user`, `.cl-input-wrapper`, `.cl-source-reference`,
+`.cl-sidebar`, `.cl-send-button` — ninguna de ellas existe en el CSS/DOM real
+de Chainlit. El bundle compilado no contiene ni una sola clase `.cl-*`; usa el
+esquema de variables shadcn/Tailwind con el que se construye su frontend:
+`--primary`, `--background`, `--foreground`, `--accent`, `--border`,
+`--sidebar-*`, `--radius`, `--font-sans`, `--font-mono`.
+
+Chainlit expone un mecanismo oficial para mapear estas variables que E-02 no
+usó: un fichero `public/theme.json`, que `chainlit/server.py`
+(`get_html_template`) lee y expone como `window.theme = {variables}`
+inyectado en el HTML — es la vía soportada para fijar la paleta de marca.
+`custom_css` (lo único configurado hoy, `.chainlit/config.toml` →
+`custom_css = "/public/style.css"`) es un `<link>` adicional pensado para
+extras (el borde animado del input, ajustes puntuales), no para redefinir la
+paleta base.
+
+Con alta probabilidad esto significa que el theming de E-02 nunca se aplicó
+al chat real — E-02 se dio por completada validando contra comps generados
+con v0/Claude Design, no contra un servidor Chainlit corriendo con
+inspección de navegador.
+
+**Decisión**
+T-05 amplía su alcance más allá de "repasar y hacer responsive":
+1. Crear `design/public/theme.json` mapeando los tokens de `tokens.css` al
+   esquema real de Chainlit (`primary`, `background`, `foreground`, `accent`,
+   `border`, `sidebar-*`, `radius`, fonts vía `custom_fonts`).
+2. Reescribir los selectores de `design/public/style.css` que hoy apuntan a
+   clases `.cl-*` inexistentes, sustituyéndolos por las clases reales del DOM
+   de Chainlit (message bubbles, input composer, sidebar, `cl.Step`,
+   `cl.Action`/chips, alerta de warning).
+3. La identificación exacta de esas clases reales requiere arrancar Chainlit
+   local + inspección con devtools — no se puede completar en Cowork sin
+   navegador conectado. Se hace en Antigravity durante la implementación,
+   como parte del ciclo de validación manual de T-05 (D-030: T-05 es "sin
+   TDD", pero sigue llevando rama + PR propia — ver excepción de
+   `skills/task-start`).
+
+**Alternativas descartadas**
+- Dar T-05 por un simple "pulido visual" sobre un theming que se asume
+  funcional — descartado tras confirmar con evidencia (bundle CSS real) que
+  el theming base no se aplica; construir responsive/polish sobre una base
+  que no renderiza sería trabajo perdido.
+- Resolver la identificación de selectores reales desde Cowork inspeccionando
+  solo el JS/CSS minificado sin arrancar servidor — descartado como método
+  principal: es indicativo pero no fiable al 100% sin ver el DOM renderizado;
+  se usa como apoyo, no como sustituto de la inspección en Antigravity.
+
+**Justificación**
+El bundle CSS compilado es la fuente de verdad de qué selectores/variables
+existen realmente — no hay ambigüedad en que `.cl-*` no aparece ni una vez.
+Usar el mecanismo oficial (`theme.json`) en vez de seguir intentando forzar
+variables inventadas via `custom_css` es la vía soportada por el framework y
+evita mantenimiento futuro sobre una integración que nunca funcionó.
+
+**Consecuencias**
+- `design/public/style.css` de E-02 pasa a tener que revisarse en T-05 —
+  no se toca `tokens.css` (sigue siendo la fuente de verdad de valores), pero
+  sí el fichero que los traduce a Chainlit.
+- E-02 no se reabre formalmente (sus tokens y el enfoque "CSS custom
+  properties como fuente de verdad" de D-013 siguen vigentes); lo que cambia
+  es únicamente el mecanismo de traducción hacia Chainlit.
+- `design/auth/style.css` (Supabase Auth UI) no está afectado por este
+  hallazgo — es un sistema de theming distinto (D-031 ya lo dejó fuera de
+  Chainlit); se revisa por separado si hace falta, no en T-05.
+
+---
+
+## D-039 — Arranque de Chainlit vía `CHAINLIT_APP_ROOT` + symlinks, y saludo dinámico como mensaje real para poder themarlo
+
+**Fecha:** 9 de julio de 2026
+**Fase:** técnica / UI
+**Épica:** E-05 (implementación de T-05 en Antigravity)
+
+**Contexto**
+Al implementar D-038 (theme.json + selectores reales) surgieron dos
+decisiones de arquitectura no anticipadas en el plan de T-05
+(`tasks/E05-T05-plan.md`), tomadas durante el ciclo de validación manual con
+Marcos.
+
+**1. Resolución de `CHAINLIT_APP_ROOT`**
+
+El plan dejaba abierto cómo `public_dir` de Chainlit (`APP_ROOT/public`)
+llega a resolver a `design/public/`, dado que `chainlit/family/config.toml`
+vive en un directorio distinto y el repo no documentaba el comando de
+arranque. Se resuelve así:
+- La app se lanza con `CHAINLIT_APP_ROOT=chainlit/family` (fija tanto
+  `.chainlit/config.toml` como `public/` relativos a ese directorio).
+- `chainlit/family/config.toml` se mueve a `chainlit/family/.chainlit/config.toml`
+  (ubicación que Chainlit espera dentro de `APP_ROOT`).
+- `chainlit/family/public` es un symlink a `../../design/public` — evita
+  duplicar los assets de diseño (D-013: `tokens.css` sigue siendo la única
+  fuente de verdad).
+- `chainlit/family/.chainlit/translations` es un symlink a
+  `../../../.chainlit/translations` — reutiliza las traducciones ya
+  existentes en la raíz del repo sin duplicarlas.
+- Comando completo documentado en `README.md` → "Setup local":
+  `CHAINLIT_APP_ROOT=chainlit/family PYTHONPATH=. chainlit run chainlit/main_family.py -w --port ${PORT_FAMILY:-8000}`.
+- Efecto colateral: Chainlit exige `CHAINLIT_AUTH_SECRET` con esta
+  configuración — añadido a `.env.example` como placeholder.
+
+**2. Saludo dinámico (`_greeting()`) como mensaje real, no solo CSS**
+
+El comp de referencia (`docs/design/screens/AIIP Phase 2 - Chat.dc.html`)
+incluye un título tipográfico grande sobre el chat que Chainlit no tiene
+como componente nativo — no hay forma de inyectarlo solo con CSS sin
+`custom_js` (descartado: D-038 ya fija `theme.json` + `custom_css` como
+mecanismo, sin añadir una superficie de JS nueva para esto). Se opta por
+generar contenido real: `chainlit/main_family.py` añade `_greeting()`, que
+compone un saludo por hora del día del servidor ("Buenos días" / "Buenas
+tardes" / "Buenas noches", con el identifier del usuario si hay sesión) y lo
+envía como un `cl.Message` propio, antes del mensaje de bienvenida de D-036.
+`style.css` lo detecta con `[data-step-type="assistant_message"]:first-child`
+(siempre el primer mensaje del hilo) y lo despoja del tratamiento de tarjeta
+para renderizarlo como texto de título.
+
+**Alternativas descartadas**
+- Añadir `custom_js` para inyectar un elemento de título vía DOM — descartado
+  por introducir una superficie de personalización adicional (JS) para un
+  único elemento de texto, cuando un mensaje real de Chainlit ya resuelve lo
+  mismo sin código nuevo del lado cliente.
+- Hardcodear el saludo sin franja horaria por usuario — aceptado como
+  limitación conocida (no hay zona horaria por perfil todavía); usa la hora
+  del servidor.
+
+**Justificación**
+Ambas decisiones resuelven bloqueos reales encontrados al verificar T-05 con
+la app corriendo de verdad (no contra mocks): sin `CHAINLIT_APP_ROOT` ningún
+cambio de `theme.json`/`style.css` es visible; sin un mensaje real, el título
+del comp de referencia no tiene dónde enganchar un selector CSS válido.
+
+**Consecuencias**
+- El perfil profesional (`chainlit/professional/`) necesitará el mismo
+  cableado de `CHAINLIT_APP_ROOT` + symlinks cuando se aborde (F-01) — no
+  verificado todavía, ver nota en `README.md`.
+- `on_chat_start` ahora envía dos mensajes (saludo + bienvenida) en vez de
+  uno — cambio de comportamiento observable para el usuario, cubierto solo
+  implícitamente por el `.feature` de T-05 (no hay escenario Gherkin
+  dedicado al saludo en sí, más allá de su theming).
+- Si en el futuro se añade zona horaria por perfil (E-08, memoria de
+  perfil), `_greeting()` es el punto a revisar.
+
+---
+
+## D-040 — Flujo completo de autenticación en Chainlit: signup con confirmación de email, recuperación de contraseña vía rutas propias, y descubribilidad del enlace
+
+**Fecha:** 9 de julio de 2026
+**Fase:** técnica / arquitectura
+**Épica:** E-05 (task-start T-06)
+
+**Contexto**
+Al formalizar T-06 se detectó que `e05_t06_auth_ui.feature` (creado en `epic-start`) daba por buenos dos mecanismos que Chainlit 2.11.1 no soporta: una acción de signup independiente del login, y un mensaje de error personalizado en la pantalla de login. Verificado contra el código fuente instalado (`.venv/.../chainlit`), la documentación oficial (`docs.chainlit.io/authentication/password`) y las traducciones (`.chainlit/translations/es.json`): `password_auth_callback` es un formulario fijo (email + password + submit) que solo devuelve `cl.User` o `None`, sin canal de mensajes custom, sin campo de confirmación de contraseña y sin enlace de "olvidé mi contraseña". Además, ni la confirmación de email de signup ni la recuperación de contraseña de Supabase tienen dónde aterrizar dentro de Chainlit: ambos son flujos basados en un enlace de correo que Supabase espera resolver contra una URL propia de la aplicación (`{{ .ConfirmationURL }}` / `verifyOtp`), y Chainlit no expone ninguna ruta para ello.
+
+**Decisión**
+
+1. **Signup mergeado en `password_auth_callback`** (ya aprobado): intenta `login()`; si falla, intenta `signup()` con las mismas credenciales. Sin campo de confirmación de contraseña ni mensaje distinguible en la UI — limitación aceptada del formulario único de Chainlit.
+2. **"Confirm email" se mantiene activado** en el proyecto Supabase (verificar/activar en el dashboard si no lo estuviera ya — paso manual de Marcos). Se descarta desactivarlo: la única razón para hacerlo era evitar construir una pantalla de "revisa tu correo", y el punto 3 la construye de todos modos para la recuperación de contraseña, así que ya no supone ahorro real. Mantenerlo activado es más coherente con el espíritu de D-009 (no ser descuidados dando de alta cuentas sobre datos de salud) sin coste adicional.
+3. **Rutas propias registradas sobre la misma app de Chainlit**, no una sub-aplicación aparte: `chainlit run <target>` hace internamente `from chainlit.server import app` y carga el módulo objetivo sobre esa instancia antes de arrancar uvicorn — así que `chainlit/main_family.py` puede hacer `from chainlit.server import app` y añadir `@app.get/post(...)` directamente, sin `mount_chainlit()`, sin prefijo de path nuevo y sin tocar el comando de arranque de D-039. Dos rutas:
+   - `GET/POST /auth/forgot-password` — formulario mínimo (email) que dispara `reset_password_for_email()`. Punto de entrada inevitablemente distinto: es el único paso sin token todavía.
+   - `GET/POST /auth/confirm` — recibe `token_hash` + `type` (`signup` | `recovery`) y llama a `verify_otp({token_hash, type})`, patrón server-side recomendado por la documentación oficial de Supabase para evitar depender de JS/fragmentos de URL. Compartida entre signup y recovery — la verificación es idéntica, solo cambia la rama final: `type=signup` muestra "cuenta confirmada" con enlace a `/login`; `type=recovery` muestra un formulario de nueva contraseña que hace `POST` a la misma ruta y llama a `update_user({"password": ...})`.
+4. **Plantillas de email de Supabase reescritas** (Auth > Email Templates, dashboard — paso manual de Marcos) para que "Confirm signup" y "Reset password" apunten a `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup|recovery` en vez del `{{ .ConfirmationURL }}` por defecto.
+5. **Descubribilidad del "olvidé mi contraseña"**: `custom_js` (nuevo, p. ej. `/public/auth.js`) inyecta un enlace a `/auth/forgot-password` en la pantalla de login de Chainlit. Única superficie de personalización JS del proyecto además de la que D-038 evitó explícitamente — allí se descartó por existir una alternativa nativa (un `cl.Message` real); aquí no existe ninguna, es la única vía para que el enlace sea descubrible sin salir del flujo del producto.
+6. **Login con Google:** sin cambios — D-032 sigue vigente tal cual.
+7. **Nombre para personalización, pedido en el chat, no en el formulario de signup:** el formulario de Chainlit no admite un campo de nombre (límite duro, ver contexto). En vez de eso, `on_chat_start` comprueba si el usuario ya tiene `full_name` en su `user_metadata` de Supabase Auth; si no lo tiene (primer login), lo pide con `cl.AskUserMessage` antes del saludo/bienvenida y lo persiste vía `update_user_by_id()` (Admin API, mismo patrón de `get_or_create_profile`) usando el `user_id` propagado en `cl.User.metadata` desde `login()`/`signup()`/`oauth_callback`. Para cuentas de Google, `raw_user_data` ya trae el nombre — se guarda igual en `user_metadata.full_name` en el primer login, sin preguntar nunca en el chat. `_greeting()` (D-039) pasa a usar `full_name` si existe; si no (p. ej. el usuario no respondió a `cl.AskUserMessage` en ese primer `on_chat_start`), el saludo se muestra sin nombre — no se usa `identifier` (email) como sustituto, resulta impersonal mostrar un correo en un saludo.
+
+8. **Frontend de las rutas propias (`/auth/forgot-password`, `/auth/confirm`):** implementación con criterio de frontend senior — plantilla base compartida (tarjeta, campo de formulario con su propio slot de mensaje de error, botón) reutilizada entre las tres variantes de pantalla (solicitar recuperación, confirmar signup, fijar nueva contraseña), CSS propio sin estilos en línea, usando los mismos tokens de `design/public/tokens.css` que el resto de la app para que el look&feel sea coherente con la maqueta (`docs/design/standalone-html/screens-auth.html`, solo como guía visual, no HTML a portar literalmente) y con la pantalla de login nativa de Chainlit. Esta última, al ser HTML fijo de Chainlit, solo admite coherencia vía `design/public/style.css` (selectores reales, mismo patrón D-038) — no hay componentización posible ahí, es la única superficie de las cuatro donde no aplica.
+
+**Alternativas descartadas**
+- Desactivar "Confirm email" para signup — más simple, pero deja de aportar nada una vez se construyen las rutas de recuperación, y es menos coherente con D-009.
+- `mount_chainlit()` con una sub-aplicación FastAPI separada — más aislado, pero introduce un prefijo de path nuevo que obligaría a revisar las URLs ya registradas en Google Cloud Console (D-032) y en la configuración de Supabase, y cambia el comando de arranque que fija D-039 sin necesidad.
+- Una ruta de verificación distinta por caso (`/auth/confirm-signup` vs `/auth/reset-password`) en vez de compartir `/auth/confirm` — descartado: la llamada a `verify_otp()` es idéntica en ambos casos, solo cambia qué se muestra después; mantenerlas separadas duplicaría lógica sin beneficio.
+- No ofrecer descubribilidad del "olvidé mi contraseña" en la UI (URL sin enlazar, solo documentada) — descartado: un familiar real no la encontraría nunca; el coste de un `custom_js` mínimo es bajo frente a dejar la funcionalidad inutilizable en la práctica.
+- No pedir nombre nunca (mantener el signup mínimo tal cual, sin personalización) — descartado por Marcos: aunque es lo más alineado con D-009, prefiere personalizar el saludo.
+- Añadir columna `profiles.full_name` en vez de usar `user_metadata` de Supabase Auth — descartado: requiere una migración SQL nueva y una segunda tabla con dato de usuario que mantener sincronizada, cuando `user_metadata` ya resuelve lo mismo sin cambio de esquema.
+
+**Justificación**
+Todas las piezas nuevas cuelgan del mismo proceso Chainlit ya existente (sin sub-aplicación, sin cambiar D-039) y comparten mecanismo (`verify_otp` con `token_hash`) entre signup y recovery en vez de duplicar rutas. Mantener "Confirm email" activado no cuesta nada extra una vez que `/auth/confirm` existe de todas formas, y es el comportamiento más defendible dado D-009.
+
+**Consecuencias**
+- Reescribe el Scenario 1 de `tests/features/e05_t06_auth_ui.feature` (ya aprobado): deja de prometer "sin segundo login manual"; pasa a "recibe correo de confirmación, confirma, accede con login normal".
+- Nuevos escenarios en el `.feature`: solicitud y confirmación de recuperación de contraseña, y manejo de fallos (token expirado/ya usado, email no confirmado al intentar login, OAuth cancelado por el usuario) — a redactar en el `task-start` de T-06.
+- `auth/supabase_client.py` gana funciones nuevas: para disparar `reset_password_for_email`, para `verify_otp`, y para `update_user` con la nueva contraseña — además de la función de sincronización de Google ya prevista en D-032.
+- `chainlit/main_family.py` gana las rutas `/auth/forgot-password` y `/auth/confirm`, y un `custom_js` nuevo (`design/public/auth.js` o similar) para el enlace de la pantalla de login.
+- `.env.example` gana `OAUTH_GOOGLE_CLIENT_ID`/`OAUTH_GOOGLE_CLIENT_SECRET` (ya anticipado en D-032); no se necesitan variables adicionales para las rutas propias (reutilizan `SUPABASE_URL`/`SUPABASE_ANON_KEY`).
+- Paso manual pendiente de Marcos: confirmar que "Confirm email" está activado en el proyecto Supabase, y reescribir las plantillas "Confirm signup" y "Reset password" en el dashboard.
+- `design/auth/style.css` se retira (ya acordado en la revisión de la tarea, sin relación directa con esta decisión).
+- El consentimiento informado específico de datos de salud (D-009) no se resuelve en esta tarea, pero sí se le encuentra un lugar en el diseño sin reabrir D-031: ver la actualización del 9 de julio de 2026 en D-009 (gate explícito post-autenticación en `on_chat_start`, separado del formulario de login/signup).
+
+---
+
+## D-041 — Paso "Documentos consultados" (D-035): se deja de mostrar en el chat, redundante con el listado de fuentes de D-026
+
+**Fecha:** 10 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-05 T-07
+
+**Contexto**
+D-035 implementó el `cl.Step` "Documentos consultados" (`_format_retrieval_step` en `chainlit/main_family.py`) mostrando, por cada documento recuperado, source/filename, score y un extracto de ~200 caracteres del `page_content` — la coincidencia real encontrada en el chunk. Durante el smoke test manual de T-07, revisando el paso intermedio tal como lo ve el usuario en el chat real, quedó abierta la disyuntiva entre dos formas de presentar las fuentes consultadas en la conversación: mostrarlas de forma "nativa" vía el `cl.Step` (el mecanismo de D-035, expandible bajo "Usado Documentos consultados ⌄") o la solución custom ya existente de D-026 (`_build_sources_section`, el listado plano "Fuentes consultadas:" con enlaces al final de cada respuesta).
+
+Primer intento: mantener el `cl.Step` pero resumido (solo source/filename + score, sin el extracto de `page_content`). Al probarlo en vivo, Marcos observó que incluso esa versión resumida seguía siendo un bloque colapsable adicional ("Usado Documentos consultados ⌄") que repite la misma información que ya muestra "Fuentes consultadas:" justo encima — mismos ficheros, mismos scores en esencia — solo que en un formato distinto y más verboso (bloque plegable + icono de "usado" + repetición del nombre completo del fichero por cada chunk, incluso si varios chunks vienen del mismo documento).
+
+**Decisión**
+Se retira por completo el `cl.Step` de recuperación del flujo de `main_family.py`. El listado custom de D-026 ("Fuentes consultadas:", al final de la respuesta) queda como única superficie de trazabilidad de fuentes visible para el usuario familiar. `RAGPipeline.retrieve()` se sigue llamando primero en `_answer()` — se mantiene por la razón original de D-035 (evitar una segunda consulta al vectorstore, reutilizando `raw_results` en `aquery_stream()`), pero su resultado ya no se renderiza en la UI.
+
+**Alternativas descartadas**
+- Mantener el `cl.Step` con extracto de `page_content` (comportamiento original de D-035) — descartado: verboso y redundante.
+- Mantener el `cl.Step` resumido a solo fuente + score (primer ajuste de esta misma decisión) — descartado tras verlo en vivo: sigue siendo una segunda superficie con la misma información que "Fuentes consultadas:", sin aportar nada que el usuario familiar no tenga ya.
+- Quitar `pipeline.retrieve()` de `_answer()` y dejar que `aquery_stream()` haga su propia consulta al vectorstore — descartado: reintroduce la doble consulta que D-035 evitó explícitamente; no hay motivo para pagar ese coste si ya no se renderiza nada con `raw_results` antes del streaming (igual se sigue necesitando para pasarlo a `aquery_stream()`).
+
+**Justificación**
+El `.feature` de E-05 T-03 (`e05_t03_rag_steps_visualization.feature`) nunca exigió que el paso de recuperación se viera en el chat — solo que `RAGPipeline` expusiera los documentos recuperados como estructura de datos reutilizable sin una segunda consulta (Scenarios 1-3, que siguen intactos). El renderizado en `cl.Step` fue una decisión de UI de D-035 para la tarea de "visualización de pasos intermedios", pero una vez que D-026 ya resuelve la trazabilidad de fuentes de cara al usuario, mantener las dos superficies visibles a la vez es puro ruido — dos bloques con el mismo propósito, sin que ninguno añada información que el otro no tenga.
+
+**Consecuencias**
+- `chainlit/main_family.py`: se elimina `_format_retrieval_step()` y la constante `_RETRIEVAL_STEP_NAME`; `_answer()` ya no abre ningún `cl.Step`, pero conserva `pipeline.retrieve()` seguido de `aquery_stream(question, raw_results=raw_results)`.
+- `tests/features/e05_t03_rag_steps_visualization.feature`: el Scenario 4 pasa de "el chat muestra el paso de recuperación" a "el chat no abre ningún cl.Step, pero reutiliza los mismos resultados de retrieval sin segunda consulta". Scenarios 1-3 no cambian.
+- `tests/step_defs/test_e05_t03.py`: `se_envia_step_con_documentos` se reemplaza por `no_se_abre_step_con_documentos`, que verifica `retrieve()` llamado una vez, ningún `cl.Step` abierto (`_opened_steps` vacío) y el mensaje de streaming completo.
+- No afecta a D-026 (listado de fuentes al final de la respuesta), que sigue siendo la única superficie de citación de cara al usuario.
+
+---
+
+## D-042 — signup() no detectaba emails ya registrados y confirmados tras activar "Confirm email" (D-040)
+
+**Fecha:** 10 de julio de 2026
+**Fase:** técnica / seguridad
+**Épica:** E-05 (cierre), regresión sobre código de E-03
+
+**Contexto**
+Al cerrar E-05, `pytest tests/ -v` reveló que `test_e03_t03.py` (E-03 T-03, "Registro con
+email ya existente eleva un error claro") fallaba con un `APIError` de foreign key en
+`profiles` (`Key (id)=(...) is not present in table "users"`), no con el `AuthApiError`
+que el test espera. Investigado: con "Confirm email" desactivado (estado del proyecto
+durante E-03), `client.auth.sign_up()` para un email ya registrado eleva `AuthApiError`
+("User already registered") de forma directa. Con "Confirm email" activado (D-040,
+E-05 T-06), Supabase cambia de comportamiento por protección anti-enumeración: si el
+email ya existe y está confirmado, `sign_up()` **no eleva error** — devuelve un usuario
+ofuscado (`identities: []`, sin sesión) indistinguible a simple vista de un registro
+nuevo legítimo, para no revelar si un email tiene cuenta o no.
+
+`signup()` en `auth/supabase_client.py` no contemplaba este segundo camino: seguía
+adelante llamando a `get_or_create_profile(user_id, role)` con el `user_id` del usuario
+ofuscado, que no existe de verdad en `auth.users` — de ahí el error de foreign key. El
+test nunca había ejercitado este camino con éxito hasta ahora: antes fallaba antes,
+por rate limit de Supabase al hacer dos `signup()` reales seguidos en el mismo test (ver
+también el fix de aislamiento de precondiciones más abajo) — el bug de `signup()` estaba
+enmascarado por esa flakiness previa.
+
+**Impacto real:** desde que D-040 activó "Confirm email" (E-05 T-06), cualquier intento
+real de registro con un email ya existente y confirmado producía un error 500 (foreign
+key) en vez de un mensaje claro de "email ya registrado" — no un problema de seguridad
+de Falso Negativo Cero, pero sí una regresión de UX/robustez en el flujo de signup no
+detectada hasta el cierre de E-05.
+
+**Decisión**
+`signup()` comprueba `response.user.identities` tras `sign_up()`: si está vacío, eleva
+`AuthApiError("User already registered", status=400, code="user_already_exists")`
+manualmente, replicando el mismo contrato de error que ya existía con "Confirm email"
+desactivado, antes de intentar crear el perfil.
+
+**Alternativas descartadas**
+- Comprobar `response.session is None` como señal de "email ya existente" — descartado:
+  con "Confirm email" activado, un signup legítimo y nuevo *también* tiene
+  `session is None` hasta que se confirma el correo (D-040). `identities` es la única
+  señal que distingue de forma fiable "usuario ofuscado por duplicado" de "usuario nuevo
+  sin confirmar todavía".
+
+**Consecuencias**
+- `auth/supabase_client.py::signup()`: chequeo añadido antes de `get_or_create_profile`.
+- `tests/step_defs/test_e03_t03.py`: además de este fix, las precondiciones de los
+  escenarios "email ya existente" y "login correcto" (`usuario_ya_registrado`,
+  `usuario_registrado_con_role`) se cambian de `signup()` público a creación directa vía
+  Admin API (`admin_client.auth.admin.create_user(..., email_confirm=True)`) — evita que
+  la propia precondición del test dispare el rate limit de Supabase o el requisito de
+  confirmación antes de llegar a la llamada que de verdad se testea. Mismo patrón que
+  `_create_auth_user` en `tests/conftest.py`, ya previsto en `tasks/E03-T03-plan.md` para
+  este Given y nunca aplicado en la implementación original.
+- No afecta a `get_or_create_google_user()` (login con Google, D-032): ese flujo ya usa
+  la Admin API directamente (`create_user` + fallback a `_find_user_by_email`), no pasa
+  por `sign_up()` público ni por este camino ofuscado.
 
 ---
 

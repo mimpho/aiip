@@ -77,10 +77,19 @@ def existe_perfil_con_role(admin_client, signup_result, role):
 # ── Scenario 3: signup con email ya existente ───────────────────
 
 @given("un usuario ya registrado con el email de prueba", target_fixture="signup_result")
-def usuario_ya_registrado(test_email, created_user_ids):
-    result = signup(test_email, TEST_PASSWORD, "family")
-    created_user_ids.append(result["user_id"])
-    return result
+def usuario_ya_registrado(test_email, created_user_ids, admin_client):
+    # Precondición, no la llamada bajo test (esa es la de "llamo a signup con
+    # el mismo email" a continuación): usar Admin API evita que dos signup()
+    # públicos seguidos en el mismo test se pisen con el rate limit de
+    # Supabase ("For security purposes...") antes de llegar a comprobar el
+    # error de email duplicado.
+    created = admin_client.auth.admin.create_user(
+        {"email": test_email, "password": TEST_PASSWORD, "email_confirm": True}
+    )
+    user_id = created.user.id
+    created_user_ids.append(user_id)
+    admin_client.table("profiles").insert({"id": user_id, "role": "family"}).execute()
+    return {"user_id": user_id, "role": "family", "session": None}
 
 
 @when("llamo a signup con el mismo email", target_fixture="signup_error")
@@ -113,10 +122,20 @@ def no_se_crea_perfil_duplicado(admin_client, signup_result):
     parsers.parse('un usuario registrado con el email de prueba y role "{role}"'),
     target_fixture="signup_result",
 )
-def usuario_registrado_con_role(test_email, created_user_ids, role):
-    result = signup(test_email, TEST_PASSWORD, role)
-    created_user_ids.append(result["user_id"])
-    return result
+def usuario_registrado_con_role(test_email, created_user_ids, role, admin_client):
+    # Precondición para probar login(), no signup() (ya cubierto en los
+    # escenarios 1-2): se crea el usuario directamente vía Admin API con
+    # email_confirm=True, evitando tanto el rate limit del signup público
+    # como el requisito de "Confirm email" (D-040) que bloquearía el login
+    # inmediato si se usara signup(). Mismo patrón que _create_auth_user en
+    # conftest.py, ya previsto en tasks/E03-T03-plan.md para este Given.
+    created = admin_client.auth.admin.create_user(
+        {"email": test_email, "password": TEST_PASSWORD, "email_confirm": True}
+    )
+    user_id = created.user.id
+    created_user_ids.append(user_id)
+    admin_client.table("profiles").insert({"id": user_id, "role": role}).execute()
+    return {"user_id": user_id, "role": role, "session": None}
 
 
 @when("llamo a login con el email de prueba y contraseña correcta", target_fixture="login_result")

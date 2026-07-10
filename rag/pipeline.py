@@ -1,3 +1,5 @@
+from typing import AsyncIterator
+
 from rag.embeddings import get_embeddings
 from rag.generator import RAGGenerator
 from rag.language import detect_language
@@ -74,3 +76,61 @@ class RAGPipeline:
         if sources_section:
             response = f"{response}\n\n{sources_section}"
         return response
+
+    def retrieve(self, question: str):
+        """Devuelve los documentos recuperados para la pregunta dada.
+
+        D-035: método público que encapsula similarity_search_with_score.
+        Permite al llamador (e.g. main_family.on_message) obtener los
+        documentos antes de iniciar el streaming y reutilizarlos en
+        aquery_stream(raw_results=...) sin una segunda consulta al vectorstore.
+
+        Returns:
+            list[tuple[Document, float]]: lista de (documento, score) en el
+            mismo formato que devuelve Chroma.similarity_search_with_score.
+        """
+        return self._vectorstore.similarity_search_with_score(
+            question, k=self._top_k
+        )
+
+    async def aquery_stream(self, question: str, raw_results=None) -> AsyncIterator[str]:
+        """Recibe una pregunta y emite la respuesta generada en streaming.
+
+        D-035: acepta `raw_results` opcional (list[tuple[Document, float]]).
+        Si se proporciona, reutiliza esos resultados de retrieval en lugar de
+        volver a consultar el vectorstore — permite que el llamador haga una
+        sola llamada a retrieve() y la comparta entre el paso de visualización
+        (cl.Step) y la generación de la respuesta.
+
+        Si `raw_results` es None (default), se comporta exactamente como antes
+        (retrocompatible con todos los tests de T-01 y T-02).
+
+        El filtro de seguridad y el listado de fuentes se aplican sobre el
+        texto completo ya ensamblado (D-030): se yield-ean como fragmentos
+        finales tras agotar el streaming del cuerpo, nunca intercalados.
+        """
+        language = detect_language(question)
+        if raw_results is None:
+            raw_results = self._vectorstore.similarity_search_with_score(
+                question, k=self._top_k
+            )
+        raw = raw_results
+        context = "\n\n".join(doc.page_content for doc, _ in raw)
+        has_alarm = check_alarm_signals(question)
+
+        chunks = []
+        async for token in self._generator.agenerate_stream(
+            question=question, context=context, language=language
+        ):
+            chunks.append(token)
+            yield token
+
+        full_text = "".join(chunks)
+        filtered = apply_safety_filter(full_text, has_alarm)
+        safety_suffix = filtered[len(full_text):]
+        if safety_suffix:
+            yield safety_suffix
+
+        sources_section = _build_sources_section(raw, language)
+        if sources_section:
+            yield f"\n\n{sources_section}"

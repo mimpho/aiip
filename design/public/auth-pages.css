@@ -1,0 +1,299 @@
+/* ============================================================
+   AIIP — Auth pages CSS (E-05 T-06 / D-040 punto 8)
+
+   Estilos de las 3 pantallas propias servidas fuera de la SPA de
+   Chainlit (/auth/forgot-password, /auth/confirm signup y recovery),
+   registradas sobre `chainlit.server.app` en chainlit/main_family.py.
+   Reutiliza los tokens de tokens.css y reproduce la tarjeta glass del
+   login nativo de Chainlit (mismo radio, blur y paleta que
+   docs/design/standalone-html/screens-auth.html) para que las 4
+   pantallas del flujo de auth se sientan como una sola superficie.
+
+   Solo perfil family (accent-family) — estas rutas cuelgan de
+   main_family.py, main_professional.py sigue siendo un stub (D-040).
+   ============================================================ */
+
+@import url('./tokens.css');
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body.auth-page {
+  display: flex;
+  /* column, not the flex default row (10 jul 2026, Marcos): this body
+     used to have a single flex child (.auth-card); now that the
+     login-style heading group sits above it as a sibling, row would
+     put them side by side instead of stacked. */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  min-height: 100vh;
+  padding: var(--space-6);
+  background: var(--color-bg);
+  background-image: radial-gradient(85% 55% at 50% -5%, rgba(110, 139, 255, 0.16), transparent 62%);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+}
+
+body::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(85% 55% at 50% 100%, rgba(110, 139, 255, 0.16), transparent 56%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-10) var(--space-7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.light .auth-card {
+  box-shadow: 0 10px 30px rgba(26, 33, 41, .06);
+}
+
+/* Login-style heading group (badge + title + subtitle), same content/
+   ids as design/public/auth.js's injectLoginHeading — see the HTML in
+   auth_base.html for why it's static markup here instead of JS
+   injection. Sizes mirror style.css's version; colors are re-derived
+   from tokens.css vars via color-mix() instead of the `hsl(var(--primary)
+   / alpha)` shadcn trick style.css uses, since tokens.css stores full
+   hex colors, not bare HSL triplets, and --primary itself doesn't
+   exist outside the Chainlit SPA. */
+#aiip-login-heading {
+  text-align: center;
+  max-width: 440px;
+  margin: 0 auto 28px;
+}
+
+#aiip-login-logo-badge {
+  width: 62px;
+  height: 62px;
+  border-radius: 17px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-accent-family) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent-family) 30%, transparent);
+}
+
+.light #aiip-login-logo-badge {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent-family) 16%, transparent);
+}
+
+#aiip-login-logo-badge img {
+  width: 34px;
+  height: 34px;
+}
+
+#aiip-login-heading-title {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-2xl);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  background: linear-gradient(154deg, var(--color-accent-family), var(--color-accent-professional));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  margin: 0;
+}
+
+#aiip-login-heading-subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 13px 0 0;
+}
+
+/* This page's own heading (e.g. "¿Olvidaste tu contraseña?") — plain
+   color, not the gradient above (10 jul 2026, Marcos): the gradient is
+   reserved for the AIIP branding title now that it lives in the badge
+   group, not this page-specific one. */
+.auth-title {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-xl);
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-4);
+}
+
+.auth-copy {
+  font-size: var(--text-sm);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-6);
+}
+
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  text-align: left;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.auth-field__label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+
+/* height/border-radius/font-size on inputs and buttons below (10 jul
+   2026, Marcos): 15px sits between --text-sm (14) and --text-base (16)
+   in tokens.css, so it's set literally here rather than pointing at a
+   token that doesn't exist. border-radius already matches --radius-md
+   (10px) exactly, kept as the token. */
+.auth-field__input {
+  height: 46px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  padding: 0 var(--space-4);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+
+.auth-field__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.auth-field__input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(110, 139, 255, 0.16);
+}
+
+.auth-field__input--error {
+  border-color: var(--color-error);
+}
+
+.auth-field__error {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-error);
+}
+
+.auth-button {
+  height: 46px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(110, 139, 255, 0.3);
+  transition: background 0.15s ease;
+}
+
+.auth-button:hover {
+  background: var(--color-accent-hover);
+}
+
+.auth-link {
+  margin-top: var(--space-5);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+}
+
+.auth-link--button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 46px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  margin-top: 0;
+}
+
+.auth-link--button:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.auth-disclaimer {
+  margin: var(--space-6) 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Theme toggle (design/public/auth.js, injectThemeToggle) — this page
+   has no header to dock into (unlike the Chainlit SPA), so it always
+   renders as the floating glass pill; same `#aiip-theme-toggle` /
+   `.aiip-theme-toggle--floating` rules as design/public/style.css,
+   duplicated here (10 jul 2026, Marcos) since these standalone auth
+   pages load this stylesheet instead of that one. Border-hover uses
+   --color-accent, not --primary — the latter is a shadcn/theme.json
+   variable that only exists inside the Chainlit SPA. */
+#aiip-theme-toggle {
+  cursor: pointer;
+}
+
+#aiip-theme-toggle.aiip-theme-toggle--floating {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 50;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  color: var(--color-text-primary);
+  transition: border-color .15s ease;
+}
+
+#aiip-theme-toggle.aiip-theme-toggle--floating:hover {
+  border-color: var(--color-accent);
+}

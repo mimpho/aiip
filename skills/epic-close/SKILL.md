@@ -18,11 +18,20 @@ la siguiente épica.
 
 ## Antes de empezar
 
-Primero, asegúrate de estar en la rama de épica correcta:
+Primero, comprueba en qué rama estás — **nunca hagas `checkout` tú mismo, ni siquiera
+para inspeccionar** (ver "Reparto git" en `AGENTS.md`). Un `checkout`/`merge --ff-only`
+de "solo mirar" ya dejó un `.git/index.lock` huérfano bloqueando a Marcos en una sesión
+anterior: el sandbox de Cowork monta su repo real, no un clon aislado, así que cualquier
+cambio de HEAD es un cambio real, aunque la intención fuera solo de lectura.
 
 ```bash
-git checkout epic/E[nn]-nombre
+git branch --show-current
+git log --oneline main..epic/E[nn]-nombre   # commits de la épica, sin moverte de rama
 ```
+
+Si no estás en `epic/E[nn]-nombre` (o hay trabajo en una rama de tarea aún sin mergear
+a la épica), pídele a Marcos que haga el `checkout`/merge él mismo, o sigue trabajando
+con `<rama-A>..<rama-B>` en los comandos de git en vez de moverte de HEAD.
 
 Verifica que la épica está realmente lista para cerrar:
 - No hay TODOs pendientes en el código de la épica
@@ -30,15 +39,19 @@ Verifica que la épica está realmente lista para cerrar:
 - Todos los tests del proyecto pasan (no solo los de la épica):
 
 ```bash
-pytest tests/ -v
+PYTHONPATH=. pytest tests/ -v
 ```
+
+`PYTHONPATH=.` es obligatorio — varios step_defs importan módulos del repo raíz
+(`auth.*`, `rag.*`) vía `main_family`; sin ello la colección falla entera, no solo esos
+tests (ver `AGENTS.md` → Convenciones → Tests).
 
 Si algún test de una épica anterior falla, es una regresión — hay que resolverla antes de cerrar.
 
 > **No correr `pytest` ni instalar dependencias dentro del sandbox de Cowork.**
 > El `.venv` del repo es de macOS/Homebrew y no funciona en el Linux del sandbox, y las
 > dependencias pesadas (torch, chromadb, transformers) no se instalan limpiamente ahí.
-> Pide directamente a Marcos que ejecute `pytest tests/ -v` en su terminal (con el `.venv`
+> Pide directamente a Marcos que ejecute `PYTHONPATH=. pytest tests/ -v` en su terminal (con el `.venv`
 > activado) o en Antigravity, y que te pase el resultado. No intentes reconstruir el entorno
 > en el sandbox — es tiempo perdido.
 
@@ -59,15 +72,22 @@ Si algún test de una épica anterior falla, es una regresión — hay que resol
 Haz un repaso del estado actual antes de escribir nada:
 
 ```bash
-git log --oneline main..HEAD   # commits de la épica
-git diff main --stat           # ficheros modificados
-pytest tests/features/eXX_*.feature -v  # confirma que todo pasa
+git log --oneline main..epic/E[nn]-nombre               # commits de la épica, sin moverte de rama
+git diff main..epic/E[nn]-nombre --stat                  # ficheros modificados
+PYTHONPATH=. pytest tests/features/eXX_*.feature -v      # confirma que todo pasa (pide a Marcos que lo ejecute, ver nota de arriba)
 ```
 
 Con esto en mano, identifica:
 - Entregables concretos (ficheros creados/modificados con su propósito)
 - Decisiones de implementación no obvias que merezcan documentarse
 - Prompts o system prompts que hayan evolucionado durante el desarrollo
+- **Relee los "Criterios de aceptación de alto nivel" de la épica en `backlog/epics.md`
+  contra las decisiones tomadas durante el desarrollo (`decisions.md`).** No te limites a
+  comprobar que las tareas están completadas — un criterio puede acabar cumplido de una
+  forma distinta a como se escribió originalmente porque una decisión posterior cambió el
+  mecanismo (p. ej. una visualización en UI que se sustituye por logging server-side). Si
+  es el caso, anótalo junto al criterio en `epics.md` y márcalo explícitamente en la PR
+  description en vez de dar el criterio por cumplido sin más.
 
 ---
 
@@ -99,7 +119,7 @@ feat(E-XX): [one-line description of what the epic delivers]
 - [...]
 
 ## Test results
-All scenarios passing: `pytest tests/features/eXX_*.feature`
+All scenarios passing: `PYTHONPATH=. pytest tests/features/eXX_*.feature`
 
 ## Notes
 [Relevant implementation decisions, known technical debt, etc.]

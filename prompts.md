@@ -646,3 +646,123 @@ Cambio reflejado también en el cierre obligatorio de cada respuesta.
 El perfil "familiar" no es un único tipo de usuario (paciente adulto vs. familiar/tutor) — el
 prompt debe evitar segunda persona que asuma quién es el interlocutor cuando ambos casos son
 igual de probables.
+
+---
+
+### P-023 — System prompt: guardrail contra generalizar protocolos de tratamiento concretos
+**Fecha:** 09 julio 2026
+**Fase:** E-05 (T-04)
+**Tipo:** decisión de prompting
+**Herramienta:** Antigravity
+
+**Prompt / decisión:**
+Añadido a `prompts/system_prompt_family.txt`:
+"Si el contexto incluye instrucciones de actuación de un tratamiento concreto (qué medicamento
+tomar, cuándo detener una infusión, cómo actuar ante una reacción a un procedimiento pautado), no
+las repitas como pauta general aplicable a cualquiera — son protocolos que el equipo médico ha
+indicado para ese tratamiento específico. Indícalo así y remite a seguir o confirmar ese protocolo
+con su equipo médico, en vez de listar los pasos como recomendación propia."
+
+**Resultado / aprendizaje:**
+Detectado durante el trabajo de onboarding/disclaimers (T-04): la KB contiene protocolos de
+tratamiento concretos (dosis de medicación, condiciones para detener una infusión) que el LLM
+podría presentar como consejo genérico aplicable a cualquier familia si no se le indica
+explícitamente que son pautas del equipo médico de ese paciente en particular. Refuerza Falso
+Negativo Cero evitando la sobregeneralización de instrucciones médicas específicas encontradas en
+el contexto recuperado.
+
+---
+
+### P-024 — Falsos positivos de `langdetect` en frases cortas, ahora también con dígitos/símbolos
+**Fecha:** 10 julio 2026
+**Fase:** E-05 (T-07)
+**Tipo:** razonamiento técnico
+**Herramienta:** Antigravity (smoke test)
+
+**Prompt / decisión:**
+Durante el smoke test E2E (CU-01), la pregunta "Mi hijo tiene 38.5°C, ¿es urgente?" se detectó como
+neerlandés y la respuesta completa se generó en ese idioma. El contenido de seguridad fue correcto
+(antipirético, aviso de acudir a urgencias, mención del 112), pero el idioma fue incorrecto.
+Hipótesis: el número/símbolo "38.5°C" diluye la señal lingüística de `langdetect` en frases cortas
+y declarativas en español — mismo patrón que D-017 ya describía sin dígitos, ahora confirmado
+también con dígitos/símbolos en el texto.
+
+**Resultado / aprendizaje:**
+Falso Negativo Cero no se vio comprometido (contenido de seguridad correcto pese al idioma
+erróneo), pero confirma que la detección de idioma actual no es robusta para frases cortas con
+datos numéricos/clínicos — a resolver en E-07/E-09 junto con el resto de hallazgos de idioma (ver
+`backlog/ideas.md`).
+
+---
+
+### P-025 — Ruido en dense retrieval sobre fuente HTML con boilerplate de maquetación
+**Fecha:** 10 julio 2026
+**Fase:** E-05 (T-07)
+**Tipo:** razonamiento técnico
+**Herramienta:** Antigravity (smoke test)
+
+**Prompt / decisión:**
+La pregunta "¿A quién llamo si es fin de semana?" (CU-05) recuperó un teléfono real de Urgencias
+Pediátricas de un PDF, pero no citó `aedip/Hospitales-con-Servicios-de-Inmunologia.html` — el
+directorio de hospitales con inmunología, a priori la fuente más canónica para ese tipo de
+pregunta. Inspección: el HTML tiene mucho boilerplate de maquetación (clases CSS largas, atributos
+de imagen repetidos) que diluye la señal semántica del chunk en el embedding frente a un PDF con
+una sección "Datos de contacto" limpia. Segunda confirmación real del mismo patrón ya visto en
+E-06 T-07 (Hallazgo 2, ruido en Dense Vector Search con nombres propios/geográficos).
+
+**Resultado / aprendizaje:**
+El ruido de retrieval no es solo un problema de la pregunta (nombres propios sin fuerza suficiente
+como filtro) sino también del propio documento fuente cuando tiene mucho boilerplate. Dos
+mitigaciones sobre la mesa para E-07/E-09: Hybrid Search (Dense + BM25), o una lista manual de
+keywords por documento para dar peso extra. Limpiar el HTML de boilerplate antes de indexar es una
+mejora barata independiente de cuál se elija.
+
+---
+
+### P-026 — Directrices de prompting para iterar layout y theming en Antigravity
+**Fecha:** 09-10 julio 2026
+**Fase:** E-05 (T-05, T-06)
+**Tipo:** decisión de prompting
+**Herramienta:** Antigravity
+
+**Prompt / decisión:**
+Directrices dadas a Antigravity sobre cómo debía comportarse el layout en distintos bloques de la
+interfaz — desde las páginas de auth (login, signup, recuperación de contraseña) hasta los bloques
+del chat — más una segunda ronda de afinamiento visual centrada en integrar el theme toggle
+(claro/oscuro) de forma consistente en todas las páginas, incluidas las de auth (commit #42,
+"unify visual identity and theme persistence across authentication pages").
+
+**Resultado / aprendizaje:**
+El theming coherente entre bloques con propósitos distintos (chat conversacional vs. formularios
+de auth) no salió de una sola pasada — hizo falta iterar directrices de layout por bloque y luego
+una ronda dedicada solo al toggle de tema para que se propagara a superficies que no formaban parte
+del comp original de chat. Mismo fenómeno que D-038/D-039 documentan a nivel de selectores CSS
+("el CSS real no coincide con el plan"), aquí a nivel de directrices de layout/tema.
+
+---
+
+### P-027 — Comportamiento anti-enumeración de Supabase: `sign_up()` no eleva error para emails ya confirmados
+**Fecha:** 10 julio 2026
+**Fase:** E-05 (cierre), regresión sobre código de E-03
+**Tipo:** razonamiento técnico
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Al cerrar E-05, `pytest tests/ -v` reveló que `signup()` (`auth/supabase_client.py`) dejaba
+pasar un usuario "fantasma" a `get_or_create_profile()`, reventando con un error de foreign
+key. Investigación: con "Confirm email" activado (D-040), `client.auth.sign_up()` de Supabase
+para un email ya existente y confirmado **no eleva `AuthApiError`** — por protección
+anti-enumeración, devuelve un usuario ofuscado con `identities: []` y sin sesión, indistinguible
+a simple vista de un registro nuevo legítimo. Con "Confirm email" desactivado (estado del
+proyecto durante E-03, cuando se escribió el test que lo detectó), sí eleva el error
+directamente. Fix: comprobar `response.user.identities` vacío y elevar el mismo `AuthApiError`
+manualmente (D-042).
+
+**Resultado / aprendizaje:**
+Activar una opción de seguridad de un proveedor externo (Supabase) puede cambiar
+silenciosamente el contrato de error de código que llevaba tiempo funcionando, sin ningún
+cambio en el propio código que lo consume — el bug estuvo además enmascarado varias horas por
+un rate limit del test (dos `signup()` reales seguidos), que fallaba antes de llegar a ejercitar
+este camino. Al tocar cualquier setting de "seguridad por defecto" de un proveedor de auth,
+revisar explícitamente qué pasa con las respuestas de "recurso ya existente" — no solo el
+flujo feliz.

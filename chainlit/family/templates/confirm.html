@@ -1,0 +1,38 @@
+{% extends "auth_base.html" %}
+{% import "auth_base.html" as ui %}
+
+{% block title %}Confirmación · AIIP{% endblock %}
+
+{% block content %}
+{% if state == "error" %}
+  <h1 class="auth-title">Enlace no válido</h1>
+  <p class="auth-copy">
+    Este enlace ha caducado, ya se usó, o no es correcto. Solicita uno
+    nuevo para continuar.
+  </p>
+  <a class="auth-link" href="/auth/forgot-password">Solicitar un nuevo enlace</a>
+
+{% elif state == "signup" %}
+  <h1 class="auth-title">Cuenta confirmada</h1>
+  <p class="auth-copy">
+    Tu email ha quedado verificado. Ya puedes iniciar sesión con tu email
+    y contraseña.
+  </p>
+  <a class="auth-link auth-link--button" href="/login">Ir a iniciar sesión</a>
+
+{% elif state == "recovery" %}
+  <h1 class="auth-title">Elige una nueva contraseña</h1>
+  <p class="auth-copy">Tu identidad ya está verificada. Introduce tu nueva contraseña.</p>
+  <form class="auth-form" method="post" action="/auth/confirm">
+    <input type="hidden" name="access_token" value="{{ access_token }}">
+    <input type="hidden" name="refresh_token" value="{{ refresh_token }}">
+    {{ ui.field("password", "Nueva contraseña", type="password", autofocus=True) }}
+    {{ ui.button("Guardar nueva contraseña") }}
+  </form>
+
+{% elif state == "updated" %}
+  <h1 class="auth-title">Contraseña actualizada</h1>
+  <p class="auth-copy">Ya puedes iniciar sesión con tu nueva contraseña.</p>
+  <a class="auth-link auth-link--button" href="/login">Ir a iniciar sesión</a>
+{% endif %}
+{% endblock %}
