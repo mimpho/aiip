@@ -17,12 +17,14 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 
 ## Estado del proyecto
 
-| Fase | Estado | Hito |
-|---|---|---|
-| Fase 0 — Documentación técnica | ✅ Completada | 12 jun 2026 |
-| Fase 1 — MVP core | 🔄 En progreso | 10 jul 2026 |
-| Fase 1.5 — MVP completo | ⚪ No iniciada | 29 jul 2026 |
-| Features opcionales | ⚪ Backlog | Post-TFM |
+| Fase | Estado | Hito | Épicas |
+|---|---|---|---|
+| Fase 0 — Documentación técnica | ✅ Completada | 12 jun 2026 | — (previa a la descomposición en épicas) |
+| Fase 1 — MVP core | ✅ Completada | 10 jul 2026 | E-01 a E-06 |
+| Fase 1.5 — MVP completo | ⚪ No iniciada | 29 jul 2026 | E-07, E-08, E-09, E-10 |
+| Features opcionales | ⚪ Backlog | Post-TFM | F-01 (perfil profesional, multimodal) |
+
+> **E-07 y E-08** se movieron de Fase 1 a Fase 1.5 el 10 jul 2026 — ninguna era requisito del hito "código funcional" (lo entrega E-05); ver notas en `backlog/epics.md`.
 
 ### Épicas
 
@@ -73,9 +75,9 @@ gantt
     E-04 Pipeline RAG                 :done,    e04, 2026-06-27, 2026-07-05
     E-05 Interfaz Chainlit            :done,    e05, 2026-07-08, 2026-07-10
     E-06 Ingesta KB                   :done,    e06, 2026-06-27, 2026-07-08
-    E-07 RAGAS parcial                :         e07, 2026-07-10, 2026-07-13
 
     section Fase 1.5 — MVP completo
+    E-07 RAGAS parcial                :         e07, 2026-07-10, 2026-07-13
     E-08 Memoria + histórico          :         e08, 2026-07-10, 2026-07-18
     E-09 RAGAS completo               :         e09, 2026-07-18, 2026-07-25
     E-10 Pulido final                 :         e10, 2026-07-25, 2026-07-29
