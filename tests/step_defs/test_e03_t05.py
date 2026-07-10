@@ -20,6 +20,7 @@ class _FakeUser:
 
 _fake_cl = types.ModuleType("chainlit")
 _fake_cl.password_auth_callback = lambda f: f
+_fake_cl.oauth_callback = lambda f: f
 _fake_cl.on_chat_start = lambda f: f
 _fake_cl.on_message = lambda f: f
 _fake_cl.action_callback = lambda name: (lambda f: f)
