@@ -311,3 +311,32 @@ body::before {
 .-ml-1\.5.flex.items-center.flex-wrap > button:not([class~="w-9"]) svg {
   display: none;
 }
+
+/* ── Login page (E-05 T-06 / D-040) ──────────────────────────
+   Chainlit's login form already reads its base look from theme.json
+   (the shadcn Tailwind utilities on #email/#password/the submit
+   button all consume the same --background/--card/--primary vars as
+   the rest of the app), so nothing needs overriding there. The only
+   two gaps, confirmed against a live DOM capture of the rendered
+   /login route (chainlit==2.11.1, same verification method as
+   D-038): the heading still uses the body font instead of AIIP's
+   display font, and the "forgot password" link that auth.js injects
+   (design/public/auth.js, D-040 punto 5) has no styling of its own.
+   `#root form h1` is scoped to the login form specifically — plain
+   `h1` would also catch any markdown-rendered heading inside a chat
+   message. */
+#root form h1 {
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+#aiip-forgot-password-link {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-accent-family);
+  text-decoration: none;
+}
+#aiip-forgot-password-link:hover {
+  color: var(--color-accent-family-hover);
+  text-decoration: underline;
+}

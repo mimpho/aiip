@@ -1,0 +1,48 @@
+{# Layout base compartido por las 3 pantallas propias de autenticación
+   (D-040 punto 8): /auth/forgot-password y las dos variantes de
+   /auth/confirm. Tarjeta + macros de campo de formulario y botón,
+   reutilizadas vía self-import (`{% import "auth_base.html" as ui %}`)
+   desde cada plantilla hija, sin estilos en línea — todo el CSS vive en
+   auth-pages.css sobre los tokens de design/public/tokens.css. #}
+
+{% macro field(name, label, type="text", placeholder="", value="", error=None, autofocus=False) %}
+<div class="auth-field">
+  <label class="auth-field__label" for="{{ name }}">{{ label }}</label>
+  <input
+    class="auth-field__input{% if error %} auth-field__input--error{% endif %}"
+    id="{{ name }}"
+    name="{{ name }}"
+    type="{{ type }}"
+    {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+    {% if value %}value="{{ value }}"{% endif %}
+    {% if autofocus %}autofocus{% endif %}
+    required
+  >
+  {% if error %}<p class="auth-field__error">{{ error }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro button(text, type="submit") %}
+<button class="auth-button" type="{{ type }}">{{ text }}</button>
+{% endmacro %}
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AIIP{% endblock %}</title>
+  <link rel="icon" href="/public/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/auth-pages.css">
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <img class="auth-logo" src="/public/logo_dark.svg" alt="AIIP">
+    {% block content %}{% endblock %}
+    <p class="auth-disclaimer">AIIP acompaña e informa, nunca diagnostica.</p>
+  </main>
+</body>
+</html>

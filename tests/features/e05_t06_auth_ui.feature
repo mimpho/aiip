@@ -86,6 +86,12 @@ Feature: Autenticación en Chainlit — login, signup, recuperación de contrase
     Then verify_otp() falla
     And se muestra un error claro sin exponer detalles internos de Supabase
 
+  Scenario: Acceder a /auth/confirm sin token_hash ni type no expone un error crudo de FastAPI
+    Given no se aportan token_hash ni type en la query string
+    When se accede a /auth/confirm sin esos parámetros
+    Then no se llega a llamar a verify_otp()
+    And se muestra la misma pantalla de error que ante un token inválido, no un JSON de FastAPI
+
   # ── Login con Google (@cl.oauth_callback) ───────────────────────────────
 
   Scenario: Login con Google vía oauth_callback nativo de Chainlit
@@ -93,6 +99,12 @@ Feature: Autenticación en Chainlit — login, signup, recuperación de contrase
     When Chainlit recibe el perfil de Google ya verificado (raw_user_data)
     Then se busca o crea el usuario correspondiente en auth.users de Supabase por email (Admin API)
     And se obtiene o crea su perfil con el role de la app
+    And se devuelve un cl.User válido para la sesión de Chainlit
+
+  Scenario: oauth_callback es invocable sin id_token, como lo hace la ruta genérica de Chainlit
+    Given el usuario completa el flujo de Google gestionado por Chainlit (@cl.oauth_callback)
+    When Chainlit invoca oauth_callback con los 4 argumentos posicionales de su ruta genérica, sin id_token
+    Then no se lanza TypeError por argumento faltante
     And se devuelve un cl.User válido para la sesión de Chainlit
 
   Scenario: Segundo login con Google del mismo usuario no duplica el perfil

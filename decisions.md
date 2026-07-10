@@ -593,6 +593,12 @@ El stub de `rag/retriever.py` creado en T-01 (`get_retriever(embeddings, chroma_
 - La integración real en `rag/pipeline.py` queda fuera de esta tarea — es T-06, mismo patrón que D-016 estableció para el retriever.
 - Si en el futuro se añade un selector explícito de idioma en interfaz (evolución futura de D-011), este fallback deja de ser crítico pero puede mantenerse como red de seguridad.
 
+**Actualización — 9 de julio de 2026:** QA manual sobre el chat real (durante E-05 T-06) encontró
+fallos de detección en frases declarativas cortas de síntomas en español (confianza >0.999,
+mismo patrón de "confianza falsa" ya descrito arriba, pero en frases muy por encima del umbral de
+10 caracteres — el umbral no protege de este caso). Detalle, muestra de pruebas y propuestas de
+mitigación en `backlog/ideas.md` → "Hallazgos del RAG para optimización en E-07", punto 4.
+
 ---
 
 ## D-018 — Generador LLM: nombres de variables agnósticos y estrategia de test mock + smoke real
