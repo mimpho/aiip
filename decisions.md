@@ -49,6 +49,7 @@
 - [D-038 — Theming real de Chainlit: `public/theme.json` como mecanismo de base, `style.css` de E-02 reescrito sobre selectores reales](#d-038--theming-real-de-chainlit-publictheme-json-como-mecanismo-de-base-stylecss-de-e-02-reescrito-sobre-selectores-reales)
 - [D-039 — Arranque de Chainlit vía `CHAINLIT_APP_ROOT` + symlinks, y saludo dinámico como mensaje real para poder themarlo](#d-039--arranque-de-chainlit-vía-chainlit_app_root--symlinks-y-saludo-dinámico-como-mensaje-real-para-poder-themarlo)
 - [D-040 — Flujo completo de autenticación en Chainlit: signup con confirmación de email, recuperación de contraseña vía rutas propias, y descubribilidad del enlace](#d-040--flujo-completo-de-autenticación-en-chainlit-signup-con-confirmación-de-email-recuperación-de-contraseña-vía-rutas-propias-y-descubribilidad-del-enlace)
+- [D-041 — Paso "Documentos consultados" (D-035): se deja de mostrar en el chat, redundante con el listado de fuentes de D-026](#d-041--paso-documentos-consultados-d-035-se-deja-de-mostrar-en-el-chat-redundante-con-el-listado-de-fuentes-de-d-026)
 
 ---
 
@@ -1597,6 +1598,36 @@ Todas las piezas nuevas cuelgan del mismo proceso Chainlit ya existente (sin sub
 - Paso manual pendiente de Marcos: confirmar que "Confirm email" está activado en el proyecto Supabase, y reescribir las plantillas "Confirm signup" y "Reset password" en el dashboard.
 - `design/auth/style.css` se retira (ya acordado en la revisión de la tarea, sin relación directa con esta decisión).
 - El consentimiento informado específico de datos de salud (D-009) no se resuelve en esta tarea, pero sí se le encuentra un lugar en el diseño sin reabrir D-031: ver la actualización del 9 de julio de 2026 en D-009 (gate explícito post-autenticación en `on_chat_start`, separado del formulario de login/signup).
+
+---
+
+## D-041 — Paso "Documentos consultados" (D-035): se deja de mostrar en el chat, redundante con el listado de fuentes de D-026
+
+**Fecha:** 10 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-05 T-07
+
+**Contexto**
+D-035 implementó el `cl.Step` "Documentos consultados" (`_format_retrieval_step` en `chainlit/main_family.py`) mostrando, por cada documento recuperado, source/filename, score y un extracto de ~200 caracteres del `page_content` — la coincidencia real encontrada en el chunk. Durante el smoke test manual de T-07, revisando el paso intermedio tal como lo ve el usuario en el chat real, quedó abierta la disyuntiva entre dos formas de presentar las fuentes consultadas en la conversación: mostrarlas de forma "nativa" vía el `cl.Step` (el mecanismo de D-035, expandible bajo "Usado Documentos consultados ⌄") o la solución custom ya existente de D-026 (`_build_sources_section`, el listado plano "Fuentes consultadas:" con enlaces al final de cada respuesta).
+
+Primer intento: mantener el `cl.Step` pero resumido (solo source/filename + score, sin el extracto de `page_content`). Al probarlo en vivo, Marcos observó que incluso esa versión resumida seguía siendo un bloque colapsable adicional ("Usado Documentos consultados ⌄") que repite la misma información que ya muestra "Fuentes consultadas:" justo encima — mismos ficheros, mismos scores en esencia — solo que en un formato distinto y más verboso (bloque plegable + icono de "usado" + repetición del nombre completo del fichero por cada chunk, incluso si varios chunks vienen del mismo documento).
+
+**Decisión**
+Se retira por completo el `cl.Step` de recuperación del flujo de `main_family.py`. El listado custom de D-026 ("Fuentes consultadas:", al final de la respuesta) queda como única superficie de trazabilidad de fuentes visible para el usuario familiar. `RAGPipeline.retrieve()` se sigue llamando primero en `_answer()` — se mantiene por la razón original de D-035 (evitar una segunda consulta al vectorstore, reutilizando `raw_results` en `aquery_stream()`), pero su resultado ya no se renderiza en la UI.
+
+**Alternativas descartadas**
+- Mantener el `cl.Step` con extracto de `page_content` (comportamiento original de D-035) — descartado: verboso y redundante.
+- Mantener el `cl.Step` resumido a solo fuente + score (primer ajuste de esta misma decisión) — descartado tras verlo en vivo: sigue siendo una segunda superficie con la misma información que "Fuentes consultadas:", sin aportar nada que el usuario familiar no tenga ya.
+- Quitar `pipeline.retrieve()` de `_answer()` y dejar que `aquery_stream()` haga su propia consulta al vectorstore — descartado: reintroduce la doble consulta que D-035 evitó explícitamente; no hay motivo para pagar ese coste si ya no se renderiza nada con `raw_results` antes del streaming (igual se sigue necesitando para pasarlo a `aquery_stream()`).
+
+**Justificación**
+El `.feature` de E-05 T-03 (`e05_t03_rag_steps_visualization.feature`) nunca exigió que el paso de recuperación se viera en el chat — solo que `RAGPipeline` expusiera los documentos recuperados como estructura de datos reutilizable sin una segunda consulta (Scenarios 1-3, que siguen intactos). El renderizado en `cl.Step` fue una decisión de UI de D-035 para la tarea de "visualización de pasos intermedios", pero una vez que D-026 ya resuelve la trazabilidad de fuentes de cara al usuario, mantener las dos superficies visibles a la vez es puro ruido — dos bloques con el mismo propósito, sin que ninguno añada información que el otro no tenga.
+
+**Consecuencias**
+- `chainlit/main_family.py`: se elimina `_format_retrieval_step()` y la constante `_RETRIEVAL_STEP_NAME`; `_answer()` ya no abre ningún `cl.Step`, pero conserva `pipeline.retrieve()` seguido de `aquery_stream(question, raw_results=raw_results)`.
+- `tests/features/e05_t03_rag_steps_visualization.feature`: el Scenario 4 pasa de "el chat muestra el paso de recuperación" a "el chat no abre ningún cl.Step, pero reutiliza los mismos resultados de retrieval sin segunda consulta". Scenarios 1-3 no cambian.
+- `tests/step_defs/test_e05_t03.py`: `se_envia_step_con_documentos` se reemplaza por `no_se_abre_step_con_documentos`, que verifica `retrieve()` llamado una vez, ningún `cl.Step` abierto (`_opened_steps` vacío) y el mensaje de streaming completo.
+- No afecta a D-026 (listado de fuentes al final de la respuesta), que sigue siendo la única superficie de citación de cara al usuario.
 
 ---
 

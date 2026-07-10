@@ -58,6 +58,7 @@ class _FakeUser:
 
 _fake_cl = types.ModuleType("chainlit")
 _fake_cl.password_auth_callback = lambda f: f
+_fake_cl.oauth_callback = lambda f: f
 _fake_cl.on_chat_start = lambda f: f
 _fake_cl.on_message = lambda f: f
 _fake_cl.action_callback = lambda name: (lambda f: f)
@@ -276,7 +277,7 @@ def ambos_provienen_de_misma_llamada(ctx):
     assert ctx["raw_from_retrieve"] is expected
 
 
-# ── Scenario 4: El chat muestra el paso de recuperación antes de la respuesta ─
+# ── Scenario 4: El chat no muestra un paso redundante con el listado de fuentes ─
 
 
 @given("una pregunta de un usuario autenticado", target_fixture="ctx")
@@ -305,36 +306,28 @@ def se_procesa_mensaje_on_message(ctx, monkeypatch):
     mock_pipeline.aquery_stream = MagicMock(side_effect=_gen)
 
     monkeypatch.setattr(main_family, "_get_pipeline", lambda: mock_pipeline)
-    monkeypatch.setattr(main_family.cl, "Step", _FakeStep)
 
     ctx["pipeline"] = mock_pipeline
     ctx["raw_results"] = raw_results
     _run_on_message(question)
 
 
-@then(
-    "se envía un paso (cl.Step) con los documentos recuperados antes de completar "
-    "el streaming de la respuesta"
-)
-def se_envia_step_con_documentos(ctx):
+@then("no se abre ningún paso (cl.Step) de documentos consultados")
+def no_se_abre_step_con_documentos(ctx):
     # 1. retrieve() fue llamado con la pregunta del usuario.
     ctx["pipeline"].retrieve.assert_called_once_with(ctx["question"])
 
-    # 2. Se abrió al menos un cl.Step.
-    assert _opened_steps, "No se abrió ningún cl.Step"
+    # 2. No se abrió ningún cl.Step (D-041: redundante con el listado de D-026).
+    assert not _opened_steps, f"Se abrió un cl.Step inesperado: {_opened_steps}"
 
-    # 3. El step tiene output no vacío (contiene el extracto).
-    step = _opened_steps[0]
-    assert step.output, "El cl.Step no tiene output"
-
-    # 4. El mensaje de respuesta recibió tokens del streaming.
+    # 3. El mensaje de respuesta recibió tokens del streaming.
     assert _sent_messages, "No se envió ningún mensaje al chat"
     assert _sent_messages[-1].content == "respuesta streaming"
 
 
 @then(
-    "el paso usa los mismos resultados de retrieval que la respuesta final, "
-    "sin una segunda consulta al vectorstore"
+    "el pipeline reutiliza los mismos resultados de retrieval para el streaming "
+    "de la respuesta, sin una segunda consulta al vectorstore"
 )
 def paso_usa_mismos_resultados_sin_segunda_consulta(ctx):
     # aquery_stream debe haber recibido raw_results= con el mismo objeto

@@ -214,6 +214,34 @@ body::after {
   margin-bottom: 1rem;
 }
 
+/* ── Sources list ("Fuentes consultadas:", D-026) ─────────────
+   The deterministic sources list is plain markdown appended after
+   the response text (and after the safety reminder, if any, per
+   D-034) — it's always the actual last content of the message, so
+   the same last-child pattern already used for the empty-message/
+   greeting rules above reliably targets it without needing a
+   dedicated wrapper element. Each markdown paragraph renders as its
+   own `<div role="article">` (verified in the compiled bundle,
+   chainlit/frontend/dist/assets/index-*.js: the `p()` renderer maps
+   to a div with that role, not a real `<p>` tag) — a first attempt
+   selecting `p:last-of-type` inside a single wrapping `[role="article"]`
+   never matched anything, since there is no such `<p>`.
+   `:has(+ ul:last-child)` on the heading div scopes the rule to only
+   fire when a sources list actually follows it, so it doesn't dim
+   the last sentence of a normal answer that has no sources metadata
+   (D-026's early-return case). Values (16px, --font-sans, opacity
+   .75) given directly by Marcos during live QA — de-emphasized
+   relative to the answer text above, same font-sans/muted treatment
+   as the rest of the app's UI chrome (theme.json), not the
+   --font-display used for the reply. */
+.ai-message .message-content [role="article"]:last-of-type:has(+ ul:last-child),
+.ai-message .message-content ul:last-child {
+  font-size: 16px;
+  font-family: var(--font-sans);
+  font-style: normal;
+  opacity: .85;
+}
+
 /* The markdown paragraph Chainlit renders inside .message-content
    (role="article", Tailwind's "leading-7" utility → line-height: 28px)
    sets its own line-height directly, which wins over the inherited
@@ -302,6 +330,19 @@ body::after {
 /* ── Sidebar ─────────────────────────────────────────────── */
 [data-sidebar="sidebar"] {
   border-right: 1px solid var(--color-border-subtle);
+}
+
+/* ── Watermark disclaimer ("Los LLM pueden cometer errores...") ──
+   Real, stable class from the compiled bundle: `<div class="watermark"
+   style="display:flex;align-items:center">` (chat.watermark translation
+   key, translations/es.json). The parent column (`flex flex-col
+   items-center w-full`) already centers the box itself, but the div
+   has no text-align of its own — missing Tailwind's `text-center` —
+   so when the text wraps to two lines on narrower widths, each line
+   stays left-aligned inside that centered box instead of reading as
+   centered. */
+.watermark {
+  text-align: center;
 }
 
 /* ── RAG intermediate step ("Documentos consultados", D-035) ── */

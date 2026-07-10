@@ -180,6 +180,28 @@ Durante la validación de E-05 T-03 (visualización de pasos intermedios) se evi
 - **Problema:** El modelo de embeddings BGE-M3 (búsqueda semántica pura) asocia la pregunta de "hospitales en Barcelona" a cualquier chunk de la lista de hospitales de España (recuperando Alicante, Gran Canaria, Oviedo) porque semánticamente todos hablan de hospitales con inmunología. La palabra "Barcelona" no tiene fuerza suficiente para hacer de filtro.
 - **Idea/Solución:** Implementar **Hybrid Search** (combinando Dense Search para semántica con BM25 para coincidencias exactas por palabra clave), de forma que nombres propios o geográficos fuercen la coincidencia estricta y eliminen el ruido.
 
+**Actualización — 10 jul 2026 (smoke test E-05 T-07, CU-05):** segunda confirmación real
+del mismo patrón, con el documento causante identificado. La pregunta "¿A quién llamo
+si es fin de semana?" recuperó el teléfono de Urgencias Pediátricas de un hospital
+concreto (`data/raw/upiip/guia_antibiotics_esp_0.pdf`, real, no alucinado — verificado
+contra el PDF), pero **no** citó `aedip/Hospitales-con-Servicios-de-Inmunologia.html`,
+que es el directorio de hospitales con servicio de inmunología — a priori la fuente más
+canónica para ese tipo de pregunta. Inspeccionado el HTML: el contenido útil (nombre de
+hospital, dirección, teléfono) está diluido entre mucho boilerplate de maquetación
+(`dfd-spacer-module`, `data-parallax_sense`, clases CSS largas, atributos de imagen
+repetidos) que probablemente degrada la señal semántica del chunk en el embedding,
+haciendo que compita en desventaja frente a un PDF con una sección "Datos de contacto"
+limpia y bien delimitada. Mismo diagnóstico de fondo (falta de coincidencia exacta/ruido),
+pero aquí el ruido está en el propio documento fuente, no solo en la pregunta.
+Idea adicional de Marcos, más ligera que Hybrid Search completo: mantener por documento
+una lista de keywords manual que aporte peso extra a la hora de puntuar/priorizar ese
+documento para ciertas consultas — un balanceo manual en vez de BM25 automático. Es
+desarrollo custom (curación manual de keywords por fuente), pero podría ser un parche
+más barato de implementar antes de abordar Hybrid Search completo. Revisar ambas
+opciones juntas en E-07/E-09; para el directorio de hospitales en concreto, limpiar el
+HTML antes de indexar (quitar boilerplate de maquetación) sería una mejora previa barata
+independiente de cuál de las dos estrategias se elija.
+
 ### 3. Registro lingüístico no siempre accesible (8 jul 2026)
 - **Criticidad:** 🟡 Media — problema de comprensión, no de información incorrecta
 - **Problema:** detectado al hacer QA manual de E-05 T-04 — algunas respuestas generadas (ej. sobre el proceso de trasplante de médula) usan vocabulario clínico ("acondicionamiento", "recuperación del sistema inmunitario") que puede no ser comprensible para cualquier familiar sin formación médica, pese a que `[TONO — PERFIL FAMILIAR]` en `prompts/system_prompt_family.txt` ya pide "lenguaje accesible... sin tecnicismos innecesarios".
@@ -216,3 +238,14 @@ Durante la validación de E-05 T-03 (visualización de pasos intermedios) se evi
   dado que toca directamente la calidad de respuesta ante síntomas.
 - **Cuándo revisarlo:** al abordar E-07, junto con los hallazgos 1-3 de esta misma sección — o
   antes, si se decide que es bloqueante para el hito del 10 de julio.
+
+**Actualización — 10 jul 2026 (smoke test E-05 T-07):** tercer caso real, esta vez con un número
+en la frase: `"Mi hijo tiene 38.5°C, ¿es urgente?"` (CU-01) se detectó como neerlandés y la
+respuesta completa se generó en ese idioma. Hipótesis de Marcos: el número/símbolo `"38.5°C"`
+diluye la señal lingüística del resto de la frase — coherente con el patrón de "confianza falsa"
+ya descrito arriba, ahora también con dígitos en el texto, no solo con frases declarativas
+puramente textuales. El contenido de seguridad de la respuesta fue correcto (antipirético, aviso
+de urgencias, 112) — el fallo es solo de idioma, Falso Negativo Cero no se vio comprometido.
+Evaluado como no bloqueante para el hito del 10 de julio (decisión de Marcos): se documenta aquí
+y se revisa junto al resto en E-07/E-09, no se aborda como fix puntual ahora. Detalle completo en
+`tests/results/e05_t07_smoke_test_results.md`.
