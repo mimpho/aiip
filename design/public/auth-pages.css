@@ -60,11 +60,15 @@ body.auth-page {
 
 .auth-title {
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 400;
   font-size: var(--text-2xl);
   line-height: var(--line-height-tight);
   letter-spacing: -0.01em;
-  color: var(--color-text-primary);
+  background:              linear-gradient(154deg, var(--color-accent-family), var(--color-accent-professional));
+  -webkit-background-clip: text;
+  background-clip:         text;
+  -webkit-text-fill-color: transparent;
+  color:                   transparent;
   margin: 0 0 var(--space-3);
 }
 
@@ -95,6 +99,11 @@ body.auth-page {
   color: var(--color-text-muted);
 }
 
+/* height/border-radius/font-size on inputs and buttons below (10 jul
+   2026, Marcos): 15px sits between --text-sm (14) and --text-base (16)
+   in tokens.css, so it's set literally here rather than pointing at a
+   token that doesn't exist. border-radius already matches --radius-md
+   (10px) exactly, kept as the token. */
 .auth-field__input {
   height: 46px;
   border-radius: var(--radius-md);
@@ -103,7 +112,7 @@ body.auth-page {
   padding: 0 var(--space-4);
   color: var(--color-text-primary);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: 15px;
 }
 
 .auth-field__input::placeholder {
@@ -127,14 +136,14 @@ body.auth-page {
 }
 
 .auth-button {
-  height: 48px;
+  height: 46px;
   border: none;
   border-radius: var(--radius-md);
   background: var(--color-accent);
   color: #ffffff;
   font-family: var(--font-body);
   font-weight: var(--font-weight-semibold);
-  font-size: var(--text-base);
+  font-size: 15px;
   cursor: pointer;
   box-shadow: 0 8px 22px rgba(110, 139, 255, 0.3);
   transition: background 0.15s ease;
@@ -162,10 +171,11 @@ body.auth-page {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 48px;
+  height: 46px;
   border-radius: var(--radius-md);
   background: var(--color-accent);
   color: #ffffff;
+  font-size: 15px;
   font-weight: var(--font-weight-semibold);
   margin-top: 0;
 }

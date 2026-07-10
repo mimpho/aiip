@@ -151,6 +151,12 @@ Feature: Autenticación en Chainlit — login, signup, recuperación de contrase
     When busco la opción de recuperar contraseña, inyectada vía custom_js
     Then el enlace es visible y lleva a /auth/forgot-password
 
+  Scenario: El badge del logo, título y subtítulo forman un grupo centrado pegado a la tarjeta, inyectados vía custom_js
+    Given abro la pantalla de login de la app familiar
+    When busco el logo (en su badge redondeado), el título "Asistente Inteligente de Inmunodeficiencias Primarias" y su subtítulo
+    Then el logo original de Chainlit (esquina superior izquierda) no se muestra duplicado
+    And los tres elementos están centrados, agrupados y con la tipografía de la app, justo encima de la tarjeta
+
   Scenario: El correo de confirmación de signup llega y su enlace confirma la cuenta
     Given me registro con un email real
     When reviso mi bandeja de entrada
