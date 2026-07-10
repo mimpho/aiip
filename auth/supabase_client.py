@@ -77,6 +77,20 @@ def signup(email: str, password: str, role: str) -> dict:
     """
     client = get_supabase_client(use_service_key=False)
     response = client.auth.sign_up({"email": email, "password": password})
+
+    # Con "Confirm email" activado (D-040), Supabase no eleva error para un
+    # email ya existente y confirmado — por protección anti-enumeración,
+    # devuelve un usuario ofuscado con identities=[] y sin sesión, en vez de
+    # AuthApiError. Sin este chequeo, get_or_create_profile revienta contra
+    # la FK de `profiles` con un user_id que no existe de verdad en
+    # auth.users. Se normaliza al mismo AuthApiError que ya se propagaba
+    # cuando "Confirm email" estaba desactivado, para no cambiar el
+    # contrato de cara a quien llama.
+    if not response.user.identities:
+        raise AuthApiError(
+            "User already registered", status=400, code="user_already_exists"
+        )
+
     user_id = response.user.id
     get_or_create_profile(user_id, role)
     return {"user_id": user_id, "role": role, "session": response.session}

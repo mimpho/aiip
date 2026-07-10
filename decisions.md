@@ -50,6 +50,7 @@
 - [D-039 — Arranque de Chainlit vía `CHAINLIT_APP_ROOT` + symlinks, y saludo dinámico como mensaje real para poder themarlo](#d-039--arranque-de-chainlit-vía-chainlit_app_root--symlinks-y-saludo-dinámico-como-mensaje-real-para-poder-themarlo)
 - [D-040 — Flujo completo de autenticación en Chainlit: signup con confirmación de email, recuperación de contraseña vía rutas propias, y descubribilidad del enlace](#d-040--flujo-completo-de-autenticación-en-chainlit-signup-con-confirmación-de-email-recuperación-de-contraseña-vía-rutas-propias-y-descubribilidad-del-enlace)
 - [D-041 — Paso "Documentos consultados" (D-035): se deja de mostrar en el chat, redundante con el listado de fuentes de D-026](#d-041--paso-documentos-consultados-d-035-se-deja-de-mostrar-en-el-chat-redundante-con-el-listado-de-fuentes-de-d-026)
+- [D-042 — signup() no detectaba emails ya registrados y confirmados tras activar "Confirm email" (D-040)](#d-042--signup-no-detectaba-emails-ya-registrados-y-confirmados-tras-activar-confirm-email-d-040)
 
 ---
 
@@ -1628,6 +1629,67 @@ El `.feature` de E-05 T-03 (`e05_t03_rag_steps_visualization.feature`) nunca exi
 - `tests/features/e05_t03_rag_steps_visualization.feature`: el Scenario 4 pasa de "el chat muestra el paso de recuperación" a "el chat no abre ningún cl.Step, pero reutiliza los mismos resultados de retrieval sin segunda consulta". Scenarios 1-3 no cambian.
 - `tests/step_defs/test_e05_t03.py`: `se_envia_step_con_documentos` se reemplaza por `no_se_abre_step_con_documentos`, que verifica `retrieve()` llamado una vez, ningún `cl.Step` abierto (`_opened_steps` vacío) y el mensaje de streaming completo.
 - No afecta a D-026 (listado de fuentes al final de la respuesta), que sigue siendo la única superficie de citación de cara al usuario.
+
+---
+
+## D-042 — signup() no detectaba emails ya registrados y confirmados tras activar "Confirm email" (D-040)
+
+**Fecha:** 10 de julio de 2026
+**Fase:** técnica / seguridad
+**Épica:** E-05 (cierre), regresión sobre código de E-03
+
+**Contexto**
+Al cerrar E-05, `pytest tests/ -v` reveló que `test_e03_t03.py` (E-03 T-03, "Registro con
+email ya existente eleva un error claro") fallaba con un `APIError` de foreign key en
+`profiles` (`Key (id)=(...) is not present in table "users"`), no con el `AuthApiError`
+que el test espera. Investigado: con "Confirm email" desactivado (estado del proyecto
+durante E-03), `client.auth.sign_up()` para un email ya registrado eleva `AuthApiError`
+("User already registered") de forma directa. Con "Confirm email" activado (D-040,
+E-05 T-06), Supabase cambia de comportamiento por protección anti-enumeración: si el
+email ya existe y está confirmado, `sign_up()` **no eleva error** — devuelve un usuario
+ofuscado (`identities: []`, sin sesión) indistinguible a simple vista de un registro
+nuevo legítimo, para no revelar si un email tiene cuenta o no.
+
+`signup()` en `auth/supabase_client.py` no contemplaba este segundo camino: seguía
+adelante llamando a `get_or_create_profile(user_id, role)` con el `user_id` del usuario
+ofuscado, que no existe de verdad en `auth.users` — de ahí el error de foreign key. El
+test nunca había ejercitado este camino con éxito hasta ahora: antes fallaba antes,
+por rate limit de Supabase al hacer dos `signup()` reales seguidos en el mismo test (ver
+también el fix de aislamiento de precondiciones más abajo) — el bug de `signup()` estaba
+enmascarado por esa flakiness previa.
+
+**Impacto real:** desde que D-040 activó "Confirm email" (E-05 T-06), cualquier intento
+real de registro con un email ya existente y confirmado producía un error 500 (foreign
+key) en vez de un mensaje claro de "email ya registrado" — no un problema de seguridad
+de Falso Negativo Cero, pero sí una regresión de UX/robustez en el flujo de signup no
+detectada hasta el cierre de E-05.
+
+**Decisión**
+`signup()` comprueba `response.user.identities` tras `sign_up()`: si está vacío, eleva
+`AuthApiError("User already registered", status=400, code="user_already_exists")`
+manualmente, replicando el mismo contrato de error que ya existía con "Confirm email"
+desactivado, antes de intentar crear el perfil.
+
+**Alternativas descartadas**
+- Comprobar `response.session is None` como señal de "email ya existente" — descartado:
+  con "Confirm email" activado, un signup legítimo y nuevo *también* tiene
+  `session is None` hasta que se confirma el correo (D-040). `identities` es la única
+  señal que distingue de forma fiable "usuario ofuscado por duplicado" de "usuario nuevo
+  sin confirmar todavía".
+
+**Consecuencias**
+- `auth/supabase_client.py::signup()`: chequeo añadido antes de `get_or_create_profile`.
+- `tests/step_defs/test_e03_t03.py`: además de este fix, las precondiciones de los
+  escenarios "email ya existente" y "login correcto" (`usuario_ya_registrado`,
+  `usuario_registrado_con_role`) se cambian de `signup()` público a creación directa vía
+  Admin API (`admin_client.auth.admin.create_user(..., email_confirm=True)`) — evita que
+  la propia precondición del test dispare el rate limit de Supabase o el requisito de
+  confirmación antes de llegar a la llamada que de verdad se testea. Mismo patrón que
+  `_create_auth_user` en `tests/conftest.py`, ya previsto en `tasks/E03-T03-plan.md` para
+  este Given y nunca aplicado en la implementación original.
+- No afecta a `get_or_create_google_user()` (login con Google, D-032): ese flujo ya usa
+  la Admin API directamente (`create_user` + fallback a `_find_user_by_email`), no pasa
+  por `sign_up()` público ni por este camino ofuscado.
 
 ---
 
