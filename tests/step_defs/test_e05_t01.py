@@ -6,6 +6,7 @@ import types
 from pathlib import Path
 from unittest.mock import MagicMock
 
+from fastapi import FastAPI
 from pytest_bdd import given, parsers, scenarios, then, when
 
 # ── Fake chainlit module (not installed in this environment) ─────────────────
@@ -51,15 +52,26 @@ _fake_cl = types.ModuleType("chainlit")
 _fake_cl.password_auth_callback = lambda f: f
 _fake_cl.on_chat_start = lambda f: f
 _fake_cl.on_message = lambda f: f
+_fake_cl.action_callback = lambda name: (lambda f: f)
 _fake_cl.User = _FakeUser
 _fake_cl.user_session = MagicMock()
 _fake_cl.Message = _FakeMessage
 _fake_cl.Step = _FakeStep
+_fake_cl.Action = MagicMock()
 
 # Overwrite (not setdefault) and drop any cached main_family: other test
 # modules register their own fake "chainlit", and main_family must be
 # (re)imported bound to *this* file's fake, not whichever ran first.
 sys.modules["chainlit"] = _fake_cl
+
+# main_family.py hace `from chainlit.server import app` (E-05 T-06, D-040)
+# para registrar rutas propias sobre la app de Chainlit — sin este stub,
+# el import falla porque el "chainlit" fake de arriba no es un paquete de
+# verdad y no tiene submódulo `server`.
+_fake_server = types.ModuleType("chainlit.server")
+_fake_server.app = FastAPI()
+sys.modules["chainlit.server"] = _fake_server
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "chainlit"))
 sys.modules.pop("main_family", None)
 import main_family  # noqa: E402

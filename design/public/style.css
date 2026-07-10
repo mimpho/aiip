@@ -35,7 +35,18 @@
    ============================================================ */
 
 @import url('./tokens.css');
-@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=PT+Serif:ital,wght@0,400;1,400&display=swap');
+/* PT Serif (10 jul 2026): replaces Spectral as --font-display (titles) and
+   is also applied directly to chat message content below — see the
+   `.ai-message .message-content` / `[data-step-type="user_message"]`
+   rules further down. Titles read at regular weight (400) — the 700
+   weight was tried and reverted (10 jul 2026, Marcos: read too bold),
+   so only 400 is imported now, no italic needed here but 1,400 kept
+   for parity with the other imports in case markdown emphasis
+   (`*text*`) appears inside a serif-styled block.
+   Form elements are untouched on purpose (Marcos, 10 jul 2026): inputs/
+   buttons/labels keep reading --font-sans (Hanken Grotesk, theme.json),
+   which this import doesn't touch. */
 
 /* ── Ambient background glow ──────────────────────────────── */
 /* CSS can't insert a real <div> into Chainlit's DOM without custom_js
@@ -116,29 +127,21 @@ body::before {
   mask-repeat:  no-repeat;
 }
 
-/* ── Assistant message card ──────────────────────────────── */
-/* Chainlit's default skin puts no background around the assistant's
-   reply — .ai-message and .message-content are real classes but
-   render as plain text. Reference gives it a card (screens-chat.html:
-   66 dark / :119 light): sharp top-left corner (points at the
-   avatar), soft lift shadow in light mode only. The avatar stays in
-   its native position (left of the message row) rather than the
-   reference's "avatar + AIIP label above the card" — that would need
-   restructuring the row into a column plus decorative label text.
-   Border/text colors here use the closest existing tokens
-   (--color-border / --color-text-secondary) rather than the
-   reference's exact one-off hex — per D-013, tokens.css stays the
-   only place new color values get introduced. */
+/* ── Assistant message ────────────────────────────────────── */
+/* Was a card (screens-chat.html reference: background, border, radius,
+   light-mode shadow) — reverted per Marcos (10 jul 2026): the reply
+   should sit directly on the page background, not inside a box. Since
+   .message-content is Chainlit's own node (not one we can restructure),
+   this strips every box-like property — background, border, radius,
+   padding, shadow — and keeps only what governs the text itself. */
 .ai-message .message-content {
-  background:    var(--color-surface);
-  border:        1px solid var(--color-border);
-  border-radius: 4px var(--radius-lg) var(--radius-lg) var(--radius-lg);
-  padding:       14px 17px;
   color:         hsl(var(--card-foreground));
   font-size:     var(--text-base);
-}
-.light .ai-message .message-content {
-  box-shadow: 0 1px 2px rgba(26, 33, 41, 0.04);
+  /* Chat content → PT Serif (10 jul 2026, Marcos), same token as the
+     titles (--font-display). Chainlit's own base font (--font-sans,
+     theme.json) still drives every form/input/button element — this
+     only overrides the reply text itself. */
+  font-family:   var(--font-display);
 }
 
 /* ── Greeting title ───────────────────────────────────────── */
@@ -147,7 +150,11 @@ body::before {
    message of the thread. [data-step-type="assistant_message"]:first-child
    is a reliable hook for exactly that message (not :first-of-type,
    which would match on tag name across unrelated siblings). Strip the
-   card/avatar treatment and render as a plain display heading instead. */
+   card/avatar treatment and render as a plain display heading instead.
+   Text uses a family→professional gradient (both accent tokens, not
+   just the active profile's) rather than flat --foreground, per Marcos
+   — the greeting is the one place the brand's two profile colors
+   appear together. */
 [data-step-type="assistant_message"]:first-child .ai-message {
   gap: 0;
 }
@@ -155,17 +162,33 @@ body::before {
   display: none;
 }
 [data-step-type="assistant_message"]:first-child .message-content {
-  background:     none;
+  background:              linear-gradient(154deg, var(--color-accent-family), var(--color-accent-professional));
+  -webkit-background-clip: text;
+  background-clip:         text;
+  -webkit-text-fill-color: transparent;
+  color:          transparent;
   border:         none;
   padding:        0 0 0 2rem;
   box-shadow:     none;
-  color:          hsl(var(--foreground));
   font-family:    var(--font-display);
-  font-weight:    500;
+  font-weight:    400;
   font-size:      46px;
-  line-height:    1.05;
+  line-height:    1.2;
   letter-spacing: -0.01em;
-  margin-bottom:  3rem;
+  margin-bottom:  1rem;
+}
+/* The markdown paragraph Chainlit renders inside .message-content
+   (role="article", Tailwind's "leading-7" utility → line-height: 28px)
+   sets its own line-height directly, which wins over the inherited
+   1.2 above regardless of selector specificity — inheritance never
+   overrides an explicit declaration on the element itself. With plain
+   solid-color text that's invisible (ink simply overflows the tight
+   line box), but background-clip: text only paints the gradient
+   within that box's height, so the top of the 46px glyphs fell in the
+   unpainted area above it and looked clipped. Override line-height on
+   the actual element instead of relying on cascade from the ancestor. */
+[data-step-type="assistant_message"]:first-child .message-content [role="article"] {
+  line-height: 1.2;
 }
 
 /* ── User message bubble ──────────────────────────────────── */
@@ -182,6 +205,7 @@ body::before {
   border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
   padding:       11px 16px;
   font-size:     var(--text-base);
+  font-family:   var(--font-display);
 }
 
 /* While the answer has no tokens yet (main_family.py sends an empty
@@ -205,13 +229,14 @@ body::before {
    component as messages, looking up /avatars/{step name} — since no
    file matches that name, it falls back to Chainlit's own default
    logo. Rather than adding a file for it, remove the icon and its
-   reserved layout space, then pull the label left to line up with the
-   assistant card's text inset (14px 17px padding) above it. */
+   reserved layout space, then pull the label left with a small inset
+   (10px, 10 jul 2026 — was 17px to line up with the assistant card's
+   old text padding, which no longer exists now that card is gone). */
 [data-step-type="undefined"] span:has(> img[alt^="Avatar for"]) {
   display: none;
 }
 [data-step-type="undefined"] [id^="step-"] {
-  padding-left: 17px;
+  padding-left: 10px;
 }
 /* Defensive: if the step's expanded body reuses .message-content
    internally, strip the card treatment so it doesn't nest a card
@@ -290,4 +315,253 @@ body::before {
    only "waiting" indicator, per Marcos. */
 .-ml-1\.5.flex.items-center.flex-wrap > button:not([class~="w-9"]) svg {
   display: none;
+}
+
+/* ── Login page (E-05 T-06 / D-040) ──────────────────────────
+   Chainlit's login form already reads its base look from theme.json
+   (the shadcn Tailwind utilities on #email/#password/the submit
+   button all consume the same --background/--card/--primary vars as
+   the rest of the app). Confirmed against a live DOM capture of the
+   rendered /login route (chainlit==2.11.1, same verification method as
+   D-038): the heading uses the body font instead of AIIP's display
+   font, the "forgot password" link that auth.js injects (design/
+   public/auth.js, D-040 punto 5) has no styling of its own, and
+   inputs/buttons ship at the shadcn default size (h-10/rounded-md,
+   verified in the compiled bundle: components `rc`/`Lt`) instead of
+   the app's own dimensions. `#root form h1` is scoped to the login
+   form specifically — plain `h1` would also catch any
+   markdown-rendered heading inside a chat message. */
+#root form h1 {
+  font-family:              var(--font-display);
+  font-weight:              400;
+  background:               linear-gradient(154deg, var(--color-accent-family), var(--color-accent-professional));
+  -webkit-background-clip:  text;
+  background-clip:          text;
+  -webkit-text-fill-color:  transparent;
+  color:                    transparent;
+}
+
+/* Same size spec as design/public/auth-pages.css's .auth-field__input/
+   .auth-button (10 jul 2026, Marcos) — kept the two auth surfaces
+   (native /login vs the custom /auth/* pages) visually consistent.
+   `button:not([class~="w-9"])` excludes the icon-only show/hide-
+   password toggle inside the password field (shadcn `size="icon"` →
+   `h-9 w-9`, same exclusion pattern already used above for the
+   copy/edit message-action icon buttons) — only the Sign In and
+   Continue-with-Google buttons should get the larger size. */
+#root form input {
+  height:        46px;
+  border-radius: 10px;
+  font-size:     15px;
+}
+#root form button:not([class~="w-9"]) {
+  height:        46px;
+  border-radius: 10px;
+  font-size:     15px;
+}
+
+#aiip-forgot-password-link {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-accent-family);
+  text-decoration: none;
+}
+#aiip-forgot-password-link:hover {
+  color: var(--color-accent-family-hover);
+  text-decoration: underline;
+}
+
+/* ── Login page: single centered card, no split panel (10 jul 2026) ──
+   Chainlit's login route ships a fixed two-column template (verified
+   against the compiled bundle, chainlit/frontend/dist/assets/index-*.js,
+   same method as everything else in this file): a
+   `<div class="grid min-h-svh lg:grid-cols-2">` with the themed logo +
+   centered auth form on the left, and a decorative
+   `<div class="relative hidden bg-muted lg:block overflow-hidden">` on
+   the right holding an `<img>` that falls back to Chainlit's own
+   `/favicon` endpoint whenever `ui.login_page_image` isn't set in
+   config.toml (ours isn't) — that fallback is the oversized logo shape
+   filling the right half today, not a bug, just an unconfigured
+   default.
+
+   The reference (docs/design/standalone-html/screens-auth.html) has no
+   split panel at all — a single glass card, centered, on the app's own
+   ambient glow (the `body::before` gradient defined near the top of
+   this file already paints behind this route too, nothing extra needed
+   for that part). Closest real-DOM equivalent: hide the decorative
+   panel, collapse the grid to one column, and give the reference's
+   card treatment (glass background, border, radius-xl, per-theme
+   shadow — same tokens as the reference's own #0F1419/#F4F6F9 cards)
+   to the form's own wrapper.
+
+   Everything here is scoped under the outer grid selector rather than
+   relying on the inner class combos alone — `max-w-xs` in particular
+   is a generic Tailwind utility that could in principle recur
+   elsewhere in the app (dialogs, popovers); nesting under the login
+   page's distinctive `min-h-svh` grid keeps this from leaking into
+   unrelated UI. The small top-left logo is left where Chainlit places
+   it (outside the card, top-left corner) — the reference's "badge
+   above the title, inside the card" treatment would need the logo
+   moved across non-adjacent DOM nodes, which is a separate, more
+   fragile change than what was asked for here. */
+.grid.min-h-svh.lg\:grid-cols-2 {
+  grid-template-columns: 1fr;
+}
+.grid.min-h-svh.lg\:grid-cols-2 > div.relative.bg-muted.overflow-hidden {
+  display: none;
+}
+.grid.min-h-svh.lg\:grid-cols-2 .w-full.max-w-xs {
+  max-width:       440px;
+  width:           100%;
+  padding:         32px;
+  background:      var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border:          1px solid var(--color-border);
+  border-radius:   var(--radius-xl);
+  box-shadow:      0 1px 3px rgba(0, 0, 0, .1);
+}
+/* Light mode only: soft lift shadow, per the reference's light card
+   (screens-auth.html light variant) — dark keeps the barely-there
+   shadow above, matching the reference's dark card. */
+.light .grid.min-h-svh.lg\:grid-cols-2 .w-full.max-w-xs {
+  box-shadow: 0 10px 30px rgba(26, 33, 41, .06);
+}
+
+/* Card wrapper (`.flex.flex-1.items-center.justify-center`, same node
+   injectLoginHeading anchors to in auth.js) ships `items-center` from
+   Tailwind, vertically centering the card in the column's leftover
+   height below the heading — reverted to top-aligned per Marcos
+   (10 jul 2026): with the badge/title/subtitle already anchoring the
+   top of the column, centering left too much dead space below the
+   card on tall viewports. justify-center (horizontal) is untouched. */
+.grid.min-h-svh.lg\:grid-cols-2 .flex.flex-1.items-center.justify-center {
+  align-items: flex-start;
+}
+
+/* Chainlit's own top-left logo (the `w-[150px]` element, top of the
+   column) is replaced by the centered badge below, grouped with the
+   title right above the card — two logos on the same page would be
+   redundant. */
+.grid.min-h-svh.lg\:grid-cols-2 .flex.justify-center.gap-2.md\:justify-start {
+  display: none;
+}
+
+/* Per-panel radial glow (screens-auth.html: `position:absolute; inset:0;
+   background:radial-gradient(85% 55% at 50% -5%, rgba(110,139,255,.16),
+   transparent 62%)`), distinct from the page-wide animated glow defined
+   near the top of this file (body::before) — this one is static and
+   scoped to the login column itself, layered behind the logo/title/card
+   group. `position:relative` on the column gives the pseudo-element's
+   `inset:0` something to size against (the column has no positioning
+   context by default). Color uses --primary (already the app's accent
+   in shadcn-variable form, same one the starter chips border/tint reuse)
+   rather than the reference's literal hex, per D-013. */
+.grid.min-h-svh.lg\:grid-cols-2 > div:first-child {
+  position: relative;
+}
+.grid.min-h-svh.lg\:grid-cols-2 > div:first-child::before {
+  content:    '';
+  position:   absolute;
+  inset:      0;
+  background: radial-gradient(85% 55% at 50% -5%, hsl(var(--primary) / 0.16), transparent 62%);
+  pointer-events: none;
+}
+
+/* Logo badge + title + subtitle between the logo's old spot and the
+   card (design/public/auth.js, injectLoginHeading) — real DOM nodes
+   inserted by JS, not CSS-generated content, so styled like any other
+   element. Sizes/colors mirror the reference's badge (62px, radius
+   17px) and its h1 (32px Spectral)/muted subtitle; centered and given
+   just enough bottom margin to read as one group attached to the card
+   below, not three separate floating pieces. */
+#aiip-login-heading {
+  text-align: center;
+  max-width:  440px;
+  /* `auto` on the sides, not just `0 0 28px` — the column is a flex
+     column with the default `align-items: stretch`, so a plain
+     max-width without horizontal auto margins left this whole group
+     flush against the left edge instead of centered (text-align only
+     centers the inline text *inside* the box, not the box itself). This
+     is what made the logo/title/subtitle look off-center and detached
+     from the card, which centers correctly via its own flex wrapper. */
+  margin:     0 auto 28px;
+}
+#aiip-login-logo-badge {
+  width:          62px;
+  height:         62px;
+  border-radius:  17px;
+  margin:         0 auto 18px;
+  display:        flex;
+  align-items:    center;
+  justify-content: center;
+  background:     hsl(var(--primary) / 0.10);
+  border:         1px solid hsl(var(--primary) / 0.30);
+}
+.light #aiip-login-logo-badge {
+  background: var(--color-surface);
+  border:     1px solid var(--color-border);
+  box-shadow: 0 4px 14px hsl(var(--primary) / 0.16);
+}
+#aiip-login-logo-badge img {
+  width:  34px;
+  height: 34px;
+}
+#aiip-login-heading-title {
+  font-family:              var(--font-display);
+  font-weight:              400;
+  font-size:                var(--text-2xl);
+  line-height:              1.2;
+  letter-spacing:           -0.01em;
+  background:               linear-gradient(154deg, var(--color-accent-family), var(--color-accent-professional));
+  -webkit-background-clip:  text;
+  background-clip:          text;
+  -webkit-text-fill-color:  transparent;
+  color:                    transparent;
+  margin:                   0;
+}
+#aiip-login-heading-subtitle {
+  font-family: var(--font-body);
+  font-size:   var(--text-sm);
+  color:       var(--color-text-secondary);
+  margin:      13px 0 0;
+}
+
+/* Theme toggle (design/public/auth.js, injectThemeToggle /
+   positionThemeToggle, 10 jul 2026, revisión 2). Chainlit's own chat-
+   header toggle (`#theme-toggle`, component `aGn`) is hidden outright —
+   our button replaces it everywhere so the control looks and behaves
+   the same on /login and in the authenticated app, instead of two
+   toggles fighting for the same corner (the original bug report).
+   `#aiip-theme-toggle` itself carries no visual styling: in the header
+   it's given the native button's own className at runtime (JS), so it
+   inherits that row's icon-button look for free; the glass-pill
+   treatment below only applies via the `--floating` modifier class,
+   which JS adds solely when there's no header to dock into (/login). */
+#theme-toggle {
+  display: none;
+}
+#aiip-theme-toggle {
+  cursor: pointer;
+}
+#aiip-theme-toggle.aiip-theme-toggle--floating {
+  position:        fixed;
+  top:              20px;
+  right:            20px;
+  z-index:          50;
+  width:            40px;
+  height:           40px;
+  display:          flex;
+  align-items:      center;
+  justify-content:  center;
+  border-radius:    999px;
+  border:           1px solid var(--color-border);
+  background:       var(--glass-bg);
+  backdrop-filter:          blur(var(--glass-blur));
+  -webkit-backdrop-filter:  blur(var(--glass-blur));
+  color:            var(--color-text-primary);
+  transition:       border-color .15s ease;
+}
+#aiip-theme-toggle.aiip-theme-toggle--floating:hover {
+  border-color: hsl(var(--primary) / 0.4);
 }

@@ -185,6 +185,8 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 
 **Nota de alcance (9 jul 2026):** al arrancar T-05 (task-start) se detectó, inspeccionando el CSS compilado real de Chainlit 2.11.1 y `chainlit/server.py`, que `design/public/style.css` (entregable de E-02) define variables `--cl-color-*` y clases `.cl-*` que no existen en el DOM/CSS real de Chainlit (que usa el esquema shadcn/Tailwind: `--primary`, `--background`, `--foreground`, `--accent`, `--border`, `--sidebar-*`, `--radius`, `--font-sans`/`--font-mono`) ni se usa el mecanismo oficial de theming (`public/theme.json`, inyectado por Chainlit como `window.theme`). Con alta probabilidad el theming de E-02 nunca se aplicó al chat real — nunca se verificó visualmente contra un servidor Chainlit corriendo, solo contra comps de v0/Claude Design. D-038 documenta el hallazgo y amplía el alcance de T-05: no es solo "repasar y hacer responsive" sino crear `design/public/theme.json` + corregir selectores de `style.css` a clases reales (verificación de clases exactas se hace en Antigravity con devtools durante la implementación, dado que Cowork no tiene navegador conectado al Chainlit local).
 
+**Nota de alcance (9 jul 2026):** al formalizar T-06 (task-start) se detectó que Chainlit no soporta signup ni recuperación de contraseña de forma nativa (solo login vía `password_auth_callback`, formulario fijo sin mensajes custom). D-040 amplía el alcance original de T-06 (que solo cubría signup + login Google + `auth/style.css`) para incluir también la recuperación de contraseña completa: rutas propias sobre la misma app de Chainlit (`/auth/forgot-password`, `/auth/confirm` compartida con la confirmación de signup), plantillas de email de Supabase reescritas, y un `custom_js` mínimo para la descubribilidad del enlace.
+
 **Estado:** 🔵 En curso
 
 ### Tareas
@@ -196,7 +198,7 @@ Interfaz de usuario para el perfil familias con visualización del pipeline RAG.
 | T-03 | Visualización de pasos intermedios del RAG | Sí | ✅ Completada |
 | T-04 | Onboarding y disclaimers de seguridad | No | ✅ Completada |
 | T-05 | Theming completo (tokens E-02) + responsive del chat | No | ✅ Completada |
-| T-06 | UI de autenticación en Chainlit: signup + login Google + fusión de auth/style.css | Parcial | ⚪ Pendiente |
+| T-06 | UI de autenticación en Chainlit: signup + login Google + fusión de auth/style.css | Parcial | ✅ Completada |
 | T-07 | Smoke test manual E2E — chat + signup + login Google (configuración, sin TDD) | No | ⚪ Pendiente |
 
 ---
@@ -270,6 +272,15 @@ Dataset de prueba y métricas básicas funcionando, ejecutada inmediatamente des
 
 ### E-08 — Memoria de perfil e histórico de conversaciones
 Onboarding, datos estables del paciente y persistencia de conversaciones entre sesiones.
+
+**Nota de alcance (9 jul 2026):** D-040 (E-05 T-06) guarda el nombre del
+usuario en `user_metadata.full_name` de Supabase Auth como solución
+provisional — el formulario de signup de Chainlit no admite un campo de
+nombre, así que se pide por chat en el primer `on_chat_start`. Es un lugar
+provisional, no el "registro más decente" que le corresponde: cuando esta
+épica diseñe el esquema de onboarding/perfil, migrar `full_name` (y
+cualquier otro dato ya capturado en `user_metadata`) a esa estructura
+propia, no dejarlo repartido entre Auth y `profiles`.
 
 **Nota de alcance (8 jul 2026):** al hacer QA manual de E-05 T-04 se confirmó
 que `rag/pipeline.py` (`retrieve()`/`aquery_stream()`) no recibe ningún

@@ -37,7 +37,7 @@
                 }
             },
             "errors": {
-                "default": "No se pudo iniciar sesi\u00f3n",
+                "default": "No hemos podido iniciar sesi\u00f3n. Si acabas de registrarte, revisa tu correo para confirmar la cuenta antes de volver a intentarlo. Si ya ten\u00edas cuenta, comprueba tu contrase\u00f1a.",
                 "signin": "Intenta iniciar sesi\u00f3n con otra cuenta",
                 "oauthSignin": "Intenta iniciar sesi\u00f3n con otra cuenta",
                 "redirectUriMismatch": "El URI de redirecci\u00f3n no coincide con la configuraci\u00f3n de la aplicaci\u00f3n OAuth",

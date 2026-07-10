@@ -7,14 +7,23 @@
 
 :root {
   /* ── Fonts ──────────────────────────────────────────────── */
-  --font-display:  'Spectral', Georgia, serif;
+  /* --font-display was Spectral; PT Serif (10 jul 2026) per Marcos —
+     used for titles (login h1, login heading, greeting title) and, via
+     the same variable, for chat message content (see
+     .ai-message .message-content / [data-step-type="user_message"] in
+     style.css). --font-body is left as-is: it's only used for a couple
+     of secondary/metadata spots (the "Documentos consultados" step),
+     not the actual message bubbles, so the chat-content change is
+     applied directly where the content lives rather than by repointing
+     this token. */
+  --font-display:  'PT Serif', Georgia, serif;
   --font-body:     'Hanken Grotesk', system-ui, sans-serif;
   --font-mono:     'JetBrains Mono', 'Courier New', monospace;
 
   /* ── Type scale ─────────────────────────────────────────── */
   --text-xs:   12px;
   --text-sm:   14px;
-  --text-base: 16px;
+  --text-base: 17px;
   --text-lg:   18px;
   --text-xl:   24px;
   --text-2xl:  32px;
@@ -114,5 +123,5 @@
 }
 
 /* ── Google Fonts import (reference; load in <head>) ──────
-   @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+   @import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=PT+Serif:ital,wght@0,400;1,400&display=swap');
    ──────────────────────────────────────────────────────── */
