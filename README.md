@@ -101,7 +101,8 @@ aiip/
 ├── prompts.md         ← Prompts operativos usados en el desarrollo. Append-only.
 ├── decisions.md       ← Registro de decisiones relevantes del proyecto.
 ├── requirements.txt   ← Dependencias Python del proyecto.
-├── .chainlit/         ← Traducciones i18n de Chainlit (reutilizadas vía symlink desde chainlit/family/.chainlit/); config.toml es boilerplate de `chainlit init` sin uso real (config real: chainlit/family/.chainlit/config.toml).
+├── .env.example       ← Variables de entorno necesarias (nunca commitear .env).
+├── .chainlit/         ← Traducciones i18n de Chainlit (reutilizadas vía symlink desde chainlit/family/.chainlit/translations); config.toml es boilerplate de `chainlit init` sin uso real (config real: chainlit/family/.chainlit/config.toml).
 ├── chainlit.md        ← Stub de bienvenida de Chainlit sin uso (real: chainlit/family/chainlit.md, vacío por diseño — D-039).
 │
 ├── docs/
@@ -112,15 +113,17 @@ aiip/
 │   ├── kb-sources.md      ← Índice de fuentes de la KB (E-06). No duplica los documentos — solo los referencia.
 │   ├── kb-maintenance.md  ← Runbook: pasos para añadir/actualizar/renombrar/eliminar en la KB.
 │   ├── kb-datasheet.md    ← Datasheet DAIMS de la KB (E-06 T-06).
-│   └── process-log.md     ← Retrospectivas del workflow de desarrollo, una entrada por épica cerrada.
+│   ├── process-log.md     ← Retrospectivas del workflow de desarrollo, una entrada por épica cerrada.
+│   └── design/            ← Comps y exploraciones visuales de referencia (identity, auth, chat) generadas fuera del repo (v0/Claude Design) — no es código de producción.
 │
 ├── chainlit/              ← Entrypoints y configuración Chainlit.
-│   ├── main_familiar.py   ← Entrypoint perfil familiar (puerto 8000).
-│   ├── main_profesional.py← Entrypoint perfil profesional stub (puerto 8001).
-│   ├── familiar/          ← Config Chainlit app familiar (config.toml).
-│   └── profesional/       ← Config Chainlit app profesional (config.toml).
-├── design/                ← Tokens CSS y temas visuales (Chainlit + Supabase Auth).
-│   └── profesional/       ← Stub JS/CSS del perfil profesional.
+│   ├── main_family.py     ← Entrypoint perfil familias (puerto 8000).
+│   ├── main_professional.py← Entrypoint perfil profesional stub (puerto 8001).
+│   ├── family/            ← App Chainlit familias: `.chainlit/` (config + symlink a traducciones), `chainlit.md` (vacío, D-039), `public` (symlink a `design/public/`), `templates/` (auth_base, confirm, forgot_password — D-040).
+│   └── professional/      ← Config Chainlit app profesional, stub (config.toml).
+├── design/
+│   ├── public/            ← tokens.css, style.css, theme.json (theming real de Chainlit, D-038), auth-pages.css, auth.js (D-040), avatars/, logos.
+│   └── professional/      ← Stub JS/CSS del perfil profesional.
 ├── auth/                  ← Módulo de autenticación Python.
 ├── rag/                   ← Pipeline RAG: embeddings, retriever, idioma, generador, seguridad.
 ├── ingestion/             ← Pipeline de ingesta de la KB (E-06): loader, chunker, indexer, manifest.
@@ -136,7 +139,7 @@ aiip/
 ├── tests/
 │   ├── features/          ← Escenarios Gherkin por tarea (.feature).
 │   ├── step_defs/         ← Step definitions pytest-bdd.
-│   └── results/           ← Resultados de smoke tests manuales (p. ej. E-06 T-07), revisión humana.
+│   └── results/           ← Resultados de smoke tests manuales (p. ej. E-06 T-07, E-05 T-07), revisión humana.
 │
 └── backlog/
     ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
