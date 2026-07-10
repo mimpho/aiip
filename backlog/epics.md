@@ -39,8 +39,8 @@ Perfil familias. Pipeline RAG completo. Seguridad. Autenticación básica.
 | E-04 | Pipeline RAG + módulo de seguridad | E-01 |
 | E-05 | Interfaz conversacional (Chainlit) | E-02, E-04 |
 | E-06 | Ingesta y procesamiento de la KB | E-01 |
-| E-07 | Evaluación RAGAS parcial | E-06 |
-| E-08 | Memoria de perfil e histórico | E-03, E-04, E-06 |
+
+**Estado:** ✅ Completada — 10 jul 2026 (hito "código funcional" cerrado por E-05; E-07 y E-08 se mueven a Fase 1.5, ver notas de cada una — ninguna era requisito de este hito)
 
 ---
 
@@ -269,6 +269,21 @@ Carga, limpieza, chunking e indexación de las fuentes de IDP en ChromaDB.
 
 ---
 
+## Fase 1.5 — MVP completo
+*Hito: 29 de julio de 2026 — entrega final*
+
+Completa el MVP con evaluación cerrada y pulido final.
+
+**Movimiento de fase (10 jul 2026):** E-07 y E-08 se trasladan aquí desde
+Fase 1. E-07: la reprioridad del 7 jul ya establecía que no era requisito
+del hito "código funcional" (lo entrega E-05), y ejecutarla inmediatamente
+después del 10 de julio la sitúa cronológica y funcionalmente junto al
+resto de evaluación de Fase 1.5. E-08 (memoria de perfil e histórico): es
+una ampliación de producto sobre el MVP ya funcional, no un requisito del
+hito del 10 de julio — coherente con cómo el Gantt del README ya la
+situaba, aunque la estructura de este documento no lo reflejara hasta
+ahora.
+
 ### E-07 — Evaluación RAGAS (parcial)
 Dataset de prueba y métricas básicas funcionando, ejecutada inmediatamente después del hito del 10 de julio.
 
@@ -281,7 +296,7 @@ Dataset de prueba y métricas básicas funcionando, ejecutada inmediatamente des
 **Notas**
 - **Corrección (7 jul 2026):** el criterio original decía "las cuatro métricas RAGAS implementadas" — no coincidía con el plan de fases de `docs/evaluation.md` (sección 3), que solo asigna Faithfulness + Answer Relevancy a la Fase 1 parcial. Se alinea este criterio con `evaluation.md`, que es el documento con el desglose técnico detallado.
 - **Reprioridad (7 jul 2026):** E-05 (interfaz Chainlit) pasa por delante de E-07 en la ejecución. El hito del 10 de julio se llama "código funcional" (ver `README.md`) — lo entrega E-05, no E-07. El ciclo de mejora basado en RAGAS (la parte que realmente aporta valor de iteración) ya estaba asignado a Fase 1.5 (29 jul) en `evaluation.md`, así que ejecutar E-07 parcial unos días después del 10 de julio no compromete el hito. Única dependencia real a vigilar: E-09 (RAGAS completa, necesaria para la entrega final del 29 jul) está bloqueada por E-07 — no debe retrasarse mucho más allá del 10 de julio para no comprimir el margen antes del 29.
-- Hito de cierre de Fase 1 (10 jul, vía E-05). Al cerrar E-07: ejecutar `pytest tests/ -v` sobre el sistema completo acumulado hasta este punto — primera validación de integración real del pipeline.
+- **Movimiento de fase (10 jul 2026):** trasladada de Fase 1 a Fase 1.5 al cerrar E-05 — ver nota de la fase arriba. El hito de Fase 1 ya quedó cerrado por E-05, sin esperar a esta épica.
 
 **Estado:** ⚪ No iniciada
 
@@ -335,11 +350,6 @@ esquema en Supabase ni de UI de borrado de datos.
 **Estado:** ⚪ No iniciada
 
 ---
-
-## Fase 1.5 — MVP completo
-*Hito: 29 de julio de 2026 — entrega final*
-
-Completa el MVP con evaluación cerrada y pulido final.
 
 ### E-09 — Evaluación RAGAS completa
 Cierre del plan de evaluación con al menos un ciclo de mejora.
