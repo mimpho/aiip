@@ -284,6 +284,26 @@ hito del 10 de julio — coherente con cómo el Gantt del README ya la
 situaba, aunque la estructura de este documento no lo reflejara hasta
 ahora.
 
+**Prioridad de ejecución (15 jul 2026):** a 5 días del hito del 10 de julio,
+ninguna épica de esta fase se ha arrancado todavía — el Gantt orientativo
+del README (E-07 10-13 jul, E-08 10-18 jul en paralelo) ya ha quedado
+desfasado. Decisión de Marcos: orden de ejecución **E-07 → E-09 → E-10,
+por delante de E-08**. Razones: (1) la dependencia E-09 bloqueada por E-07
+ya estaba documentada en la nota de reprioridad del 7 jul — no es una
+opción, es la única secuencia posible; (2) sin E-08 el sistema sigue
+siendo un agente RAG completo y funcional (demostrado en el smoke test de
+E-05); sin E-09 cerrada, en cambio, falta el bloque de evaluación
+completo del TFM (4 métricas + ciclo de mejora + checklist CHART) — el
+riesgo de dejarla fuera es mayor. E-08 pasa a ejecutarse con el tiempo que
+quede antes del 29 de julio, no en paralelo.
+
+Dentro de E-08, si el calendario aprieta, priorizar la capa de memoria
+conversacional de corto plazo (intra-sesión, sin tocar Supabase — barata y
+ya identificada como hueco visible: el chat "olvida" lo dicho dos mensajes
+antes) sobre la persistencia entre sesiones + derecho al olvido (la capa
+más cara: esquema en Supabase, UI de borrado). Ver criterios de aceptación
+de E-08 más abajo.
+
 ### E-07 — Evaluación RAGAS (parcial)
 Dataset de prueba y métricas básicas funcionando, ejecutada inmediatamente después del hito del 10 de julio.
 
@@ -337,6 +357,15 @@ Al descomponer esta épica en tareas, evaluar si (1) debe resolverse antes o
 de forma independiente de (2)/(3) — la memoria de corto plazo mejora la
 experiencia de chat ya con la arquitectura actual, sin depender de diseño de
 esquema en Supabase ni de UI de borrado de datos.
+
+**Nota de prioridad (15 jul 2026):** E-08 se ejecuta después de E-07/E-09
+(ver nota de prioridad de la fase, arriba). Si el tiempo antes del 29 de
+julio no da para las tres capas, la capa (1) —memoria de corto plazo— es la
+candidata a mantener por barata y por resolver un hueco de UX ya visible;
+la capa (3) —persistencia entre sesiones + derecho al olvido— es la
+candidata a recortar o dejar como versión mínima, por ser la más costosa
+(esquema Supabase, UI de borrado) y la que menos compromete que el agente
+siga siendo un producto completo sin ella.
 
 **Criterios de aceptación de alto nivel**
 - Memoria conversacional de corto plazo: el agente mantiene el hilo de la

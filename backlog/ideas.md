@@ -118,6 +118,27 @@
 - **Cuándo revisarlo:** si hay señal de que el registro es una barrera real de adopción, y con
   algún control de cuota/rate-limit ya pensado.
 
+### Despliegue online del perfil familias (demo funcional, no solo prototipo estático)
+- **Criticidad:** 🟡 Media — hoy solo hay prototipos estáticos de diseño (Lovable, ver "Prototipo
+  interactivo" en `README.md`), no una instancia real del chat funcionando en la nube
+- **Qué sería:** desplegar `chainlit/main_family.py` en un hosting accesible online para demo del
+  TFM, no solo en local.
+- **Requisitos técnicos identificados (10 jul 2026):** Supabase y Gemini ya están en la nube, no
+  bloquean nada. El embedding model (`BAAI/bge-m3`, vía `sentence_transformers`) se descarga y
+  corre en el propio proceso — pesa un par de GB, necesita una máquina con RAM decente, no una
+  función serverless minúscula. La base vectorial (`data/chroma/`, ~69 MB hoy) está en
+  `.gitignore` — no viaja con el repo, hay que empaquetarla en la imagen de despliegue o
+  regenerarla en el build. Secrets necesarios: `GOOGLE_API_KEY`, `HF_TOKEN`, `CHROMA_PATH`,
+  credenciales de Supabase, `CHAINLIT_AUTH_SECRET`, `OAUTH_GOOGLE_CLIENT_ID`/`SECRET`.
+- **Opciones evaluadas:** Hugging Face Spaces con Docker (tier gratuito 2 vCPU/16 GB RAM, de sobra
+  para bge-m3, se duerme tras ~48h de inactividad pero arranca solo con tráfico — razonable para
+  un demo) o Fly.io (también gratuito, pero sus websockets no son sticky por defecto si se escala
+  a más de una instancia — irrelevante para una sola instancia de demo).
+- **Por qué no ahora:** es trabajo de infraestructura real (Docker, cuentas, gestión de secrets)
+  fuera del alcance de Cowork — requiere credenciales de Marcos y probablemente terminal/Antigravity.
+- **Cuándo revisarlo:** encaja de forma natural en E-10 (Pulido: responsive, CORS y UX) o como
+  epic propia si se decide antes.
+
 ---
 
 ## Referencias académicas pendientes de leer
