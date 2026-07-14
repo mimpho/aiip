@@ -25,6 +25,8 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | Features opcionales | ⚪ Backlog | Post-TFM | F-01 (perfil profesional, multimodal) |
 
 > **E-07 y E-08** se movieron de Fase 1 a Fase 1.5 el 10 jul 2026 — ninguna era requisito del hito "código funcional" (lo entrega E-05); ver notas en `backlog/epics.md`.
+>
+> **Orden de ejecución (15 jul 2026):** E-07 → E-09 → E-10, por delante de E-08 — E-08 se ejecuta con el tiempo que quede antes del 29 jul. Ver "Prioridad de ejecución" en `backlog/epics.md`.
 
 ### Épicas
 
