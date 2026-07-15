@@ -25,7 +25,7 @@ class RAGGenerator:
             raise EnvironmentError("Variable de entorno requerida no definida: GOOGLE_API_KEY")
         self._system_prompt = self._load_system_prompt()
         self._llm = ChatGoogleGenerativeAI(
-            model=config.get("LLM_MODEL", "gemini-2.5-flash-lite"),
+            model=config.get("LLM_MODEL", "gemini-2.5-flash"),
             temperature=config.get("LLM_TEMPERATURE", 0.1),
             top_p=config.get("LLM_TOP_P", 0.1),
             max_output_tokens=config.get("LLM_MAX_TOKENS", 1024),

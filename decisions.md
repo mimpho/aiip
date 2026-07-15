@@ -51,6 +51,7 @@
 - [D-040 — Flujo completo de autenticación en Chainlit: signup con confirmación de email, recuperación de contraseña vía rutas propias, y descubribilidad del enlace](#d-040--flujo-completo-de-autenticación-en-chainlit-signup-con-confirmación-de-email-recuperación-de-contraseña-vía-rutas-propias-y-descubribilidad-del-enlace)
 - [D-041 — Paso "Documentos consultados" (D-035): se deja de mostrar en el chat, redundante con el listado de fuentes de D-026](#d-041--paso-documentos-consultados-d-035-se-deja-de-mostrar-en-el-chat-redundante-con-el-listado-de-fuentes-de-d-026)
 - [D-042 — signup() no detectaba emails ya registrados y confirmados tras activar "Confirm email" (D-040)](#d-042--signup-no-detectaba-emails-ya-registrados-y-confirmados-tras-activar-confirm-email-d-040)
+- [D-043 — Modelo LLM: cambio de gemini-2.5-flash-lite a gemini-2.5-flash y activación de facturación (revisita D-027)](#d-043--modelo-llm-cambio-de-gemini-25-flash-lite-a-gemini-25-flash-y-activación-de-facturación-revisita-d-027)
 
 ---
 
@@ -1690,6 +1691,40 @@ desactivado, antes de intentar crear el perfil.
 - No afecta a `get_or_create_google_user()` (login con Google, D-032): ese flujo ya usa
   la Admin API directamente (`create_user` + fallback a `_find_user_by_email`), no pasa
   por `sign_up()` público ni por este camino ofuscado.
+
+---
+
+## D-043 — Modelo LLM: cambio de gemini-2.5-flash-lite a gemini-2.5-flash y activación de facturación (revisita D-027)
+
+**Fecha:** 15 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (arranque)
+
+**Contexto**
+D-027 documentaba un límite de cuota de 1.500 RPD para `gemini-2.5-flash-lite` en el free tier, pero el arranque de E-07 (evaluación RAGAS) reveló que la cifra real, verificada por Marcos en el dashboard de AI Studio (proyecto AIIP), era de **20 RPD** para ambos modelos (`gemini-2.5-flash` y `gemini-2.5-flash-lite`) — coincidente con lo que ya había registrado D-037 el 9 jul, no con D-027. Con esa cuota, ni siquiera la ejecución de T-02 (RAGAS: Faithfulness + Answer Relevancy sobre 20 casos informativos, ~4 llamadas/caso estimadas) cabía en un solo día.
+
+Al resolver la cuota se abrió una segunda pregunta: si de todas formas hay que activar facturación, ¿tiene sentido seguir en flash-lite? Se estimó el coste real de las pruebas (con `RAG_TOP_K=5` × `RAG_CHUNK_SIZE=512` + system prompt ~550 tokens como base): incluso en el escenario más intensivo (scripts automatizados, 300-500 peticiones/hora), el coste con flash-lite es de 0.08-0.14 USD/hora, y con `gemini-2.5-flash` (sin lite) de 0.41-0.68 USD/hora — la diferencia es irrelevante frente al prepago mínimo de 10 EUR/USD necesario para activar Nivel 1 en cualquiera de los dos casos.
+
+Con el coste descartado como factor, la comparación pasó a ser de calidad: benchmarks de terceros (artificialanalysis.ai, llm-stats.com) sitúan a `gemini-2.5-flash` por delante de flash-lite en las 10 métricas comparadas, incluyendo **FACTS Grounding** — la métrica más directamente relacionada con el principio de Falso Negativo Cero (mide si el modelo se ciñe al contexto recuperado en vez de inventar). Esto conecta con dos hallazgos ya documentados en `backlog/ideas.md` ("Hallazgos del RAG para optimización en E-07": grounding insuficiente ante contexto ambiguo, ej. "Vic"/"Barcelona") y con D-037 (repetición de protocolos de tratamiento sin descargo) — ambos son fallos de comportamiento del LLM, no de retrieval, y son exactamente el tipo de fallo que FACTS Grounding intenta capturar.
+
+**Decisión**
+1. Se activa facturación (Nivel 1, Google Cloud) en el proyecto AIIP — prepago inicial de 10 EUR.
+2. El modelo de producción por defecto pasa de `gemini-2.5-flash-lite` a `gemini-2.5-flash` — revisita y sustituye D-027 en este punto concreto (la cuota de free tier que motivó D-027 deja de aplicar en Nivel 1).
+
+**Alternativas descartadas**
+- Comparación empírica lado a lado (correr T-02 contra flash-lite y flash sobre el mismo dataset antes de decidir) — propuesta pero descartada por Marcos a favor de decidir directamente con el benchmark de FACTS Grounding, dado que el coste de cualquiera de las dos vías es marginal y no justifica duplicar el trabajo de T-02.
+- Cambiar de proveedor a Claude Haiku 4.5 — descartado por ahora: mejor instruction-following reportado en tareas con restricciones múltiples, pero implica cambio de proveedor real (nueva dependencia `langchain-anthropic`, cuenta/billing en Anthropic sin free tier) frente a un cambio de una línea de `.env` manteniendo Google. Queda como opción a revisitar si `gemini-2.5-flash` no da resultados suficientes en RAGAS (E-07/E-09).
+- Mantener flash-lite + facturación (solo resolver cuota sin mejorar grounding) — descartado: el ahorro de coste frente a flash es irrelevante (céntimos/hora) dado que hay que activar facturación de todas formas.
+
+**Justificación**
+Activar facturación es inevitable para desbloquear la cuota necesaria para T-02/T-03; el coste adicional de usar flash en vez de flash-lite es marginal frente a ese mismo prepago. En un dominio de salud con el principio de Falso Negativo Cero, la mejora de grounding vale el cambio de una línea de configuración — no tiene sentido quedarse con el modelo de peor grounding reportado solo por costumbre.
+
+**Consecuencias**
+- `rag/config.py` y `rag/generator.py`: default de `LLM_MODEL` pasa a `gemini-2.5-flash`.
+- `.env.example`: `LLM_MODEL=gemini-2.5-flash`.
+- Pendiente para Marcos: actualizar `LLM_MODEL` en su `.env` personal (gitignored) si lo tenía fijado a `gemini-2.5-flash-lite`.
+- `backlog/epics.md` (E-07): nota de arranque actualizada para reflejar la decisión ya resuelta.
+- Sin verificar todavía contra RAGAS real — esta decisión se apoya en benchmarks de terceros, no en medición propia sobre las preguntas de AIIP. T-02 es precisamente lo que dará el primer dato propio; si los resultados no son suficientes, revisitar (Claude Haiku 4.5 queda como alternativa ya evaluada, no descartada de forma permanente).
 
 ---
 
