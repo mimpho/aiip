@@ -1,8 +1,8 @@
 {
   "meta": {
-    "status": "borrador_pendiente_revision_marcos",
+    "status": "revisado_marcos_pendiente_validacion_clinica",
     "decision": "D-044",
-    "note": "35 casos (20 informativos + 15 alarma) para RAGAS Fase 1 (E-07). expected_answer es una referencia de trabajo redactada por Claude a partir de la KB (data/raw/) y config/alarm_triggers.json, no una validación clínica del inmunólogo (esa llega en Fase 1.5 / E-09)."
+    "note": "42 casos (27 informativos + 15 alarma) para RAGAS Fase 1 (E-07, ampliado por D-049 con 7 preguntas de viajes/vida diaria aportadas por Marcos). expected_answer es una referencia de trabajo redactada por Claude a partir de la KB (data/raw/) y config/alarm_triggers.json, revisada por Marcos el 15 jul 2026. No sustituye la validación clínica del inmunólogo, prevista para Fase 1.5 / E-09."
   },
   "cases": [
     {
@@ -166,60 +166,60 @@
       "language": "es"
     },
     {
+      "id": "eval_21",
       "question": "¿Podemos viajar con nuestro hijo si tiene una inmunodeficiencia?",
       "expected_answer": "En general, muchos niños con inmunodeficiencia primaria pueden viajar con normalidad, aunque conviene planificarlo con antelación: llevar informe médico, la medicación necesaria y comentar el viaje con el equipo de inmunología, especialmente si el destino implica mayor riesgo infeccioso.",
       "is_alarm": false,
       "profile": "familiar",
-      "language": "es",
-      "id": "eval_21"
+      "language": "es"
     },
     {
+      "id": "eval_22",
       "question": "¿Tendríamos que informar al inmunólogo de referencia si salimos del país de vacaciones?",
       "expected_answer": "Es recomendable informar al inmunólogo de un viaje al extranjero, sobre todo si coincide con fechas de tratamiento o si el destino requiere vacunas o precauciones especiales. El equipo médico puede ayudar a planificar la medicación y las medidas necesarias.",
       "is_alarm": false,
       "profile": "familiar",
-      "language": "es",
-      "id": "eval_22"
+      "language": "es"
     },
     {
+      "id": "eval_23",
       "question": "¿Deberíamos informar al inmunólogo de referencia del destino de nuestras vacaciones?",
       "expected_answer": "Sí, es recomendable comentar el destino concreto con el inmunólogo, ya que algunos lugares implican mayor riesgo infeccioso o requieren vacunas que pueden no ser adecuadas según el tipo de inmunodeficiencia. El equipo médico puede orientar sobre precauciones específicas de ese destino.",
       "is_alarm": false,
       "profile": "familiar",
-      "language": "es",
-      "id": "eval_23"
+      "language": "es"
     },
     {
+      "id": "eval_24",
       "question": "¿Podemos viajar a zonas exóticas?",
       "expected_answer": "Viajar a zonas con mayor riesgo infeccioso (por ejemplo, destinos tropicales) requiere valorarlo con el inmunólogo antes del viaje, ya que puede haber recomendaciones específicas de vacunación, profilaxis o precauciones según el tipo de inmunodeficiencia. No hay una respuesta única válida para todos los casos.",
       "is_alarm": false,
       "profile": "familiar",
-      "language": "es",
-      "id": "eval_24"
+      "language": "es"
     },
     {
+      "id": "eval_25",
       "question": "¿Puede mi hijo marcharse de convivencias varios días?",
       "expected_answer": "Muchos niños con inmunodeficiencia primaria pueden participar en convivencias o campamentos escolares de varios días, pero conviene hablarlo antes con el equipo médico para valorar el tratamiento durante esos días (por ejemplo, si coincide con una infusión) y asegurarse de que los responsables del grupo saben cómo actuar ante cualquier incidencia.",
       "is_alarm": false,
       "profile": "familiar",
-      "language": "es",
-      "id": "eval_25"
+      "language": "es"
     },
     {
+      "id": "eval_26",
       "question": "¿Existen las inmunodeficiencias secundarias?",
       "expected_answer": "Sí. A diferencia de las primarias, que tienen origen genético, las inmunodeficiencias secundarias aparecen por una causa externa (como ciertos tratamientos médicos, infecciones u otras enfermedades) que debilita un sistema inmunitario formado con normalidad.",
       "is_alarm": false,
       "profile": "familiar",
-      "language": "es",
-      "id": "eval_26"
+      "language": "es"
     },
     {
+      "id": "eval_27",
       "question": "¿Es contagiosa una inmunodeficiencia?",
       "expected_answer": "No, una inmunodeficiencia primaria no es contagiosa — no se transmite de una persona a otra como una infección. Es un trastorno del propio sistema inmunitario de la persona, de origen genético.",
       "is_alarm": false,
       "profile": "familiar",
-      "language": "es",
-      "id": "eval_27"
+      "language": "es"
     },
     {
       "id": "eval_28",

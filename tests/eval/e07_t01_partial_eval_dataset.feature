@@ -6,7 +6,7 @@
 Feature: Dataset de evaluación parcial
 
   Como responsable del proyecto
-  Quiero un dataset estructurado de 35 casos de prueba (20 informativos + 15 de alarma)
+  Quiero un dataset estructurado de 42 casos de prueba (27 informativos + 15 de alarma)
   Para poder ejecutar Faithfulness y Answer Relevancy (T-02) y el baseline de Safety Compliance (T-03) contra el pipeline real
 
   Background:
@@ -15,8 +15,8 @@ Feature: Dataset de evaluación parcial
   Scenario: Conteo total y por categoría del dataset
     Given el dataset parcial de evaluación cargado desde tests/eval/dataset_partial.json
     When se valida su estructura
-    Then contiene exactamente 35 entradas
-    And 20 entradas corresponden a consultas informativas
+    Then contiene exactamente 42 entradas
+    And 27 entradas corresponden a consultas informativas
     And 15 entradas tienen is_alarm en true
 
   Scenario: Todas las entradas cumplen el schema obligatorio

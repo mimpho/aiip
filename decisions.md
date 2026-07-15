@@ -57,6 +57,7 @@
 - [D-046 — Dataset de evaluación: campo id por entrada (amplía D-044)](#d-046--dataset-de-evaluación-campo-id-por-entrada-amplía-d-044)
 - [D-047 — Esquema de id del dataset: secuencial y desacoplado de is_alarm (corrige D-046)](#d-047--esquema-de-id-del-dataset-secuencial-y-desacoplado-de-is_alarm-corrige-d-046)
 - [D-048 — config/alarm_triggers.json: claves en inglés e id desacoplado de categoría (amplía D-019 y D-047, fuera de alcance de E-07 pero corregido en la misma revisión)](#d-048--configalarm_triggersjson-claves-en-inglés-e-id-desacoplado-de-categoría-amplía-d-019-y-d-047-fuera-de-alcance-de-e-07-pero-corregido-en-la-misma-revisión)
+- [D-049 — Dataset de evaluación parcial ampliado a 42 casos (27 informativos + 15 alarma), revisita D-044](#d-049--dataset-de-evaluación-parcial-ampliado-a-42-casos-27-informativos--15-alarma-revisita-d-044)
 
 ---
 
@@ -1953,6 +1954,74 @@ formas se va a revisar antes de producción.
 - Cuando Jacques valide la lista de triggers, seguir el esquema de id secuencial ya
   establecido (`trigger_38` en adelante para triggers nuevos, no reintroducir prefijo por
   categoría).
+
+---
+
+## D-049 — Dataset de evaluación parcial ampliado a 42 casos (27 informativos + 15 alarma), revisita D-044
+
+**Fecha:** 15 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (T-01)
+
+**Contexto**
+D-044 fijó el dataset de Fase 1 en 35 casos (20 informativos + 15 de alarma), en línea con
+`docs/evaluation.md` sección 2.2 (que reserva esas 20 informativas para el dataset final
+completo de 65 casos, no solo para Fase 1). El ciclo TDD en Antigravity terminó en verde
+con ese conteo (4 escenarios, suite completa 119 passed).
+
+En la revisión de contenido posterior (antes del cierre formal de la tarea — el dataset
+seguía marcado `borrador_pendiente_revision_marcos`), Marcos propuso 7 preguntas
+informativas adicionales, típicas de un padre/madre pero no cubiertas por las 20
+originales: viajes con un hijo con inmunodeficiencia, si informar al inmunólogo antes de
+salir del país o del destino concreto, viajes a zonas de mayor riesgo infeccioso,
+participación en convivencias/campamentos escolares de varios días, existencia de
+inmunodeficiencias secundarias, y si una inmunodeficiencia es contagiosa.
+
+Se valoró la alternativa de sustituir 7 de las 20 preguntas existentes por las nuevas (sin
+tocar el conteo total ni el `.feature` ya cerrado) frente a ampliar el dataset. Marcos
+decidió ampliar: el coste de reabrir el escenario de conteo y volver a pasar el ciclo TDD
+en Antigravity es mínimo (cambiar dos números en el `.feature` y en los step defs), y las
+7 preguntas nuevas no son claramente reemplazables por ninguna de las 20 existentes sin
+perder cobertura temática.
+
+**Decisión**
+1. El dataset de Fase 1 pasa de 35 a 42 casos: 27 informativos + 15 de alarma (sin cambios
+   en el subconjunto de alarma). Ids renumerados secuencialmente `eval_01`..`eval_42`
+   (mismo criterio de D-047 — sin romper nada, ningún id se había consumido todavía fuera
+   de este fichero).
+2. `docs/evaluation.md` sección 2.2 se actualiza: consultas informativas 20→27, total del
+   dataset completo (Fase 1.5) 65→72. Sección 3 (Fase 1) actualizada a "42 casos (27+15)".
+   Esto es una revisión del presupuesto total planeado del proyecto de evaluación, no solo
+   de T-01 — las 7 preguntas nuevas quedan también reservadas dentro del futuro dataset de
+   65→72 casos de E-09.
+3. `.feature`, step defs (`tests/step_defs/test_e07_t01.py`) y `backlog/epics.md`
+   actualizados al nuevo conteo. `evaluation/dataset.py` no tiene números hardcodeados —
+   sin cambios.
+
+**Alternativas descartadas**
+- Sustituir 7 de las 20 preguntas existentes (mantener 35 casos, cero rework de TDD) —
+  descartada por Marcos: el coste de ampliar es mínimo y no hay 7 candidatas claras a
+  descartar sin perder cobertura.
+- Dejar las 7 preguntas nuevas anotadas para cuando se amplíe a 65 en E-09, sin tocar T-01
+  ahora — descartada por el mismo motivo: no había necesidad real de posponerlo dado el
+  coste bajo del cambio.
+
+**Justificación**
+El coste real de ampliar (dos números en dos ficheros de test + un ciclo TDD corto en
+Antigravity) es menor que el tiempo ya invertido decidiendo si merecía la pena — más
+cobertura temática ahora mejora la representatividad de Faithfulness/Answer Relevancy en
+T-02 sin coste de rework significativo.
+
+**Consecuencias**
+- `tests/eval/dataset_partial.json`: 42 casos, `meta.note` actualizado.
+- `tests/eval/e07_t01_partial_eval_dataset.feature`: escenario 1 actualizado (42/27/15).
+- `tests/step_defs/test_e07_t01.py`: `@then` de conteo actualizados a 42/27.
+- `docs/evaluation.md`: 2.2 y 3 actualizados; total del dataset final pasa de 65 a 72.
+- `backlog/epics.md` (E-07 T-01): descripción actualizada a "42 casos: 27 informativos +
+  15 alarma".
+- Pendiente: re-ejecutar `PYTHONPATH=. pytest tests/step_defs/test_e07_t01.py -v` en
+  Antigravity para confirmar los 4 escenarios en verde con el nuevo conteo antes de
+  `task-close`.
 
 ---
 

@@ -102,3 +102,24 @@
   Marcos en esta tarea es un baseline de trabajo, no una validación clínica formal.
 - Los otros 30 casos del dataset completo (diagnóstico, casos límite, otros idiomas,
   prompt injection) — quedan para E-09.
+
+## Actualización post-implementación — ampliación a 42 casos (D-049)
+
+Este plan se escribió y se ejecutó en Antigravity con 35 casos (20 informativos + 15 de
+alarma) — los 4 escenarios pasaron en verde con ese conteo. Antes del cierre de la tarea,
+en la revisión de contenido, Marcos añadió 7 preguntas informativas más (viajes,
+información al inmunólogo antes de un viaje, convivencias/campamentos escolares,
+inmunodeficiencias secundarias, contagio) — ver D-049 en `decisions.md`. El dataset pasa a
+42 casos (27 informativos + 15 de alarma). El resto del texto de este plan (arriba) no se
+ha reescrito con el número nuevo — queda como registro de lo que se implementó
+originalmente; el número vigente es 42/27/15, reflejado en:
+
+- `tests/eval/dataset_partial.json` — 42 entradas, ids `eval_01`..`eval_42`
+- `tests/eval/e07_t01_partial_eval_dataset.feature` — escenario 1 actualizado a 42/27/15
+- `tests/step_defs/test_e07_t01.py` — `@then("contiene exactamente 42 entradas")` y
+  `@then("27 entradas corresponden a consultas informativas")` (antes 35/20)
+- `evaluation/dataset.py` — sin cambios, no tenía ningún número hardcodeado
+- `docs/evaluation.md` (2.2 y 3) y `backlog/epics.md` (T-01) — conteos actualizados
+
+Pendiente: Antigravity debe re-ejecutar `PYTHONPATH=. pytest tests/step_defs/test_e07_t01.py -v`
+para confirmar los 4 escenarios en verde con el nuevo conteo.
