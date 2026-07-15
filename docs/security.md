@@ -73,7 +73,7 @@ def check_alarm_signals(query: str) -> bool:
 ```
 
 La lista de señales vive en [`config/alarm_triggers.json`](../config/alarm_triggers.json),
-con dos fuentes documentadas en su propio `meta.fuentes`: el listado "Signos de Alarma
+con dos fuentes documentadas en su propio `meta.sources`: el listado "Signos de Alarma
 Avanzados en Pacientes Diagnósticos de IDP" aportado por Marcos (fuente primaria, organizada
 por sistema: respiratorio, hematología/autoinmunidad, neurología, gastrointestinal,
 dermatología, linfoproliferativo, laboratorio) y un documento de la KB en francés

@@ -53,49 +53,18 @@
 /* CSS can't insert a real <div> into Chainlit's DOM without custom_js
    — a fixed-position ::before on body gets the identical visual
    result (radial glow, doesn't intercept clicks) with no JS. Paints
-   behind #root by default DOM/stacking order, no z-index games needed.
-
-   Drift: the gradient itself stays fixed; what moves is
-   background-position over an oversized canvas (inset: -20% / size
-   140% keeps the glow within an area larger than the viewport, so
-   panning never reveals a hard edge). Uneven keyframe stops (not
-   0/25/50/75) avoid an obviously mechanical back-and-forth; a long,
-   eased duration keeps the motion close to imperceptible. */
-body::before {
+   behind #root by default DOM/stacking order, no z-index games needed. */
+body::before,
+body::after {
   content: '';
-  position: fixed;
-  inset: -20%;
-  background: radial-gradient(85% 55% at 50% 0%, hsl(var(--primary) / 0.16), transparent 62%);
-  background-size: 140% 140%;
-  background-repeat: no-repeat;
-  animation: aiip-glow-drift 150s ease-in-out infinite;
+  inset: 0;
   pointer-events: none;
 }
 
-@keyframes aiip-glow-drift {
-  0% {
-    background-position: 50% 10%;
-  }
-
-  22% {
-    background-position: 63% 22%;
-  }
-
-  41% {
-    background-position: 58% 38%;
-  }
-
-  63% {
-    background-position: 39% 30%;
-  }
-
-  79% {
-    background-position: 44% 14%;
-  }
-
-  100% {
-    background-position: 50% 10%;
-  }
+body::before {
+  position: fixed;
+  background: radial-gradient(85% 55% at 50% 0%, hsl(var(--primary) / 0.16), transparent 56%);
+  background-repeat: no-repeat;
 }
 
 /* Bottom echo of the glow above (10 jul 2026, Marcos) — static, no
@@ -103,11 +72,8 @@ body::before {
    opposite of `::before`), so unlike body::before it *would* paint on
    top of #root without an explicit z-index; -1 puts it back behind. */
 body::after {
-  content: '';
   position: absolute;
-  inset: 0;
   background: radial-gradient(85% 55% at 50% 100%, hsl(var(--primary) / 0.16), transparent 56%);
-  pointer-events: none;
   z-index: -1;
 }
 
@@ -608,8 +574,8 @@ body::after {
 #aiip-login-heading-title {
   font-family: var(--font-display);
   font-weight: var(--font-weight-medium);
-  font-size: var(--text-2xl);
-  line-height: 1.2;
+  font-size: 30px;
+  line-height: 1.4;
   letter-spacing: -0.01em;
   background: linear-gradient(154deg, var(--color-accent-family), var(--color-accent-professional));
   -webkit-background-clip: text;
