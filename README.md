@@ -79,10 +79,10 @@ gantt
     E-06 Ingesta KB                   :done,    e06, 2026-06-27, 2026-07-08
 
     section Fase 1.5 — MVP completo
-    E-07 RAGAS parcial                :         e07, 2026-07-10, 2026-07-13
-    E-08 Memoria + histórico          :         e08, 2026-07-10, 2026-07-18
-    E-09 RAGAS completo               :         e09, 2026-07-18, 2026-07-25
-    E-10 Pulido final                 :         e10, 2026-07-25, 2026-07-29
+    E-07 RAGAS parcial                :         e07, 2026-07-15, 2026-07-18
+    E-09 RAGAS completo                :         e09, 2026-07-18, 2026-07-24
+    E-10 Pulido final                 :         e10, 2026-07-24, 2026-07-27
+    E-08 Memoria + histórico          :         e08, 2026-07-27, 2026-07-29
 
     section Features opcionales
     Perfil profesional · Multimodal   :         fo, 2026-07-29, 2026-09-01
@@ -131,6 +131,7 @@ aiip/
 ├── auth/                  ← Módulo de autenticación Python.
 ├── rag/                   ← Pipeline RAG: embeddings, retriever, idioma, generador, seguridad.
 ├── ingestion/             ← Pipeline de ingesta de la KB (E-06): loader, chunker, indexer, manifest.
+├── evaluation/            ← Carga y validación del dataset de evaluación RAGAS (E-07): dataset.py (EvalCase, pydantic).
 ├── config/                ← Configuración de dominio (p. ej. triggers de alarma).
 ├── prompts/               ← System prompts por perfil, en fichero separado del código.
 ├── data/
@@ -143,7 +144,8 @@ aiip/
 ├── tests/
 │   ├── features/          ← Escenarios Gherkin por tarea (.feature).
 │   ├── step_defs/         ← Step definitions pytest-bdd.
-│   └── results/           ← Resultados de smoke tests manuales (p. ej. E-06 T-07, E-05 T-07), revisión humana.
+│   ├── results/           ← Resultados de smoke tests manuales (p. ej. E-06 T-07, E-05 T-07), revisión humana.
+│   └── eval/              ← Datasets de evaluación RAGAS y su .feature (E-07): dataset_partial.json, e07_t01_partial_eval_dataset.feature.
 │
 └── backlog/
     ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
