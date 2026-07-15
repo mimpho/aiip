@@ -21,7 +21,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 |---|---|---|---|
 | Fase 0 — Documentación técnica | ✅ Completada | 12 jun 2026 | — (previa a la descomposición en épicas) |
 | Fase 1 — MVP core | ✅ Completada | 10 jul 2026 | E-01 a E-06 |
-| Fase 1.5 — MVP completo | ⚪ No iniciada | 29 jul 2026 | E-07, E-08, E-09, E-10 |
+| Fase 1.5 — MVP completo | 🔵 En curso | 29 jul 2026 | E-07, E-08, E-09, E-10 |
 | Features opcionales | ⚪ Backlog | Post-TFM | F-01 (perfil profesional, multimodal) |
 
 > **E-07 y E-08** se movieron de Fase 1 a Fase 1.5 el 10 jul 2026 — ninguna era requisito del hito "código funcional" (lo entrega E-05); ver notas en `backlog/epics.md`.
@@ -38,7 +38,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-04 | Pipeline RAG + módulo de seguridad | ✅ Completada — 05 jul 2026 | — |
 | E-05 | Interfaz conversacional (Chainlit) | ✅ Completada — 10 jul 2026 | E-02, E-04 |
 | E-06 | Ingesta y procesamiento de la KB | ✅ Completada — 08 jul 2026 | E-01 |
-| E-07 | Evaluación RAGAS parcial | ⚪ No iniciada | E-06 |
+| E-07 | Evaluación RAGAS parcial | 🔵 En curso | E-06 |
 | E-08 | Memoria de perfil e histórico | ⚪ No iniciada | E-03, E-04, E-06 |
 | E-09 | Evaluación RAGAS completa | ⚪ No iniciada | E-07 |
 | E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada | E-05 |

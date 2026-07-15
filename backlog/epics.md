@@ -317,8 +317,20 @@ Dataset de prueba y métricas básicas funcionando, ejecutada inmediatamente des
 - **Corrección (7 jul 2026):** el criterio original decía "las cuatro métricas RAGAS implementadas" — no coincidía con el plan de fases de `docs/evaluation.md` (sección 3), que solo asigna Faithfulness + Answer Relevancy a la Fase 1 parcial. Se alinea este criterio con `evaluation.md`, que es el documento con el desglose técnico detallado.
 - **Reprioridad (7 jul 2026):** E-05 (interfaz Chainlit) pasa por delante de E-07 en la ejecución. El hito del 10 de julio se llama "código funcional" (ver `README.md`) — lo entrega E-05, no E-07. El ciclo de mejora basado en RAGAS (la parte que realmente aporta valor de iteración) ya estaba asignado a Fase 1.5 (29 jul) en `evaluation.md`, así que ejecutar E-07 parcial unos días después del 10 de julio no compromete el hito. Única dependencia real a vigilar: E-09 (RAGAS completa, necesaria para la entrega final del 29 jul) está bloqueada por E-07 — no debe retrasarse mucho más allá del 10 de julio para no comprimir el margen antes del 29.
 - **Movimiento de fase (10 jul 2026):** trasladada de Fase 1 a Fase 1.5 al cerrar E-05 — ver nota de la fase arriba. El hito de Fase 1 ya quedó cerrado por E-05, sin esperar a esta épica.
+- **Arranque (15 jul 2026):** el plan original de `docs/evaluation.md` (Faithfulness + Answer Relevancy vía RAGAS contra `RAGPipeline.query()` real) choca con un punto abierto de cuota de la API de Gemini: D-027 documentaba "1.500 RPD" para `gemini-2.5-flash-lite`, pero D-037 (9 jul) registró agotamiento real a las ~20 peticiones ese día. Investigado de nuevo al arrancar esta épica: la documentación oficial de Google ya no publica una cifra fija por tier — remite al dashboard de AI Studio, específico de cada proyecto.
+- **Confirmado (15 jul 2026):** Marcos consultó el dashboard (`aistudio.google.com/rate-limit`, proyecto AIIP, nivel gratuito). D-037 tenía razón, no D-027: el límite real era **20 RPD** tanto para `gemini-2.5-flash` como para `gemini-2.5-flash-lite` en este proyecto — y `flash-lite` ya lo había superado en la ventana de 28 días (25/20).
+- **Resuelto (15 jul 2026, D-043):** Marcos activó facturación (Nivel 1, prepago de 10 EUR) — cuota ya no es un bloqueo (RPD sube a 10K en flash y a ilimitado en flash-lite). Aprovechando que había que activar facturación de todas formas, y dado que el coste adicional es irrelevante (céntimos/hora), se decide además subir de `gemini-2.5-flash-lite` a `gemini-2.5-flash` como modelo de producción — mejor grounding reportado (FACTS Grounding), relevante para Falso Negativo Cero. Detalle completo, alternativas descartadas (comparación empírica lado a lado, Claude Haiku 4.5) y justificación en D-043. `rag/config.py`, `rag/generator.py` y `.env.example` ya actualizados. T-02/T-03 se construyen igualmente con ejecución incremental/reanudable (checkpointing) como buena práctica, ya sin la presión de cuota que lo motivó originalmente.
 
-**Estado:** ⚪ No iniciada
+**Estado:** 🔵 En curso
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Dataset de evaluación parcial (35 casos: 20 informativos + 15 alarma) | ⚪ Pendiente |
+| T-02 | RAGAS: Faithfulness + Answer Relevancy contra el pipeline real | ⚪ Pendiente |
+| T-03 | Safety Compliance baseline (15 casos de alarma) | ⚪ Pendiente |
+| T-04 | Informe parcial de resultados (documentación, sin TDD) | ⚪ Pendiente |
 
 ---
 
