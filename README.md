@@ -170,7 +170,21 @@ Esta estructura responde a tres principios que se documentan y justifican en det
 ## Setup local
 
 1. Copia `.env.example` a `.env` y rellena las variables (Supabase, Google AI API, Hugging Face) — ver `.env.example`.
-2. Instala dependencias: `pip install -r requirements.txt` (o usa el `.venv` del repo).
+2. Entorno virtual: el repo ya incluye uno en `.venv/` (gitignored). Actívalo:
+
+   ```bash
+   source .venv/bin/activate
+   ```
+
+   Si no existe (clon nuevo del repo), créalo primero: `python3 -m venv .venv`. Con el venv
+   activo, tu prompt debería mostrar `(.venv)` al principio. Instala/actualiza dependencias:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+   El resto de comandos de esta sección (`chainlit run`, `pytest`) asumen el venv activo.
+
 3. Arranca la app familiar:
 
    ```bash
