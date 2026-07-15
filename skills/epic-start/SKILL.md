@@ -38,7 +38,11 @@ git checkout -b epic/E[nn]-nombre
 git push -u origin epic/E[nn]-nombre
 ```
 
-Nomenclatura: `epic/E03-auth`, `epic/E04-rag`, `epic/E05-chainlit`, etc.
+Nomenclatura: `epic/E03-auth`, `epic/E04-rag`, `epic/E05-chainlit`, etc. — el nombre
+descriptivo va **siempre en inglés**, aunque el resto de la skill se trabaje en
+castellano (coherente con la convención de commits en inglés de `AGENTS.md`). No
+traducir literalmente el nombre de la épica del backlog: usar una palabra o dos que
+resuman el tema (ej. épica "Evaluación RAGAS" → `ragas-eval`, no `evaluacion-ragas`).
 
 **Espera confirmación de Marcos antes de continuar.**
 La rama debe existir en origin antes de crear los `.feature` y actualizar el backlog,
