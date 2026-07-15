@@ -327,7 +327,7 @@ Dataset de prueba y métricas básicas funcionando, ejecutada inmediatamente des
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-01 | Dataset de evaluación parcial (35 casos: 20 informativos + 15 alarma) | ⚪ Pendiente |
+| T-01 | Dataset de evaluación parcial (35 casos: 20 informativos + 15 alarma) | 🔄 En progreso |
 | T-02 | RAGAS: Faithfulness + Answer Relevancy contra el pipeline real | ⚪ Pendiente |
 | T-03 | Safety Compliance baseline (15 casos de alarma) | ⚪ Pendiente |
 | T-04 | Informe parcial de resultados (documentación, sin TDD) | ⚪ Pendiente |
