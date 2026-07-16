@@ -122,9 +122,10 @@ aiip/
     ├── features/          ← Escenarios Gherkin por tarea (eXX_tYY_nombre.feature)
     ├── step_defs/         ← Step definitions pytest-bdd (test_eXX_tYY.py)
     ├── results/           ← Resultados de smoke tests manuales, revisión humana (p. ej. E-06 T-07, E-05 T-07)
-    └── eval/               ← Datasets de evaluación RAGAS y su .feature (E-07, D-044): dataset_partial.json,
-                              e07_t01_partial_eval_dataset.feature — separado de features/ porque es fixture de
-                              datos, no código de test
+    └── eval/               ← Datasets de evaluación RAGAS, sus .feature y resultados (E-07, D-044): dataset_partial.json,
+                              e07_t0{1,2,3,4}_*.feature — separado de features/ porque es fixture de
+                              datos, no código de test. results/ — scores RAGAS, baseline de Safety
+                              Compliance e informe parcial (T-04)
 ```
 
 ---

@@ -38,7 +38,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-04 | Pipeline RAG + módulo de seguridad | ✅ Completada — 05 jul 2026 | — |
 | E-05 | Interfaz conversacional (Chainlit) | ✅ Completada — 10 jul 2026 | E-02, E-04 |
 | E-06 | Ingesta y procesamiento de la KB | ✅ Completada — 08 jul 2026 | E-01 |
-| E-07 | Evaluación RAGAS parcial | 🔵 En curso | E-06 |
+| E-07 | Evaluación RAGAS parcial | ✅ Completada — 16 jul 2026 | E-06 |
 | E-08 | Memoria de perfil e histórico | ⚪ No iniciada | E-03, E-04, E-06 |
 | E-09 | Evaluación RAGAS completa | ⚪ No iniciada | E-07 |
 | E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada | E-05 |
@@ -79,7 +79,7 @@ gantt
     E-06 Ingesta KB                   :done,    e06, 2026-06-27, 2026-07-08
 
     section Fase 1.5 — MVP completo
-    E-07 RAGAS parcial                :         e07, 2026-07-15, 2026-07-18
+    E-07 RAGAS parcial                :done,    e07, 2026-07-15, 2026-07-16
     E-09 RAGAS completo                :         e09, 2026-07-18, 2026-07-24
     E-10 Pulido final                 :         e10, 2026-07-24, 2026-07-27
     E-08 Memoria + histórico          :         e08, 2026-07-27, 2026-07-29
@@ -145,7 +145,7 @@ aiip/
 │   ├── features/          ← Escenarios Gherkin por tarea (.feature).
 │   ├── step_defs/         ← Step definitions pytest-bdd.
 │   ├── results/           ← Resultados de smoke tests manuales (p. ej. E-06 T-07, E-05 T-07), revisión humana.
-│   └── eval/              ← Datasets de evaluación RAGAS y su .feature (E-07): dataset_partial.json, e07_t01_partial_eval_dataset.feature.
+│   └── eval/              ← Datasets de evaluación RAGAS, sus .feature y resultados (E-07): dataset_partial.json, e07_t0{1,2,3,4}_*.feature, results/ (scores RAGAS, baseline de Safety Compliance, informe parcial).
 │
 └── backlog/
     ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
@@ -212,4 +212,4 @@ El perfil profesional (`chainlit/professional/`) es un stub fuera de alcance del
 
 ---
 
-*Última actualización: 10 julio 2026 — E-05 (Interfaz conversacional Chainlit) completada*
+*Última actualización: 16 julio 2026 — E-07 (Evaluación RAGAS parcial) completada*

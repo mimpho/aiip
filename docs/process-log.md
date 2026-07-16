@@ -141,3 +141,52 @@ desarrollo asistido por IA a lo largo del proyecto.
   como regla de skill todavía.
 
 ---
+
+## E-07 — Evaluación RAGAS (parcial)
+**Periodo:** 15–16 jul 2026
+**Tareas:** T-01 a T-04 (4 tareas, todas completadas)
+
+### ¿Qué funcionó bien en el proceso?
+
+- **Reutilizar precedentes ya validados evitó relitigar decisiones.** T-02 siguió el patrón
+  "script sin TDD" de E06-T07 sin debate nuevo (D-050), y el diseño de la evaluación RAGAS
+  reutilizó modelo/embeddings/convenciones de producción en vez de abrir configuración nueva
+  (D-051, ver P-029 en `prompts.md`).
+- **El bloqueo de cuota de Gemini se resolvió en una sola decisión** (activar facturación +
+  subir de modelo, D-043) sin bloquear el arranque de la épica.
+- **Ritmo de cierre rápido:** las 4 tareas + el cierre de la épica se completaron en 2 días
+  (15–16 jul), sin regresiones sobre épicas anteriores.
+
+### ¿Qué generó fricción o retraso?
+
+- **El esquema del dataset de evaluación pasó por seis revisiones seguidas el mismo día**
+  (D-044 a D-049) antes de asentarse. En particular, el campo `id` cambió de esquema dos veces
+  porque la primera propuesta lo acopló a un campo revisable (`is_alarm`) — cuando ese campo
+  cambiara de valor, el id habría quedado inestable. La corrección del mismo patrón se extendió
+  también a `config/alarm_triggers.json`, de una épica ya cerrada (E-04).
+- **La librería `ragas` reventó dos veces en Antigravity** (import condicional roto de
+  `ChatVertexAI`, truncamiento de JSON por límite de tokens del evaluador — D-052) sin que la
+  fase de research en Cowork lo hubiera anticipado. Fue barato de resolver y no es un patrón
+  repetible (fricción de una dependencia de terceros concreta), así que no generó cambio de
+  skill.
+- **La propia skill `epic-close` generaba la PR description antes de actualizar
+  `epics.md`/`README.md`/`AGENTS.md`/`prompts.md` y de hacer la retrospectiva.** Esto daba la
+  falsa impresión de que la épica ya estaba lista para integrarse en `main` cuando el repo
+  todavía no lo reflejaba, y no dejaba explícito que la rama `epic/E[nn]-nombre` debía quedar
+  actualizada (`checkout` + `pull`) antes de revisar el trabajo y correr los tests — con riesgo
+  de trabajar sobre una copia local desfasada respecto al remoto (ya había ocurrido: la copia
+  local de `epic/E07-ragas-eval` iba dos commits por detrás de `origin` al llegar al cierre).
+
+### ¿Qué cambió en las skills o el workflow?
+
+- **`epic-close` reordenada de arriba a abajo.** Nuevo Paso 1: comandos de `checkout`/`pull`
+  para que Marcos deje la rama de la épica actualizada antes de nada, y los tests se corren
+  sobre esa rama (no sobre `main` ni sobre la rama de la última tarea). El PR final pasa del
+  antiguo Paso 2 al último paso (Paso 6 de 6), después de registros, borrador de `prompts.md` y
+  retrospectiva — la retro también genera documentación (este mismo fichero), así que cuenta
+  como parte de "todo lo anterior ya actualizado" antes de generar la PR description.
+- **`task-start`:** sin cambios. La fricción del esquema del dataset (D-044–D-049) fue
+  específica de un dataset nuevo sin precedente claro en el repo, no un patrón que se repita en
+  cada tarea — no se formaliza como regla de skill todavía.
+
+---

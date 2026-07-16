@@ -3,11 +3,13 @@ name: epic-close
 description: >
   Cierre de una épica de desarrollo en AIIP. Se lanza desde Cowork. Úsala cuando
   todos los tests de la épica pasan y Marcos confirma que está lista para cerrar.
-  Orquesta el cierre completo: revisa el trabajo realizado, prepara la descripción
-  del PR final (epic→main), actualiza backlog/epics.md y README.md, genera el
-  borrador de entradas para prompts.md, y hace una retrospectiva del workflow con
-  mejoras inmediatas a las skills si aplica. Actívala cuando el usuario diga
-  "cerramos la E-XX", "épica terminada", "vamos a cerrar" o similar.
+  Orquesta el cierre completo: deja la rama de la épica actualizada, revisa el
+  trabajo realizado, actualiza backlog/epics.md, README.md y AGENTS.md, genera
+  el borrador de entradas para prompts.md, hace una retrospectiva del workflow
+  con mejoras inmediatas a las skills si aplica, y por último — con todo lo
+  anterior ya actualizado — prepara la descripción del PR final (epic→main).
+  Actívala cuando el usuario diga "cerramos la E-XX", "épica terminada", "vamos
+  a cerrar" o similar.
 ---
 
 # epic-close
@@ -16,27 +18,45 @@ Workflow de cierre para épicas de desarrollo. El objetivo es dejar todos los
 registros actualizados y el repositorio en un estado limpio antes de pasar a
 la siguiente épica.
 
-## Antes de empezar
+---
 
-Primero, comprueba en qué rama estás — **nunca hagas `checkout` tú mismo, ni siquiera
-para inspeccionar** (ver "Reparto git" en `AGENTS.md`). Un `checkout`/`merge --ff-only`
-de "solo mirar" ya dejó un `.git/index.lock` huérfano bloqueando a Marcos en una sesión
-anterior: el sandbox de Cowork monta su repo real, no un clon aislado, así que cualquier
-cambio de HEAD es un cambio real, aunque la intención fuera solo de lectura.
+## Paso 1 — Rama de la épica actualizada y tests en verde
+
+**Nunca hagas `checkout`/`pull` tú mismo, ni siquiera para inspeccionar** (ver
+"Reparto git" en `AGENTS.md`). Un `checkout`/`merge --ff-only` de "solo mirar" ya
+dejó un `.git/index.lock` huérfano bloqueando a Marcos en una sesión anterior: el
+sandbox de Cowork monta su repo real, no un clon aislado, así que cualquier cambio
+de HEAD es un cambio real, aunque la intención fuera solo de lectura.
+
+Como las tareas de la épica se integran vía PR en GitHub, la copia local de
+`epic/E[nn]-nombre` puede quedar por detrás del remoto (última tarea mergeada sin
+fast-forward local). Además, el propio cierre va a añadir un commit más sobre esta
+rama (los registros actualizados en los Pasos 3-4), así que hay que partir de la
+rama de épica real y actualizada, no de la rama de la última tarea ni de una copia
+desfasada. Pide a Marcos que ejecute él mismo:
+
+```bash
+git checkout epic/E[nn]-nombre
+git pull origin epic/E[nn]-nombre
+```
+
+Con la rama ya actualizada, comprueba el estado (esto sí lo puede hacer el agente
+— `status`/`log`/`diff`/`branch` son de lectura):
 
 ```bash
 git branch --show-current
 git log --oneline main..epic/E[nn]-nombre   # commits de la épica, sin moverte de rama
 ```
 
-Si no estás en `epic/E[nn]-nombre` (o hay trabajo en una rama de tarea aún sin mergear
-a la épica), pídele a Marcos que haga el `checkout`/merge él mismo, o sigue trabajando
-con `<rama-A>..<rama-B>` en los comandos de git en vez de moverte de HEAD.
+Si Marcos no ha hecho el `checkout`/`pull` todavía, sigue trabajando con
+`<rama-A>..<rama-B>` en los comandos de git (o contra `origin/epic/E[nn]-nombre`)
+en vez de moverte de HEAD tú mismo.
 
 Verifica que la épica está realmente lista para cerrar:
 - No hay TODOs pendientes en el código de la épica
 - Marcos ha confirmado el cierre
-- Todos los tests del proyecto pasan (no solo los de la épica):
+- Todos los tests del proyecto pasan **sobre la rama de la épica ya actualizada**
+  (no solo los de la épica, y no sobre `main` ni sobre una rama de tarea suelta):
 
 ```bash
 PYTHONPATH=. pytest tests/ -v
@@ -52,8 +72,8 @@ Si algún test de una épica anterior falla, es una regresión — hay que resol
 > El `.venv` del repo es de macOS/Homebrew y no funciona en el Linux del sandbox, y las
 > dependencias pesadas (torch, chromadb, transformers) no se instalan limpiamente ahí.
 > Pide directamente a Marcos que ejecute `PYTHONPATH=. pytest tests/ -v` en su terminal (con el `.venv`
-> activado) o en Antigravity, y que te pase el resultado. No intentes reconstruir el entorno
-> en el sandbox — es tiempo perdido.
+> activado, sobre la rama de la épica) o en Antigravity, y que te pase el resultado. No
+> intentes reconstruir el entorno en el sandbox — es tiempo perdido.
 
 > **Tests de integración contra servicios externos (Supabase, Google, etc.):**
 > Los tests que requieren conexión de red a Supabase u otros servicios externos
@@ -67,14 +87,14 @@ Si algún test de una épica anterior falla, es una regresión — hay que resol
 
 ---
 
-## Paso 1 — Revisión del trabajo realizado
+## Paso 2 — Revisión del trabajo realizado
 
 Haz un repaso del estado actual antes de escribir nada:
 
 ```bash
 git log --oneline main..epic/E[nn]-nombre               # commits de la épica, sin moverte de rama
 git diff main..epic/E[nn]-nombre --stat                  # ficheros modificados
-PYTHONPATH=. pytest tests/features/eXX_*.feature -v      # confirma que todo pasa (pide a Marcos que lo ejecute, ver nota de arriba)
+PYTHONPATH=. pytest tests/features/eXX_*.feature -v      # confirma que todo pasa (pide a Marcos que lo ejecute, ver Paso 1)
 ```
 
 Con esto en mano, identifica:
@@ -87,45 +107,7 @@ Con esto en mano, identifica:
   forma distinta a como se escribió originalmente porque una decisión posterior cambió el
   mecanismo (p. ej. una visualización en UI que se sustituye por logging server-side). Si
   es el caso, anótalo junto al criterio en `epics.md` y márcalo explícitamente en la PR
-  description en vez de dar el criterio por cumplido sin más.
-
----
-
-## Paso 2 — PR final de la épica
-
-El PR es de la rama de épica a main: `epic/E[nn]-nombre → main`.
-
-Genera la PR description **en inglés**, igual que `task-close` — solo el título del
-commit/PR y el cuerpo van en inglés; el resto de la sesión (chat, retro, registros) sigue en
-español. Proporciona en el chat el título y descripción del PR, listos para copiar en GitHub.
-
-**La primera línea es el título del PR** (campo "Title" de GitHub, no un heading dentro
-de la descripción). El resto, a partir de `## What`, es el cuerpo ("Description"):
-
-```
-feat(E-XX): [one-line description of what the epic delivers]
-
-## What
-[2-3 sentences explaining the change at product/system level]
-
-## Changes
-- `path/file.py` — [what it does]
-- `tests/features/eXX_tYY.feature` — [what behavior it validates]
-- [...]
-
-## Acceptance criteria covered
-- [ ] [criterion 1 from epics.md]
-- [ ] [criterion 2]
-- [...]
-
-## Test results
-All scenarios passing: `PYTHONPATH=. pytest tests/features/eXX_*.feature`
-
-## Notes
-[Relevant implementation decisions, known technical debt, etc.]
-```
-
-No crees ningún fichero .md para el PR. Solo en el chat.
+  description (Paso 6) en vez de dar el criterio por cumplido sin más.
 
 ---
 
@@ -266,13 +248,59 @@ de forma independiente, sin asumir contexto de la sesión.
 
 ---
 
+## Paso 6 — PR final de la épica
+
+Este es el último paso, no antes. `epics.md`, `README.md`, `AGENTS.md`, el borrador
+de `prompts.md` y la retrospectiva en `docs/process-log.md` (Pasos 3-5) ya están
+cerrados — la retro también genera documentación del repo, así que cuenta como
+parte de "todo lo anterior actualizado". Generar la PR description en cualquier
+punto anterior daría la falsa impresión de que la épica ya está lista para `main`
+mientras el propio repo todavía no lo refleja.
+
+El PR es de la rama de épica a main: `epic/E[nn]-nombre → main`.
+
+Genera la PR description **en inglés**, igual que `task-close` — solo el título del
+commit/PR y el cuerpo van en inglés; el resto de la sesión (chat, retro, registros) sigue en
+español. Proporciona en el chat el título y descripción del PR, listos para copiar en GitHub.
+
+**La primera línea es el título del PR** (campo "Title" de GitHub, no un heading dentro
+de la descripción). El resto, a partir de `## What`, es el cuerpo ("Description"):
+
+```
+feat(E-XX): [one-line description of what the epic delivers]
+
+## What
+[2-3 sentences explaining the change at product/system level]
+
+## Changes
+- `path/file.py` — [what it does]
+- `tests/features/eXX_tYY.feature` — [what behavior it validates]
+- [...]
+
+## Acceptance criteria covered
+- [ ] [criterion 1 from epics.md]
+- [ ] [criterion 2]
+- [...]
+
+## Test results
+All scenarios passing: `PYTHONPATH=. pytest tests/features/eXX_*.feature`
+
+## Notes
+[Relevant implementation decisions, known technical debt, etc.]
+```
+
+No crees ningún fichero .md para el PR. Solo en el chat.
+
+---
+
 ## Resumen de entregables del cierre
 
 | Entregable | Destino | Quién ejecuta |
 |---|---|---|
-| Descripción del PR | Chat (copiar en GitHub) | Marcos |
+| Rama de la épica actualizada (`checkout`/`pull`) | Repo local | Marcos |
 | Estado + tareas + entregables | `backlog/epics.md` | Agente |
 | Tabla de épicas actualizada | `README.md` | Agente |
 | Estructura del repo actualizada | `AGENTS.md` (si aplica) | Agente |
 | Borrador de entradas | `prompts.md` | Marcos (tras revisión) |
 | Retrospectiva del workflow | `docs/process-log.md` | Agente (Marcos valida) |
+| Descripción del PR (generada al final, Paso 6) | Chat (copiar en GitHub) | Marcos |

@@ -766,3 +766,46 @@ un rate limit del test (dos `signup()` reales seguidos), que fallaba antes de ll
 este camino. Al tocar cualquier setting de "seguridad por defecto" de un proveedor de auth,
 revisar explícitamente qué pasa con las respuestas de "recurso ya existente" — no solo el
 flujo feliz.
+
+---
+
+## Fase 1.5 — MVP completo
+
+### P-028 — Autoría del dataset de evaluación: Claude redacta desde la KB, Marcos revisa y amplía
+**Fecha:** 15 julio 2026
+**Fase:** E-07 (T-01)
+**Tipo:** evaluation
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Reparto de autoría del dataset de 42 casos (D-044/D-049) — Claude redacta preguntas +
+`expected_answer` a partir de la KB real y de `config/alarm_triggers.json` (15 casos de
+alarma), Marcos revisa, corrige y amplía (7 preguntas adicionales tras la primera pasada:
+viajes, convivencias escolares, contagio). No sustituye la validación clínica de Jacques
+Rivière, prevista para E-09.
+
+**Resultado / aprendizaje:**
+Patrón reutilizable para ampliar a 65→72 casos en E-09 — Claude propone desde fuentes ya
+indexadas, Marcos filtra por relevancia real de padre/madre que la KB no resalta
+explícitamente. La ronda de revisión detectó huecos temáticos, no solo errores de redacción.
+
+---
+
+### P-029 — Diseño técnico de evaluación RAGAS: reutilizar infraestructura de producción
+**Fecha:** 16 julio 2026
+**Fase:** E-07 (T-02)
+**Tipo:** evaluation
+**Herramienta:** Claude Cowork (diseño) + Antigravity (implementación)
+
+**Prompt / decisión:**
+Al diseñar `scripts/run_ragas_eval.py` (D-051): evaluador RAGAS = mismo `LLM_MODEL` de
+producción en vez de una variable nueva; embeddings = mismo bge-m3 vía
+`rag/embeddings.py`; métricas calculadas sobre la respuesta generada *sin* el bloque de
+fuentes concatenado, para no penalizar Faithfulness con contenido no clínico;
+checkpointing simple basado en fichero (guarda tras cada caso, detecta ids ya procesados
+al relanzar).
+
+**Resultado / aprendizaje:**
+Reutilizar infraestructura de producción para evaluación redujo a casi cero la superficie
+de configuración nueva. Precedente directo para E-09 al escalar de 27 a 72 casos
+evaluados: mismo patrón de extracción de contexto y checkpointing.
