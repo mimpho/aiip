@@ -5,6 +5,8 @@
 
 ---
 
+![alt text](aiip-readme.png)
+
 ## ¿Qué es AIIP?
 
 Las familias que conviven con una Inmunodeficiencia Primaria (IDP) se enfrentan a un volumen de información médica compleja, dispersa y difícil de interpretar. Los profesionales que las atienden necesitan acceso ágil a literatura especializada en un campo con alta variabilidad clínica.
