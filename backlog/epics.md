@@ -395,10 +395,21 @@ siga siendo un producto completo sin ella.
 ### E-09 — Evaluación RAGAS completa
 Cierre del plan de evaluación con al menos un ciclo de mejora.
 
+**Nota de alcance (16 jul 2026):** la entrega es un TFM, no una validación médica. La
+revisión clínica de Jacques Rivière (`docs/evaluation.md` sección 1.2: signos de alarma,
+tono, respuestas peligrosas) no es un requisito bloqueante para la entrega del 29 de
+julio — es trabajo importante de cara a un uso real post-entrega, no una condición de
+cierre de E-09. Sí conviene lanzarla en paralelo cuanto antes (su turnaround histórico es
+de días/rondas, ver la revisión de signos de alarma de junio-julio, aún no cerrada del
+todo), pero si su feedback no llega a tiempo, E-09 se cierra igualmente con los resultados
+RAGAS + ciclo de mejora + CHART ya completados, dejando la validación clínica como
+seguimiento abierto post-TFM.
+
 **Criterios de aceptación de alto nivel**
 - Resultados RAGAS completos documentados en `docs/evaluation.md`
 - Al menos un ciclo de mejora basado en los resultados
 - Checklist CHART completado como anexo
+- Validación clínica de Jacques: deseable en paralelo, no bloqueante para la entrega (ver nota de alcance)
 
 **Estado:** ⚪ No iniciada
 
