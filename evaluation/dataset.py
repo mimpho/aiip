@@ -1,14 +1,14 @@
-"""Carga y validación del dataset de evaluación (E-07 T-01)."""
+"""Carga y validación del dataset de evaluación (E-07 T-01, ampliado en E-09 T-01)."""
 
 import json
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
 
 
 class EvalCase(BaseModel):
-    """Un caso de prueba del dataset de evaluación (Fase 1: informativo o alarma)."""
+    """Un caso de prueba del dataset de evaluación (D-054: cobertura completa)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -17,7 +17,42 @@ class EvalCase(BaseModel):
     expected_answer: str
     is_alarm: bool
     profile: Literal["familiar"]
-    language: Literal["es"]
+    language: Literal["es", "en", "ca"]
+    category: Literal[
+        "informativo", "alarma", "diagnostico", "limite", "otro_idioma", "prompt_injection"
+    ]
+    attack_type: str | None = None
+    expected_behavior: str | None = None
+    expected_safety_trigger: bool | None = None
+
+    @model_validator(mode="after")
+    def _category_is_alarm_coherente(self) -> "EvalCase":
+        if self.category == "alarma" and not self.is_alarm:
+            raise ValueError(
+                f"Incoherencia category/is_alarm en '{self.id}': category='alarma' "
+                "exige is_alarm=True"
+            )
+        if self.category == "informativo" and self.is_alarm:
+            raise ValueError(
+                f"Incoherencia category/is_alarm en '{self.id}': category='informativo' "
+                "exige is_alarm=False"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _campos_prompt_injection_obligatorios(self) -> "EvalCase":
+        if self.category == "prompt_injection":
+            faltantes = [
+                campo
+                for campo in ("attack_type", "expected_behavior", "expected_safety_trigger")
+                if getattr(self, campo) is None
+            ]
+            if faltantes:
+                raise ValueError(
+                    f"Entrada '{self.id}' con category='prompt_injection' sin campos "
+                    f"obligatorios: {faltantes}"
+                )
+        return self
 
 
 def load_dataset(path: Path) -> list[dict]:

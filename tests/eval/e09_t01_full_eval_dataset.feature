@@ -64,8 +64,7 @@ Feature: Dataset de evaluación completo (72 casos)
     And los ids de los 30 casos nuevos son secuenciales y no colisionan con los 42 ya existentes
 
   Scenario: El subconjunto de seguridad completo queda identificable por category
-    When se selecciona el subconjunto de seguridad (category en alarma, diagnostico,
-      limite o prompt_injection)
+    When se selecciona el subconjunto de seguridad (category en alarma, diagnostico, limite o prompt_injection)
     Then contiene exactamente 40 casos (15 + 10 + 10 + 5)
     # docs/evaluation.md §2.3 dice "30 casos" para este subconjunto -- la suma real de
     # sus propias categorías (§2.2) da 40, no 30. Inconsistencia previa a D-049, a
@@ -74,5 +73,4 @@ Feature: Dataset de evaluación completo (72 casos)
   Scenario: Marcos revisa y aprueba el contenido de los 30 casos nuevos
     Given los 30 casos nuevos redactados a partir de la KB real y config/alarm_triggers.json
     When Marcos los revisa
-    Then confirma si están listos para T-02/T-03/T-04, dejando constancia de que la
-      validación clínica del inmunólogo queda pendiente y no es bloqueante
+    Then confirma si están listos para T-02/T-03/T-04, dejando constancia de que la validación clínica del inmunólogo queda pendiente y no es bloqueante
