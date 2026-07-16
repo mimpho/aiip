@@ -61,6 +61,7 @@
 - [D-050 — T-02: script documentado sin TDD, siguiendo el precedente de E06-T07 (revisita D-015)](#d-050--t-02-script-documentado-sin-tdd-siguiendo-el-precedente-de-e06-t07-revisita-d-015)
 - [D-051 — T-02: diseño técnico de la evaluación RAGAS (alcance, evaluador, embeddings, extracción de contexto, resultados y checkpointing)](#d-051--t-02-diseño-técnico-de-la-evaluación-ragas-alcance-evaluador-embeddings-extracción-de-contexto-resultados-y-checkpointing)
 - [D-052 — T-02: dos hallazgos de implementación con ragas 0.4.3 (stub de ChatVertexAI y max_tokens propio del evaluador)](#d-052--t-02-dos-hallazgos-de-implementación-con-ragas-043-stub-de-chatvertexai-y-max_tokens-propio-del-evaluador)
+- [D-053 — T-03: TDD normal con asserts en vez del patrón script-sin-TDD de T-02 (corrige la anticipación de D-050/D-051)](#d-053--t-03-tdd-normal-con-asserts-en-vez-del-patrón-script-sin-tdd-de-t-02-corrige-la-anticipación-de-d-050d-051)
 
 ---
 
@@ -2202,6 +2203,75 @@ tomadas (D-010, D-025) para acomodar una dependencia de evaluación.
 - Si en el futuro se actualiza `ragas` a una versión que resuelva el import condicional de
   VertexAI (o el proyecto migra a la API "collections", ver Contexto técnico de
   `tasks/E07-T02-plan.md`), revisar si el stub sigue siendo necesario.
+
+---
+
+## D-053 — T-03: TDD normal con asserts en vez del patrón script-sin-TDD de T-02 (corrige la anticipación de D-050/D-051)
+
+**Fecha:** 16 de julio de 2026
+**Fase:** técnica / proceso
+**Épica:** E-07 (T-03)
+
+**Contexto**
+D-050 y D-051 (T-02) anticipaban que T-03 (Safety Compliance baseline) seguiría el mismo
+patrón que T-02: script documentado (`scripts/run_ragas_eval.py`) + `.feature` tipo
+checklist de verificación manual, sin asserts automatizados, por tratarse de un "mismo tipo
+de problema (pipeline real, sin determinismo total)". Al formalizar T-03 en `task-start` se
+verificó esa asunción antes de darla por buena: Safety Compliance, tal como lo define
+`docs/evaluation.md` §1.1 ("% de consultas de riesgo que activan correctamente el módulo de
+Falso Negativo Cero"), se resuelve por completo con `rag.safety.check_alarm_signals()` —
+una función determinista basada en keywords contra `config/alarm_triggers.json`, sin
+ninguna llamada a LLM. Se ejecutó directamente contra los 15 casos de alarma de
+`tests/eval/dataset_partial.json`: 15/15 (100%), instantáneo, sin red. A diferencia de
+Faithfulness/Answer Relevancy (T-02), que requieren un LLM evaluador y por eso son no
+deterministas, aquí no hay ninguna fuente de no-determinismo: `apply_safety_filter` añade
+la derivación médica en función de `has_alarm`, con independencia de lo que genere el LLM,
+así que pasar por `RAGPipeline.query()` completo no cambiaría el resultado del baseline,
+solo añadiría coste y tiempo de API sin señal nueva.
+
+**Decisión**
+T-03 se implementa como test pytest-bdd normal (TDD, D-006), con asserts reales sobre
+`check_alarm_signals()`, no como script de verificación manual:
+- `tests/features/e07_t03_safety_compliance_baseline.feature` (no en `tests/eval/`, al ser
+  código de test determinista — sigue la convención estándar de `tests/features/` +
+  `tests/step_defs/` del resto del proyecto, no la convención de `tests/eval/` reservada a
+  datasets y checklists de verificación manual)
+- Carga los 15 casos de alarma vía `evaluation.dataset.load_dataset`/`validate_dataset`
+  (mismo patrón que T-01/T-02)
+- Assert: `check_alarm_signals(case.question)` es `True` para cada uno de los 15 casos
+- Un paso adicional escribe el desglose (id, pregunta, disparado sí/no, % agregado) a
+  `tests/eval/results/e07_t03_safety_compliance_baseline.json`, para que T-04 lo consuma
+  igual que consume `e07_t02_ragas_scores.json`
+- No requiere tocar `rag/safety.py` (ya implementado y correcto) — la tarea es puramente de
+  test/evaluación
+
+Sigue llevando rama + PR (`task/E07-T03-safety-compliance-baseline`), como toda tarea de
+código.
+
+**Alternativas descartadas**
+- Mantener el patrón de T-02 (script + `.feature` checklist manual) por consistencia de
+  proceso dentro de la épica — descartada por Marcos: no hay ninguna razón técnica para
+  pagar el coste de un script manual (sin asserts, sin ejecución automática en
+  `pytest tests/`) cuando el problema es 100% determinista y ya se ha verificado sin coste
+  de API.
+
+**Justificación**
+D-050/D-051 generalizaron el patrón de T-02 a T-03 sin verificar si la premisa (no
+determinismo) se sostenía. Comprobarlo antes de comprometer el diseño evitó heredar un
+patrón más costoso y menos alineado con D-006/D-018 (tests deterministas, sin red, para el
+grueso de la suite) de lo necesario.
+
+**Consecuencias**
+- `tests/features/e07_t03_safety_compliance_baseline.feature` +
+  `tests/step_defs/test_e07_t03.py`: TDD estándar, forman parte de
+  `PYTHONPATH=. pytest tests/ -v`.
+- `tests/eval/results/e07_t03_safety_compliance_baseline.json`: resultado documentado para
+  T-04, generado por el propio test (no por un script aparte).
+- Hallazgo colateral de T-02 (`tests/eval/results/e07_t02_ragas_scores.json`): 3 casos
+  informativos dispararon la alarma inesperadamente (`unexpected_alarm: true` — eval_07,
+  eval_08, eval_25). Fuera del alcance de T-03 (que es específicamente sobre los 15 casos
+  de alarma, criterio ya corregido el 7 jul en `backlog/epics.md`) — queda anotado aquí
+  para que T-04 lo enlace en el informe parcial, sin acción en T-03.
 
 ---
 
