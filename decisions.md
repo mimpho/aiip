@@ -60,6 +60,7 @@
 - [D-049 — Dataset de evaluación parcial ampliado a 42 casos (27 informativos + 15 alarma), revisita D-044](#d-049--dataset-de-evaluación-parcial-ampliado-a-42-casos-27-informativos--15-alarma-revisita-d-044)
 - [D-050 — T-02: script documentado sin TDD, siguiendo el precedente de E06-T07 (revisita D-015)](#d-050--t-02-script-documentado-sin-tdd-siguiendo-el-precedente-de-e06-t07-revisita-d-015)
 - [D-051 — T-02: diseño técnico de la evaluación RAGAS (alcance, evaluador, embeddings, extracción de contexto, resultados y checkpointing)](#d-051--t-02-diseño-técnico-de-la-evaluación-ragas-alcance-evaluador-embeddings-extracción-de-contexto-resultados-y-checkpointing)
+- [D-052 — T-02: dos hallazgos de implementación con ragas 0.4.3 (stub de ChatVertexAI y max_tokens propio del evaluador)](#d-052--t-02-dos-hallazgos-de-implementación-con-ragas-043-stub-de-chatvertexai-y-max_tokens-propio-del-evaluador)
 
 ---
 
@@ -2134,6 +2135,73 @@ propia (scores de un LLM en vivo).
   checkpoint incremental en `tests/eval/results/e07_t02_ragas_scores.json`.
 - Precedente para T-03: mismo `RAGPipeline` real, mismo patrón de resultados en
   `tests/eval/results/`.
+
+---
+
+## D-052 — T-02: dos hallazgos de implementación con ragas 0.4.3 (stub de ChatVertexAI y max_tokens propio del evaluador)
+
+**Fecha:** 16 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (T-02)
+
+**Contexto**
+Al implementar `scripts/run_ragas_eval.py` en Antigravity (siguiendo `tasks/E07-T02-plan.md`,
+D-050/D-051) surgieron dos problemas no anticipados en la fase de research de Cowork:
+
+1. `ragas` (comprobado en todas las versiones 0.1–0.4 disponibles) importa
+   incondicionalmente `langchain_community.chat_models.vertexai.ChatVertexAI` al cargar
+   `ragas.llms.base`, aunque el proyecto no use VertexAI para nada. Ese submódulo ya no
+   existe en la línea moderna de `langchain-community` (0.4.x) que ya usa el proyecto —
+   se movió a un paquete standalone tras el aviso de sunset de `langchain-community`. Sin
+   workaround, `import ragas` fallaba con `ModuleNotFoundError` antes de poder usar
+   `Faithfulness`/`ResponseRelevancy`.
+2. Reutilizar `LLM_MAX_TOKENS=1024` (calibrado en D-025 para respuestas de chat concisas)
+   como límite del LLM evaluador rompía el parseo interno de Faithfulness: RAGAS le pide
+   al LLM listar y juzgar cada afirmación de la respuesta (statement + reason + verdict)
+   en un único JSON, que con 1024 tokens quedaba truncado a mitad del último elemento.
+
+**Decisión**
+1. `scripts/run_ragas_eval.py` registra un stub de `sys.modules` para
+   `langchain_community.chat_models.vertexai` (una clase `ChatVertexAI` vacía, no
+   funcional) antes de `import ragas`, documentado inline. No se degrada la versión de
+   `langchain-community` del proyecto ni se toca VertexAI de ninguna forma — es
+   exclusivamente un parche para que `ragas` pueda cargar su import condicional.
+2. El LLM evaluador de RAGAS usa una constante propia `_EVALUATOR_MAX_TOKENS = 8192`, en
+   vez de `config["LLM_MAX_TOKENS"]`. El resto de parámetros de inferencia (modelo,
+   temperatura, top_p, `thinking_budget=0` de D-025) se mantienen iguales a producción —
+   solo el límite de tokens de salida es distinto, y solo para las llamadas internas de
+   RAGAS, no para `RAGPipeline.query()`.
+
+**Alternativas descartadas**
+- Downgradear `langchain-community` a una versión que aún incluya `chat_models.vertexai`
+  — descartado: reintroduce código legacy ya retirado deliberadamente del proyecto, y
+  arriesga romper compatibilidad con el resto de `langchain` 1.x ya en uso.
+- Instalar el paquete standalone real de VertexAI para satisfacer el import — descartado:
+  añadiría una dependencia real (y su superficie de configuración) solo para que un import
+  no usado no falle; el stub vacío es más barato y más honesto sobre que VertexAI no se
+  usa.
+- Subir `LLM_MAX_TOKENS` global del proyecto a 8192 en vez de una constante local —
+  descartado: `LLM_MAX_TOKENS` gobierna las respuestas de chat en producción
+  (`rag/generator.py`), no debe cambiar por una necesidad exclusiva del evaluador de RAGAS.
+
+**Justificación**
+Ambos hallazgos son fricciones de integración de una librería de terceros (`ragas`) con
+las convenciones ya asentadas del proyecto (línea moderna de `langchain-community`,
+`LLM_MAX_TOKENS` calibrado para chat) — resolverlos con parches locales y documentados en
+el propio script evita modificar configuración de producción o retroceder decisiones ya
+tomadas (D-010, D-025) para acomodar una dependencia de evaluación.
+
+**Consecuencias**
+- `requirements.txt`: `ragas==0.4.3` pinneado, junto con las dependencias reales nuevas
+  que arrastra (`datasets`, `instructor`, `langchain-openai`, `langchain-core` actualizado
+  a 1.4.9, etc.), verificadas contra `pip freeze` real.
+- `scripts/run_ragas_eval.py`: stub de `ChatVertexAI` y `_EVALUATOR_MAX_TOKENS = 8192`
+  documentados inline con la razón de cada uno.
+- Precedente para T-03 (Safety Compliance baseline): si reutiliza el mismo evaluador
+  RAGAS o un import de `ragas`, heredar ambos workarounds en vez de redescubrirlos.
+- Si en el futuro se actualiza `ragas` a una versión que resuelva el import condicional de
+  VertexAI (o el proyecto migra a la API "collections", ver Contexto técnico de
+  `tasks/E07-T02-plan.md`), revisar si el stub sigue siendo necesario.
 
 ---
 
