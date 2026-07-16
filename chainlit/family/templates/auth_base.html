@@ -40,7 +40,7 @@ auth-pages.css sobre los tokens de design/public/tokens.css. #}
   report — this route always loaded dark regardless of the toggle
   picked on /login, because nothing here ever set that class). Must
   run synchronously, before the stylesheet, or the page paints dark
-  first and flashes to light once auth.js (deferred) catches up. #}
+  first and flashes to light once custom.js (deferred) catches up. #}
   <script>
     (function () {
       if (localStorage.getItem('vite-ui-theme') === 'light') {
@@ -53,12 +53,12 @@ auth-pages.css sobre los tokens de design/public/tokens.css. #}
 
 <body class="auth-page">
   {# Same badge+title+subtitle group as the native /login page (design/
-  public/auth.js, injectLoginHeading) — added here by hand instead of
+  public/custom.js, injectLoginHeading) — added here by hand instead of
   injected by JS, since that injector targets a Tailwind DOM shape
   specific to Chainlit's compiled bundle that doesn't exist on this
   plain server-rendered page (10 jul 2026, Marcos: brought the two
   surfaces back in visual sync). Reuses the exact same ids so the
-  matching CSS in auth-pages.css (and auth.js's syncThemeAwareLogos,
+  matching CSS in auth-pages.css (and custom.js's syncThemeAwareLogos,
   which looks up #aiip-auth-logo by id) needs no changes for this
   page specifically. <h2>, not <h1> — .auth-title below is this
       page's real, page-specific heading. #}
@@ -74,11 +74,12 @@ auth-pages.css sobre los tokens de design/public/tokens.css. #}
       </main>
       {# Reuses the SPA's custom_js (D-040 punto 5): its theme toggle already
       falls back to the floating glass-pill treatment whenever it can't
-      find Chainlit's native header toggle (see auth.js's own header
+      find Chainlit's native header toggle (see custom.js's own header
       comment) — true on every route here, so it just works. The
-      forgot-password-link/login-heading injectors in the same file
-      no-op harmlessly (their target elements never exist on this page). #}
-      <script src="/public/auth.js" defer></script>
+      forgot-password-link/login-heading/thinking-indicator injectors in
+      the same file no-op harmlessly (their target elements never exist
+      on this page). #}
+      <script src="/public/custom.js" defer></script>
 </body>
 
 </html>

@@ -330,3 +330,225 @@
   });
   observer.observe(document.body, { childList: true, subtree: true });
 })();
+
+/* AIIP — indicador de "pensando" con efecto de máquina de escribir
+ * (16 jul 2026, ampliado el mismo día tras feedback de Marcos).
+ *
+ * main_family.py::_answer envía un cl.Message(content="") antes de
+ * empezar el streaming (D-035); mientras dura eso, style.css oculta la
+ * tarjeta vacía (.message-content:empty) y anima solo el avatar
+ * (aiip-avatar-pulse). Eso deja la espera muda: sin texto, un pulso
+ * silencioso puede leerse como que la app se ha colgado, y este es un
+ * asistente sobre inmunodeficiencias primarias — quien pregunta puede
+ * estar en un momento delicado, así que el texto no debe sonar clínico
+ * ni generar alarma, solo dar sensación de progreso en un tono cálido
+ * y de acompañamiento.
+ *
+ * Independiente de la IIFE de arriba (no depende de su `return`
+ * temprano cuando ambas inyecciones del login ya están hechas): esta
+ * función debe seguir observando durante toda la vida de la página,
+ * incluida la vista de chat autenticada donde ese `return` nunca
+ * llegó a importar.
+ *
+ * Selectores reutilizan los ya verificados en style.css
+ * (`.ai-message .message-content`, `img[alt^="Avatar for"]`) — no se
+ * inventan nuevos hooks de DOM aquí.
+ */
+(function () {
+  var THINKING_MESSAGES = [
+    "Buscando información fiable para acompañarte.",
+    "Revisando con calma las fuentes disponibles...",
+    "Cada pregunta resuelta es un paso más hacia la tranquilidad.",
+    "Preparando una respuesta clara, a tu ritmo.",
+    "No estás solo/a en esto: seguimos aquí, buscando lo mejor para ti.",
+    "Conectando con el conocimiento que puede ayudarte hoy.",
+    "Un momento — queremos darte una respuesta bien fundamentada.",
+    "Organizando la información con cuidado, casi lista.",
+  ];
+  var TYPE_CHAR_MS = 32;
+  var PAUSE_AFTER_TYPE_MS = 1600;
+
+  // ai-message (elemento real del DOM) -> { wrapperEl, typedEl, typeTimer,
+  // pauseTimer }. Un Map normal (no WeakMap) porque también se recorre
+  // para purgar instancias cuyo elemento ya no está en el documento
+  // (mensajes que Chainlit desmonta al cambiar de hilo).
+  var instances = new Map();
+
+  function isThinking(aiMessageEl) {
+    var content = aiMessageEl.querySelector(".message-content");
+    return !!content && content.childNodes.length === 0;
+  }
+
+  // Teclea `message` carácter a carácter en `inst.typedEl`; al terminar,
+  // programa una pausa (cursor parpadeando sobre el texto completo,
+  // legible) antes de pasar a la siguiente frase. El cursor en sí no se
+  // toca desde aquí — es un <span> hermano siempre presente con su
+  // propia animación CSS continua (ver .aiip-thinking-cursor).
+  function typeMessage(inst, index) {
+    var message = THINKING_MESSAGES[index];
+    inst.typedEl.textContent = "";
+    var charIndex = 0;
+
+    inst.typeTimer = setInterval(function () {
+      charIndex++;
+      inst.typedEl.textContent = message.slice(0, charIndex);
+      if (charIndex >= message.length) {
+        clearInterval(inst.typeTimer);
+        inst.typeTimer = null;
+        var nextIndex = (index + 1) % THINKING_MESSAGES.length;
+        inst.pauseTimer = setTimeout(function () {
+          typeMessage(inst, nextIndex);
+        }, PAUSE_AFTER_TYPE_MS);
+      }
+    }, TYPE_CHAR_MS);
+  }
+
+  function startThinking(aiMessageEl) {
+    if (instances.has(aiMessageEl)) {
+      return;
+    }
+
+    // .message-content no es hijo directo de .ai-message: el bundle
+    // compilado de Chainlit (chainlit/frontend/dist/assets/index-*.js)
+    // envuelve avatar y contenido en dos hijos flex de la fila
+    // ("ai-message flex gap-4 w-full"): el avatar, y un wrapper interno
+    // ("flex flex-col items-start ... flex-grow gap-2") que es quien de
+    // verdad ocupa el ancho restante y contiene .message-content. Un
+    // primer intento colgaba este nodo directamente de aiMessageEl —
+    // eso lo convertía en un TERCER hijo de la fila exterior, compitiendo
+    // por espacio con ese wrapper (que ya reclama todo lo disponible vía
+    // flex-grow): el resultado visual era el texto anclado al borde
+    // derecho, creciendo hacia la izquierda con cada carácter tecleado.
+    // Montarlo dentro de ese mismo wrapper, justo después del
+    // .message-content vacío, lo hace ocupar la posición donde
+    // aparecerá el texto real — ancho fijo, ancla izquierda, sin saltos.
+    var content = aiMessageEl.querySelector(".message-content");
+    var mount = content && content.parentElement;
+    if (!mount) {
+      return;
+    }
+
+    var wrapperEl = document.createElement("div");
+    wrapperEl.className = "aiip-thinking-text";
+    var typedEl = document.createElement("span");
+    typedEl.className = "aiip-thinking-typed";
+    var cursorEl = document.createElement("span");
+    cursorEl.className = "aiip-thinking-cursor";
+    wrapperEl.appendChild(typedEl);
+    wrapperEl.appendChild(cursorEl);
+    mount.insertBefore(wrapperEl, content.nextSibling);
+
+    var inst = { wrapperEl: wrapperEl, typedEl: typedEl, typeTimer: null, pauseTimer: null };
+    instances.set(aiMessageEl, inst);
+
+    var startIndex = Math.floor(Math.random() * THINKING_MESSAGES.length);
+    typeMessage(inst, startIndex);
+  }
+
+  function stopThinking(aiMessageEl) {
+    var inst = instances.get(aiMessageEl);
+    if (!inst) {
+      return;
+    }
+    if (inst.typeTimer) {
+      clearInterval(inst.typeTimer);
+    }
+    if (inst.pauseTimer) {
+      clearTimeout(inst.pauseTimer);
+    }
+    if (inst.wrapperEl.parentNode) {
+      inst.wrapperEl.parentNode.removeChild(inst.wrapperEl);
+    }
+    instances.delete(aiMessageEl);
+  }
+
+  function syncThinkingIndicators() {
+    document.querySelectorAll(".ai-message").forEach(function (el) {
+      if (isThinking(el)) {
+        startThinking(el);
+      } else {
+        stopThinking(el);
+      }
+    });
+    // Mensajes desmontados del DOM (cambio de hilo, borrado) cuyos
+    // timers quedarían huérfanos si no se limpian aquí explícitamente.
+    instances.forEach(function (_inst, el) {
+      if (!document.body.contains(el)) {
+        stopThinking(el);
+      }
+    });
+  }
+
+  new MutationObserver(syncThinkingIndicators).observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  });
+  syncThinkingIndicators();
+})();
+
+/* AIIP — clase específica para el pie "Fuentes consultadas" (16 jul 2026)
+ *
+ * D-026 (rag/pipeline.py::_build_sources_section) añade, de forma
+ * determinista, un encabezado + listado de enlaces al final de la
+ * respuesta — nunca generado por el LLM. style.css usaba hasta ahora un
+ * selector puramente estructural (`[role="article"]:last-of-type:has(+
+ * ul:last-child)`, `ul:last-child`) para darle estilo, asumiendo que esa
+ * lista era siempre la última cosa en .message-content. Problema real
+ * (Marcos, 16 jul 2026): `:last-child` solo comprueba la posición de un
+ * elemento entre sus propios hermanos, no si es lo último en
+ * .message-content en general — así que cualquier lista con viñetas
+ * dentro de la propia respuesta (p. ej. si el LLM termina su respuesta
+ * enumerando síntomas) que resultase ser el último bloque también
+ * heredaba el estilo "de pie de página", atenuándola por error.
+ *
+ * `_SOURCES_HEADINGS` en rag/pipeline.py es un diccionario fijo de
+ * exactamente 3 strings ("Fuentes consultadas:"/"Sources consulted:"/
+ * "Fonts consultades:"); `detect_language` (rag/language.py) nunca
+ * produce un idioma sin entrada ahí — `_build_sources_section` cae a
+ * "es" si el idioma detectado no es es/en/ca. Ese encabezado es texto
+ * controlado por nuestro propio backend, no por el LLM, así que
+ * emparejarlo por contenido exacto desde JS es más fiable que cualquier
+ * heurística de posición en el DOM: solo se etiqueta un `<ul>` como
+ * "sección de fuentes" cuando el `[role="article"]` inmediatamente
+ * anterior es, carácter a carácter, uno de esos 3 encabezados.
+ *
+ * Reutiliza el patrón ya establecido en este fichero (MutationObserver
+ * sobre document.body, idempotente vía comprobación de classList) en
+ * vez de acoplarse al observer de startThinking/syncThinkingIndicators
+ * de arriba — mismo motivo que ese bloque es su propia IIFE: son
+ * preocupaciones independientes, cada una con su propio ciclo de vida.
+ */
+(function () {
+  var SOURCES_HEADINGS = [
+    "Fuentes consultadas:",
+    "Sources consulted:",
+    "Fonts consultades:",
+  ];
+
+  function tagSourcesSections() {
+    document.querySelectorAll(".ai-message .message-content").forEach(function (contentEl) {
+      contentEl.querySelectorAll('[role="article"]').forEach(function (article) {
+        if (article.classList.contains("aiip-sources-heading")) {
+          return;
+        }
+        var text = article.textContent.trim();
+        if (SOURCES_HEADINGS.indexOf(text) === -1) {
+          return;
+        }
+        article.classList.add("aiip-sources-heading");
+        var list = article.nextElementSibling;
+        if (list && list.tagName === "UL") {
+          list.classList.add("aiip-sources-list");
+        }
+      });
+    });
+  }
+
+  new MutationObserver(tagSourcesSections).observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  });
+  tagSourcesSections();
+})();

@@ -72,7 +72,7 @@ body::after {
 }
 
 /* Login-style heading group (badge + title + subtitle), same content/
-   ids as design/public/auth.js's injectLoginHeading — see the HTML in
+   ids as design/public/custom.js's injectLoginHeading — see the HTML in
    auth_base.html for why it's static markup here instead of JS
    injection. Sizes mirror style.css's version; colors are re-derived
    from tokens.css vars via color-mix() instead of the `hsl(var(--primary)
@@ -263,7 +263,7 @@ body::after {
   color: var(--color-text-muted);
 }
 
-/* Theme toggle (design/public/auth.js, injectThemeToggle) — this page
+/* Theme toggle (design/public/custom.js, injectThemeToggle) — this page
    has no header to dock into (unlike the Chainlit SPA), so it always
    renders as the floating glass pill; same `#aiip-theme-toggle` /
    `.aiip-theme-toggle--floating` rules as design/public/style.css,

@@ -126,7 +126,7 @@ aiip/
 │   ├── family/            ← App Chainlit familias: `.chainlit/` (config + symlink a traducciones), `chainlit.md` (vacío, D-039), `public` (symlink a `design/public/`), `templates/` (auth_base, confirm, forgot_password — D-040).
 │   └── professional/      ← Config Chainlit app profesional, stub (config.toml).
 ├── design/
-│   ├── public/            ← tokens.css, style.css, theme.json (theming real de Chainlit, D-038), auth-pages.css, auth.js (D-040), avatars/, logos.
+│   ├── public/            ← tokens.css, style.css, theme.json (theming real de Chainlit, D-038), auth-pages.css, custom.js (custom_js único: login D-040 + indicador de "pensando" del chat), avatars/, logos.
 │   └── professional/      ← Stub JS/CSS del perfil profesional.
 ├── auth/                  ← Módulo de autenticación Python.
 ├── rag/                   ← Pipeline RAG: embeddings, retriever, idioma, generador, seguridad.
