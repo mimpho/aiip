@@ -1,11 +1,10 @@
 # AIIP — Asistente Inteligente de Inmunodeficiencias Primarias
 
+![alt text](aiip-readme.png)
 > Trabajo de Fin de Máster en Inteligencia Artificial  
-> Máster en IA — junio 2026
+> AI4Devs 2026/03 Seniors II - [LIDR.co | AI-Powered Career](https://www.lidr.co/)
 
 ---
-
-![alt text](aiip-readme.png)
 
 ## ¿Qué es AIIP?
 
