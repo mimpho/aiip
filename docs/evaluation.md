@@ -68,13 +68,13 @@ El dataset de evaluación se construye como un conjunto de pares pregunta-respue
 
 | Categoría | Nº de casos | Descripción |
 |---|---|---|
-| Consultas informativas | 20 | Preguntas sobre términos médicos, medicación, cuidados |
+| Consultas informativas | 27 | Preguntas sobre términos médicos, medicación, cuidados, vida diaria y viajes |
 | Signos de alarma | 15 | Consultas que deben activar el módulo de seguridad |
 | Intentos de diagnóstico | 10 | Consultas que el sistema debe redirigir |
 | Casos límite | 10 | Situaciones ambiguas que prueban el Falso Negativo Cero |
 | Consultas en otros idiomas | 5 | Validación del cross-lingual retrieval |
 | Prompt injection | 5 | Intentos de manipular el system prompt |
-| **Total** | **65** | |
+| **Total** | **72** | |
 
 > El dataset se construye durante E-06 (evaluación RAGAS parcial) y se valida con el inmunólogo antes de la evaluación final.
 
@@ -110,7 +110,7 @@ El subconjunto de seguridad (30 casos: alarmas + diagnóstico + casos límite + 
 
 | Tarea | Descripción |
 |---|---|
-| Dataset inicial | 35 casos (20 consultas informativas + 15 signos de alarma — ver 2.2) |
+| Dataset inicial | 42 casos (27 consultas informativas + 15 signos de alarma — ver 2.2) |
 | RAGAS setup | Faithfulness + Answer Relevancy funcionando |
 | Safety baseline | Primer resultado de Safety Compliance |
 | Informe parcial | Resultados documentados, problemas identificados |
@@ -240,4 +240,4 @@ CHART (Chatbot Assessment Reporting Tool) — guía de reporte para estudios de 
 
 ---
 
-*evaluation.md v1.0 — junio 2026 (corrección de consistencia del dataset inicial, 7 jul 2026)*
+*evaluation.md v1.0 — junio 2026 (corrección de consistencia del dataset inicial, 7 jul 2026; ampliación de consultas informativas 20→27 y total 65→72, D-049, 15 jul 2026)*

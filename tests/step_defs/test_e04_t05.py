@@ -162,7 +162,7 @@ def se_inicializa_modulo(triggers_file_path, tmp_path):
     test_triggers_path.write_text(
         json.dumps({
             "meta": {},
-            "triggers": [{"id": "t_test", "texto": unique_keyword, "categoria": "test", "fuente": "test"}],
+            "triggers": [{"id": "t_test", "text": unique_keyword, "category": "test", "source": "test"}],
         }),
         encoding="utf-8",
     )

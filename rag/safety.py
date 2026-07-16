@@ -35,7 +35,7 @@ def check_alarm_signals(query: str, triggers_path: Path = _TRIGGERS_PATH) -> boo
     """Devuelve True si la query contiene palabras clave de algún trigger de alarma."""
     triggers = _load_triggers(triggers_path)
     query_kws = _keywords(query)
-    return any(bool(_keywords(t["texto"]) & query_kws) for t in triggers)
+    return any(bool(_keywords(t["text"]) & query_kws) for t in triggers)
 
 
 def apply_safety_filter(response: str, has_alarm: bool) -> str:

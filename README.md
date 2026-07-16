@@ -21,7 +21,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 |---|---|---|---|
 | Fase 0 — Documentación técnica | ✅ Completada | 12 jun 2026 | — (previa a la descomposición en épicas) |
 | Fase 1 — MVP core | ✅ Completada | 10 jul 2026 | E-01 a E-06 |
-| Fase 1.5 — MVP completo | ⚪ No iniciada | 29 jul 2026 | E-07, E-08, E-09, E-10 |
+| Fase 1.5 — MVP completo | 🔵 En curso | 29 jul 2026 | E-07, E-08, E-09, E-10 |
 | Features opcionales | ⚪ Backlog | Post-TFM | F-01 (perfil profesional, multimodal) |
 
 > **E-07 y E-08** se movieron de Fase 1 a Fase 1.5 el 10 jul 2026 — ninguna era requisito del hito "código funcional" (lo entrega E-05); ver notas en `backlog/epics.md`.
@@ -38,7 +38,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-04 | Pipeline RAG + módulo de seguridad | ✅ Completada — 05 jul 2026 | — |
 | E-05 | Interfaz conversacional (Chainlit) | ✅ Completada — 10 jul 2026 | E-02, E-04 |
 | E-06 | Ingesta y procesamiento de la KB | ✅ Completada — 08 jul 2026 | E-01 |
-| E-07 | Evaluación RAGAS parcial | ⚪ No iniciada | E-06 |
+| E-07 | Evaluación RAGAS parcial | ✅ Completada — 16 jul 2026 | E-06 |
 | E-08 | Memoria de perfil e histórico | ⚪ No iniciada | E-03, E-04, E-06 |
 | E-09 | Evaluación RAGAS completa | ⚪ No iniciada | E-07 |
 | E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada | E-05 |
@@ -79,10 +79,10 @@ gantt
     E-06 Ingesta KB                   :done,    e06, 2026-06-27, 2026-07-08
 
     section Fase 1.5 — MVP completo
-    E-07 RAGAS parcial                :         e07, 2026-07-10, 2026-07-13
-    E-08 Memoria + histórico          :         e08, 2026-07-10, 2026-07-18
-    E-09 RAGAS completo               :         e09, 2026-07-18, 2026-07-25
-    E-10 Pulido final                 :         e10, 2026-07-25, 2026-07-29
+    E-07 RAGAS parcial                :done,    e07, 2026-07-15, 2026-07-16
+    E-09 RAGAS completo                :         e09, 2026-07-18, 2026-07-24
+    E-10 Pulido final                 :         e10, 2026-07-24, 2026-07-27
+    E-08 Memoria + histórico          :         e08, 2026-07-27, 2026-07-29
 
     section Features opcionales
     Perfil profesional · Multimodal   :         fo, 2026-07-29, 2026-09-01
@@ -126,11 +126,12 @@ aiip/
 │   ├── family/            ← App Chainlit familias: `.chainlit/` (config + symlink a traducciones), `chainlit.md` (vacío, D-039), `public` (symlink a `design/public/`), `templates/` (auth_base, confirm, forgot_password — D-040).
 │   └── professional/      ← Config Chainlit app profesional, stub (config.toml).
 ├── design/
-│   ├── public/            ← tokens.css, style.css, theme.json (theming real de Chainlit, D-038), auth-pages.css, auth.js (D-040), avatars/, logos.
+│   ├── public/            ← tokens.css, style.css, theme.json (theming real de Chainlit, D-038), auth-pages.css, custom.js (custom_js único: login D-040 + indicador de "pensando" del chat), avatars/, logos.
 │   └── professional/      ← Stub JS/CSS del perfil profesional.
 ├── auth/                  ← Módulo de autenticación Python.
 ├── rag/                   ← Pipeline RAG: embeddings, retriever, idioma, generador, seguridad.
 ├── ingestion/             ← Pipeline de ingesta de la KB (E-06): loader, chunker, indexer, manifest.
+├── evaluation/            ← Carga y validación del dataset de evaluación RAGAS (E-07): dataset.py (EvalCase, pydantic).
 ├── config/                ← Configuración de dominio (p. ej. triggers de alarma).
 ├── prompts/               ← System prompts por perfil, en fichero separado del código.
 ├── data/
@@ -143,7 +144,8 @@ aiip/
 ├── tests/
 │   ├── features/          ← Escenarios Gherkin por tarea (.feature).
 │   ├── step_defs/         ← Step definitions pytest-bdd.
-│   └── results/           ← Resultados de smoke tests manuales (p. ej. E-06 T-07, E-05 T-07), revisión humana.
+│   ├── results/           ← Resultados de smoke tests manuales (p. ej. E-06 T-07, E-05 T-07), revisión humana.
+│   └── eval/              ← Datasets de evaluación RAGAS, sus .feature y resultados (E-07): dataset_partial.json, e07_t0{1,2,3,4}_*.feature, results/ (scores RAGAS, baseline de Safety Compliance, informe parcial).
 │
 └── backlog/
     ├── epics.md           ← Épicas y tareas del proyecto. Fuente de verdad del backlog.
@@ -168,7 +170,21 @@ Esta estructura responde a tres principios que se documentan y justifican en det
 ## Setup local
 
 1. Copia `.env.example` a `.env` y rellena las variables (Supabase, Google AI API, Hugging Face) — ver `.env.example`.
-2. Instala dependencias: `pip install -r requirements.txt` (o usa el `.venv` del repo).
+2. Entorno virtual: el repo ya incluye uno en `.venv/` (gitignored). Actívalo:
+
+   ```bash
+   source .venv/bin/activate
+   ```
+
+   Si no existe (clon nuevo del repo), créalo primero: `python3 -m venv .venv`. Con el venv
+   activo, tu prompt debería mostrar `(.venv)` al principio. Instala/actualiza dependencias:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+   El resto de comandos de esta sección (`chainlit run`, `pytest`) asumen el venv activo.
+
 3. Arranca la app familiar:
 
    ```bash
@@ -196,4 +212,4 @@ El perfil profesional (`chainlit/professional/`) es un stub fuera de alcance del
 
 ---
 
-*Última actualización: 10 julio 2026 — E-05 (Interfaz conversacional Chainlit) completada*
+*Última actualización: 16 julio 2026 — E-07 (Evaluación RAGAS parcial) completada*

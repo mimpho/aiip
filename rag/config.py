@@ -15,7 +15,7 @@ def load_rag_config() -> dict:
             raise EnvironmentError(f"Variable de entorno requerida no definida: {var}")
         config[var] = value
     config["RAG_TOP_K"] = int(os.getenv("RAG_TOP_K", "5"))
-    config["LLM_MODEL"] = os.getenv("LLM_MODEL", "gemini-2.5-flash-lite")
+    config["LLM_MODEL"] = os.getenv("LLM_MODEL", "gemini-2.5-flash")
     config["LLM_TEMPERATURE"] = float(os.getenv("LLM_TEMPERATURE", "0.1"))
     config["LLM_TOP_P"] = float(os.getenv("LLM_TOP_P", "0.1"))
     config["LLM_MAX_TOKENS"] = int(os.getenv("LLM_MAX_TOKENS", "1024"))

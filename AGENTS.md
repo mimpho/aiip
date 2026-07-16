@@ -99,13 +99,14 @@ aiip/
 │   ├── kb-maintenance.md  ← Runbook: pasos para añadir/actualizar/renombrar/eliminar en la KB (D-028)
 │   └── design/            ← Comps y exploraciones visuales de referencia (identity, auth, chat), generadas fuera del repo (v0/Claude Design) — no es código de producción
 ├── design/                ← Tokens CSS y temas Chainlit (E-02, E-05)
-│   ├── public/            ← tokens.css, style.css, theme.json (theming real de Chainlit — E-05 D-038), auth-pages.css, auth.js (E-05 D-040), avatars/, logos
+│   ├── public/            ← tokens.css, style.css, theme.json (theming real de Chainlit — E-05 D-038), auth-pages.css, custom.js (custom_js único: login E-05 D-040 + indicador de "pensando" del chat), avatars/, logos
 │   └── professional/      ← stub.js, style.css (professional coming-soon UI)
 ├── auth/                  ← Módulo de autenticación Python (E-03; signup()/oauth sync ampliados en E-05)
 ├── rag/                   ← Pipeline RAG (E-04): embeddings, retriever, idioma, generador, seguridad
 ├── config/                ← Configuración de dominio, p. ej. alarm_triggers.json (E-04)
 ├── prompts/               ← System prompts por perfil, en fichero separado del código (E-04)
 ├── ingestion/             ← Pipeline de ingesta de la KB (E-06): loader, chunker, indexer, manifest
+├── evaluation/            ← Carga y validación del dataset de evaluación RAGAS (E-07): dataset.py (EvalCase, pydantic)
 ├── data/
 │   └── raw/manifest.json  ← Trazabilidad de fuentes crudas (checksum, URL, fecha). Único fichero versionado de data/raw/ — el resto vive local/Drive, gitignored (E-06, D-021)
 ├── backlog/
@@ -120,7 +121,11 @@ aiip/
 └── tests/
     ├── features/          ← Escenarios Gherkin por tarea (eXX_tYY_nombre.feature)
     ├── step_defs/         ← Step definitions pytest-bdd (test_eXX_tYY.py)
-    └── results/           ← Resultados de smoke tests manuales, revisión humana (p. ej. E-06 T-07, E-05 T-07)
+    ├── results/           ← Resultados de smoke tests manuales, revisión humana (p. ej. E-06 T-07, E-05 T-07)
+    └── eval/               ← Datasets de evaluación RAGAS, sus .feature y resultados (E-07, D-044): dataset_partial.json,
+                              e07_t0{1,2,3,4}_*.feature — separado de features/ porque es fixture de
+                              datos, no código de test. results/ — scores RAGAS, baseline de Safety
+                              Compliance e informe parcial (T-04)
 ```
 
 ---

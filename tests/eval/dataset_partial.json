@@ -1,0 +1,345 @@
+{
+  "meta": {
+    "status": "revisado_marcos_pendiente_validacion_clinica",
+    "decision": "D-044",
+    "note": "42 casos (27 informativos + 15 alarma) para RAGAS Fase 1 (E-07, ampliado por D-049 con 7 preguntas de viajes/vida diaria aportadas por Marcos). expected_answer es una referencia de trabajo redactada por Claude a partir de la KB (data/raw/) y config/alarm_triggers.json, revisada por Marcos el 15 jul 2026. No sustituye la validación clínica del inmunólogo, prevista para Fase 1.5 / E-09."
+  },
+  "cases": [
+    {
+      "id": "eval_01",
+      "question": "¿Qué es una inmunodeficiencia primaria?",
+      "expected_answer": "Una inmunodeficiencia primaria (IDP) es un trastorno del sistema inmunitario, presente desde el nacimiento aunque a veces se diagnostica más tarde, que hace que el cuerpo tenga más dificultad para defenderse de infecciones. Existen muchos tipos distintos, con diferente gravedad, y el diagnóstico y seguimiento los hace un inmunólogo.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_02",
+      "question": "¿Las inmunodeficiencias primarias son hereditarias?",
+      "expected_answer": "Muchas inmunodeficiencias primarias se originan por mutaciones genéticas, que pueden ser heredadas de los progenitores o aparecer de novo (mutaciones nuevas, no presentes en ningún progenitor). El patrón de herencia varía según el tipo de inmunodeficiencia, y cualquier duda sobre un caso concreto debe valorarla el equipo de inmunología o genética que lo lleva.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_03",
+      "question": "¿Por qué mi hijo necesita infusiones de inmunoglobulinas?",
+      "expected_answer": "Las infusiones de inmunoglobulinas aportan los anticuerpos que el cuerpo no produce en cantidad suficiente por sí mismo, ayudando a prevenir infecciones. Es un tratamiento habitual en varios tipos de inmunodeficiencia primaria y su pauta concreta (dosis, frecuencia, vía) la decide el equipo médico según cada caso.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_04",
+      "question": "¿Cuál es la diferencia entre las infusiones de inmunoglobulinas intravenosas y subcutáneas?",
+      "expected_answer": "La vía intravenosa se administra en el hospital u hospital de día, normalmente cada 3-4 semanas, mientras que la vía subcutánea puede administrarse en casa con más frecuencia (semanal o cada pocos días) tras el entrenamiento correspondiente. La elección entre una u otra la decide el equipo médico según las necesidades y preferencias de cada paciente.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_05",
+      "question": "¿Puede mi hija recibir vacunas de virus vivos si tiene una inmunodeficiencia primaria?",
+      "expected_answer": "En muchos tipos de inmunodeficiencia primaria las vacunas de virus vivos atenuados (como triple vírica o varicela) requieren precaución o están contraindicadas, según el tipo y gravedad de la inmunodeficiencia. El calendario de vacunación debe decidirlo siempre el inmunólogo que lleva el caso, no debe administrarse ninguna vacuna sin consultarlo antes.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_06",
+      "question": "¿Con qué frecuencia hay que hacer revisiones con el inmunólogo?",
+      "expected_answer": "La frecuencia de las revisiones depende del tipo de inmunodeficiencia, la edad y la estabilidad del paciente; puede ir de revisiones mensuales a anuales. Es el equipo de inmunología quien marca el calendario de seguimiento adecuado para cada caso.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_07",
+      "question": "¿Es normal que le duela el brazo después de la infusión subcutánea de inmunoglobulinas?",
+      "expected_answer": "Es habitual notar molestias leves, enrojecimiento o hinchazón en la zona de la infusión subcutánea, y suele mejorar en poco tiempo. Si el dolor es intenso, no mejora o aparecen otros síntomas asociados, conviene comentarlo con el equipo médico que supervisa el tratamiento.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_08",
+      "question": "¿Qué antibióticos se usan habitualmente como profilaxis en inmunodeficiencias primarias?",
+      "expected_answer": "En algunos tipos de inmunodeficiencia primaria se pauta antibiótico de forma preventiva para reducir el riesgo de infecciones, pero el tipo de antibiótico, la dosis y la duración dependen de cada caso concreto. Esta decisión la toma siempre el equipo médico, nunca debe iniciarse ni modificarse sin indicación profesional.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_09",
+      "question": "¿Puede mi hijo hacer deporte con normalidad teniendo una inmunodeficiencia primaria?",
+      "expected_answer": "En general, muchos niños con inmunodeficiencia primaria pueden practicar deporte con normalidad, adaptando la actividad si hay algún tratamiento activo (por ejemplo, evitar esfuerzo intenso el día de una infusión). Conviene comentar con el equipo médico qué tipo de actividad es adecuada según el caso concreto.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_10",
+      "question": "¿Es seguro que mi hijo vaya al colegio con una inmunodeficiencia primaria?",
+      "expected_answer": "La mayoría de los niños con inmunodeficiencia primaria pueden acudir al colegio con normalidad, aunque en algunos casos convenga tomar precauciones adicionales durante periodos de mayor riesgo infeccioso. El equipo médico puede orientar sobre medidas concretas y sobre si conviene informar al centro escolar.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_11",
+      "question": "¿Cómo se diagnostica una inmunodeficiencia primaria?",
+      "expected_answer": "El diagnóstico combina la historia clínica (frecuencia y tipo de infecciones), analíticas de sangre que estudian el sistema inmunitario, y en muchos casos pruebas genéticas. Es un proceso que lleva a cabo un inmunólogo, y puede requerir varias pruebas a lo largo del tiempo.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_12",
+      "question": "¿Debemos hacer pruebas genéticas al resto de la familia?",
+      "expected_answer": "En inmunodeficiencias primarias con causa genética conocida, a veces se recomienda estudiar a otros familiares, especialmente si el patrón hereditario lo sugiere. Esta decisión y el momento de hacerlo los debe valorar el equipo de inmunología o genética que lleva el caso, no es una prueba que deba iniciarse por cuenta propia.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_13",
+      "question": "¿Qué cuidados hay que tener en la zona de la piel donde se pone la inyección subcutánea?",
+      "expected_answer": "Es recomendable rotar los puntos de infusión, mantener la zona limpia y vigilar signos de infección como enrojecimiento intenso, calor o supuración. El equipo que entrena la técnica de infusión suele dar indicaciones concretas de cuidado de la piel adaptadas a cada paciente.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_14",
+      "question": "¿Es lo mismo una inmunodeficiencia primaria que una alergia?",
+      "expected_answer": "No, son cosas distintas: una alergia es una reacción exagerada del sistema inmunitario ante algo inofensivo, mientras que una inmunodeficiencia primaria es una dificultad del sistema inmunitario para defenderse frente a infecciones. Pueden coexistir en la misma persona, pero no son la misma condición.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_15",
+      "question": "¿Podemos viajar en avión llevando la medicación de inmunoglobulinas?",
+      "expected_answer": "En general es posible viajar llevando la medicación, pero conviene planificarlo con antelación: llevar un informe médico, respetar las condiciones de conservación (algunas inmunoglobulinas requieren frío) y consultar con el equipo médico o la farmacia hospitalaria las recomendaciones de transporte para el viaje concreto.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_16",
+      "question": "¿Qué es la inmunodeficiencia variable común (IDVC)?",
+      "expected_answer": "La inmunodeficiencia variable común es uno de los tipos más frecuentes de inmunodeficiencia primaria en adultos, caracterizada por niveles bajos de anticuerpos y mayor susceptibilidad a infecciones, entre otras manifestaciones posibles. Su diagnóstico y seguimiento corresponden al equipo de inmunología.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_17",
+      "question": "¿Existen grupos de apoyo para familias con inmunodeficiencias primarias?",
+      "expected_answer": "Sí, existen asociaciones de pacientes como AEDIP en España o IPOPI a nivel internacional que ofrecen información, recursos y espacios de apoyo entre familias afectadas por inmunodeficiencias primarias.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_18",
+      "question": "¿Es necesario informar al colegio sobre la condición de mi hijo?",
+      "expected_answer": "No es obligatorio, pero suele ser recomendable informar al colegio, al menos al personal implicado en su cuidado, para que puedan actuar adecuadamente ante situaciones como fiebre o exposición a enfermedades contagiosas. El equipo médico puede ayudar a decidir qué información compartir y cómo.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_19",
+      "question": "¿Qué especialista debe hacer el seguimiento de una inmunodeficiencia primaria?",
+      "expected_answer": "El seguimiento principal lo lleva un inmunólogo (o inmunólogo pediátrico en el caso de niños), que puede coordinarse con otros especialistas según los órganos o sistemas afectados en cada caso.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_20",
+      "question": "¿Las inmunodeficiencias primarias tienen cura?",
+      "expected_answer": "Depende mucho del tipo: algunas se controlan bien de por vida con tratamiento (como las infusiones de inmunoglobulinas), y en casos concretos y graves existen opciones como el trasplante de médula ósea o terapia génica. La perspectiva a largo plazo de cada tipo de inmunodeficiencia debe comentarla el equipo de inmunología que lleva el caso.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_21",
+      "question": "¿Podemos viajar con nuestro hijo si tiene una inmunodeficiencia?",
+      "expected_answer": "En general, muchos niños con inmunodeficiencia primaria pueden viajar con normalidad, aunque conviene planificarlo con antelación: llevar informe médico, la medicación necesaria y comentar el viaje con el equipo de inmunología, especialmente si el destino implica mayor riesgo infeccioso.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_22",
+      "question": "¿Tendríamos que informar al inmunólogo de referencia si salimos del país de vacaciones?",
+      "expected_answer": "Es recomendable informar al inmunólogo de un viaje al extranjero, sobre todo si coincide con fechas de tratamiento o si el destino requiere vacunas o precauciones especiales. El equipo médico puede ayudar a planificar la medicación y las medidas necesarias.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_23",
+      "question": "¿Deberíamos informar al inmunólogo de referencia del destino de nuestras vacaciones?",
+      "expected_answer": "Sí, es recomendable comentar el destino concreto con el inmunólogo, ya que algunos lugares implican mayor riesgo infeccioso o requieren vacunas que pueden no ser adecuadas según el tipo de inmunodeficiencia. El equipo médico puede orientar sobre precauciones específicas de ese destino.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_24",
+      "question": "¿Podemos viajar a zonas exóticas?",
+      "expected_answer": "Viajar a zonas con mayor riesgo infeccioso (por ejemplo, destinos tropicales) requiere valorarlo con el inmunólogo antes del viaje, ya que puede haber recomendaciones específicas de vacunación, profilaxis o precauciones según el tipo de inmunodeficiencia. No hay una respuesta única válida para todos los casos.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_25",
+      "question": "¿Puede mi hijo marcharse de convivencias varios días?",
+      "expected_answer": "Muchos niños con inmunodeficiencia primaria pueden participar en convivencias o campamentos escolares de varios días, pero conviene hablarlo antes con el equipo médico para valorar el tratamiento durante esos días (por ejemplo, si coincide con una infusión) y asegurarse de que los responsables del grupo saben cómo actuar ante cualquier incidencia.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_26",
+      "question": "¿Existen las inmunodeficiencias secundarias?",
+      "expected_answer": "Sí. A diferencia de las primarias, que tienen origen genético, las inmunodeficiencias secundarias aparecen por una causa externa (como ciertos tratamientos médicos, infecciones u otras enfermedades) que debilita un sistema inmunitario formado con normalidad.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_27",
+      "question": "¿Es contagiosa una inmunodeficiencia?",
+      "expected_answer": "No, una inmunodeficiencia primaria no es contagiosa — no se transmite de una persona a otra como una infección. Es un trastorno del propio sistema inmunitario de la persona, de origen genético.",
+      "is_alarm": false,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_28",
+      "question": "Mi hijo lleva tres semanas con tos con flema verde y con algo de sangre, ¿es normal?",
+      "expected_answer": "No es algo que deba valorarse como normal sin revisión médica: una tos con flema verde o con sangre que se prolonga varias semanas es un signo que conviene consultar cuanto antes con el equipo médico o inmunólogo que lleva el caso.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_29",
+      "question": "Últimamente se cansa mucho al subir las escaleras, algo que antes no le pasaba, ¿debo preocuparme?",
+      "expected_answer": "Un cambio nuevo en la tolerancia al esfuerzo, como cansarse al subir escaleras cuando antes no pasaba, es un síntoma que conviene comunicar al equipo médico para que lo valore, en lugar de esperar a ver si mejora por sí solo.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_30",
+      "question": "Le han salido moratones grandes en las piernas sin haberse golpeado, ¿qué puede ser?",
+      "expected_answer": "Los moratones grandes que aparecen sin un golpe que los explique son un signo que debe consultarse con el médico lo antes posible, ya que puede requerir valoración y pruebas para identificar la causa.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_31",
+      "question": "Tiene los labios muy pálidos y está muy cansado últimamente, ¿es grave?",
+      "expected_answer": "La palidez marcada junto con cansancio extremo es un signo que conviene que valore un médico cuanto antes, ya que puede tener distintas causas que requieren revisión.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_32",
+      "question": "Se despierta por la noche con un dolor de cabeza muy fuerte, sobre todo por la mañana, ¿es urgente?",
+      "expected_answer": "Un dolor de cabeza intenso que despierta por la noche o es peor por las mañanas es un signo de alarma que debe consultarse con un médico cuanto antes, no conviene esperar a ver si se repite.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_33",
+      "question": "Ha empezado a tener vómitos de repente sin haber tenido náuseas antes, ¿qué hacemos?",
+      "expected_answer": "Vómitos repentinos sin náuseas previas son un síntoma que conviene que valore un médico, especialmente si se repiten o aparecen junto con otros síntomas; no conviene esperar sin consultarlo.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_34",
+      "question": "Lleva más de dos semanas con diarrea, ¿debería preocuparme?",
+      "expected_answer": "Una diarrea que se prolonga más de dos semanas es un signo que debe consultarse con el equipo médico, ya que puede necesitar valoración y pruebas para identificar la causa.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_35",
+      "question": "Ha perdido peso sin ninguna explicación en el último mes, ¿es señal de algo grave?",
+      "expected_answer": "Una pérdida de peso sin explicación es un signo que conviene que valore un médico, ya que puede estar relacionada con distintas causas que requieren revisión y no debe pasarse por alto.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_36",
+      "question": "Tiene llagas grandes en la boca que no se curan desde hace varias semanas, ¿es normal?",
+      "expected_answer": "Unas llagas grandes en la boca que no cicatrizan en varias semanas son un signo que debe consultarse con el médico, no es algo que deba considerarse normal sin revisión.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_37",
+      "question": "Le han salido ganglios grandes y duros que no le duelen, ¿debería ir al médico?",
+      "expected_answer": "Sí, unos ganglios grandes y duros, sobre todo si no duelen, son un signo que conviene que valore un médico cuanto antes.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_38",
+      "question": "En el último análisis los neutrófilos le han salido bajos, ¿es preocupante?",
+      "expected_answer": "Un descenso de neutrófilos en la analítica es un resultado que debe comentarse con el equipo médico que sigue el caso, ya que es quien puede valorar su significado en el contexto clínico completo del paciente.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_39",
+      "question": "Mi hijo ha tenido más de seis otitis este año y tiene tres años, ¿es normal?",
+      "expected_answer": "Un número tan alto de otitis en un niño pequeño es un signo que conviene comentar con el pediatra o inmunólogo, ya que puede ser relevante para valorar el funcionamiento del sistema inmunitario.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_40",
+      "question": "He tenido más de dos neumonías este año, ¿debería preocuparme?",
+      "expected_answer": "Tener más de dos neumonías en un año es un signo que debe consultarse con un médico, ya que puede ser relevante para valorar el sistema inmunitario y no es algo que deba dejarse sin revisión.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_41",
+      "question": "Mi hijo tiene 40 grados de fiebre desde hace varios días, ¿qué hago?",
+      "expected_answer": "Una fiebre tan alta y mantenida durante varios días es una situación que requiere atención médica urgente; conviene contactar con el médico o acudir a urgencias sin demora.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    },
+    {
+      "id": "eval_42",
+      "question": "Le cuesta respirar y tiene los labios morados, ¿es una urgencia?",
+      "expected_answer": "Sí, la dificultad para respirar junto con labios morados o azulados es una urgencia médica; hay que buscar atención médica inmediata (urgencias o servicios de emergencia), no esperar.",
+      "is_alarm": true,
+      "profile": "familiar",
+      "language": "es"
+    }
+  ]
+}

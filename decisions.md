@@ -51,6 +51,17 @@
 - [D-040 — Flujo completo de autenticación en Chainlit: signup con confirmación de email, recuperación de contraseña vía rutas propias, y descubribilidad del enlace](#d-040--flujo-completo-de-autenticación-en-chainlit-signup-con-confirmación-de-email-recuperación-de-contraseña-vía-rutas-propias-y-descubribilidad-del-enlace)
 - [D-041 — Paso "Documentos consultados" (D-035): se deja de mostrar en el chat, redundante con el listado de fuentes de D-026](#d-041--paso-documentos-consultados-d-035-se-deja-de-mostrar-en-el-chat-redundante-con-el-listado-de-fuentes-de-d-026)
 - [D-042 — signup() no detectaba emails ya registrados y confirmados tras activar "Confirm email" (D-040)](#d-042--signup-no-detectaba-emails-ya-registrados-y-confirmados-tras-activar-confirm-email-d-040)
+- [D-043 — Modelo LLM: cambio de gemini-2.5-flash-lite a gemini-2.5-flash y activación de facturación (revisita D-027)](#d-043--modelo-llm-cambio-de-gemini-25-flash-lite-a-gemini-25-flash-y-activación-de-facturación-revisita-d-027)
+- [D-044 — Dataset de evaluación parcial: ubicación en tests/eval/, schema sin relevant_chunks y autoría de contenido](#d-044--dataset-de-evaluación-parcial-ubicación-en-testseval-schema-sin-relevant_chunks-y-autoría-de-contenido)
+- [D-045 — Validación del dataset de evaluación con pydantic, adoptada como dependencia intencional (revisita D-044)](#d-045--validación-del-dataset-de-evaluación-con-pydantic-adoptada-como-dependencia-intencional-revisita-d-044)
+- [D-046 — Dataset de evaluación: campo id por entrada (amplía D-044)](#d-046--dataset-de-evaluación-campo-id-por-entrada-amplía-d-044)
+- [D-047 — Esquema de id del dataset: secuencial y desacoplado de is_alarm (corrige D-046)](#d-047--esquema-de-id-del-dataset-secuencial-y-desacoplado-de-is_alarm-corrige-d-046)
+- [D-048 — config/alarm_triggers.json: claves en inglés e id desacoplado de categoría (amplía D-019 y D-047, fuera de alcance de E-07 pero corregido en la misma revisión)](#d-048--configalarm_triggersjson-claves-en-inglés-e-id-desacoplado-de-categoría-amplía-d-019-y-d-047-fuera-de-alcance-de-e-07-pero-corregido-en-la-misma-revisión)
+- [D-049 — Dataset de evaluación parcial ampliado a 42 casos (27 informativos + 15 alarma), revisita D-044](#d-049--dataset-de-evaluación-parcial-ampliado-a-42-casos-27-informativos--15-alarma-revisita-d-044)
+- [D-050 — T-02: script documentado sin TDD, siguiendo el precedente de E06-T07 (revisita D-015)](#d-050--t-02-script-documentado-sin-tdd-siguiendo-el-precedente-de-e06-t07-revisita-d-015)
+- [D-051 — T-02: diseño técnico de la evaluación RAGAS (alcance, evaluador, embeddings, extracción de contexto, resultados y checkpointing)](#d-051--t-02-diseño-técnico-de-la-evaluación-ragas-alcance-evaluador-embeddings-extracción-de-contexto-resultados-y-checkpointing)
+- [D-052 — T-02: dos hallazgos de implementación con ragas 0.4.3 (stub de ChatVertexAI y max_tokens propio del evaluador)](#d-052--t-02-dos-hallazgos-de-implementación-con-ragas-043-stub-de-chatvertexai-y-max_tokens-propio-del-evaluador)
+- [D-053 — T-03: TDD normal con asserts en vez del patrón script-sin-TDD de T-02 (corrige la anticipación de D-050/D-051)](#d-053--t-03-tdd-normal-con-asserts-en-vez-del-patrón-script-sin-tdd-de-t-02-corrige-la-anticipación-de-d-050d-051)
 
 ---
 
@@ -1690,6 +1701,577 @@ desactivado, antes de intentar crear el perfil.
 - No afecta a `get_or_create_google_user()` (login con Google, D-032): ese flujo ya usa
   la Admin API directamente (`create_user` + fallback a `_find_user_by_email`), no pasa
   por `sign_up()` público ni por este camino ofuscado.
+
+---
+
+## D-043 — Modelo LLM: cambio de gemini-2.5-flash-lite a gemini-2.5-flash y activación de facturación (revisita D-027)
+
+**Fecha:** 15 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (arranque)
+
+**Contexto**
+D-027 documentaba un límite de cuota de 1.500 RPD para `gemini-2.5-flash-lite` en el free tier, pero el arranque de E-07 (evaluación RAGAS) reveló que la cifra real, verificada por Marcos en el dashboard de AI Studio (proyecto AIIP), era de **20 RPD** para ambos modelos (`gemini-2.5-flash` y `gemini-2.5-flash-lite`) — coincidente con lo que ya había registrado D-037 el 9 jul, no con D-027. Con esa cuota, ni siquiera la ejecución de T-02 (RAGAS: Faithfulness + Answer Relevancy sobre 20 casos informativos, ~4 llamadas/caso estimadas) cabía en un solo día.
+
+Al resolver la cuota se abrió una segunda pregunta: si de todas formas hay que activar facturación, ¿tiene sentido seguir en flash-lite? Se estimó el coste real de las pruebas (con `RAG_TOP_K=5` × `RAG_CHUNK_SIZE=512` + system prompt ~550 tokens como base): incluso en el escenario más intensivo (scripts automatizados, 300-500 peticiones/hora), el coste con flash-lite es de 0.08-0.14 USD/hora, y con `gemini-2.5-flash` (sin lite) de 0.41-0.68 USD/hora — la diferencia es irrelevante frente al prepago mínimo de 10 EUR/USD necesario para activar Nivel 1 en cualquiera de los dos casos.
+
+Con el coste descartado como factor, la comparación pasó a ser de calidad: benchmarks de terceros (artificialanalysis.ai, llm-stats.com) sitúan a `gemini-2.5-flash` por delante de flash-lite en las 10 métricas comparadas, incluyendo **FACTS Grounding** — la métrica más directamente relacionada con el principio de Falso Negativo Cero (mide si el modelo se ciñe al contexto recuperado en vez de inventar). Esto conecta con dos hallazgos ya documentados en `backlog/ideas.md` ("Hallazgos del RAG para optimización en E-07": grounding insuficiente ante contexto ambiguo, ej. "Vic"/"Barcelona") y con D-037 (repetición de protocolos de tratamiento sin descargo) — ambos son fallos de comportamiento del LLM, no de retrieval, y son exactamente el tipo de fallo que FACTS Grounding intenta capturar.
+
+**Decisión**
+1. Se activa facturación (Nivel 1, Google Cloud) en el proyecto AIIP — prepago inicial de 10 EUR.
+2. El modelo de producción por defecto pasa de `gemini-2.5-flash-lite` a `gemini-2.5-flash` — revisita y sustituye D-027 en este punto concreto (la cuota de free tier que motivó D-027 deja de aplicar en Nivel 1).
+
+**Alternativas descartadas**
+- Comparación empírica lado a lado (correr T-02 contra flash-lite y flash sobre el mismo dataset antes de decidir) — propuesta pero descartada por Marcos a favor de decidir directamente con el benchmark de FACTS Grounding, dado que el coste de cualquiera de las dos vías es marginal y no justifica duplicar el trabajo de T-02.
+- Cambiar de proveedor a Claude Haiku 4.5 — descartado por ahora: mejor instruction-following reportado en tareas con restricciones múltiples, pero implica cambio de proveedor real (nueva dependencia `langchain-anthropic`, cuenta/billing en Anthropic sin free tier) frente a un cambio de una línea de `.env` manteniendo Google. Queda como opción a revisitar si `gemini-2.5-flash` no da resultados suficientes en RAGAS (E-07/E-09).
+- Mantener flash-lite + facturación (solo resolver cuota sin mejorar grounding) — descartado: el ahorro de coste frente a flash es irrelevante (céntimos/hora) dado que hay que activar facturación de todas formas.
+
+**Justificación**
+Activar facturación es inevitable para desbloquear la cuota necesaria para T-02/T-03; el coste adicional de usar flash en vez de flash-lite es marginal frente a ese mismo prepago. En un dominio de salud con el principio de Falso Negativo Cero, la mejora de grounding vale el cambio de una línea de configuración — no tiene sentido quedarse con el modelo de peor grounding reportado solo por costumbre.
+
+**Consecuencias**
+- `rag/config.py` y `rag/generator.py`: default de `LLM_MODEL` pasa a `gemini-2.5-flash`.
+- `.env.example`: `LLM_MODEL=gemini-2.5-flash`.
+- Pendiente para Marcos: actualizar `LLM_MODEL` en su `.env` personal (gitignored) si lo tenía fijado a `gemini-2.5-flash-lite`.
+- `backlog/epics.md` (E-07): nota de arranque actualizada para reflejar la decisión ya resuelta.
+- Sin verificar todavía contra RAGAS real — esta decisión se apoya en benchmarks de terceros, no en medición propia sobre las preguntas de AIIP. T-02 es precisamente lo que dará el primer dato propio; si los resultados no son suficientes, revisitar (Claude Haiku 4.5 queda como alternativa ya evaluada, no descartada de forma permanente).
+
+---
+
+## D-044 — Dataset de evaluación parcial: ubicación en tests/eval/, schema sin relevant_chunks y autoría de contenido
+
+**Fecha:** 15 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (T-01)
+
+**Contexto**
+`docs/evaluation.md` (sección 2.1) define un schema de entrada del dataset de evaluación (`question`, `expected_answer`, `relevant_chunks`, `is_alarm`, `profile`, `language`) pero no fija dónde debe vivir el fichero en el repo — `AGENTS.md` solo prevé `data/` para fuentes de la KB (E-06) y `tests/` para código de test. Al arrancar T-01 (dataset parcial: 35 casos, 20 informativos + 15 de alarma) hicieron falta tres decisiones antes de poder formalizar el `.feature`: ubicación del fichero, si incluir ya `relevant_chunks`, y quién redacta el contenido clínico.
+
+**Decisión**
+1. **Ubicación:** `tests/eval/dataset_partial.json`. El dataset es fixture de test — lo consumen escenarios pytest-bdd de T-01/T-02/T-03 — así que sigue el patrón ya documentado en `AGENTS.md` (`tests/features/`, `tests/step_defs/`, `tests/results/`) en vez de abrir un directorio top-level nuevo.
+2. **Schema de Fase 1 sin `relevant_chunks`:** el campo se omite en T-01. Ninguna métrica de Fase 1 lo consume — Faithfulness compara la respuesta con los chunks que el pipeline recupera en el momento de la evaluación (no con una lista predefinida), y Answer Relevancy solo compara pregunta/respuesta. `relevant_chunks` solo lo necesitan Context Precision y Context Recall, asignadas a E-09. Se añade entonces, cuando además ya no haga falta pre-especularlo (se puede derivar corriendo el retriever real).
+3. **Autoría del contenido:** Claude redacta un borrador de las 35 preguntas + `expected_answer` a partir de la KB real (`data/raw/`, perfil familias) y de `config/alarm_triggers.json` para los 15 casos de alarma. Marcos revisa y corrige antes de cerrar T-01. No sustituye la validación clínica del inmunólogo prevista para Fase 1.5 (E-09) — este es un baseline de trabajo, no un dataset clínicamente validado.
+4. **Reuso en T-03:** los 15 casos de alarma de T-01 son el mismo subconjunto que T-03 usará para el baseline de Safety Compliance — no se duplica contenido clínico entre tareas.
+
+**Alternativas descartadas**
+- `data/eval/` — descartado porque `data/` está reservado a fuentes de la KB (D-021, manifest de trazabilidad); mezclar conceptos habría complicado ese contrato.
+- Incluir `relevant_chunks` ya en T-01 — descartado por ser anotación manual contra ChromaDB que ningún test de esta épica consume todavía; se hace en E-09 cuando aporte valor real.
+- Que Marcos redacte el contenido íntegro — descartado por volumen (35 casos) y porque la KB ya contiene el material base; más eficiente que Claude proponga y Marcos corrija.
+
+**Justificación**
+Mantener el dataset dentro de `tests/` evita crear una tercera categoría de directorio de datos en el repo sin necesidad. Omitir `relevant_chunks` evita trabajo de anotación que no se usa hasta E-09. El reparto de autoría (Claude redacta, Marcos revisa) es el mismo patrón ya usado para otros artefactos generados desde la KB en el proyecto.
+
+**Consecuencias**
+- Nueva carpeta `tests/eval/` — sin precedente en la estructura de `AGENTS.md`; se documentará ahí tras el merge de T-01.
+- El `.feature` de T-01 valida solo estructura/schema (conteos, campos obligatorios, sin duplicados), no corrección clínica del contenido.
+- E-09 hereda la obligación de añadir `relevant_chunks` (o el mecanismo equivalente) al ampliar el dataset a 65 casos.
+
+---
+
+## D-045 — Validación del dataset de evaluación con pydantic, adoptada como dependencia intencional (revisita D-044)
+
+**Fecha:** 15 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (T-01)
+
+**Contexto**
+D-044 optó por validación manual (dict + `json` estándar, sin nueva dependencia) para `evaluation/dataset.py`, siguiendo el patrón de `ingestion/manifest.py`. Al revisar el plan de implementación, Marcos preguntó por qué no se había propuesto `pydantic` — ya presente en `requirements.txt`, aunque como dependencia transitiva (arrastrada por `langchain`/Supabase, no adoptada a propósito por el proyecto).
+
+El análisis de coste/beneficio: para el schema de Fase 1 (5 campos, 35 casos) el ahorro de `pydantic` es marginal, porque los chequeos que más importan (conteo total, conteo por categoría, sin duplicados) son a nivel de dataset completo, no de entrada individual, y esos siguen requiriendo código propio con o sin `pydantic`. El beneficio real aparece en E-09, cuando el dataset crece a 65 casos con campos opcionales y condicionales (`relevant_chunks`, `attack_type` solo en casos de prompt injection, nuevas categorías) — ahí un modelo declarativo con validación de tipos evita ir apilando condicionales a mano.
+
+Validar a mano ahora y migrar a `pydantic` en E-09 implicaría reescribir `evaluation/dataset.py`, no ampliarlo. Adoptarlo ya permite que E-09 extienda el modelo existente de forma incremental.
+
+**Decisión**
+1. `evaluation/dataset.py` valida las entradas del dataset con un `BaseModel` de `pydantic` en vez de checks manuales sobre dicts.
+2. `pydantic` pasa de dependencia transitiva a dependencia intencional del proyecto — ya está pinned en `requirements.txt` (`pydantic==2.13.4`), no requiere cambio de versión, solo el cambio de estatus (documentado aquí, no en el propio `requirements.txt`, que se mantiene como lista plana sin comentarios, generada por `pip freeze`).
+3. Los chequeos de nivel de dataset completo (conteo total, conteo por categoría, preguntas duplicadas) siguen siendo código propio en `evaluation/dataset.py`, fuera del modelo de `pydantic` — no son responsabilidad de la validación por entrada.
+
+**Alternativas descartadas**
+- Mantener validación manual (D-044 original) — descartada: el coste de adoptar `pydantic` ahora es bajo (un `BaseModel` de 5 campos) frente al coste de reescribir la validación en E-09 cuando el calendario estará más ajustado (cierre 29 jul).
+- `jsonschema` — descartada: sería una dependencia genuinamente nueva (no está en `requirements.txt`), sin la ventaja de estar ya disponible que sí tiene `pydantic`.
+
+**Justificación**
+El coste de adoptar `pydantic` ahora es bajo y ya está pagado (dependencia presente); el beneficio se concentra en E-09, donde el schema gana complejidad real. Adoptarlo en T-01 evita una reescritura más adelante, cuando quede menos margen antes del cierre del TFM.
+
+**Consecuencias**
+- `evaluation/dataset.py`: `validate_dataset` se reimplementa sobre un `BaseModel` de pydantic (campos `question: str`, `expected_answer: str`, `is_alarm: bool`, `profile: Literal["familiar"]`, `language: Literal["es"]`, `model_config = ConfigDict(extra="forbid")` para rechazar `relevant_chunks` u otros campos no previstos).
+- `tasks/E07-T01-plan.md`: actualizado para reflejar `pydantic` en el orden de implementación TDD.
+- Precedente para E-09: al ampliar el dataset, extender el mismo `BaseModel` (campos opcionales, posible unión discriminada para prompt injection) en vez de crear un segundo mecanismo de validación.
+
+---
+
+## D-046 — Dataset de evaluación: campo id por entrada (amplía D-044)
+
+**Fecha:** 15 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (T-01)
+
+**Contexto**
+El schema del dataset acordado en D-044 (`question`, `expected_answer`, `is_alarm`,
+`profile`, `language`) no incluía un identificador por entrada — reflejaba el ejemplo de
+`docs/evaluation.md` sección 2.1, que tampoco lo lleva. Al revisar el dataset ya redactado,
+Marcos señaló la ausencia de un id como algo llamativo: sin él, referenciar un caso
+concreto en resultados o informes obliga a citar el texto completo de la pregunta, y T-03
+(que reutiliza los mismos 15 casos de alarma de T-01, ver D-044 punto 4) no tiene una forma
+estable de apuntar a "el mismo caso" entre tareas.
+
+**Decisión**
+Se añade `id: str` como campo obligatorio de cada entrada. Esquema: `info_01`..`info_20`
+para los 20 casos informativos, `alarm_01`..`alarm_15` para los 15 de alarma — mismo
+patrón de prefijo + número usado ya en `config/alarm_triggers.json` (`resp_01`,
+`hemato_01`, etc.), consistente en el repo. `evaluation/dataset.py` valida además que no
+haya `id` duplicados (mismo tratamiento que la comprobación de `question` duplicada).
+
+**Alternativas descartadas**
+- UUID generado — descartado: no aporta legibilidad y complica citar casos a mano en
+  informes o conversación con Marcos.
+- Numeración secuencial única (`eval_001`..`eval_035`) sin distinguir categoría —
+  descartado: el prefijo por categoría (`info_`/`alarm_`) es más legible al leer resultados
+  y ya sigue el precedente de `alarm_triggers.json`.
+
+**Justificación**
+Coste mínimo (un campo más, mecánico de generar) frente al beneficio de trazabilidad entre
+T-01/T-02/T-03/E-09 y consistencia con el único precedente de IDs ya existente en el
+proyecto.
+
+**Consecuencias**
+- `tests/eval/dataset_partial.json`: las 35 entradas ya incluyen `id`.
+- `tests/eval/e07_t01_partial_eval_dataset.feature`: escenario de schema obligatorio
+  actualizado para incluir `id`; escenario de duplicados ampliado a `question` + `id`.
+- `evaluation/dataset.py` (Antigravity, T-01): `EvalCase` incluye `id: str`;
+  `validate_dataset` comprueba unicidad de `id` además de `question`.
+- Precedente para E-09: los nuevos casos (diagnóstico, casos límite, otros idiomas, prompt
+  injection) deben seguir el mismo esquema de prefijo + número.
+
+---
+
+## D-047 — Esquema de id del dataset: secuencial y desacoplado de is_alarm (corrige D-046)
+
+**Fecha:** 15 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (T-01)
+
+**Contexto**
+D-046 adoptó un esquema de id con prefijo por categoría (`info_01`..`info_20`,
+`alarm_01`..`alarm_15`), calcando el patrón de `config/alarm_triggers.json`. Marcos señaló
+el problema antes de implementarlo: a diferencia de las categorías médicas fijas de
+`alarm_triggers.json` (respiratorio, hematología...), `is_alarm` en el dataset de
+evaluación es una valoración de trabajo que puede revisarse — por ejemplo, si al corregir
+el contenido un caso pasa de informativo a alarma o viceversa. Con el id incrustando la
+categoría, ese cambio obligaría a renombrar el id, rompiendo cualquier referencia ya hecha
+al caso en resultados de T-02/T-03.
+
+**Decisión**
+El id pasa a ser secuencial y desacoplado de la categoría: `eval_01`..`eval_35`, asignado
+por orden de aparición en el dataset. `is_alarm` sigue siendo el único campo que determina
+la categoría de un caso; el id no la codifica y por tanto no cambia si la categoría se
+revisa.
+
+**Alternativas descartadas**
+- Mantener el esquema de D-046 (prefijo por categoría) — descartado por el riesgo de id
+  inestable ante una revisión de categoría, señalado por Marcos.
+- Recalcular el id solo si cambia la categoría (mantener prefijo pero renombrar cuando
+  haga falta) — descartado: reintroduce el mismo problema de raíz (referencias rotas) cada
+  vez que ocurre, en lugar de eliminarlo de origen.
+
+**Justificación**
+Un identificador estable no debe codificar un valor que puede cambiar. Desacoplar el id de
+`is_alarm` elimina el riesgo de raíz sin coste adicional: sigue siendo tan legible como el
+esquema anterior, solo pierde el prefijo semántico.
+
+**Consecuencias**
+- `tests/eval/dataset_partial.json`: las 35 entradas usan `eval_01`..`eval_35`.
+- `tasks/E07-T01-plan.md`: actualizado para reflejar el esquema corregido.
+- `tests/eval/e07_t01_partial_eval_dataset.feature`: sin cambios — los escenarios ya
+  probaban presencia y unicidad de `id` sin asumir un formato concreto.
+- Precedente para E-09: los nuevos casos continúan la secuencia (`eval_36` en adelante),
+  también desacoplados de su categoría.
+
+---
+
+## D-048 — config/alarm_triggers.json: claves en inglés e id desacoplado de categoría (amplía D-019 y D-047, fuera de alcance de E-07 pero corregido en la misma revisión)
+
+**Fecha:** 15 de julio de 2026
+**Fase:** técnica
+**Épica:** E-04 (retocado durante E-07 T-01)
+
+**Contexto**
+D-047 corrigió en `tests/eval/dataset_partial.json` el acoplamiento entre `id` y una
+categoría revisable (`is_alarm`). Al revisar ese cambio, Marcos observó que
+`config/alarm_triggers.json` (E-04, D-019, ya cerrada) tiene exactamente el mismo defecto:
+ids con prefijo de categoría (`resp_01`, `hemato_01`, `neuro_01`...) cuando el campo
+`categoria` ya existe por separado. Además, ambos ficheros JSON (`alarm_triggers.json` y
+`dataset_partial.json`) tenían nombres de clave en castellano (`texto`, `categoria`,
+`fuente`, `estado`, `fuentes`, `nota`) — inconsistente con que el resto del código del
+proyecto usa nombres en inglés.
+
+Aunque ambos son asuntos fuera del alcance formal de E-07 T-01 (uno toca una épica ya
+cerrada), Marcos decidió corregirlos ya: la lista de `alarm_triggers.json` está marcada
+como placeholder pendiente de validación clínica por Jacques Rivière (D-019) — se va a
+tocar de todas formas antes de producción, así que no tiene sentido esperar a esa revisión
+externa para arreglar un problema de esquema ya identificado.
+
+Antes de tocarlo, se verificó el impacto: `rag/safety.py::check_alarm_signals` es el único
+punto de producción que lee el fichero, y solo usa el campo `texto`/`text` (nunca lee
+`id` ni `categoria`/`category`). El único test que construye un trigger a mano
+(`tests/step_defs/test_e04_t05.py`, fixture de la línea 165) tampoco compara valores de
+`id` ni `categoria`. Sin `pytest-bdd` disponible en el sandbox de Cowork para correr la
+suite real, se verificó manualmente reimplementando `check_alarm_signals` en línea contra
+el fichero ya modificado, con las dos queries reales del `.feature` de E-04 T-05 (alarma
+de fiebre alta → detecta; pregunta informativa sobre agammaglobulinemia de Bruton → no
+detecta) — mismo resultado que antes del cambio.
+
+**Decisión**
+1. `config/alarm_triggers.json`: los 37 triggers pasan a `id` secuencial desacoplado de
+   categoría (`trigger_01`..`trigger_37`) y claves en inglés (`text`, `category`,
+   `source`; a nivel de `meta`: `status`, `sources`, `note`).
+2. `tests/eval/dataset_partial.json`: `meta.estado`/`meta.nota` pasan a `meta.status`/
+   `meta.note` (los campos de cada caso ya estaban en inglés desde el borrador inicial —
+   D-044).
+3. Consumidores actualizados: `rag/safety.py` (`t["texto"]` → `t["text"]`),
+   `tests/step_defs/test_e04_t05.py` (fixture de trigger de test),
+   `docs/security.md` (`meta.fuentes` → `meta.sources`).
+4. `tasks/E04-T05-plan.md` no se toca — es el plan de una tarea ya cerrada, registro
+   histórico de lo que se hizo entonces (mismo criterio aplicado a
+   `tests/features/e01_setup.feature` en D-025).
+
+**Alternativas descartadas**
+- Dejarlo para cuando Jacques valide la lista clínicamente — descartado: esa revisión va a
+  reescribir contenido, no necesariamente esquema; arreglar el esquema ahora no añade
+  riesgo y evita cargar con esta inconsistencia hasta entonces.
+- Mantener `categoria`/`texto`/`fuente` en castellano por ser un fichero de configuración
+  "de dominio" distinto al código — descartado: el propio `id` en inglés (`trigger_`) y el
+  resto del código del proyecto (`rag/`, `ingestion/`, `auth/`) ya usan inglés; mantener
+  claves mixtas es la inconsistencia real.
+
+**Justificación**
+El coste de corregirlo ahora es bajo (renombrado mecánico, impacto confirmado nulo en
+producción) frente al de arrastrar un esquema inconsistente en un fichero que de todas
+formas se va a revisar antes de producción.
+
+**Consecuencias**
+- `config/alarm_triggers.json`, `rag/safety.py`, `tests/step_defs/test_e04_t05.py`,
+  `docs/security.md`, `tests/eval/dataset_partial.json` actualizados.
+- Verificación manual (sin ejecutar la suite pytest-bdd real) — pendiente confirmar en
+  Antigravity, en la próxima sesión que toque estos ficheros, que `pytest tests/ -v` sigue
+  en verde para `tests/features/e04_t05_safety_module.feature`.
+- Cuando Jacques valide la lista de triggers, seguir el esquema de id secuencial ya
+  establecido (`trigger_38` en adelante para triggers nuevos, no reintroducir prefijo por
+  categoría).
+
+---
+
+## D-049 — Dataset de evaluación parcial ampliado a 42 casos (27 informativos + 15 alarma), revisita D-044
+
+**Fecha:** 15 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (T-01)
+
+**Contexto**
+D-044 fijó el dataset de Fase 1 en 35 casos (20 informativos + 15 de alarma), en línea con
+`docs/evaluation.md` sección 2.2 (que reserva esas 20 informativas para el dataset final
+completo de 65 casos, no solo para Fase 1). El ciclo TDD en Antigravity terminó en verde
+con ese conteo (4 escenarios, suite completa 119 passed).
+
+En la revisión de contenido posterior (antes del cierre formal de la tarea — el dataset
+seguía marcado `borrador_pendiente_revision_marcos`), Marcos propuso 7 preguntas
+informativas adicionales, típicas de un padre/madre pero no cubiertas por las 20
+originales: viajes con un hijo con inmunodeficiencia, si informar al inmunólogo antes de
+salir del país o del destino concreto, viajes a zonas de mayor riesgo infeccioso,
+participación en convivencias/campamentos escolares de varios días, existencia de
+inmunodeficiencias secundarias, y si una inmunodeficiencia es contagiosa.
+
+Se valoró la alternativa de sustituir 7 de las 20 preguntas existentes por las nuevas (sin
+tocar el conteo total ni el `.feature` ya cerrado) frente a ampliar el dataset. Marcos
+decidió ampliar: el coste de reabrir el escenario de conteo y volver a pasar el ciclo TDD
+en Antigravity es mínimo (cambiar dos números en el `.feature` y en los step defs), y las
+7 preguntas nuevas no son claramente reemplazables por ninguna de las 20 existentes sin
+perder cobertura temática.
+
+**Decisión**
+1. El dataset de Fase 1 pasa de 35 a 42 casos: 27 informativos + 15 de alarma (sin cambios
+   en el subconjunto de alarma). Ids renumerados secuencialmente `eval_01`..`eval_42`
+   (mismo criterio de D-047 — sin romper nada, ningún id se había consumido todavía fuera
+   de este fichero).
+2. `docs/evaluation.md` sección 2.2 se actualiza: consultas informativas 20→27, total del
+   dataset completo (Fase 1.5) 65→72. Sección 3 (Fase 1) actualizada a "42 casos (27+15)".
+   Esto es una revisión del presupuesto total planeado del proyecto de evaluación, no solo
+   de T-01 — las 7 preguntas nuevas quedan también reservadas dentro del futuro dataset de
+   65→72 casos de E-09.
+3. `.feature`, step defs (`tests/step_defs/test_e07_t01.py`) y `backlog/epics.md`
+   actualizados al nuevo conteo. `evaluation/dataset.py` no tiene números hardcodeados —
+   sin cambios.
+
+**Alternativas descartadas**
+- Sustituir 7 de las 20 preguntas existentes (mantener 35 casos, cero rework de TDD) —
+  descartada por Marcos: el coste de ampliar es mínimo y no hay 7 candidatas claras a
+  descartar sin perder cobertura.
+- Dejar las 7 preguntas nuevas anotadas para cuando se amplíe a 65 en E-09, sin tocar T-01
+  ahora — descartada por el mismo motivo: no había necesidad real de posponerlo dado el
+  coste bajo del cambio.
+
+**Justificación**
+El coste real de ampliar (dos números en dos ficheros de test + un ciclo TDD corto en
+Antigravity) es menor que el tiempo ya invertido decidiendo si merecía la pena — más
+cobertura temática ahora mejora la representatividad de Faithfulness/Answer Relevancy en
+T-02 sin coste de rework significativo.
+
+**Consecuencias**
+- `tests/eval/dataset_partial.json`: 42 casos, `meta.note` actualizado.
+- `tests/eval/e07_t01_partial_eval_dataset.feature`: escenario 1 actualizado (42/27/15).
+- `tests/step_defs/test_e07_t01.py`: `@then` de conteo actualizados a 42/27.
+- `docs/evaluation.md`: 2.2 y 3 actualizados; total del dataset final pasa de 65 a 72.
+- `backlog/epics.md` (E-07 T-01): descripción actualizada a "42 casos: 27 informativos +
+  15 alarma".
+- Pendiente: re-ejecutar `PYTHONPATH=. pytest tests/step_defs/test_e07_t01.py -v` en
+  Antigravity para confirmar los 4 escenarios en verde con el nuevo conteo antes de
+  `task-close`.
+
+---
+
+## D-050 — T-02: script documentado sin TDD, siguiendo el precedente de E06-T07 (revisita D-015)
+
+**Fecha:** 16 de julio de 2026
+**Fase:** técnica / proceso
+**Épica:** E-07 (T-02)
+
+**Contexto**
+Al revisar T-02 en `task-start` surgió la pregunta de si debía implementarse como
+escenarios pytest-bdd con asserts de umbral (patrón por defecto para tareas de código,
+D-006) o como script documentado sin TDD (patrón de E06-T07, D-015). Calcular Faithfulness
+y Answer Relevancy contra `RAGPipeline.query()` real implica llamadas de red no
+deterministas a Gemini (LLM real) y al embedder — igual que el smoke test de E06-T07.
+Meter esto como escenarios pytest-bdd con asserts de umbral habría significado que
+`PYTHONPATH=. pytest tests/ -v` disparase llamadas reales a la API cada vez que alguien
+corre la suite completa (coste, tiempo, flakiness por variabilidad del LLM), rompiendo el
+principio ya asentado en D-018/D-015 de tests deterministas y sin red para el grueso de la
+suite.
+
+**Decisión**
+T-02 se implementa como script (`scripts/run_ragas_eval.py`) + `.feature` tipo checklist de
+verificación manual (sin asserts automatizados, mismo formato que
+`tests/features/e06_t07_rag_smoke_test.feature`) + resultados volcados a fichero para
+revisión de Marcos. Sigue llevando rama + PR (task/E07-T02-ragas-faithfulness-answer-relevancy),
+igual que E06-T07 — la ausencia de TDD no exime de rama+PR (precedente ya registrado en
+memoria de proceso tras E06-T07).
+
+**Alternativas descartadas**
+- pytest-bdd con asserts de umbral, marcado con `@pytest.mark.live_llm` y excluido por
+  defecto de la suite — descartada por añadir complejidad de configuración (marker,
+  exclusión en `pytest.ini`/`conftest.py`) sin beneficio claro frente al patrón ya
+  probado de E06-T07 para este mismo tipo de problema (pipeline real, no determinista).
+
+**Justificación**
+Reutilizar un patrón ya validado en el proyecto (E06-T07) para el mismo tipo de problema
+(pipeline real contra LLM en vivo) es más consistente que introducir un segundo mecanismo
+(marker de pytest) para resolver la misma tensión.
+
+**Consecuencias**
+- `tests/eval/e07_t02_ragas_faithfulness_relevancy.feature`: checklist de verificación
+  manual, sin escenarios pytest-bdd.
+- `scripts/run_ragas_eval.py`: script ejecutado manualmente por Marcos (o desde Antigravity
+  como parte del cierre de la tarea), no forma parte de `pytest tests/ -v`.
+- Precedente para T-03 (Safety Compliance baseline): mismo tipo de problema (pipeline real,
+  sin determinismo total), revisar si aplica el mismo patrón al formalizar esa tarea.
+
+---
+
+## D-051 — T-02: diseño técnico de la evaluación RAGAS (alcance, evaluador, embeddings, extracción de contexto, resultados y checkpointing)
+
+**Fecha:** 16 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (T-02)
+
+**Contexto**
+Al formalizar T-02 quedaron varios puntos de diseño sin fijar: qué subconjunto del dataset
+se evalúa, qué modelo actúa de evaluador RAGAS, qué embedder usa Answer Relevancy, si la
+respuesta de `RAGPipeline.query()` (que incluye el bloque de fuentes concatenado, D-026/
+D-041) se pasa tal cual a RAGAS, dónde se guardan los resultados, y cómo se implementa el
+checkpointing ya decidido en la nota de arranque de E-07 (`backlog/epics.md`).
+
+**Decisión**
+1. **Alcance:** se evalúan los 27 casos informativos del dataset (`is_alarm: false`), no
+   los 42 completos — coincide con lo ya anticipado en D-043 ("T-02 sobre casos
+   informativos"). Los 15 casos de alarma quedan para T-03 (Safety Compliance), que es la
+   métrica adecuada para ese subconjunto.
+2. **LLM evaluador:** se reutiliza `LLM_MODEL` (mismo modelo de producción,
+   `gemini-2.5-flash` vía `rag/config.py::load_rag_config()`) en vez de introducir una
+   variable de entorno nueva — coherente con D-010 (modelo nunca hardcodeado, ya
+   parametrizado).
+3. **Embeddings:** se reutiliza `rag/embeddings.py::get_embeddings()` (BAAI/bge-m3) para
+   Answer Relevancy, en vez de introducir un embedder nuevo solo para evaluación.
+4. **Extracción de contexto:** las métricas RAGAS se calculan sobre la respuesta generada
+   *sin* el bloque de fuentes concatenado — se obtiene la respuesta pura vía el generador
+   (o separando el bloque de fuentes del resultado de `query()`) para no penalizar
+   artificialmente Faithfulness con contenido que no son afirmaciones clínicas.
+5. **Resultados:** se guardan en `tests/eval/results/e07_t02_ragas_scores.json` (scores por
+   caso + agregados), separado de `tests/results/` (reservado a informes de smoke test en
+   markdown) y siguiendo el patrón de `tests/eval/` ya abierto en T-01. T-04 (informe
+   parcial) consume este fichero.
+6. **Checkpointing:** mecanismo simple basado en fichero — el script guarda el resultado
+   tras cada caso procesado y, al relanzarse, detecta qué ids ya tienen score y continúa
+   sin repetir llamadas ya hechas.
+
+**Alternativas descartadas**
+- Evaluar los 42 casos completos — descartada: Faithfulness/Answer Relevancy no son la
+  métrica adecuada para el subconjunto de alarma (ver punto 1).
+- Variable de entorno nueva para el modelo evaluador (`RAGAS_EVALUATOR_MODEL`) —
+  descartada por ahora: más flexible pero añade superficie de configuración sin necesidad
+  clara en un TFM; se puede introducir más adelante si se quiere desacoplar evaluador de
+  producción.
+- Pasar la respuesta de `query()` tal cual (con fuentes) a RAGAS — descartada por el riesgo
+  de penalizar Faithfulness con contenido no clínico.
+
+**Justificación**
+Cada decisión reutiliza infraestructura ya existente en el proyecto (modelo, embedder,
+convención de `tests/eval/`) en vez de introducir mecanismos nuevos, minimizando la
+superficie de cambio para una tarea de evaluación que ya tiene bastante incertidumbre
+propia (scores de un LLM en vivo).
+
+**Consecuencias**
+- `requirements.txt`: nueva dependencia `ragas` (+ `datasets`, requerida por su API).
+- `scripts/run_ragas_eval.py`: instancia `RAGPipeline` con `load_rag_config()`, itera los
+  27 casos informativos, separa respuesta/fuentes, llama a RAGAS con evaluador
+  `ChatGoogleGenerativeAI(model=config["LLM_MODEL"])` y `get_embeddings()`, y hace
+  checkpoint incremental en `tests/eval/results/e07_t02_ragas_scores.json`.
+- Precedente para T-03: mismo `RAGPipeline` real, mismo patrón de resultados en
+  `tests/eval/results/`.
+
+---
+
+## D-052 — T-02: dos hallazgos de implementación con ragas 0.4.3 (stub de ChatVertexAI y max_tokens propio del evaluador)
+
+**Fecha:** 16 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (T-02)
+
+**Contexto**
+Al implementar `scripts/run_ragas_eval.py` en Antigravity (siguiendo `tasks/E07-T02-plan.md`,
+D-050/D-051) surgieron dos problemas no anticipados en la fase de research de Cowork:
+
+1. `ragas` (comprobado en todas las versiones 0.1–0.4 disponibles) importa
+   incondicionalmente `langchain_community.chat_models.vertexai.ChatVertexAI` al cargar
+   `ragas.llms.base`, aunque el proyecto no use VertexAI para nada. Ese submódulo ya no
+   existe en la línea moderna de `langchain-community` (0.4.x) que ya usa el proyecto —
+   se movió a un paquete standalone tras el aviso de sunset de `langchain-community`. Sin
+   workaround, `import ragas` fallaba con `ModuleNotFoundError` antes de poder usar
+   `Faithfulness`/`ResponseRelevancy`.
+2. Reutilizar `LLM_MAX_TOKENS=1024` (calibrado en D-025 para respuestas de chat concisas)
+   como límite del LLM evaluador rompía el parseo interno de Faithfulness: RAGAS le pide
+   al LLM listar y juzgar cada afirmación de la respuesta (statement + reason + verdict)
+   en un único JSON, que con 1024 tokens quedaba truncado a mitad del último elemento.
+
+**Decisión**
+1. `scripts/run_ragas_eval.py` registra un stub de `sys.modules` para
+   `langchain_community.chat_models.vertexai` (una clase `ChatVertexAI` vacía, no
+   funcional) antes de `import ragas`, documentado inline. No se degrada la versión de
+   `langchain-community` del proyecto ni se toca VertexAI de ninguna forma — es
+   exclusivamente un parche para que `ragas` pueda cargar su import condicional.
+2. El LLM evaluador de RAGAS usa una constante propia `_EVALUATOR_MAX_TOKENS = 8192`, en
+   vez de `config["LLM_MAX_TOKENS"]`. El resto de parámetros de inferencia (modelo,
+   temperatura, top_p, `thinking_budget=0` de D-025) se mantienen iguales a producción —
+   solo el límite de tokens de salida es distinto, y solo para las llamadas internas de
+   RAGAS, no para `RAGPipeline.query()`.
+
+**Alternativas descartadas**
+- Downgradear `langchain-community` a una versión que aún incluya `chat_models.vertexai`
+  — descartado: reintroduce código legacy ya retirado deliberadamente del proyecto, y
+  arriesga romper compatibilidad con el resto de `langchain` 1.x ya en uso.
+- Instalar el paquete standalone real de VertexAI para satisfacer el import — descartado:
+  añadiría una dependencia real (y su superficie de configuración) solo para que un import
+  no usado no falle; el stub vacío es más barato y más honesto sobre que VertexAI no se
+  usa.
+- Subir `LLM_MAX_TOKENS` global del proyecto a 8192 en vez de una constante local —
+  descartado: `LLM_MAX_TOKENS` gobierna las respuestas de chat en producción
+  (`rag/generator.py`), no debe cambiar por una necesidad exclusiva del evaluador de RAGAS.
+
+**Justificación**
+Ambos hallazgos son fricciones de integración de una librería de terceros (`ragas`) con
+las convenciones ya asentadas del proyecto (línea moderna de `langchain-community`,
+`LLM_MAX_TOKENS` calibrado para chat) — resolverlos con parches locales y documentados en
+el propio script evita modificar configuración de producción o retroceder decisiones ya
+tomadas (D-010, D-025) para acomodar una dependencia de evaluación.
+
+**Consecuencias**
+- `requirements.txt`: `ragas==0.4.3` pinneado, junto con las dependencias reales nuevas
+  que arrastra (`datasets`, `instructor`, `langchain-openai`, `langchain-core` actualizado
+  a 1.4.9, etc.), verificadas contra `pip freeze` real.
+- `scripts/run_ragas_eval.py`: stub de `ChatVertexAI` y `_EVALUATOR_MAX_TOKENS = 8192`
+  documentados inline con la razón de cada uno.
+- Precedente para T-03 (Safety Compliance baseline): si reutiliza el mismo evaluador
+  RAGAS o un import de `ragas`, heredar ambos workarounds en vez de redescubrirlos.
+- Si en el futuro se actualiza `ragas` a una versión que resuelva el import condicional de
+  VertexAI (o el proyecto migra a la API "collections", ver Contexto técnico de
+  `tasks/E07-T02-plan.md`), revisar si el stub sigue siendo necesario.
+
+---
+
+## D-053 — T-03: TDD normal con asserts en vez del patrón script-sin-TDD de T-02 (corrige la anticipación de D-050/D-051)
+
+**Fecha:** 16 de julio de 2026
+**Fase:** técnica / proceso
+**Épica:** E-07 (T-03)
+
+**Contexto**
+D-050 y D-051 (T-02) anticipaban que T-03 (Safety Compliance baseline) seguiría el mismo
+patrón que T-02: script documentado (`scripts/run_ragas_eval.py`) + `.feature` tipo
+checklist de verificación manual, sin asserts automatizados, por tratarse de un "mismo tipo
+de problema (pipeline real, sin determinismo total)". Al formalizar T-03 en `task-start` se
+verificó esa asunción antes de darla por buena: Safety Compliance, tal como lo define
+`docs/evaluation.md` §1.1 ("% de consultas de riesgo que activan correctamente el módulo de
+Falso Negativo Cero"), se resuelve por completo con `rag.safety.check_alarm_signals()` —
+una función determinista basada en keywords contra `config/alarm_triggers.json`, sin
+ninguna llamada a LLM. Se ejecutó directamente contra los 15 casos de alarma de
+`tests/eval/dataset_partial.json`: 15/15 (100%), instantáneo, sin red. A diferencia de
+Faithfulness/Answer Relevancy (T-02), que requieren un LLM evaluador y por eso son no
+deterministas, aquí no hay ninguna fuente de no-determinismo: `apply_safety_filter` añade
+la derivación médica en función de `has_alarm`, con independencia de lo que genere el LLM,
+así que pasar por `RAGPipeline.query()` completo no cambiaría el resultado del baseline,
+solo añadiría coste y tiempo de API sin señal nueva.
+
+**Decisión**
+T-03 se implementa como test pytest-bdd normal (TDD, D-006), con asserts reales sobre
+`check_alarm_signals()`, no como script de verificación manual:
+- `tests/features/e07_t03_safety_compliance_baseline.feature` (no en `tests/eval/`, al ser
+  código de test determinista — sigue la convención estándar de `tests/features/` +
+  `tests/step_defs/` del resto del proyecto, no la convención de `tests/eval/` reservada a
+  datasets y checklists de verificación manual)
+- Carga los 15 casos de alarma vía `evaluation.dataset.load_dataset`/`validate_dataset`
+  (mismo patrón que T-01/T-02)
+- Assert: `check_alarm_signals(case.question)` es `True` para cada uno de los 15 casos
+- Un paso adicional escribe el desglose (id, pregunta, disparado sí/no, % agregado) a
+  `tests/eval/results/e07_t03_safety_compliance_baseline.json`, para que T-04 lo consuma
+  igual que consume `e07_t02_ragas_scores.json`
+- No requiere tocar `rag/safety.py` (ya implementado y correcto) — la tarea es puramente de
+  test/evaluación
+
+Sigue llevando rama + PR (`task/E07-T03-safety-compliance-baseline`), como toda tarea de
+código.
+
+**Alternativas descartadas**
+- Mantener el patrón de T-02 (script + `.feature` checklist manual) por consistencia de
+  proceso dentro de la épica — descartada por Marcos: no hay ninguna razón técnica para
+  pagar el coste de un script manual (sin asserts, sin ejecución automática en
+  `pytest tests/`) cuando el problema es 100% determinista y ya se ha verificado sin coste
+  de API.
+
+**Justificación**
+D-050/D-051 generalizaron el patrón de T-02 a T-03 sin verificar si la premisa (no
+determinismo) se sostenía. Comprobarlo antes de comprometer el diseño evitó heredar un
+patrón más costoso y menos alineado con D-006/D-018 (tests deterministas, sin red, para el
+grueso de la suite) de lo necesario.
+
+**Consecuencias**
+- `tests/features/e07_t03_safety_compliance_baseline.feature` +
+  `tests/step_defs/test_e07_t03.py`: TDD estándar, forman parte de
+  `PYTHONPATH=. pytest tests/ -v`.
+- `tests/eval/results/e07_t03_safety_compliance_baseline.json`: resultado documentado para
+  T-04, generado por el propio test (no por un script aparte).
+- Hallazgo colateral de T-02 (`tests/eval/results/e07_t02_ragas_scores.json`): 3 casos
+  informativos dispararon la alarma inesperadamente (`unexpected_alarm: true` — eval_07,
+  eval_08, eval_25). Fuera del alcance de T-03 (que es específicamente sobre los 15 casos
+  de alarma, criterio ya corregido el 7 jul en `backlog/epics.md`) — queda anotado aquí
+  para que T-04 lo enlace en el informe parcial, sin acción en T-03.
 
 ---
 

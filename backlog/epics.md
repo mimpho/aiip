@@ -317,8 +317,43 @@ Dataset de prueba y métricas básicas funcionando, ejecutada inmediatamente des
 - **Corrección (7 jul 2026):** el criterio original decía "las cuatro métricas RAGAS implementadas" — no coincidía con el plan de fases de `docs/evaluation.md` (sección 3), que solo asigna Faithfulness + Answer Relevancy a la Fase 1 parcial. Se alinea este criterio con `evaluation.md`, que es el documento con el desglose técnico detallado.
 - **Reprioridad (7 jul 2026):** E-05 (interfaz Chainlit) pasa por delante de E-07 en la ejecución. El hito del 10 de julio se llama "código funcional" (ver `README.md`) — lo entrega E-05, no E-07. El ciclo de mejora basado en RAGAS (la parte que realmente aporta valor de iteración) ya estaba asignado a Fase 1.5 (29 jul) en `evaluation.md`, así que ejecutar E-07 parcial unos días después del 10 de julio no compromete el hito. Única dependencia real a vigilar: E-09 (RAGAS completa, necesaria para la entrega final del 29 jul) está bloqueada por E-07 — no debe retrasarse mucho más allá del 10 de julio para no comprimir el margen antes del 29.
 - **Movimiento de fase (10 jul 2026):** trasladada de Fase 1 a Fase 1.5 al cerrar E-05 — ver nota de la fase arriba. El hito de Fase 1 ya quedó cerrado por E-05, sin esperar a esta épica.
+- **Arranque (15 jul 2026):** el plan original de `docs/evaluation.md` (Faithfulness + Answer Relevancy vía RAGAS contra `RAGPipeline.query()` real) choca con un punto abierto de cuota de la API de Gemini: D-027 documentaba "1.500 RPD" para `gemini-2.5-flash-lite`, pero D-037 (9 jul) registró agotamiento real a las ~20 peticiones ese día. Investigado de nuevo al arrancar esta épica: la documentación oficial de Google ya no publica una cifra fija por tier — remite al dashboard de AI Studio, específico de cada proyecto.
+- **Confirmado (15 jul 2026):** Marcos consultó el dashboard (`aistudio.google.com/rate-limit`, proyecto AIIP, nivel gratuito). D-037 tenía razón, no D-027: el límite real era **20 RPD** tanto para `gemini-2.5-flash` como para `gemini-2.5-flash-lite` en este proyecto — y `flash-lite` ya lo había superado en la ventana de 28 días (25/20).
+- **Resuelto (15 jul 2026, D-043):** Marcos activó facturación (Nivel 1, prepago de 10 EUR) — cuota ya no es un bloqueo (RPD sube a 10K en flash y a ilimitado en flash-lite). Aprovechando que había que activar facturación de todas formas, y dado que el coste adicional es irrelevante (céntimos/hora), se decide además subir de `gemini-2.5-flash-lite` a `gemini-2.5-flash` como modelo de producción — mejor grounding reportado (FACTS Grounding), relevante para Falso Negativo Cero. Detalle completo, alternativas descartadas (comparación empírica lado a lado, Claude Haiku 4.5) y justificación en D-043. `rag/config.py`, `rag/generator.py` y `.env.example` ya actualizados. T-02/T-03 se construyen igualmente con ejecución incremental/reanudable (checkpointing) como buena práctica, ya sin la presión de cuota que lo motivó originalmente.
 
-**Estado:** ⚪ No iniciada
+**Estado:** ✅ Completada — 16 jul 2026
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Dataset de evaluación parcial (42 casos: 27 informativos + 15 alarma) | ✅ Completada |
+| T-02 | RAGAS: Faithfulness + Answer Relevancy contra el pipeline real | ✅ Completada |
+| T-03 | Safety Compliance baseline (15 casos de alarma) | ✅ Completada |
+| T-04 | Informe parcial de resultados (documentación, sin TDD) | ✅ Completada |
+
+**Entregables**
+- `evaluation/dataset.py`, `evaluation/__init__.py` — loader/validator del dataset de evaluación (`EvalCase`, pydantic)
+- `tests/eval/dataset_partial.json` — dataset de 42 casos (27 informativos + 15 alarma), redactado por Claude a partir de la KB real y revisado por Marcos (D-044/D-049)
+- `tests/eval/e07_t01_partial_eval_dataset.feature`, `tests/step_defs/test_e07_t01.py` — escenarios T-01 (TDD)
+- `scripts/run_ragas_eval.py` — script de evaluación RAGAS (Faithfulness + Answer Relevancy) contra `RAGPipeline` real, documentado sin TDD (D-050/D-051)
+- `tests/eval/e07_t02_ragas_faithfulness_relevancy.feature`, `tests/eval/results/e07_t02_ragas_scores.json` — escenario y resultados brutos de T-02
+- `tests/eval/e07_t03_safety_compliance_baseline.feature`, `tests/step_defs/test_e07_t03.py`, `tests/eval/results/e07_t03_safety_compliance_baseline.json` — TDD y resultados de Safety Compliance (D-053)
+- `tests/eval/e07_t04_informe_parcial.feature`, `tests/eval/results/e07_t04_informe_parcial.md` — informe parcial de resultados (T-04)
+- `config/alarm_triggers.json`, `rag/safety.py` — claves de triggers renombradas a inglés, id desacoplado de categoría (D-048, fuera de alcance de E-07)
+- `rag/config.py`, `rag/generator.py`, `.env.example` — modelo de producción `LLM_MODEL` a `gemini-2.5-flash` (D-043)
+- `tasks/E07-T01-plan.md` a `E07-T03-plan.md` — planes de implementación
+- `decisions.md` — D-043 a D-053
+
+**Resultados (baseline, sin ciclo de mejora)**
+
+| Métrica | Resultado | Objetivo | Estado |
+|---|---|---|---|
+| Faithfulness | 79.7% | > 95% | Por debajo del objetivo |
+| Answer Relevancy | 77.8% | > 90% | Por debajo del objetivo |
+| Safety Compliance | 100% (15/15) | 100% | Cumplido |
+
+Dos hallazgos abiertos remitidos al ciclo de mejora de E-09: posible sobre-activación del filtro de seguridad en 3 casos informativos, y 2 casos con Answer Relevancy en 0.0 sin causa diagnosticada. Detalle en `tests/eval/results/e07_t04_informe_parcial.md`.
 
 ---
 
@@ -383,10 +418,21 @@ siga siendo un producto completo sin ella.
 ### E-09 — Evaluación RAGAS completa
 Cierre del plan de evaluación con al menos un ciclo de mejora.
 
+**Nota de alcance (16 jul 2026):** la entrega es un TFM, no una validación médica. La
+revisión clínica de Jacques Rivière (`docs/evaluation.md` sección 1.2: signos de alarma,
+tono, respuestas peligrosas) no es un requisito bloqueante para la entrega del 29 de
+julio — es trabajo importante de cara a un uso real post-entrega, no una condición de
+cierre de E-09. Sí conviene lanzarla en paralelo cuanto antes (su turnaround histórico es
+de días/rondas, ver la revisión de signos de alarma de junio-julio, aún no cerrada del
+todo), pero si su feedback no llega a tiempo, E-09 se cierra igualmente con los resultados
+RAGAS + ciclo de mejora + CHART ya completados, dejando la validación clínica como
+seguimiento abierto post-TFM.
+
 **Criterios de aceptación de alto nivel**
 - Resultados RAGAS completos documentados en `docs/evaluation.md`
 - Al menos un ciclo de mejora basado en los resultados
 - Checklist CHART completado como anexo
+- Validación clínica de Jacques: deseable en paralelo, no bloqueante para la entrega (ver nota de alcance)
 
 **Estado:** ⚪ No iniciada
 
