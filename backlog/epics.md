@@ -428,13 +428,48 @@ todo), pero si su feedback no llega a tiempo, E-09 se cierra igualmente con los 
 RAGAS + ciclo de mejora + CHART ya completados, dejando la validación clínica como
 seguimiento abierto post-TFM.
 
+**Arranque (17 jul 2026):** al descomponer la épica en `epic-start` surgieron dos
+inconsistencias numéricas en `docs/evaluation.md` no detectadas hasta ahora: §3 (Fase
+1.5) dice "65 casos" cuando §2.2 ya desglosaba 72 tras la ampliación de D-049 (27+15+10+
+10+5+5); y §2.3 dice "30 casos" para el subconjunto de seguridad cuando la suma de sus
+propias categorías (alarma+diagnóstico+límite+prompt injection = 15+10+10+5) da 40, no
+30 — error preexistente a D-049, no causado por ella. Ambas se corrigen al documentar en
+T-06. Marcos confirmó 72 como cifra objetivo del dataset.
+
+**Alcance del ciclo de mejora (17 jul 2026):** de los 6 hallazgos remitidos a E-09 (2 del
+informe parcial E-07 T-04 §4.1/§4.2 + 4 de `backlog/ideas.md`), Marcos decidió acotar
+T-05 a los 3 de menor coste/mayor relación con lo ya medido en esta épica:
+- **A** — sobre-activación del filtro de seguridad en eval_07/eval_08/eval_25 (D-053 §4.1)
+- **B** — Answer Relevancy en 0.0 sin causa diagnosticada, eval_06/eval_15 (D-053 §4.2)
+- **F** — `langdetect` falla en frases cortas de síntomas en español (`ideas.md` #4)
+
+Quedan fuera de este ciclo (backlog abierto, no perdidos): **C** (grounding demasiado
+estricto ante conocimiento de mundo), **D** (ruido en dense search / hybrid search —
+🔴 Alta, pero implementación no trivial) y **E** (registro lingüístico no siempre
+accesible). Razón: con ~6-7 días de margen para E-09 antes de encadenar E-08/E-10 hasta
+el 29 de julio, cubrir los 6 arriesgaba tanto el timing de esta épica como el de las
+siguientes. Si Context Precision (T-02) sale por debajo de objetivo, la causa probable
+(hallazgo D) queda documentada en el informe final como limitación conocida con
+mitigación fuera de alcance de este ciclo, no como fallo oculto.
+
 **Criterios de aceptación de alto nivel**
 - Resultados RAGAS completos documentados en `docs/evaluation.md`
 - Al menos un ciclo de mejora basado en los resultados
 - Checklist CHART completado como anexo
 - Validación clínica de Jacques: deseable en paralelo, no bloqueante para la entrega (ver nota de alcance)
 
-**Estado:** ⚪ No iniciada
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Ampliar el dataset de evaluación a cobertura completa (72 casos) | ⚪ Pendiente |
+| T-02 | RAGAS completo: Context Precision + Context Recall | ⚪ Pendiente |
+| T-03 | Safety Compliance ampliado: alarma + casos límite (25 casos, determinista) | ⚪ Pendiente |
+| T-04 | Comportamiento ante diagnóstico/prompt injection + Hallucination Rate (pipeline real) | ⚪ Pendiente |
+| T-05 | Ciclo de mejora (hallazgos A, B, F) | ⚪ Pendiente |
+| T-06 | Checklist CHART + informe final en `docs/evaluation.md` | ⚪ Pendiente |
+
+**Estado:** 🔵 En curso
 
 ---
 

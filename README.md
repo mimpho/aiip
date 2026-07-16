@@ -41,7 +41,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-06 | Ingesta y procesamiento de la KB | ✅ Completada — 08 jul 2026 | E-01 |
 | E-07 | Evaluación RAGAS parcial | ✅ Completada — 16 jul 2026 | E-06 |
 | E-08 | Memoria de perfil e histórico | ⚪ No iniciada | E-03, E-04, E-06 |
-| E-09 | Evaluación RAGAS completa | ⚪ No iniciada | E-07 |
+| E-09 | Evaluación RAGAS completa | 🔵 En curso | E-07 |
 | E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada | E-05 |
 
 ---
