@@ -9,9 +9,12 @@ name = "AIIP"
 default_theme = "dark"
 # Hoja de estilos con los tokens de diseño de E-02
 custom_css = "/public/style.css"
-# Inyecta el enlace "¿Olvidaste tu contraseña?" en el login nativo,
-# que no lo soporta de fábrica (D-040 punto 5).
-custom_js = "/public/auth.js"
+# Punto de entrada único de custom_js: theme toggle + login heading +
+# enlace "¿Olvidaste tu contraseña?" (D-040 punto 5) + indicador de
+# "pensando" del chat. Chainlit solo admite un archivo custom_js, así
+# que todo vive aquí (era auth.js, luego app.js, renombrado a custom.js
+# el 16 jul 2026 al crecer más allá del login).
+custom_js = "/public/custom.js"
 # Chain of Thought (CoT) display mode — necesario para que cl.Step
 # ("Documentos consultados", D-035/T-03) se muestre en la UI.
 cot = "full"

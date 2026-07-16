@@ -99,7 +99,7 @@ aiip/
 │   ├── kb-maintenance.md  ← Runbook: pasos para añadir/actualizar/renombrar/eliminar en la KB (D-028)
 │   └── design/            ← Comps y exploraciones visuales de referencia (identity, auth, chat), generadas fuera del repo (v0/Claude Design) — no es código de producción
 ├── design/                ← Tokens CSS y temas Chainlit (E-02, E-05)
-│   ├── public/            ← tokens.css, style.css, theme.json (theming real de Chainlit — E-05 D-038), auth-pages.css, auth.js (E-05 D-040), avatars/, logos
+│   ├── public/            ← tokens.css, style.css, theme.json (theming real de Chainlit — E-05 D-038), auth-pages.css, custom.js (custom_js único: login E-05 D-040 + indicador de "pensando" del chat), avatars/, logos
 │   └── professional/      ← stub.js, style.css (professional coming-soon UI)
 ├── auth/                  ← Módulo de autenticación Python (E-03; signup()/oauth sync ampliados en E-05)
 ├── rag/                   ← Pipeline RAG (E-04): embeddings, retriever, idioma, generador, seguridad
