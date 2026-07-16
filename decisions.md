@@ -58,6 +58,9 @@
 - [D-047 — Esquema de id del dataset: secuencial y desacoplado de is_alarm (corrige D-046)](#d-047--esquema-de-id-del-dataset-secuencial-y-desacoplado-de-is_alarm-corrige-d-046)
 - [D-048 — config/alarm_triggers.json: claves en inglés e id desacoplado de categoría (amplía D-019 y D-047, fuera de alcance de E-07 pero corregido en la misma revisión)](#d-048--configalarm_triggersjson-claves-en-inglés-e-id-desacoplado-de-categoría-amplía-d-019-y-d-047-fuera-de-alcance-de-e-07-pero-corregido-en-la-misma-revisión)
 - [D-049 — Dataset de evaluación parcial ampliado a 42 casos (27 informativos + 15 alarma), revisita D-044](#d-049--dataset-de-evaluación-parcial-ampliado-a-42-casos-27-informativos--15-alarma-revisita-d-044)
+- [D-050 — T-02: script documentado sin TDD, siguiendo el precedente de E06-T07 (revisita D-015)](#d-050--t-02-script-documentado-sin-tdd-siguiendo-el-precedente-de-e06-t07-revisita-d-015)
+- [D-051 — T-02: diseño técnico de la evaluación RAGAS (alcance, evaluador, embeddings, extracción de contexto, resultados y checkpointing)](#d-051--t-02-diseño-técnico-de-la-evaluación-ragas-alcance-evaluador-embeddings-extracción-de-contexto-resultados-y-checkpointing)
+- [D-052 — T-02: dos hallazgos de implementación con ragas 0.4.3 (stub de ChatVertexAI y max_tokens propio del evaluador)](#d-052--t-02-dos-hallazgos-de-implementación-con-ragas-043-stub-de-chatvertexai-y-max_tokens-propio-del-evaluador)
 
 ---
 
@@ -2022,6 +2025,183 @@ T-02 sin coste de rework significativo.
 - Pendiente: re-ejecutar `PYTHONPATH=. pytest tests/step_defs/test_e07_t01.py -v` en
   Antigravity para confirmar los 4 escenarios en verde con el nuevo conteo antes de
   `task-close`.
+
+---
+
+## D-050 — T-02: script documentado sin TDD, siguiendo el precedente de E06-T07 (revisita D-015)
+
+**Fecha:** 16 de julio de 2026
+**Fase:** técnica / proceso
+**Épica:** E-07 (T-02)
+
+**Contexto**
+Al revisar T-02 en `task-start` surgió la pregunta de si debía implementarse como
+escenarios pytest-bdd con asserts de umbral (patrón por defecto para tareas de código,
+D-006) o como script documentado sin TDD (patrón de E06-T07, D-015). Calcular Faithfulness
+y Answer Relevancy contra `RAGPipeline.query()` real implica llamadas de red no
+deterministas a Gemini (LLM real) y al embedder — igual que el smoke test de E06-T07.
+Meter esto como escenarios pytest-bdd con asserts de umbral habría significado que
+`PYTHONPATH=. pytest tests/ -v` disparase llamadas reales a la API cada vez que alguien
+corre la suite completa (coste, tiempo, flakiness por variabilidad del LLM), rompiendo el
+principio ya asentado en D-018/D-015 de tests deterministas y sin red para el grueso de la
+suite.
+
+**Decisión**
+T-02 se implementa como script (`scripts/run_ragas_eval.py`) + `.feature` tipo checklist de
+verificación manual (sin asserts automatizados, mismo formato que
+`tests/features/e06_t07_rag_smoke_test.feature`) + resultados volcados a fichero para
+revisión de Marcos. Sigue llevando rama + PR (task/E07-T02-ragas-faithfulness-answer-relevancy),
+igual que E06-T07 — la ausencia de TDD no exime de rama+PR (precedente ya registrado en
+memoria de proceso tras E06-T07).
+
+**Alternativas descartadas**
+- pytest-bdd con asserts de umbral, marcado con `@pytest.mark.live_llm` y excluido por
+  defecto de la suite — descartada por añadir complejidad de configuración (marker,
+  exclusión en `pytest.ini`/`conftest.py`) sin beneficio claro frente al patrón ya
+  probado de E06-T07 para este mismo tipo de problema (pipeline real, no determinista).
+
+**Justificación**
+Reutilizar un patrón ya validado en el proyecto (E06-T07) para el mismo tipo de problema
+(pipeline real contra LLM en vivo) es más consistente que introducir un segundo mecanismo
+(marker de pytest) para resolver la misma tensión.
+
+**Consecuencias**
+- `tests/eval/e07_t02_ragas_faithfulness_relevancy.feature`: checklist de verificación
+  manual, sin escenarios pytest-bdd.
+- `scripts/run_ragas_eval.py`: script ejecutado manualmente por Marcos (o desde Antigravity
+  como parte del cierre de la tarea), no forma parte de `pytest tests/ -v`.
+- Precedente para T-03 (Safety Compliance baseline): mismo tipo de problema (pipeline real,
+  sin determinismo total), revisar si aplica el mismo patrón al formalizar esa tarea.
+
+---
+
+## D-051 — T-02: diseño técnico de la evaluación RAGAS (alcance, evaluador, embeddings, extracción de contexto, resultados y checkpointing)
+
+**Fecha:** 16 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (T-02)
+
+**Contexto**
+Al formalizar T-02 quedaron varios puntos de diseño sin fijar: qué subconjunto del dataset
+se evalúa, qué modelo actúa de evaluador RAGAS, qué embedder usa Answer Relevancy, si la
+respuesta de `RAGPipeline.query()` (que incluye el bloque de fuentes concatenado, D-026/
+D-041) se pasa tal cual a RAGAS, dónde se guardan los resultados, y cómo se implementa el
+checkpointing ya decidido en la nota de arranque de E-07 (`backlog/epics.md`).
+
+**Decisión**
+1. **Alcance:** se evalúan los 27 casos informativos del dataset (`is_alarm: false`), no
+   los 42 completos — coincide con lo ya anticipado en D-043 ("T-02 sobre casos
+   informativos"). Los 15 casos de alarma quedan para T-03 (Safety Compliance), que es la
+   métrica adecuada para ese subconjunto.
+2. **LLM evaluador:** se reutiliza `LLM_MODEL` (mismo modelo de producción,
+   `gemini-2.5-flash` vía `rag/config.py::load_rag_config()`) en vez de introducir una
+   variable de entorno nueva — coherente con D-010 (modelo nunca hardcodeado, ya
+   parametrizado).
+3. **Embeddings:** se reutiliza `rag/embeddings.py::get_embeddings()` (BAAI/bge-m3) para
+   Answer Relevancy, en vez de introducir un embedder nuevo solo para evaluación.
+4. **Extracción de contexto:** las métricas RAGAS se calculan sobre la respuesta generada
+   *sin* el bloque de fuentes concatenado — se obtiene la respuesta pura vía el generador
+   (o separando el bloque de fuentes del resultado de `query()`) para no penalizar
+   artificialmente Faithfulness con contenido que no son afirmaciones clínicas.
+5. **Resultados:** se guardan en `tests/eval/results/e07_t02_ragas_scores.json` (scores por
+   caso + agregados), separado de `tests/results/` (reservado a informes de smoke test en
+   markdown) y siguiendo el patrón de `tests/eval/` ya abierto en T-01. T-04 (informe
+   parcial) consume este fichero.
+6. **Checkpointing:** mecanismo simple basado en fichero — el script guarda el resultado
+   tras cada caso procesado y, al relanzarse, detecta qué ids ya tienen score y continúa
+   sin repetir llamadas ya hechas.
+
+**Alternativas descartadas**
+- Evaluar los 42 casos completos — descartada: Faithfulness/Answer Relevancy no son la
+  métrica adecuada para el subconjunto de alarma (ver punto 1).
+- Variable de entorno nueva para el modelo evaluador (`RAGAS_EVALUATOR_MODEL`) —
+  descartada por ahora: más flexible pero añade superficie de configuración sin necesidad
+  clara en un TFM; se puede introducir más adelante si se quiere desacoplar evaluador de
+  producción.
+- Pasar la respuesta de `query()` tal cual (con fuentes) a RAGAS — descartada por el riesgo
+  de penalizar Faithfulness con contenido no clínico.
+
+**Justificación**
+Cada decisión reutiliza infraestructura ya existente en el proyecto (modelo, embedder,
+convención de `tests/eval/`) en vez de introducir mecanismos nuevos, minimizando la
+superficie de cambio para una tarea de evaluación que ya tiene bastante incertidumbre
+propia (scores de un LLM en vivo).
+
+**Consecuencias**
+- `requirements.txt`: nueva dependencia `ragas` (+ `datasets`, requerida por su API).
+- `scripts/run_ragas_eval.py`: instancia `RAGPipeline` con `load_rag_config()`, itera los
+  27 casos informativos, separa respuesta/fuentes, llama a RAGAS con evaluador
+  `ChatGoogleGenerativeAI(model=config["LLM_MODEL"])` y `get_embeddings()`, y hace
+  checkpoint incremental en `tests/eval/results/e07_t02_ragas_scores.json`.
+- Precedente para T-03: mismo `RAGPipeline` real, mismo patrón de resultados en
+  `tests/eval/results/`.
+
+---
+
+## D-052 — T-02: dos hallazgos de implementación con ragas 0.4.3 (stub de ChatVertexAI y max_tokens propio del evaluador)
+
+**Fecha:** 16 de julio de 2026
+**Fase:** técnica
+**Épica:** E-07 (T-02)
+
+**Contexto**
+Al implementar `scripts/run_ragas_eval.py` en Antigravity (siguiendo `tasks/E07-T02-plan.md`,
+D-050/D-051) surgieron dos problemas no anticipados en la fase de research de Cowork:
+
+1. `ragas` (comprobado en todas las versiones 0.1–0.4 disponibles) importa
+   incondicionalmente `langchain_community.chat_models.vertexai.ChatVertexAI` al cargar
+   `ragas.llms.base`, aunque el proyecto no use VertexAI para nada. Ese submódulo ya no
+   existe en la línea moderna de `langchain-community` (0.4.x) que ya usa el proyecto —
+   se movió a un paquete standalone tras el aviso de sunset de `langchain-community`. Sin
+   workaround, `import ragas` fallaba con `ModuleNotFoundError` antes de poder usar
+   `Faithfulness`/`ResponseRelevancy`.
+2. Reutilizar `LLM_MAX_TOKENS=1024` (calibrado en D-025 para respuestas de chat concisas)
+   como límite del LLM evaluador rompía el parseo interno de Faithfulness: RAGAS le pide
+   al LLM listar y juzgar cada afirmación de la respuesta (statement + reason + verdict)
+   en un único JSON, que con 1024 tokens quedaba truncado a mitad del último elemento.
+
+**Decisión**
+1. `scripts/run_ragas_eval.py` registra un stub de `sys.modules` para
+   `langchain_community.chat_models.vertexai` (una clase `ChatVertexAI` vacía, no
+   funcional) antes de `import ragas`, documentado inline. No se degrada la versión de
+   `langchain-community` del proyecto ni se toca VertexAI de ninguna forma — es
+   exclusivamente un parche para que `ragas` pueda cargar su import condicional.
+2. El LLM evaluador de RAGAS usa una constante propia `_EVALUATOR_MAX_TOKENS = 8192`, en
+   vez de `config["LLM_MAX_TOKENS"]`. El resto de parámetros de inferencia (modelo,
+   temperatura, top_p, `thinking_budget=0` de D-025) se mantienen iguales a producción —
+   solo el límite de tokens de salida es distinto, y solo para las llamadas internas de
+   RAGAS, no para `RAGPipeline.query()`.
+
+**Alternativas descartadas**
+- Downgradear `langchain-community` a una versión que aún incluya `chat_models.vertexai`
+  — descartado: reintroduce código legacy ya retirado deliberadamente del proyecto, y
+  arriesga romper compatibilidad con el resto de `langchain` 1.x ya en uso.
+- Instalar el paquete standalone real de VertexAI para satisfacer el import — descartado:
+  añadiría una dependencia real (y su superficie de configuración) solo para que un import
+  no usado no falle; el stub vacío es más barato y más honesto sobre que VertexAI no se
+  usa.
+- Subir `LLM_MAX_TOKENS` global del proyecto a 8192 en vez de una constante local —
+  descartado: `LLM_MAX_TOKENS` gobierna las respuestas de chat en producción
+  (`rag/generator.py`), no debe cambiar por una necesidad exclusiva del evaluador de RAGAS.
+
+**Justificación**
+Ambos hallazgos son fricciones de integración de una librería de terceros (`ragas`) con
+las convenciones ya asentadas del proyecto (línea moderna de `langchain-community`,
+`LLM_MAX_TOKENS` calibrado para chat) — resolverlos con parches locales y documentados en
+el propio script evita modificar configuración de producción o retroceder decisiones ya
+tomadas (D-010, D-025) para acomodar una dependencia de evaluación.
+
+**Consecuencias**
+- `requirements.txt`: `ragas==0.4.3` pinneado, junto con las dependencias reales nuevas
+  que arrastra (`datasets`, `instructor`, `langchain-openai`, `langchain-core` actualizado
+  a 1.4.9, etc.), verificadas contra `pip freeze` real.
+- `scripts/run_ragas_eval.py`: stub de `ChatVertexAI` y `_EVALUATOR_MAX_TOKENS = 8192`
+  documentados inline con la razón de cada uno.
+- Precedente para T-03 (Safety Compliance baseline): si reutiliza el mismo evaluador
+  RAGAS o un import de `ragas`, heredar ambos workarounds en vez de redescubrirlos.
+- Si en el futuro se actualiza `ragas` a una versión que resuelva el import condicional de
+  VertexAI (o el proyecto migra a la API "collections", ver Contexto técnico de
+  `tasks/E07-T02-plan.md`), revisar si el stub sigue siendo necesario.
 
 ---
 
