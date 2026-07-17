@@ -63,6 +63,7 @@
 - [D-052 — T-02: dos hallazgos de implementación con ragas 0.4.3 (stub de ChatVertexAI y max_tokens propio del evaluador)](#d-052--t-02-dos-hallazgos-de-implementación-con-ragas-043-stub-de-chatvertexai-y-max_tokens-propio-del-evaluador)
 - [D-053 — T-03: TDD normal con asserts en vez del patrón script-sin-TDD de T-02 (corrige la anticipación de D-050/D-051)](#d-053--t-03-tdd-normal-con-asserts-en-vez-del-patrón-script-sin-tdd-de-t-02-corrige-la-anticipación-de-d-050d-051)
 - [D-054 — T-01 (E-09): schema EvalCase ampliado con campo category explícito y campos opcionales de idioma/prompt injection](#d-054--t-01-e-09-schema-evalcase-ampliado-con-campo-category-explícito-y-campos-opcionales-de-idiomaprompt-injection)
+- [D-055 — T-02 (E-09): alcance de 32 casos (informativo + otro_idioma), mapeo reference=expected_answer y consolidación de las 4 métricas en un fichero nuevo](#d-055--t-02-e-09-alcance-de-32-casos-informativo--otro_idioma-mapeo-referenceexpected_answer-y-consolidación-de-las-4-métricas-en-un-fichero-nuevo)
 
 ---
 
@@ -2339,6 +2340,91 @@ implícitas que ya se demostraron ambiguas al revisar la tarea. El coste de migr
   de la inferencia implícita del borrador de `epic-start`.
 - Precedente para cualquier categoría nueva que se añada al dataset en el futuro: pasa por
   `category`, no por combinaciones ad-hoc de campos.
+
+---
+
+## D-055 — T-02 (E-09): alcance de 32 casos (informativo + otro_idioma), mapeo `reference=expected_answer` y consolidación de las 4 métricas en un fichero nuevo
+
+**Fecha:** 17 de julio de 2026
+**Fase:** técnica
+**Épica:** E-09 (T-02)
+
+**Contexto**
+Al formalizar T-02 en `task-start` se revisó el borrador de `.feature` creado en
+`epic-start` (`tests/eval/e09_t02_ragas_context_metrics.feature`), que dejaba el alcance
+en una redacción ambigua ("casos informativos (is_alarm en false)"). El dataset ampliado
+en T-01 (72 casos, D-054) tiene varias categorías con `is_alarm=False` además de
+`category="informativo"`: `diagnostico` (10), `otro_idioma` (5) y 3 de `prompt_injection`.
+Revisando el contenido real del dataset, los 10 casos de `diagnostico` tienen
+`expected_answer` de rechazo/redirección ("no puedo confirmar ni descartar un
+diagnóstico...") — no son contenido clínico grounded en los chunks recuperados, así que
+usarlos como `reference` de Context Precision/Recall penalizaría el retrieval sin ninguna
+razón técnica. Los 5 casos de `otro_idioma` (inglés/catalán), en cambio, sí tienen
+`expected_answer` de contenido clínico real, y son precisamente el subconjunto que valida
+el retrieval cross-lingual de bge-m3 (D-011) — nunca medido hasta ahora con una métrica
+RAGAS.
+
+Adicionalmente, se confirmó por código (`ragas==0.4.3`,
+`ragas/metrics/_context_precision.py::LLMContextPrecisionWithReference` y
+`_context_recall.py::LLMContextRecall`) que ambas métricas requieren `_required_columns`
+`{"user_input", "retrieved_contexts", "reference"}` — ninguna necesita embeddings (a
+diferencia de Answer Relevancy). El dataset ya tiene el campo `expected_answer` en
+`EvalCase` (sin cambios de schema necesarios).
+
+**Decisión**
+1. **Alcance:** se evalúan 32 casos — los 27 `informativo` (paridad con el baseline de
+   E-07 T-02) + los 5 `otro_idioma`. Quedan fuera `diagnostico`, `limite`,
+   `prompt_injection` y `alarma` — ninguno tiene `expected_answer` de contenido clínico
+   comparable con los chunks recuperados.
+2. **Mapeo a RAGAS:** `reference = case.expected_answer` en el `SingleTurnSample`, además
+   de `user_input`/`retrieved_contexts` ya usados en E-07 T-02.
+3. **Extensión de script:** se amplía `scripts/run_ragas_eval.py` (no un script nuevo) con
+   `LLMContextPrecisionWithReference` y `LLMContextRecall`, reutilizando el mismo
+   `evaluator_llm` (`LLM_MODEL` de producción) y los workarounds ya documentados en D-052
+   (stub de `ChatVertexAI`, `_EVALUATOR_MAX_TOKENS=8192`). El embedder (`bge-m3`) se
+   mantiene porque el script también re-calcula Answer Relevancy sobre el nuevo
+   subconjunto.
+4. **Resultados:** las 4 métricas (Faithfulness, Answer Relevancy, Context Precision,
+   Context Recall) se recalculan juntas sobre los 32 casos y se escriben en un fichero
+   nuevo, `tests/eval/results/e09_t02_ragas_full_scores.json` — no se sobreescribe
+   `tests/eval/results/e07_t02_ragas_scores.json` (queda como registro histórico del
+   baseline de 27 casos). Re-ejecutar Faithfulness/Answer Relevancy tiene coste marginal
+   (facturación activa desde D-043, "céntimos/hora") y evita tener que fusionar dos
+   ficheros de resultados por id para el informe final de T-06.
+5. **Tipo de tarea:** script documentado sin TDD (D-050), no la corrección de D-053 —
+   Context Precision/Recall dependen de un LLM evaluador (no determinista), a diferencia
+   del caso de Safety Compliance que D-053 corrigió por ser 100% determinista. Sigue
+   llevando rama + PR (`task/E09-T02-ragas-context-precision-recall`).
+
+**Alternativas descartadas**
+- Mantener el alcance ambiguo del borrador de `epic-start` ("is_alarm en false" sin más
+  precisión) — descartada: habría incluido silenciosamente los 10 casos de `diagnostico`
+  (respuestas de rechazo) como referencia de Context Precision/Recall, contaminando el
+  resultado sin ninguna señal real sobre calidad de retrieval.
+- Ampliar a todos los casos con `is_alarm=False` (`informativo` + `diagnostico` +
+  `otro_idioma` + 3 `prompt_injection`, 45 casos) — descartada por la misma razón: la
+  presencia de `is_alarm=False` no implica que `expected_answer` sea contenido clínico
+  grounded.
+- Fusionar los resultados nuevos dentro de `e07_t02_ragas_scores.json` por id —
+  descartada: mezclaría un fichero con 27 casos (Faithfulness/Answer Relevancy) con otro
+  de 32 casos y 4 métricas, complicando su lectura por T-06.
+
+**Justificación**
+El campo `category` (D-054) existe precisamente para evitar inferencias frágiles de
+`is_alarm`; usarlo aquí para decidir el subconjunto evita repetir el mismo problema que
+motivó esa decisión. Incluir `otro_idioma` aprovecha datos ya redactados y validados
+(D-054) para medir algo relevante para el proyecto (D-011) que de otra forma quedaría sin
+medir en todo el TFM.
+
+**Consecuencias**
+- `scripts/run_ragas_eval.py`: añade `LLMContextPrecisionWithReference`/`LLMContextRecall`,
+  cambia el filtro de selección de casos a `category in ("informativo", "otro_idioma")` en
+  vez de `not case.is_alarm`, y escribe en `tests/eval/results/e09_t02_ragas_full_scores.json`.
+- `tests/eval/e09_t02_ragas_context_metrics.feature`: se actualiza el escenario de alcance
+  para fijar los 32 casos explícitamente, sin la redacción ambigua del borrador.
+- T-06 (informe final) consume `e09_t02_ragas_full_scores.json` como fuente de las 4
+  métricas RAGAS, y puede citar `e07_t02_ragas_scores.json` solo como referencia histórica
+  del baseline de 27 casos.
 
 ---
 
