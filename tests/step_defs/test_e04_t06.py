@@ -115,14 +115,10 @@ def api_key_valida_integracion():
     target_fixture="pipeline_result",
 )
 def pipeline_llm_mockeado(ctx):
-    from langdetect import DetectorFactory, detect
+    from rag.language import detect_language
 
-    DetectorFactory.seed = 0
     mock_response = MagicMock()
-    try:
-        lang = detect(ctx["query"])
-    except Exception:
-        lang = "es"
+    lang = detect_language(ctx["query"])
     if lang == "en":
         mock_response.content = (
             "Primary immunodeficiency is a genetic disorder of the immune system."
@@ -215,23 +211,21 @@ def no_excepcion(pipeline_result):
 
 @then("la respuesta está en castellano")
 def respuesta_en_castellano(pipeline_result):
-    from langdetect import DetectorFactory, detect
+    from rag.language import detect_language
 
-    DetectorFactory.seed = 0
     response = pipeline_result["response"]
     assert response, "La respuesta está vacía"
-    lang = detect(response)
+    lang = detect_language(response)
     assert lang == "es", f"Se esperaba castellano (es), se detectó: {lang!r}"
 
 
 @then("la respuesta está en inglés")
 def respuesta_en_ingles(pipeline_result):
-    from langdetect import DetectorFactory, detect
+    from rag.language import detect_language
 
-    DetectorFactory.seed = 0
     response = pipeline_result["response"]
     assert response, "La respuesta está vacía"
-    lang = detect(response)
+    lang = detect_language(response)
     assert lang == "en", f"Se esperaba inglés (en), se detectó: {lang!r}"
 
 

@@ -36,20 +36,13 @@ Feature: Ciclo de mejora — hallazgos A, B, D y F
   # --- Hallazgo A: sobre-activación del filtro de seguridad ---
 
   Scenario: eval_07, eval_08 y eval_25 dejan de activar el filtro de seguridad
-    Given las preguntas de eval_07 ("¿Es normal que le duela el brazo después de la
-      infusión subcutánea de inmunoglobulinas?"), eval_08 ("¿Qué antibióticos se usan
-      habitualmente como profilaxis en inmunodeficiencias primarias?") y eval_25
-      ("¿Puede mi hijo marcharse de convivencias varios días?")
-    When se evalúan con check_alarm_signals tras aplicar la stoplist ("después", "varios",
-      "infusión") de config/alarm_triggers.json
+    Given las preguntas de eval_07 ("¿Es normal que le duela el brazo después de la infusión subcutánea de inmunoglobulinas?"), eval_08 ("¿Qué antibióticos se usan habitualmente como profilaxis en inmunodeficiencias primarias?") y eval_25 ("¿Puede mi hijo marcharse de convivencias varios días?")
+    When se evalúan con check_alarm_signals tras aplicar la stoplist ("después", "varios", "infusión") de config/alarm_triggers.json
     Then ninguna de las tres activa la alarma
 
   Scenario: "antibióticos" solo dispara la alarma con contexto de duración o frecuencia
-    Given la pregunta de eval_08 ("¿Qué antibióticos se usan habitualmente como profilaxis
-      en inmunodeficiencias primarias?"), sin término de duración/frecuencia
-    And la pregunta de eval_62 ("Este año lleva ya dos tandas de antibióticos por
-      infecciones de oído, no sé si eso ya es motivo de preocupación..."), con término de
-      duración ("año")
+    Given la pregunta de eval_08 ("¿Qué antibióticos se usan habitualmente como profilaxis en inmunodeficiencias primarias?"), sin término de duración/frecuencia
+    And la pregunta de eval_62 ("Este año lleva ya dos tandas de antibióticos por infecciones de oído, no sé si eso ya es motivo de preocupación..."), con término de duración ("año")
     When se evalúan con check_alarm_signals tras el ajuste de requires_context
     Then eval_08 no activa la alarma
     And eval_62 sigue activando la alarma
@@ -65,21 +58,17 @@ Feature: Ciclo de mejora — hallazgos A, B, D y F
 
   Scenario: Preguntas con nombres propios geográficos recuperan chunks con coincidencia léxica exacta
     Given la pregunta "¿Qué hospitales con servicio de inmunología hay en Barcelona?"
-    When se recupera con el retriever híbrido (EnsembleRetriever: BM25 + vectorial) tras
-      el ajuste
+    When se recupera con el retriever híbrido (EnsembleRetriever: BM25 + vectorial) tras el ajuste
     Then los chunks recuperados incluyen contenido que menciona "Barcelona" explícitamente
     And no se limita a hospitales de otras ciudades recuperados solo por similitud semántica
 
   Scenario: El directorio de hospitales (aedip) aparece para preguntas de contacto genéricas
-    Given la pregunta "¿A quién llamo si es fin de semana?" (caso real documentado en
-      tests/results/e05_t07_smoke_test_results.md, CU-05)
+    Given la pregunta "¿A quién llamo si es fin de semana?" (caso real documentado en tests/results/e05_t07_smoke_test_results.md, CU-05)
     When se recupera con el retriever híbrido tras el ajuste
-    Then el chunk de data/raw/aedip/Hospitales-con-Servicios-de-Inmunologia.html aparece
-      entre los resultados recuperados
+    Then el chunk de data/raw/aedip/Hospitales-con-Servicios-de-Inmunologia.html aparece entre los resultados recuperados
 
   Scenario: Los casos ya bien recuperados en T-02 no empeoran (regresión)
-    Given los casos informativos con Context Precision > 0.99 en T-02 (eval_09, eval_10,
-      eval_19, eval_24, entre otros)
+    Given los casos informativos con Context Precision > 0.99 en T-02 (eval_09, eval_10, eval_19, eval_24, entre otros)
     When se recuperan con el retriever híbrido tras el ajuste
     Then el contenido recuperado sigue siendo relevante para la pregunta
 
@@ -97,8 +86,7 @@ Feature: Ciclo de mejora — hallazgos A, B, D y F
       | Mi hijo tiene 38.5°C, ¿es urgente?                              |
 
   Scenario: Las frases que ya detectaban bien siguen detectando bien (regresión D-017)
-    Given las 37 frases de config/alarm_triggers.json y una muestra de frases largas ya
-      validadas como correctas antes del ajuste
+    Given las 37 frases de config/alarm_triggers.json y una muestra de frases largas ya validadas como correctas antes del ajuste
     When se evalúan con detect_language tras el ajuste
     Then todas siguen detectando el idioma correcto (es, en o ca según corresponda)
     # Regresión: el fix de F no puede introducir falsos negativos nuevos en frases que
@@ -109,37 +97,29 @@ Feature: Ciclo de mejora — hallazgos A, B, D y F
   Scenario: B se investiga solo si sobra margen tras A, D y F
     Given los ajustes de A, D y F ya aplicados y verificados
     When queda margen de tiempo dentro de T-05
-    Then se investiga la causa de Answer Relevancy 0.0 en eval_06 y eval_15 (respuesta
-      generada, parseo de RAGAS, formato de la pregunta)
+    Then se investiga la causa de Answer Relevancy 0.0 en eval_06 y eval_15 (respuesta generada, parseo de RAGAS, formato de la pregunta)
     And si hay causa raíz identificada, se aplica un ajuste y se re-evalúan ambos casos
-    And si no queda margen, B se documenta como "abierto" en el cierre del ciclo, sin
-      tratarse como fallo oculto
+    And si no queda margen, B se documenta como "abierto" en el cierre del ciclo, sin tratarse como fallo oculto
 
   # --- Cierre del ciclo: re-medición obligatoria (D-056) ---
 
   Scenario: Backup de resultados previos antes de re-medir
-    Given tests/eval/results/e09_t02_ragas_full_scores.json con los 32 casos de T-02 ya
-      evaluados (checkpointing por id)
-    When se prepara la re-ejecución de scripts/run_ragas_eval.py tras aplicar los ajustes
-      de A, D y F (y de B si se abordó)
-    Then el fichero existente se respalda (p. ej. e09_t02_ragas_full_scores_pre_t05.json)
-      o _RESULTS_PATH apunta a un fichero nuevo
+    Given tests/eval/results/e09_t02_ragas_full_scores.json con los 32 casos de T-02 ya evaluados (checkpointing por id)
+    When se prepara la re-ejecución de scripts/run_ragas_eval.py tras aplicar los ajustes de A, D y F (y de B si se abordó)
+    Then el fichero existente se respalda (p. ej. e09_t02_ragas_full_scores_pre_t05.json) o _RESULTS_PATH apunta a un fichero nuevo
     And ningún caso se salta por el checkpointing del fichero anterior
 
   Scenario: Re-medición completa de las 4 métricas RAGAS
     Given el pipeline con los ajustes de A, D y F aplicados (y de B si se abordó)
     When se re-ejecuta scripts/run_ragas_eval.py sobre los 32 casos de T-02
-    Then se obtienen Faithfulness, Answer Relevancy, Context Precision y Context Recall
-      actualizados
-    And se documenta el antes/después frente a los valores de T-02 (79.2% / 75.9% /
-      53.8% / 70.3%)
+    Then se obtienen Faithfulness, Answer Relevancy, Context Precision y Context Recall actualizados
+    And se documenta el antes/después frente a los valores de T-02 (79.2% / 75.9% / 53.8% / 70.3%)
 
   Scenario: Los hallazgos quedan documentados con su resultado final
     Given los ajustes aplicados (o descartados) para A, D y F, y el estado final de B
     When se prepara el informe final (T-06)
     Then cada hallazgo indica su estado: resuelto, mitigado o abierto
-    And los hallazgos C y E quedan referenciados como backlog abierto, no como parte de
-      este ciclo
+    And los hallazgos C y E quedan referenciados como backlog abierto, no como parte de este ciclo
 
   Scenario: Marcos revisa y confirma el cierre del ciclo de mejora
     Given los resultados de los escenarios anteriores, incluida la re-medición

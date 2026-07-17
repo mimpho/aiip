@@ -3,7 +3,7 @@ from typing import AsyncIterator
 from rag.embeddings import get_embeddings
 from rag.generator import RAGGenerator
 from rag.language import detect_language
-from rag.retriever import get_retriever
+from rag.retriever import get_hybrid_retriever, get_retriever
 from rag.safety import apply_safety_filter, check_alarm_signals
 
 _DEFAULT_COLLECTION = "family"
@@ -59,12 +59,23 @@ class RAGPipeline:
             config.get("COLLECTION_NAME", _DEFAULT_COLLECTION),
             top_k=self._top_k,
         )
+        self._retriever = get_hybrid_retriever(self._vectorstore, top_k=self._top_k)
         self._generator = RAGGenerator(config)
+
+    def _retrieve_with_scores(self, question: str):
+        """Recupera documentos con el retriever híbrido (BM25 + vectorial, RRF).
+
+        D-057 (E-09 T-05, hallazgo D): EnsembleRetriever no expone un score de
+        similitud comparable al de Chroma — el score aquí es posicional
+        (1/rank), no una medida de distancia/similitud coseno.
+        """
+        docs = self._retriever.invoke(question)
+        return [(doc, 1.0 / (i + 1)) for i, doc in enumerate(docs)]
 
     def query(self, question: str) -> str:
         """Recibe una pregunta y devuelve la respuesta generada."""
         language = detect_language(question)
-        raw = self._vectorstore.similarity_search_with_score(question, k=self._top_k)
+        raw = self._retrieve_with_scores(question)
         context = "\n\n".join(doc.page_content for doc, _ in raw)
         has_alarm = check_alarm_signals(question)
         response = self._generator.generate(
@@ -89,9 +100,7 @@ class RAGPipeline:
             list[tuple[Document, float]]: lista de (documento, score) en el
             mismo formato que devuelve Chroma.similarity_search_with_score.
         """
-        return self._vectorstore.similarity_search_with_score(
-            question, k=self._top_k
-        )
+        return self._retrieve_with_scores(question)
 
     async def aquery_stream(self, question: str, raw_results=None) -> AsyncIterator[str]:
         """Recibe una pregunta y emite la respuesta generada en streaming.
@@ -111,9 +120,7 @@ class RAGPipeline:
         """
         language = detect_language(question)
         if raw_results is None:
-            raw_results = self._vectorstore.similarity_search_with_score(
-                question, k=self._top_k
-            )
+            raw_results = self._retrieve_with_scores(question)
         raw = raw_results
         context = "\n\n".join(doc.page_content for doc, _ in raw)
         has_alarm = check_alarm_signals(question)

@@ -44,12 +44,18 @@ def _fake_astream(chunks):
 
 def _build_pipeline(chunks, raw_results):
     """RAGPipeline con retrieval y LLM controlados (D-018/D-020): solo se
-    mockea ChatGoogleGenerativeAI, no la lógica de rag.safety/rag.pipeline."""
-    mock_vectorstore = MagicMock()
-    mock_vectorstore.similarity_search_with_score.return_value = raw_results
+    mockea ChatGoogleGenerativeAI, no la lógica de rag.safety/rag.pipeline.
+
+    E-09 T-05 (hallazgo D): el retrieval pasa por el retriever híbrido
+    (EnsembleRetriever), que solo expone `invoke()` devolviendo Document sin
+    score — se mockea a ese nivel en vez de `similarity_search_with_score`.
+    """
+    mock_retriever = MagicMock()
+    mock_retriever.invoke.return_value = [doc for doc, _ in raw_results]
     with (
         patch("rag.pipeline.get_embeddings", return_value=MagicMock()),
-        patch("rag.pipeline.get_retriever", return_value=mock_vectorstore),
+        patch("rag.pipeline.get_retriever", return_value=MagicMock()),
+        patch("rag.pipeline.get_hybrid_retriever", return_value=mock_retriever),
         patch("rag.generator.ChatGoogleGenerativeAI") as MockLLM,
     ):
         MockLLM.return_value.astream = _fake_astream(chunks)
