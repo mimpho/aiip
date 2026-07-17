@@ -492,6 +492,17 @@ específica → mejora específica de lo que esa medición detectó, en vez de m
 y dejar la mejora para un único ciclo al final. Evita el escenario de acabar con una
 herramienta que no funciona pero con mediciones exhaustivas de que no funciona.
 
+**Decisiones técnicas por hallazgo (`task-start` T-05, D-057):**
+- **A** — `check_alarm_signals()` incorpora una stoplist de 3 palabras sin señal de alarma
+  (después, varios, infusión) y un chequeo de contexto para "antibióticos" (exige un
+  término de duración/frecuencia). Validado sin regresiones contra los 27 casos reales de
+  alarma/límite + los 27 informativos.
+- **B** — tratado como **Plan B**, no scope comprometido: se investiga solo si sobra
+  margen tras A, D y F.
+- **D** — `EnsembleRetriever` de LangChain (BM25 + vectorial, RRF), no el `Search()`
+  nativo de Chroma (confirmado exclusivo de Chroma Cloud, no disponible para Chroma local).
+- **F** — sustituir `langdetect` por `lingua-py`, restringido a es/en/ca.
+
 **Criterios de aceptación de alto nivel**
 - Resultados RAGAS completos documentados en `docs/evaluation.md`
 - Al menos un ciclo de mejora basado en los resultados
@@ -504,7 +515,7 @@ herramienta que no funciona pero con mediciones exhaustivas de que no funciona.
 |---|---|---|
 | T-01 | Ampliar el dataset de evaluación a cobertura completa (72 casos) | ✅ Completada |
 | T-02 | RAGAS completo: Context Precision + Context Recall | ✅ Completada |
-| T-05 | Ciclo de mejora (hallazgos A, B, D, F) — **se ejecuta a continuación** (D-056) | ⚪ Pendiente |
+| T-05 | Ciclo de mejora (hallazgos A, B, D, F) — **se ejecuta a continuación** (D-056) | 🔄 En progreso |
 | T-03 | Safety Compliance ampliado: alarma + casos límite (25 casos, determinista) — sin dependencia de T-05, cualquier momento | ⚪ Pendiente |
 | T-04 | Comportamiento ante diagnóstico/prompt injection (sin dependencia) + Hallucination Rate (**medir después de T-05**) | ⚪ Pendiente |
 | T-06 | Checklist CHART + informe final en `docs/evaluation.md` | ⚪ Pendiente |
