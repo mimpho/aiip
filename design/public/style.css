@@ -73,21 +73,18 @@ body::before {
    top of #root without an explicit z-index; -1 puts it back behind. */
 body::after {
   position: absolute;
-  background: radial-gradient(85% 55% at 50% 100%, hsl(var(--primary) / 0.16), transparent 56%);
+  background: radial-gradient(85% 55% at 50% 100%, hsl(var(--primary) / 0.2), transparent 56%);
   z-index: -1;
 }
 
 /* ── Input area ───────────────────────────────────────────── */
 /* #message-composer is the real wrapper Chainlit renders for the
    chat input (verified: id="message-composer" in the compiled
-   bundle). Values match the reference exactly — glass background +
-   blur + a static 1px border, no animation
-   (docs/design/screens/AIIP Phase 2 - Chat.dc.html:72 dark / :125 light). */
+   bundle). Solid page-background fill, no border (17 jul 2026,
+   Marcos) — replaces the earlier glass + 1px border treatment. */
 #message-composer {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--color-border);
+  background: var(--composer-bg);
+  border: none;
   border-radius: var(--radius-lg);
 }
 
@@ -144,6 +141,33 @@ body::after {
   font-weight: var(--font-weight-medium);
 }
 
+/* Chainlit's own streaming indicator — the dot appended at the end of
+   the answer while tokens are still arriving (real class, verified in
+   the compiled bundle: `<span class="inline-block loading-cursor">`,
+   chainlit/frontend/dist/assets/index-*.js). Ships as a solid pulsing
+   circle (border-radius: 9999px); restyled as a thin blinking bar so
+   it actually reads as a text cursor, not a loading dot (17 jul 2026,
+   Marcos) — reuses the same shape/animation as .aiip-thinking-cursor
+   above so both "filling in" states look like the same cursor.
+   currentColor inherits .message-content's color (set above), so no
+   extra color token is needed.
+   Selector is `.inline-block.loading-cursor` (compound, not the class
+   alone): Chainlit's own compiled CSS gets injected at runtime, after
+   this stylesheet's <link> in <head>, so on a same-specificity tie
+   (single class each) its rule wins by source order and silently
+   overrode a plain `.loading-cursor` override (verified live — same
+   trick already used on `.ai-message.flex` above). Chaining the span's
+   other real class (`inline-block`, always present alongside
+   `loading-cursor` in the bundle) raises this to two classes so ours
+   wins regardless of injection order. */
+.inline-block.loading-cursor {
+  width: 2px;
+  height: 1em;
+  border-radius: 0;
+  background-color: currentColor;
+  animation: aiip-thinking-cursor-blink 1.2s step-end infinite;
+}
+
 /* Row spacing + avatar size (16 jul 2026, Marcos): Chainlit ships
    `.ai-message` with Tailwind's `gap-4` (1rem) and the avatar span with
    `h-5 w-5` (1.25rem) — real values verified against the compiled
@@ -198,7 +222,7 @@ body::after {
 }
 
 [data-step-type="assistant_message"]:first-child .message-content {
-  background: linear-gradient(154deg, var(--color-accent-family), var(--color-accent-professional));
+  background: linear-gradient(155deg, var(--color-accent-family), var(--color-accent-professional));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -212,6 +236,23 @@ body::after {
   line-height: 1.2;
   letter-spacing: -0.01em;
   margin-bottom: 1rem;
+  /* Chainlit ships this node `w-full flex flex-col` (verified live,
+     devtools), so the gradient background painted across the full row
+     width — with a short greeting ("Buenas tardes, Marcos") the text
+     only ever sampled the first sliver of it, reading as flat
+     accent-family blue with barely any shift into the professional
+     accent (17 jul 2026, Marcos). Shrinking this same node to its
+     content (inline-flex + fit-content) instead of the full row makes
+     the gradient span exactly the rendered text, whatever its length.
+     No new selector, no JS injection needed: `.message-content` is
+     already the real, stable node every other rule above targets — our
+     compound selector (attribute + class) already outweighs Tailwind's
+     bare `.flex`/`.w-full`, so this wins regardless of stylesheet
+     injection order (see the `.ai-message.flex` note further up for
+     why that ordering matters at all). */
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
 }
 
 /* ── Sources list ("Fuentes consultadas:", D-026) ─────────────
