@@ -270,3 +270,22 @@ de urgencias, 112) — el fallo es solo de idioma, Falso Negativo Cero no se vio
 Evaluado como no bloqueante para el hito del 10 de julio (decisión de Marcos): se documenta aquí
 y se revisa junto al resto en E-07/E-09, no se aborda como fix puntual ahora. Detalle completo en
 `tests/results/e05_t07_smoke_test_results.md`.
+
+### 5. `eval_63` (inglés): Faithfulness 0.0 y Answer Relevancy 0.29, muy por debajo del resto del subconjunto `otro_idioma` (17 jul 2026)
+- **Criticidad:** 🟡 Media — un único caso muy por debajo de sus vecinos del mismo subconjunto, no un patrón confirmado todavía
+- **Problema:** detectado en la ejecución real de E-09 T-02 (RAGAS Context Precision/Recall,
+  `tests/eval/results/e09_t02_ragas_full_scores.json`) — la pregunta en inglés "What is a
+  primary immunodeficiency?" (`eval_63`) obtuvo Faithfulness 0.0 y Answer Relevancy 0.29,
+  muy por debajo del resto de los 5 casos del subconjunto `otro_idioma` (el resto entre
+  0.74 y 1.0 en Faithfulness). Context Precision (0.64) y Context Recall (0.5) no muestran
+  la misma caída, lo que apunta a un problema en la generación de la respuesta o en su
+  evaluación, no en el retrieval — a diferencia del hallazgo D (arriba), que sí es de
+  retrieval.
+- **Idea/Solución:** no investigado todavía. Revisar la respuesta real generada para
+  `eval_63` (no solo el score) para distinguir entre: (a) fallo real de grounding/relevancia
+  del LLM en inglés, (b) un artefacto puntual del LLM evaluador de RAGAS (parseo, formato de
+  salida) sobre ese caso concreto, o (c) algo específico de la pregunta/respuesta de
+  referencia en `tests/eval/dataset_partial.json`.
+- **Cuándo revisarlo:** al redactar el informe final de E-09 (T-06) — si aparecen más casos
+  con el mismo patrón al citar/inspeccionar el dataset completo, evaluar si merece
+  investigación propia antes de la entrega del 29 de julio.
