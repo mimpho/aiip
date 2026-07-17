@@ -444,13 +444,53 @@ T-05 a los 3 de menor coste/mayor relación con lo ya medido en esta épica:
 - **F** — `langdetect` falla en frases cortas de síntomas en español (`ideas.md` #4)
 
 Quedan fuera de este ciclo (backlog abierto, no perdidos): **C** (grounding demasiado
-estricto ante conocimiento de mundo), **D** (ruido en dense search / hybrid search —
-🔴 Alta, pero implementación no trivial) y **E** (registro lingüístico no siempre
+estricto ante conocimiento de mundo) y **E** (registro lingüístico no siempre
 accesible). Razón: con ~6-7 días de margen para E-09 antes de encadenar E-08/E-10 hasta
 el 29 de julio, cubrir los 6 arriesgaba tanto el timing de esta épica como el de las
-siguientes. Si Context Precision (T-02) sale por debajo de objetivo, la causa probable
-(hallazgo D) queda documentada en el informe final como limitación conocida con
-mitigación fuera de alcance de este ciclo, no como fallo oculto.
+siguientes. **D se reincorpora al alcance el 17 de julio — ver nota de reordenamiento
+abajo.**
+
+**Reordenamiento mid-sprint (17 jul 2026, D-056):** al cerrar T-02 y ver los resultados
+reales (Faithfulness 79.2%, Answer Relevancy 75.9%, Context Precision 53.8%, Context
+Recall 70.3% — los cuatro por debajo de objetivo), Marcos planteó que medir todas las
+tareas restantes antes de mejorar nada arriesgaba acabar con una épica llena de
+mediciones y ninguna mejora real si el tiempo se agotaba. Se revisó qué mediciones
+pendientes son causalmente independientes de los arreglos de T-05 y cuáles no:
+
+- **T-03 (Safety Compliance, alarma+límite)** es determinista y ortogonal — confirmado en
+  `rag/safety.py`: `check_alarm_signals()` es keyword matching puro sobre el texto crudo de
+  la pregunta, no depende de retrieval, generación, ni del idioma detectado (hallazgo F).
+  Da igual en qué momento se mida; su resultado no cambia por los arreglos de T-05 y no
+  hace falta repetirla.
+- **T-04**, la parte de comportamiento (rechazo de diagnóstico, resistencia a inyección)
+  es igual de independiente. Pero **Hallucination Rate** (también en T-04) está atado a la
+  calidad de retrieval/grounding — el mismo terreno que el hallazgo D. Medirlo antes de
+  arreglar D daría un número que quedaría obsoleto en cuanto se toque retrieval.
+- Las 4 métricas ya medidas en T-02 son exactamente las que A, B y D deberían mover.
+
+**Decisión de reordenamiento:**
+1. **T-05 se adelanta** y se ejecuta a continuación, antes de T-03/T-04 (no al final de la
+   épica como estaba planeado).
+2. **Alcance de T-05 ampliado de A/B/F a A, B, D y F** — D se reincorpora dado que hoy
+   tenemos su impacto medido y cuantificado (Context Precision/Recall), en vez de quedar
+   como limitación documentada sin más.
+3. **T-05 no se considera cerrada solo con el arreglo del código** — su criterio de cierre
+   incluye re-ejecutar `scripts/run_ragas_eval.py` sobre el pipeline ya arreglado para
+   obtener un antes/después real de las 4 métricas de T-02. Importante: el script tiene
+   checkpointing por id — relanzarlo tal cual sobre
+   `tests/eval/results/e09_t02_ragas_full_scores.json` se saltaría los 32 casos ya
+   presentes y no los recalcularía. Antes de la re-ejecución hay que mover ese fichero a un
+   nombre de respaldo (o apuntar `_RESULTS_PATH` a uno nuevo) para que la comparación
+   antes/después sea honesta.
+4. **T-03 puede ejecutarse en cualquier momento** a partir de ahora, sin depender de T-05.
+5. **T-04** puede dividirse: la parte de comportamiento (diagnóstico/prompt injection) no
+   depende de T-05 y puede medirse cuando convenga; **Hallucination Rate debe medirse
+   después de T-05**, no antes, para no repetirla también.
+
+Principio general para el resto de la épica (y precedente para E-10 si aplica): medición
+específica → mejora específica de lo que esa medición detectó, en vez de medir todo primero
+y dejar la mejora para un único ciclo al final. Evita el escenario de acabar con una
+herramienta que no funciona pero con mediciones exhaustivas de que no funciona.
 
 **Criterios de aceptación de alto nivel**
 - Resultados RAGAS completos documentados en `docs/evaluation.md`
@@ -464,9 +504,9 @@ mitigación fuera de alcance de este ciclo, no como fallo oculto.
 |---|---|---|
 | T-01 | Ampliar el dataset de evaluación a cobertura completa (72 casos) | ✅ Completada |
 | T-02 | RAGAS completo: Context Precision + Context Recall | ✅ Completada |
-| T-03 | Safety Compliance ampliado: alarma + casos límite (25 casos, determinista) | ⚪ Pendiente |
-| T-04 | Comportamiento ante diagnóstico/prompt injection + Hallucination Rate (pipeline real) | ⚪ Pendiente |
-| T-05 | Ciclo de mejora (hallazgos A, B, F) | ⚪ Pendiente |
+| T-05 | Ciclo de mejora (hallazgos A, B, D, F) — **se ejecuta a continuación** (D-056) | ⚪ Pendiente |
+| T-03 | Safety Compliance ampliado: alarma + casos límite (25 casos, determinista) — sin dependencia de T-05, cualquier momento | ⚪ Pendiente |
+| T-04 | Comportamiento ante diagnóstico/prompt injection (sin dependencia) + Hallucination Rate (**medir después de T-05**) | ⚪ Pendiente |
 | T-06 | Checklist CHART + informe final en `docs/evaluation.md` | ⚪ Pendiente |
 
 **Estado:** 🔵 En curso

@@ -64,6 +64,7 @@
 - [D-053 — T-03: TDD normal con asserts en vez del patrón script-sin-TDD de T-02 (corrige la anticipación de D-050/D-051)](#d-053--t-03-tdd-normal-con-asserts-en-vez-del-patrón-script-sin-tdd-de-t-02-corrige-la-anticipación-de-d-050d-051)
 - [D-054 — T-01 (E-09): schema EvalCase ampliado con campo category explícito y campos opcionales de idioma/prompt injection](#d-054--t-01-e-09-schema-evalcase-ampliado-con-campo-category-explícito-y-campos-opcionales-de-idiomaprompt-injection)
 - [D-055 — T-02 (E-09): alcance de 32 casos (informativo + otro_idioma), mapeo reference=expected_answer y consolidación de las 4 métricas en un fichero nuevo](#d-055--t-02-e-09-alcance-de-32-casos-informativo--otro_idioma-mapeo-referenceexpected_answer-y-consolidación-de-las-4-métricas-en-un-fichero-nuevo)
+- [D-056 — E-09: reordenamiento mid-sprint — medición específica → mejora específica en vez de medir todo primero; T-05 se adelanta y amplía a A, B, D, F](#d-056--e-09-reordenamiento-mid-sprint--medición-específica--mejora-específica-en-vez-de-medir-todo-primero-t-05-se-adelanta-y-amplía-a-a-b-d-f)
 
 ---
 
@@ -2425,6 +2426,88 @@ medir en todo el TFM.
 - T-06 (informe final) consume `e09_t02_ragas_full_scores.json` como fuente de las 4
   métricas RAGAS, y puede citar `e07_t02_ragas_scores.json` solo como referencia histórica
   del baseline de 27 casos.
+
+---
+
+## D-056 — E-09: reordenamiento mid-sprint — medición específica → mejora específica en vez de medir todo primero; T-05 se adelanta y amplía a A, B, D, F
+
+**Fecha:** 17 de julio de 2026
+**Fase:** proceso / metodología
+**Épica:** E-09
+
+**Contexto**
+El plan original de E-09 (`backlog/epics.md`) secuenciaba T-03 (Safety Compliance
+ampliado) y T-04 (diagnóstico/prompt injection + Hallucination Rate) como medición pura,
+dejando toda la mejora para un único ciclo al final (T-05, acotado a los hallazgos A, B y
+F — nota de arranque del 17 jul). Al cerrar T-02 y ver los resultados reales sobre el
+pipeline sin tocar (Faithfulness 79.2%, Answer Relevancy 75.9%, Context Precision 53.8%,
+Context Recall 70.3% — las 4 métricas por debajo de objetivo), Marcos planteó el riesgo de
+fondo de ese plan: si el tiempo se agota después de medir todo, la épica termina con un
+sistema que no funciona bien pero con mediciones exhaustivas de que no funciona, sin haber
+dedicado tiempo a mejorarlo donde más pesa.
+
+Se revisó si las mediciones pendientes (T-03, T-04) son causalmente independientes de los
+arreglos previstos en T-05 o si su resultado quedaría invalidado por ellos:
+- `rag/safety.py::check_alarm_signals()` (base de T-03) es keyword matching puro sobre el
+  texto crudo de la pregunta contra `config/alarm_triggers.json` — no depende de
+  retrieval, generación ni del idioma detectado por `langdetect` (hallazgo F). T-03 es
+  ortogonal a todo lo que toca T-05: puede medirse en cualquier momento sin necesidad de
+  repetirla.
+- La parte de comportamiento de T-04 (rechazo de diagnóstico, resistencia a prompt
+  injection) es igual de independiente. Pero Hallucination Rate (también en T-04) mide
+  contenido no respaldado por la KB — el mismo terreno que el hallazgo D (ruido en dense
+  search). Medirlo antes de arreglar D produciría un número que quedaría obsoleto en
+  cuanto se toque retrieval, obligando a repetirlo de todas formas.
+- Las 4 métricas ya medidas en T-02 (Faithfulness, Answer Relevancy, Context Precision,
+  Context Recall) son exactamente las que deberían moverse con los arreglos de A, B y D.
+
+**Decisión**
+1. **T-05 se adelanta**: se ejecuta a continuación, antes de T-03/T-04, no al final de la
+   épica.
+2. **Alcance de T-05 ampliado de A/B/F a A, B, D y F** — D se reincorpora al ciclo de
+   mejora (revisa la exclusión de D en la nota de arranque del 17 jul) ahora que su
+   impacto está cuantificado (Context Precision/Recall de T-02), no como limitación
+   documentada sin más.
+3. **Criterio de cierre de T-05 incluye re-medición**: no basta con arreglar el código:
+   T-05 no se da por cerrada hasta re-ejecutar `scripts/run_ragas_eval.py` sobre el
+   pipeline ya arreglado y obtener un antes/después real de las 4 métricas de T-02.
+4. **Precaución operativa para la re-ejecución**: el script tiene checkpointing por id
+   sobre `_RESULTS_PATH` — relanzarlo tal cual sobre
+   `tests/eval/results/e09_t02_ragas_full_scores.json` saltaría los 32 casos ya presentes
+   y no los recalcularía, dando la falsa impresión de que nada mejoró. Antes de la
+   re-ejecución post-arreglo, mover ese fichero a un nombre de respaldo (p. ej.
+   `e09_t02_ragas_full_scores_pre_t05.json`) o apuntar `_RESULTS_PATH` a uno nuevo.
+5. **T-03 puede ejecutarse en cualquier momento** a partir de ahora, sin depender de T-05
+   ni necesidad de repetirse después.
+6. **T-04 se divide en la práctica**: comportamiento (diagnóstico/prompt injection) puede
+   medirse cuando convenga; Hallucination Rate debe medirse después de T-05, no antes.
+
+**Alternativas descartadas**
+- Mantener el plan original (medir T-03/T-04 completos, mejorar todo al final en T-05) —
+  descartada por el riesgo señalado por Marcos: si el margen de tiempo se agota, la épica
+  queda con medición exhaustiva y sin mejora real, y una parte de esa medición (Hallucination
+  Rate) habría que repetirla de todas formas por depender de los mismos arreglos.
+- Repetir también T-03 después de T-05 "por si acaso" — descartada: `check_alarm_signals()`
+  no tiene ninguna dependencia de código con lo que toca T-05, repetirla no aporta señal
+  nueva.
+
+**Justificación**
+El criterio para decidir el orden no es "cuánto falta" sino si el resultado de una medición
+es causalmente independiente de los arreglos pendientes. Las métricas ligadas a
+retrieval/generación (Faithfulness, Answer Relevancy, Context Precision, Context Recall,
+Hallucination Rate) son un blanco móvil hasta que se arreglen A/B/D; medirlas antes solo
+garantiza tener que repetirlas. Las métricas deterministas y desacopladas del pipeline RAG
+(Safety Compliance, comportamiento ante diagnóstico/prompt injection) no tienen ese
+problema y pueden medirse en cualquier orden.
+
+**Consecuencias**
+- `backlog/epics.md`: nota de reordenamiento añadida a E-09, tabla de tareas anotada con el
+  nuevo orden de ejecución (T-05 antes de T-03/T-04) sin renumerar los IDs existentes.
+- Precedente de proceso para el resto de la épica (y para E-10 si aplica): medición
+  específica → mejora específica de lo que esa medición detectó, en vez de medir todo
+  primero y dejar la mejora para un único ciclo final.
+- `tasks/E09-T05-plan.md` (a crear en el próximo `task-start`) debe incluir explícitamente
+  el paso de backup/reset de `_RESULTS_PATH` antes de la re-ejecución post-arreglo.
 
 ---
 
