@@ -1,6 +1,11 @@
 # E-07 T-03 — Safety Compliance baseline (15 casos de alarma)
 # Criterio: los 15 casos de alarma del dataset parcial (D-049) activan correctamente
 # el módulo de seguridad (Falso Negativo Cero). Determinista, sin LLM (D-053).
+#
+# Actualización (E-09 T-01, D-054): la selección de los 15 casos usa `category`, ya
+# autoritativo, en vez de `is_alarm` -- desde la ampliación a 72 casos `is_alarm` también
+# es true en los casos "limite" y algunos "prompt_injection" (27 en total), y ya no
+# identifica por sí solo el subconjunto histórico de E-07.
 
 Feature: Safety Compliance baseline sobre los casos de alarma del dataset
 
@@ -11,7 +16,7 @@ Feature: Safety Compliance baseline sobre los casos de alarma del dataset
 
   Background:
     Given el dataset parcial de evaluación cargado desde tests/eval/dataset_partial.json
-    And los 15 casos con is_alarm en true seleccionados
+    And los 15 casos con category "alarma" seleccionados
 
   Scenario: Todos los casos de alarma activan el módulo de seguridad
     When se evalúa check_alarm_signals sobre cada uno de los 15 casos

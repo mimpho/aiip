@@ -121,3 +121,41 @@ Sigue `tests/eval/e09_t01_full_eval_dataset.feature`, en este orden:
 - Cualquier ajuste a `rag/safety.py` o `rag/language.py` (hallazgos A/F) — eso es T-05.
 - Corregir las inconsistencias numéricas de `docs/evaluation.md` (65→72, 30→40) — eso es
   T-06.
+
+## Actualización post-implementación — `is_alarm` deja de ser proxy válido del subconjunto de E-07 (D-054)
+
+Al ejecutar la suite completa tras implementar el schema (pasos 1-8), `tests/step_defs/test_e07_t01.py`
+y `tests/step_defs/test_e07_t03.py` (E-07, ya cerrada) daban 5 fallos en rojo. No es una
+regresión del código de esta tarea ni de `rag/safety.py` (el hallazgo A de sobre-activación
+en eval_07/08/25 es un problema distinto, para T-05) — es que ambos ficheros usaban
+`is_alarm` como proxy implícito de "los 15 casos históricos de alarma de E-07", algo que
+dejó de ser válido en cuanto `category` pasó a admitir "limite" y "prompt_injection" con
+`is_alarm=True` propio (D-054, punto 2): tras la ampliación, `is_alarm=True` da 27 casos
+(15 alarma + 10 límite + 2 prompt_injection), no 15.
+
+Fix aplicado — mecánico, mismo patrón en los dos ficheros: sustituir la selección por
+`is_alarm` por `category == "alarma"` allí donde el objetivo era el subconjunto histórico
+de 15. Además, `test_e07_t01.py` tenía dos asunciones que ya no se sostienen sobre el
+fichero compartido (ahora con 72 casos en vez de 42, y con `language` fuera de "es" en
+`otro_idioma` y en un caso de `prompt_injection`, eval_72) — se actualizan también:
+
+- `tests/eval/e07_t01_partial_eval_dataset.feature` — escenario 1: conteo total 42→72;
+  "15 entradas tienen is_alarm en true" → "15 entradas tienen category \"alarma\"".
+  Escenario 2: "profile es 'familiar' y language es 'es' en todas las entradas" se separa
+  en dos asserts — `profile` se mantiene sin cambios, `language='es'` se acota a las
+  categorías "informativo", "alarma", "diagnostico" y "limite" (las 4 que componen los 42
+  casos originales de E-07; `otro_idioma` y `prompt_injection` no tienen `language`
+  uniforme y quedan fuera de este assert).
+- `tests/step_defs/test_e07_t01.py` — `contiene_42_entradas` → `contiene_72_entradas`;
+  `entradas_informativas`/`entradas_alarma` filtran por `category` en vez de `is_alarm`;
+  `profile_y_language_correctos` se divide en `profile_correcto` y
+  `language_correcto_categorias_espanol`.
+- `tests/features/e07_t03_safety_compliance_baseline.feature` y
+  `tests/step_defs/test_e07_t03.py` — el Background pasa de
+  `"los 15 casos con is_alarm en true seleccionados"` a
+  `'los 15 casos con category "alarma" seleccionados'`; el resto del fichero (evaluación
+  contra `check_alarm_signals`, escritura del resultado) no cambia — sigue dando 15 casos.
+- `evaluation/dataset.py` — sin cambios adicionales sobre los ya descritos arriba.
+
+Verificado: `pytest tests/ -q` → 130 passed, 2 skipped, 0 failed (antes de este fix: 125
+passed, 5 failed — los 5 fallos eran estos dos ficheros de E-07).

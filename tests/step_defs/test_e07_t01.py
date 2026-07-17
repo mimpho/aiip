@@ -59,20 +59,20 @@ def valida_estructura(dataset_entries):
 
 # ── Then: conteo total y por categoría ───────────────────────────────────────
 
-@then("contiene exactamente 42 entradas")
-def contiene_42_entradas(validation_result):
-    assert len(validation_result["cases"]) == 42
+@then("contiene exactamente 72 entradas")
+def contiene_72_entradas(validation_result):
+    assert len(validation_result["cases"]) == 72
 
 
 @then("27 entradas corresponden a consultas informativas")
 def entradas_informativas(validation_result):
-    informativas = [c for c in validation_result["cases"] if not c.is_alarm]
+    informativas = [c for c in validation_result["cases"] if c.category == "informativo"]
     assert len(informativas) == 27
 
 
-@then("15 entradas tienen is_alarm en true")
+@then('15 entradas tienen category "alarma"')
 def entradas_alarma(validation_result):
-    alarma = [c for c in validation_result["cases"] if c.is_alarm]
+    alarma = [c for c in validation_result["cases"] if c.category == "alarma"]
     assert len(alarma) == 15
 
 
@@ -98,11 +98,21 @@ def ninguna_entrada_incluye_relevant_chunks(validation_result):
         assert not hasattr(case, "relevant_chunks")
 
 
-@then('profile es "familiar" y language es "es" en todas las entradas')
-def profile_y_language_correctos(validation_result):
+@then('profile es "familiar" en todas las entradas')
+def profile_correcto(validation_result):
     for case in validation_result["cases"]:
         assert case.profile == "familiar"
-        assert case.language == "es"
+
+
+@then(
+    'language es "es" en todas las entradas de categorías "informativo", "alarma", '
+    '"diagnostico" y "limite"'
+)
+def language_correcto_categorias_espanol(validation_result):
+    categorias_solo_es = {"informativo", "alarma", "diagnostico", "limite"}
+    for case in validation_result["cases"]:
+        if case.category in categorias_solo_es:
+            assert case.language == "es"
 
 
 # ── Then: unicidad ────────────────────────────────────────────────────────────
