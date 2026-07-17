@@ -65,6 +65,7 @@
 - [D-054 — T-01 (E-09): schema EvalCase ampliado con campo category explícito y campos opcionales de idioma/prompt injection](#d-054--t-01-e-09-schema-evalcase-ampliado-con-campo-category-explícito-y-campos-opcionales-de-idiomaprompt-injection)
 - [D-055 — T-02 (E-09): alcance de 32 casos (informativo + otro_idioma), mapeo reference=expected_answer y consolidación de las 4 métricas en un fichero nuevo](#d-055--t-02-e-09-alcance-de-32-casos-informativo--otro_idioma-mapeo-referenceexpected_answer-y-consolidación-de-las-4-métricas-en-un-fichero-nuevo)
 - [D-056 — E-09: reordenamiento mid-sprint — medición específica → mejora específica en vez de medir todo primero; T-05 se adelanta y amplía a A, B, D, F](#d-056--e-09-reordenamiento-mid-sprint--medición-específica--mejora-específica-en-vez-de-medir-todo-primero-t-05-se-adelanta-y-amplía-a-a-b-d-f)
+- [D-057 — T-05 (E-09): decisiones técnicas por hallazgo — EnsembleRetriever para D, stoplist+contexto en alarm_triggers.json para A, lingua-py para F, B como Plan B](#d-057--t-05-e-09-decisiones-técnicas-por-hallazgo--ensembleretriever-para-d-stoplistcontexto-en-alarm_triggersjson-para-a-lingua-py-para-f-b-como-plan-b)
 
 ---
 
@@ -2508,6 +2509,111 @@ problema y pueden medirse en cualquier orden.
   primero y dejar la mejora para un único ciclo final.
 - `tasks/E09-T05-plan.md` (a crear en el próximo `task-start`) debe incluir explícitamente
   el paso de backup/reset de `_RESULTS_PATH` antes de la re-ejecución post-arreglo.
+
+---
+
+## D-057 — T-05 (E-09): decisiones técnicas por hallazgo — EnsembleRetriever para D, stoplist+contexto en alarm_triggers.json para A, lingua-py para F, B como Plan B
+
+**Fecha:** 17 de julio de 2026
+**Fase:** técnica
+**Épica:** E-09 (T-05)
+
+**Contexto**
+D-056 amplió el alcance de T-05 a los hallazgos A, B, D y F, pero no fijó cómo se resuelve
+cada uno. Al formalizar T-05 en `task-start` se investigó y validó empíricamente contra el
+dataset real antes de proponer una solución para cada hallazgo — ver research completo en
+la sesión de Cowork del 17 jul.
+
+**Decisión**
+
+**1. Hallazgo D (ruido en dense search) — `EnsembleRetriever` de LangChain, no Chroma nativo.**
+El `Search()`/hybrid search que anuncia Chroma (BM25 + vectorial + RRF nativo) está
+confirmado como exclusivo de Chroma Cloud (`docs.trychroma.com/cloud/search-api/overview`:
+*"Search API is available in Chroma Cloud only. Future support on single-node Chroma is
+planned."*). El proyecto usa Chroma local persistente (D-004/D-007) — esa vía queda
+descartada sin migrar a Cloud, fuera de alcance del TFM. Se implementa hybrid search real
+con `langchain_community.retrievers.BM25Retriever` (léxico, en memoria, construido desde
+los documentos ya indexados vía `vectorstore.get()`) + el retriever vectorial existente
+(`Chroma.as_retriever()`), combinados con `langchain.retrievers.EnsembleRetriever`
+(Reciprocal Rank Fusion). Pesos de partida ~60/40 semántico/léxico, a ajustar contra
+Context Precision/Recall. Nueva dependencia: `rank_bm25`. Antigravity debe confirmar al
+implementar el import exacto de `EnsembleRetriever` en `langchain==1.3.11` — hay indicios
+de reorganización hacia un subpaquete `langchain_classic` en versiones recientes de
+LangChain, no verificable desde el sandbox de Cowork (sin venv).
+
+**2. Hallazgo A (sobre-activación del filtro de seguridad) — stoplist + contexto, en datos no en código.**
+Investigación descartó dos hipótesis antes de llegar a la solución: exigir ≥2 keywords
+compartidos rompía 7 de los 27 casos reales de alarma/límite (p. ej. "cansancio",
+"linfocitos", "diarrea" son señales válidas que comparten una sola palabra con su
+trigger); exigir un bigrama compartido dejaba pasar 2 de los 3 falsos positivos y rompía
+2 casos reales adicionales. La solución validada contra los 27 casos reales de
+alarma/límite + los 27 informativos (0 regresiones, 0 falsos positivos nuevos):
+- 3 palabras sin señal de alarma por sí solas, que ningún caso real necesita:
+  "después", "varios", "infusión".
+- Para "antibióticos" (necesaria en un caso real, eval_62) no se excluye — se exige que
+  la pregunta contenga además un término de duración/frecuencia ("mes", "meses", "año",
+  "vena"), que es la señal real que distingue "más de un mes de antibióticos" (trigger)
+  de "qué antibióticos se usan" (informativa).
+Se codifica como datos en `config/alarm_triggers.json` (campo opcional
+`requires_context: list[str]` por trigger, vacío/ausente = sin condición extra), no
+hardcodeado por `trigger_id` en `rag/safety.py` — mantiene el patrón ya existente del
+proyecto (datos de dominio en JSON, lógica genérica en código).
+
+**3. Hallazgo F (langdetect falla en frases cortas) — sustituir `langdetect` por `lingua-py`.**
+Se descarta el parche de exclusión de acrónimos de `backlog/ideas.md` (ya demostrado
+insuficiente: no cubre "ha perdido mucho peso sin motivo", sin acrónimo). Se adopta
+`lingua-language-detector` (paquete PyPI de `lingua-py`): usa n-gramas de tamaño 1 a 5 (no
+solo trigramas), diseñada específicamente para texto corto, sin dependencias, funciona
+offline (coherente con D-010), soporta español/inglés/catalán. Se restringe el detector a
+esos 3 idiomas (`LanguageDetectorBuilder.from_languages(SPANISH, ENGLISH, CATALAN)`) para
+mejor precisión y menor huella de memoria. Requiere Python ≥3.12 (ya implícito por
+`torch`/`transformers` en `requirements.txt`). Pendiente de verificar en Antigravity el
+tamaño real en disco tras restringir a 3 idiomas, de cara al despliegue en HuggingFace
+Spaces/Railway (D-007) — el wheel completo empaqueta modelos para 75 idiomas.
+
+**4. Hallazgo B (Answer Relevancy en 0.0 sin causa diagnosticada) — Plan B, no scope comprometido.**
+Alta incertidumbre sin garantía de éxito (es investigativo, D-056/borrador de `epic-start`
+ya lo señalaba así). Se aborda solo si sobra margen tras A, D y F — no es criterio de
+cierre de T-05. Si no se investiga, queda documentado como "abierto" en el informe de
+cierre, no como fallo oculto.
+
+**Alternativas descartadas**
+- Chroma `Search()` nativo para D — descartado por ser exclusivo de Chroma Cloud (ver
+  punto 1).
+- Boost manual de keywords por documento para D (alternativa "parche" de `ideas.md`) —
+  descartado por decisión de Marcos: prioriza la implementación correcta (hybrid search
+  real) sobre el parche, dado que D ya está cuantificado (Context Precision 53.8%,
+  T-02) y no es una limitación menor.
+- Umbral de ≥2 keywords y matching por bigramas para A — descartados por regresión
+  empírica contra el dataset real (ver punto 2).
+- `fasttext` (modelo `lid.176`) para F — descartado frente a `lingua-py`: añade descarga
+  de modelo y dependencia de `fasttext`, sin ventaja de precisión clara sobre `lingua-py`
+  para el caso de uso (texto corto, 3 idiomas).
+- Investigar B como parte del scope comprometido de T-05 — descartado por Marcos: prefiere
+  tratarlo como Plan B dado el margen de tiempo de la épica (D-056) y la falta de garantía
+  de resultado.
+
+**Justificación**
+Para un hallazgo que toca directamente Falso Negativo Cero (A), proponer un ajuste sin
+validarlo contra el dataset real habría sido negligente — las dos primeras hipótesis
+parecían razonables y ambas fallaban la regresión. Para D, la investigación evitó
+comprometer a una vía (Chroma nativo) que resulta inviable con la infraestructura actual
+del proyecto antes de que Antigravity perdiera tiempo intentándolo.
+
+**Consecuencias**
+- `rag/safety.py`: `check_alarm_signals()` incorpora la stoplist y el chequeo de contexto
+  para triggers con `requires_context`.
+- `config/alarm_triggers.json`: añade `requires_context` opcional a `trigger_29` y
+  `trigger_34`.
+- `rag/retriever.py`/`rag/pipeline.py`: incorporan `BM25Retriever` + `EnsembleRetriever`;
+  el contrato de `retrieve()` (D-035, `list[tuple[Document, float]]`) se mantiene, con el
+  score de EnsembleRetriever si está disponible o un valor no significativo si no —
+  decisión de detalle para `tasks/E09-T05-plan.md`, no bloquea esta decisión porque
+  ningún llamador actual usa el score para lógica.
+- `rag/language.py`: sustituye `langdetect` por `lingua-py`; `requirements.txt` quita
+  `langdetect==1.0.9`, añade `lingua-language-detector` y `rank_bm25`.
+- `tests/features/e09_t05_ciclo_mejora.feature`: se reescribe para cubrir A, B (como Plan
+  B), D y F, con el escenario de re-medición completa que exige D-056.
 
 ---
 

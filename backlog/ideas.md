@@ -223,6 +223,47 @@ opciones juntas en E-07/E-09; para el directorio de hospitales en concreto, limp
 HTML antes de indexar (quitar boilerplate de maquetación) sería una mejora previa barata
 independiente de cuál de las dos estrategias se elija.
 
+**Actualización — 17 jul 2026 (E-09 T-05, hallazgo D — retrospectiva post-cierre):**
+implementado Hybrid Search real vía `EnsembleRetriever` de LangChain (BM25 + vectorial,
+fusión RRF, peso uniforme 0.4/0.6 para todas las consultas — ver D-057,
+`rag/retriever.py::get_hybrid_retriever`). Confirma la hipótesis original (el escenario
+de "hospitales en Barcelona" del `.feature` de T-05 recupera correctamente el chunk con
+el nombre de la ciudad), pero el análisis caso a caso de la re-medición de Context
+Precision (`tests/eval/results/e09_t02_ragas_full_scores.json` vs
+`..._pre_t05.json`) revela un patrón no anticipado:
+
+- 23 de los 32 casos no cambian en absoluto (delta 0.000) — el peso de BM25 no llega a
+  influir en el orden final para la mayoría de las preguntas.
+- De los 9 que sí cambian, 6 empeoran y solo 3 mejoran. Los que empeoran son preguntas
+  conceptuales/genéricas sin ningún término distintivo ("Are primary immunodeficiencies
+  hereditary?", "¿Existen grupos de apoyo...?", "¿Qué es la IDVC?", "¿Qué especialista
+  debe hacer el seguimiento?") — casos que ya recuperaban muy bien solo con vectorial
+  (Context Precision > 0.9) y bajan a 0.6-0.8 tras la fusión.
+- Lectura: en un corpus léxicamente homogéneo (casi todos los chunks mencionan
+  "inmunodeficiencia primaria"), BM25 no tiene término distintivo que aportar en
+  preguntas sin nombre propio/geográfico — su contribución en esos casos es ruido, no
+  señal, y un peso uniforme aplicado a todas las consultas por igual absorbe esa
+  pérdida en el mismo cómputo que la ganancia real en preguntas tipo "Barcelona". El
+  agregado (Context Precision 53.8% → 52.1%, T-02 vs post-T-05) es casi plano porque
+  ambos efectos se cancelan, no porque el ajuste sea neutro caso a caso.
+
+**Idea de solución (no implementada, evaluar si se retoma):** peso adaptativo en vez de
+uniforme — activar/ponderar BM25 solo cuando la query tiene una señal léxica fuerte
+(mayúscula inicial de nombre propio, término de baja frecuencia en el corpus, patrón de
+entidad geográfica/nombre), y dejar la búsqueda puramente vectorial para preguntas
+conceptuales sin esa señal. Más trabajo que retocar el peso fijo, pero ataca la causa
+real en vez de promediar ganancia y pérdida. Alternativa más barata a probar primero si
+se retoma: simplemente bajar el peso de BM25 (p. ej. 0.2/0.8) y volver a medir — no
+llegó a intentarse en T-05, el peso 0.4/0.6 de partida se aceptó sin iterar. Marcos
+prefiere ir directo al peso adaptativo en vez de la vía barata: el patrón encontrado es
+estructural (ayuda con nombre propio, perjudica en preguntas conceptuales), no un
+problema de calibración fina que un reajuste uniforme distinto fuera a resolver.
+- **Cuándo revisarlo:** repriorizado el 17 jul 2026 — no antes de cerrar E-09 (T-03,
+  T-04, T-06 son criterios de aceptación de la épica, no opcionales). Si tras cerrar
+  E-09 el margen hasta el 29 de julio sigue cómodo por encima de lo que necesitan E-08 y
+  E-10, retomar aquí antes de arrancar E-08. No es condición de cierre de E-09 (D-056 ya
+  contemplaba que D quedase como limitación documentada si no daba tiempo).
+
 ### 3. Registro lingüístico no siempre accesible (8 jul 2026)
 - **Criticidad:** 🟡 Media — problema de comprensión, no de información incorrecta
 - **Problema:** detectado al hacer QA manual de E-05 T-04 — algunas respuestas generadas (ej. sobre el proceso de trasplante de médula) usan vocabulario clínico ("acondicionamiento", "recuperación del sistema inmunitario") que puede no ser comprensible para cualquier familiar sin formación médica, pese a que `[TONO — PERFIL FAMILIAR]` en `prompts/system_prompt_family.txt` ya pide "lenguaje accesible... sin tecnicismos innecesarios".
