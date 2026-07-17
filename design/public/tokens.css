@@ -24,7 +24,7 @@
    /* ── Type scale ─────────────────────────────────────────── */
    --text-xs: 12px;
    --text-sm: 14px;
-   --text-base: 17px;
+   --text-base: 16px;
    --text-lg: 18px;
    --text-xl: 24px;
    --text-2xl: 32px;
@@ -93,6 +93,11 @@
    /* ── Glassmorphism input ─────────────────────────────────── */
    --glass-bg: rgba(23, 29, 37, 0.58);
    --glass-blur: 16px;
+
+   /* ── Chat composer ──────────────────────────────────────── */
+   /* Prompt box background: same as the page background, not the
+     glass treatment used elsewhere (17 jul 2026, Marcos). */
+   --composer-bg: var(--color-bg);
 }
 
 /* ── Light mode overrides ────────────────────────────────── */
