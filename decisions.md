@@ -62,6 +62,7 @@
 - [D-051 — T-02: diseño técnico de la evaluación RAGAS (alcance, evaluador, embeddings, extracción de contexto, resultados y checkpointing)](#d-051--t-02-diseño-técnico-de-la-evaluación-ragas-alcance-evaluador-embeddings-extracción-de-contexto-resultados-y-checkpointing)
 - [D-052 — T-02: dos hallazgos de implementación con ragas 0.4.3 (stub de ChatVertexAI y max_tokens propio del evaluador)](#d-052--t-02-dos-hallazgos-de-implementación-con-ragas-043-stub-de-chatvertexai-y-max_tokens-propio-del-evaluador)
 - [D-053 — T-03: TDD normal con asserts en vez del patrón script-sin-TDD de T-02 (corrige la anticipación de D-050/D-051)](#d-053--t-03-tdd-normal-con-asserts-en-vez-del-patrón-script-sin-tdd-de-t-02-corrige-la-anticipación-de-d-050d-051)
+- [D-054 — T-01 (E-09): schema EvalCase ampliado con campo category explícito y campos opcionales de idioma/prompt injection](#d-054--t-01-e-09-schema-evalcase-ampliado-con-campo-category-explícito-y-campos-opcionales-de-idiomaprompt-injection)
 
 ---
 
@@ -2272,6 +2273,72 @@ grueso de la suite) de lo necesario.
   eval_08, eval_25). Fuera del alcance de T-03 (que es específicamente sobre los 15 casos
   de alarma, criterio ya corregido el 7 jul en `backlog/epics.md`) — queda anotado aquí
   para que T-04 lo enlace en el informe parcial, sin acción en T-03.
+
+---
+
+## D-054 — T-01 (E-09): schema `EvalCase` ampliado con campo `category` explícito y campos opcionales de idioma/prompt injection
+
+**Fecha:** 17 de julio de 2026
+**Fase:** técnica
+**Épica:** E-09 (T-01)
+
+**Contexto**
+Al formalizar T-01 en `task-start` se confirmó lo ya anticipado en `epic-start`:
+`EvalCase` (`evaluation/dataset.py`) tiene `language: Literal["es"]`, `profile:
+Literal["familiar"]` y `extra="forbid"` — no admite ni los 5 casos de "otros idiomas"
+(`docs/evaluation.md` §2.2) ni los campos de prompt injection del ejemplo de §2.3
+(`expected_behavior`, `expected_safety_trigger`, `attack_type`). Además, con 6
+categorías distintas conviviendo en el mismo dataset (informativo, alarma, diagnóstico,
+límite, otro idioma, prompt injection), inferir la categoría de cada caso combinando
+`is_alarm` + presencia de campos opcionales es frágil — en concreto no distingue "caso
+límite" de "intento de diagnóstico", ambos con `is_alarm` previsiblemente mixto o falso.
+
+**Decisión**
+1. Se añade `category: Literal["informativo", "alarma", "diagnostico", "limite",
+   "otro_idioma", "prompt_injection"]` como campo obligatorio en `EvalCase`, autoritativo
+   para seleccionar subconjuntos en T-02/T-03/T-04/T-05. Los 42 casos existentes migran
+   añadiendo este único campo (`informativo` o `alarma` según su `is_alarm` actual).
+2. Se mantiene `is_alarm: bool` por compatibilidad con el código ya escrito de T-02/T-03
+   (E-07) que ya filtra por este campo — se valida (`model_validator`) que sea coherente
+   con `category` (p. ej. `category="alarma"` ⇒ `is_alarm=True`; `category="informativo"`
+   ⇒ `is_alarm=False`; el resto de categorías no fuerza un valor concreto de `is_alarm`,
+   se decide caso a caso al redactar el contenido).
+3. `language` deja de ser `Literal["es"]` y pasa a `Literal["es", "en", "ca"]` — se acota a
+   los idiomas explícitamente cubiertos por D-011 (castellano por defecto, inglés y
+   catalán desde el lanzamiento), no a `str` libre, para seguir detectando errores de
+   tipeo por validación de schema.
+4. Se añaden tres campos opcionales, `None` por defecto, obligatorios solo cuando
+   `category="prompt_injection"` (validados con `model_validator`): `attack_type: str |
+   None`, `expected_behavior: str | None`, `expected_safety_trigger: bool | None` —
+   mismo formato que el ejemplo de `docs/evaluation.md` §2.3.
+5. Los 5 casos de "otros idiomas" se redactan en inglés y catalán (D-011), sin añadir
+   idiomas fuera de los ya cubiertos por el lanzamiento.
+
+**Alternativas descartadas**
+- Opción A (campos opcionales sueltos sin `category` explícito) — descartada: obliga a
+  inferir la categoría combinando `is_alarm`/`language`/presencia de `attack_type`, frágil
+  para distinguir "límite" de "diagnóstico" y para los escenarios de T-01/T-03 que
+  necesitan seleccionar subconjuntos por categoría de forma fiable.
+- `language: str` libre — descartada: se pierde la validación de schema que ya detecta
+  errores de tipeo; acotar a los 3 idiomas de D-011 es suficiente para el alcance de E-09.
+
+**Justificación**
+Un campo `category` explícito hace verificable con un assert simple cada escenario de
+`tests/eval/e09_t01_full_eval_dataset.feature` y `tests/features/e09_t03_safety_compliance_full.feature`
+(conteo por categoría, selección del subconjunto de seguridad) sin depender de inferencias
+implícitas que ya se demostraron ambiguas al revisar la tarea. El coste de migración de los
+42 casos existentes es mínimo (un campo nuevo, sin tocar el resto de datos).
+
+**Consecuencias**
+- `evaluation/dataset.py`: `EvalCase` ampliado según los puntos 1-4; añadir
+  `model_validator` para las dos coherencias (`category`↔`is_alarm`,
+  `category="prompt_injection"`↔campos de ataque obligatorios).
+- `tests/eval/dataset_partial.json`: los 42 casos existentes migran con el campo
+  `category` añadido (`informativo`/`alarma`), sin otros cambios.
+- `tests/eval/e09_t01_full_eval_dataset.feature`: se actualiza para usar `category` en vez
+  de la inferencia implícita del borrador de `epic-start`.
+- Precedente para cualquier categoría nueva que se añada al dataset en el futuro: pasa por
+  `category`, no por combinaciones ad-hoc de campos.
 
 ---
 

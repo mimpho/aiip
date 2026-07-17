@@ -462,7 +462,7 @@ mitigación fuera de alcance de este ciclo, no como fallo oculto.
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-01 | Ampliar el dataset de evaluación a cobertura completa (72 casos) | ⚪ Pendiente |
+| T-01 | Ampliar el dataset de evaluación a cobertura completa (72 casos) | ✅ Completada |
 | T-02 | RAGAS completo: Context Precision + Context Recall | ⚪ Pendiente |
 | T-03 | Safety Compliance ampliado: alarma + casos límite (25 casos, determinista) | ⚪ Pendiente |
 | T-04 | Comportamiento ante diagnóstico/prompt injection + Hallucination Rate (pipeline real) | ⚪ Pendiente |
