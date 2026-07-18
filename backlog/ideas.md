@@ -147,7 +147,7 @@
 
 ---
 
-*Última entrada: junio 2026*
+*Última entrada: 18 julio 2026 — hallazgos del RAG (sección más abajo) asignados a E-11*
 
 ### Expansión a otras patologías
 - **Criticidad:** 🟢 Baja
@@ -291,19 +291,21 @@ distinta (contacto de urgencias, día a día, umbral de fiebre), este documento 
 ahora un sospechoso recurrente — candidato de investigación propia (¿por qué su chunking/
 embedding le da tanto alcance semántico?) antes de decidir entre peso adaptativo de BM25 y
 la idea de keywords manuales por documento ya anotada en la actualización del 10 jul.
-- **Cuándo revisarlo:** repriorizado el 17 jul 2026 — no antes de cerrar E-09 (T-03,
-  T-04, T-06 son criterios de aceptación de la épica, no opcionales). Si tras cerrar
-  E-09 el margen hasta el 29 de julio sigue cómodo por encima de lo que necesitan E-08 y
-  E-10, retomar aquí antes de arrancar E-08. No es condición de cierre de E-09 (D-056 ya
-  contemplaba que D quedase como limitación documentada si no daba tiempo).
+- **Cuándo revisarlo:** ✅ asignado — épica **E-11** (ciclo de mejora de calidad, creada
+  18 jul 2026, D-059), como parte del alcance de peso adaptativo de BM25 y de la
+  investigación del documento sospechoso `guia_antibiotics_esp_0.pdf` (ver entrada propia
+  más abajo). E-11 se ejecuta antes de E-08, después de E-09/E-10 — ver `backlog/epics.md`.
+  No fue condición de cierre de E-09 (D-056 ya contemplaba que D quedase como limitación
+  documentada si no daba tiempo).
 
 ### 3. Registro lingüístico no siempre accesible (8 jul 2026)
 - **Criticidad:** 🟡 Media — problema de comprensión, no de información incorrecta
 - **Problema:** detectado al hacer QA manual de E-05 T-04 — algunas respuestas generadas (ej. sobre el proceso de trasplante de médula) usan vocabulario clínico ("acondicionamiento", "recuperación del sistema inmunitario") que puede no ser comprensible para cualquier familiar sin formación médica, pese a que `[TONO — PERFIL FAMILIAR]` en `prompts/system_prompt_family.txt` ya pide "lenguaje accesible... sin tecnicismos innecesarios".
-- **Idea/Solución:** revisar en E-07/E-09 si el registro lingüístico real generado por el LLM es consistente con la instrucción de tono del system prompt — posible ítem adicional a evaluar junto a Faithfulness/Answer Relevancy (métrica de legibilidad, o revisión cualitativa dirigida como parte del ciclo de mejora).
+- **Idea/Solución:** revisar si el registro lingüístico real generado por el LLM es consistente con la instrucción de tono del system prompt — posible ítem adicional a evaluar junto a Faithfulness/Answer Relevancy (métrica de legibilidad, o revisión cualitativa dirigida como parte del ciclo de mejora).
+- **Cuándo revisarlo:** ✅ asignado — épica **E-11** (ciclo de mejora de calidad, 18 jul 2026, D-059), quedó explícitamente fuera del ciclo de mejora de E-09 (D-056, hallazgo E).
 
 ### 4. `langdetect` falla en frases cortas de síntomas en español, más allá de lo ya documentado en D-017 (9 jul 2026)
-- **Criticidad:** 🔴 Alta — falla justo cuando un familiar describe un síntoma preocupante, no en un caso genérico
+- **Criticidad:** ✅ Resuelta — E-09 T-05 (18 jul 2026, D-057): sustituido `langdetect` por `lingua-py`, restringido a es/en/ca. Detalle histórico del hallazgo se conserva abajo.
 - **Problema:** detectado en QA manual de Marcos sobre el chat real (E-05 T-06 en curso) — el mensaje
   `"mi hermano con IDP ha hecho heces con sangre"` se detectó como inglés y la respuesta llegó en
   inglés. Investigado en Cowork con `langdetect` fuera del venv del proyecto (mismo `DetectorFactory.seed = 0`
@@ -360,6 +362,9 @@ y se revisa junto al resto en E-07/E-09, no se aborda como fix puntual ahora. De
   del LLM en inglés, (b) un artefacto puntual del LLM evaluador de RAGAS (parseo, formato de
   salida) sobre ese caso concreto, o (c) algo específico de la pregunta/respuesta de
   referencia en `tests/eval/dataset_partial.json`.
-- **Cuándo revisarlo:** al redactar el informe final de E-09 (T-06) — si aparecen más casos
-  con el mismo patrón al citar/inspeccionar el dataset completo, evaluar si merece
-  investigación propia antes de la entrega del 29 de julio.
+- **Cuándo revisarlo:** 🟡 probablemente ya resuelto como efecto colateral — en la
+  re-medición post-T05 (`tests/eval/results/e09_t02_ragas_full_scores.json`), `eval_63`
+  tiene Faithfulness 0.877 (vs. 0.0 pre-T05), en línea con el resto del subconjunto
+  `otro_idioma`. Consistente con el fix del hallazgo D (EnsembleRetriever). Asignado a
+  **E-11** (18 jul 2026, D-059) solo como confirmación de cierre — no como investigación
+  nueva desde cero.

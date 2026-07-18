@@ -22,12 +22,12 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 |---|---|---|---|
 | Fase 0 — Documentación técnica | ✅ Completada | 12 jun 2026 | — (previa a la descomposición en épicas) |
 | Fase 1 — MVP core | ✅ Completada | 10 jul 2026 | E-01 a E-06 |
-| Fase 1.5 — MVP completo | 🔵 En curso | 29 jul 2026 | E-07, E-08, E-09, E-10 |
+| Fase 1.5 — MVP completo | 🔵 En curso | 29 jul 2026 | E-07, E-08, E-09, E-10, E-11 |
 | Features opcionales | ⚪ Backlog | Post-TFM | F-01 (perfil profesional, multimodal) |
 
 > **E-07 y E-08** se movieron de Fase 1 a Fase 1.5 el 10 jul 2026 — ninguna era requisito del hito "código funcional" (lo entrega E-05); ver notas en `backlog/epics.md`.
 >
-> **Orden de ejecución (15 jul 2026):** E-07 → E-09 → E-10, por delante de E-08 — E-08 se ejecuta con el tiempo que quede antes del 29 jul. Ver "Prioridad de ejecución" en `backlog/epics.md`.
+> **Orden de ejecución (18 jul 2026):** E-07 → E-09 → **E-11 → E-10** → E-08 (capas 2/3: perfil + persistencia) → E-08 capa 1 (memoria conversacional, candidata a seguimiento post-TFM). E-11 (ciclo de mejora de calidad) se intercala antes de E-08 porque activar memoria conversacional sobre una generación cuya calidad todavía no está resuelta encarecería el diagnóstico de fallos nuevos. Ver D-059 y "Reordenamiento" en `backlog/epics.md`.
 
 ### Épicas
 
@@ -40,9 +40,10 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-05 | Interfaz conversacional (Chainlit) | ✅ Completada — 10 jul 2026 | E-02, E-04 |
 | E-06 | Ingesta y procesamiento de la KB | ✅ Completada — 08 jul 2026 | E-01 |
 | E-07 | Evaluación RAGAS parcial | ✅ Completada — 16 jul 2026 | E-06 |
-| E-08 | Memoria de perfil e histórico | ⚪ No iniciada | E-03, E-04, E-06 |
+| E-08 | Memoria de perfil e histórico | ⚪ No iniciada | E-03, E-04, E-06, E-11 (capa 1) |
 | E-09 | Evaluación RAGAS completa | ✅ Completada — 18 jul 2026 | E-07 |
 | E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada | E-05 |
+| E-11 | Ciclo de mejora de calidad (post-E-09) | ⚪ No iniciada | E-09 |
 
 ---
 
@@ -82,8 +83,9 @@ gantt
     section Fase 1.5 — MVP completo
     E-07 RAGAS parcial                :done,    e07, 2026-07-15, 2026-07-16
     E-09 RAGAS completo                :done,    e09, 2026-07-17, 2026-07-18
-    E-10 Pulido final                 :         e10, 2026-07-24, 2026-07-27
-    E-08 Memoria + histórico          :         e08, 2026-07-27, 2026-07-29
+    E-11 Ciclo de mejora de calidad   :         e11, 2026-07-19, 2026-07-23
+    E-10 Pulido final                 :         e10, 2026-07-23, 2026-07-26
+    E-08 Memoria + histórico          :         e08, 2026-07-26, 2026-07-29
 
     section Features opcionales
     Perfil profesional · Multimodal   :         fo, 2026-07-29, 2026-09-01
@@ -213,4 +215,4 @@ El perfil profesional (`chainlit/professional/`) es un stub fuera de alcance del
 
 ---
 
-*Última actualización: 18 julio 2026 — E-09 (Evaluación RAGAS completa) completada*
+*Última actualización: 18 julio 2026 — E-09 (Evaluación RAGAS completa) completada; E-11 (ciclo de mejora de calidad) creada y priorizada antes de E-08 capa 1 (D-059)*

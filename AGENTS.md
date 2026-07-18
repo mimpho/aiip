@@ -51,6 +51,8 @@ El proyecto usa Claude en este momento, pero el diseño no debe crear dependenci
 **2. Falso Negativo Cero**  
 El agente nunca confirma que una situación es segura. Siempre orienta a consulta médica ante cualquier duda. Este principio afecta al system prompt, a la lógica de respuesta y a los tests. No lo comprometas bajo ninguna circunstancia.
 
+> Corolario (D-059): no aflojes el grounding a conocimiento general del LLM ni conectes fuentes no vetted (búsqueda web en vivo) para "compensar" huecos de la KB, y no uses la temperatura de inferencia como palanca de calidad — no es lo que controla. Si la KB parece limitada, la vía es ampliarla con fuentes curadas (mismo proceso que E-06), no relajar de qué puede hablar el modelo sin pasar por retrieval.
+
 **3. Privacy by design**  
 El sistema almacena datos de salud de categoría especial (RGPD Art. 9), potencialmente de menores. No introduzcas almacenamiento de datos adicional sin revisar D-009 en `decisions.md`. Minimización de datos por defecto.
 
