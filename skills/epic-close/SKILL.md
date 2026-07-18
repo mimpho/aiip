@@ -66,6 +66,10 @@ PYTHONPATH=. pytest tests/ -v
 (`auth.*`, `rag.*`) vía `main_family`; sin ello la colección falla entera, no solo esos
 tests (ver `AGENTS.md` → Convenciones → Tests).
 
+Pide a Marcos la línea de resumen completa de pytest (`X passed, Y failed, Z skipped,
+W xfailed...`), no un fragmento — un `xfailed` o `skipped` mencionado suelto y fuera de
+contexto es fácil de confundir con un `failed` real.
+
 Si algún test de una épica anterior falla, es una regresión — hay que resolverla antes de cerrar.
 
 > **No correr `pytest` ni instalar dependencias dentro del sandbox de Cowork.**

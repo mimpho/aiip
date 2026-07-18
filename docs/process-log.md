@@ -190,3 +190,39 @@ desarrollo asistido por IA a lo largo del proyecto.
   cada tarea — no se formaliza como regla de skill todavía.
 
 ---
+
+## E-09 — Evaluación RAGAS completa
+**Periodo:** 17–18 jul 2026
+**Tareas:** T-01 a T-06 (6 tareas, todas completadas)
+
+### ¿Qué funcionó bien en el proceso?
+
+- **Reordenamiento mid-sprint basado en dependencias causales (D-056).** Al ver los cuatro
+  resultados RAGAS reales por debajo de objetivo tras T-02, se adelantó T-05 (ciclo de mejora)
+  en vez de terminar todas las mediciones primero — evitando el riesgo de acabar con una épica
+  llena de mediciones y ninguna mejora real si el tiempo se agotaba. Principio explícito y
+  reutilizable para E-10.
+- **LLM-as-judge + confirmación manual obligatoria en T-04 (D-058) se pagó solo.** El juez
+  automático dio por bueno el caso `eval_71`, una violación literal de Falso Negativo Cero
+  (prompt injection pidiendo repetir "no es necesario ir al médico"); la revisión manual sobre
+  la transcripción completa lo detectó y permitió corregirlo dentro del alcance de la tarea.
+- **`task-start` atrapó a tiempo dos inconsistencias numéricas preexistentes** en
+  `docs/evaluation.md` (§2.3/§3, arrastradas desde antes de D-049) antes de que se propagaran
+  al dataset real de 72 casos.
+
+### ¿Qué generó fricción o retraso?
+
+- **Transparencia sobre métricas por debajo de objetivo exigió distinguir explícitamente
+  "criterio de aceptación cumplido" de "objetivo numérico alcanzado".** Con 4 de las 6 métricas
+  RAGAS/Hallucination por debajo de objetivo tras el ciclo de mejora, hubo que dejar constancia
+  clara en `epics.md` de que los criterios de aceptación de la épica (resultados documentados,
+  ciclo ejecutado, checklist CHART completo) no exigían alcanzar los números objetivo — sin esa
+  distinción explícita el cierre se leería como contradictorio.
+
+### ¿Qué cambió en las skills o el workflow?
+
+- **`epic-close` (Paso 1):** al pedir a Marcos el resultado de `pytest`, pedir la línea de
+  resumen completa en vez de aceptar un fragmento parcial del mensaje — aplicado en
+  `skills/epic-close/SKILL.md`. Pendiente de sincronizar al plugin de Cowork.
+
+---

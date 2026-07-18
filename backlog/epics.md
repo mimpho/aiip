@@ -520,7 +520,37 @@ herramienta que no funciona pero con mediciones exhaustivas de que no funciona.
 | T-04 | Comportamiento ante diagnóstico/prompt injection (sin dependencia) + Hallucination Rate (**medir después de T-05**) | ✅ Completada |
 | T-06 | Checklist CHART + informe final en `docs/evaluation.md` | ✅ Completada |
 
-**Estado:** 🔵 En curso
+**Estado:** ✅ Completada — 18 jul 2026
+
+**Entregables**
+- `evaluation/dataset.py` — schema `EvalCase` ampliado con `category` explícito y campos opcionales de idioma/prompt injection (T-01, D-054)
+- `tests/eval/dataset_partial.json` — dataset ampliado a 72 casos (D-046 a D-049), corrección de inconsistencias numéricas de `evaluation.md` §2.3/§3
+- `scripts/run_ragas_eval.py` — evaluación RAGAS completa (Faithfulness, Answer Relevancy, Context Precision, Context Recall) sobre 32 casos `informativo`/`otro_idioma`, con checkpointing (T-02, D-055)
+- `tests/eval/results/e09_t02_ragas_full_scores_pre_t05.json`, `e09_t02_ragas_full_scores.json` — resultados antes/después del ciclo de mejora
+- `rag/safety.py`, `config/alarm_triggers.json` — hallazgo A: stoplist + chequeo de contexto contra sobre-activación del filtro de seguridad (T-05, D-057)
+- `rag/retriever.py`, `rag/pipeline.py` — hallazgo D: `EnsembleRetriever` (BM25 + vectorial, RRF) — mitigación parcial de Context Precision (T-05, D-057)
+- `rag/language.py` — hallazgo F: sustitución de `langdetect` por `lingua-py` (T-05, D-057)
+- `tests/eval/results/e09_t05_cierre.md`, `e09_t05_plan_b_investigacion.md` — cierre del ciclo de mejora e investigación de hallazgo B (abierto, sin fix aplicado)
+- `tests/features/e09_t03_safety_compliance_expanded.feature`, `tests/eval/results/e09_t03_safety_compliance_full.json` — Safety Compliance ampliado, 25/25 casos (T-03, D-053)
+- `scripts/run_e09_t04_eval.py`, `tests/eval/results/e09_t04_behavior_hallucination.json` — comportamiento diagnóstico/prompt injection (LLM-as-judge + confirmación manual) y Hallucination Rate derivado de Faithfulness (T-04, D-058)
+- `prompts/system_prompt_family.txt` — restricción añadida contra repetir/confirmar frases inyectadas que contradigan el comportamiento de seguridad (hallazgo `eval_71`, D-058 addendum)
+- `docs/evaluation.md` — informe final: resultados RAGAS/Safety Compliance/Hallucination Rate, ciclo de mejora (§5), checklist CHART + TRIPOD-LLM (§6), métricas de éxito consolidadas (§7)
+- `tasks/E09-T01-plan.md` a `E09-T05-plan.md` — planes de implementación
+- `decisions.md` — D-054 a D-058
+
+**Resultados (Fase 1.5, post-ciclo de mejora)**
+
+| Métrica | Objetivo | Resultado | Estado |
+|---|---|---|---|
+| Faithfulness | > 95% | 83.7% (32 casos) | 🔴 Por debajo |
+| Answer Relevancy | > 90% | 79.5% (32 casos) | 🔴 Por debajo |
+| Context Precision | > 85% | 52.1% (32 casos) | 🔴 Por debajo |
+| Context Recall | > 85% | 75.5% (32 casos) | 🔴 Por debajo |
+| Safety Compliance | 100% | 100% (40/40) | ✅ Cumple |
+| Hallucination Rate | < 2% | 93.75% (30/32 casos) | 🔴 Muy por debajo |
+| Validación clínica | Deseable | Feedback de alarma aplicado (rondas 1-2); validación del conjunto E-09 no recibida a fecha de cierre | 🟡 Seguimiento post-TFM, no bloqueante |
+
+4 de las 6 métricas RAGAS/Hallucination quedan por debajo de objetivo tras el ciclo de mejora — el ciclo resolvió los hallazgos A y F, mitigó D solo parcialmente y dejó B abierto (investigado, sin fix). Documentado sin suavizar, siguiendo CHART/TRIPOD-LLM (`docs/evaluation.md` §6-7). Los criterios de aceptación de la épica (resultados documentados, ciclo de mejora ejecutado, checklist CHART completado) se cumplen igualmente — no exigían alcanzar los objetivos numéricos, solo completar el proceso de medición y mejora. Safety Compliance (Falso Negativo Cero) sí se cumple al 100%.
 
 ---
 
