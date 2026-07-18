@@ -43,7 +43,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-08 | Memoria de perfil e histórico | ⚪ No iniciada | E-03, E-04, E-06, E-11 (capa 1) |
 | E-09 | Evaluación RAGAS completa | ✅ Completada — 18 jul 2026 | E-07 |
 | E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada | E-05 |
-| E-11 | Ciclo de mejora de calidad (post-E-09) | ⚪ No iniciada | E-09 |
+| E-11 | Ciclo de mejora de calidad (post-E-09) | 🔵 En curso | E-09 |
 
 ---
 
@@ -83,7 +83,7 @@ gantt
     section Fase 1.5 — MVP completo
     E-07 RAGAS parcial                :done,    e07, 2026-07-15, 2026-07-16
     E-09 RAGAS completo                :done,    e09, 2026-07-17, 2026-07-18
-    E-11 Ciclo de mejora de calidad   :         e11, 2026-07-19, 2026-07-23
+    E-11 Ciclo de mejora de calidad   :active,  e11, 2026-07-18, 2026-07-23
     E-10 Pulido final                 :         e10, 2026-07-23, 2026-07-26
     E-08 Memoria + histórico          :         e08, 2026-07-26, 2026-07-29
 
