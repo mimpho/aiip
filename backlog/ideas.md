@@ -258,6 +258,39 @@ llegó a intentarse en T-05, el peso 0.4/0.6 de partida se aceptó sin iterar. M
 prefiere ir directo al peso adaptativo en vez de la vía barata: el patrón encontrado es
 estructural (ayuda con nombre propio, perjudica en preguntas conceptuales), no un
 problema de calibración fina que un reajuste uniforme distinto fuera a resolver.
+
+**Actualización — 18 jul 2026 (conversación real en Chainlit, durante task-start E-09 T-04):**
+tercera y cuarta confirmación real del mismo documento ya señalado el 10 jul (CU-05),
+`data/raw/upiip/guia_antibiotics_esp_0.pdf`. Marcos probó el chat manualmente (fuera de
+los datasets sintéticos) y encadenó tres preguntas; se revisó el PDF directamente para
+confirmar la causa exacta en cada caso:
+
+- **"¿Cómo puedo cuidar el día a día de mi familiar?"** — cita `guia_antibiotics_esp_0.pdf`
+  entre las fuentes. Revisado el contenido: el documento sí tiene una sección
+  "Espacio para el tratamiento" con consejos de organización para administrar tratamiento
+  endovenoso en casa — relevante para una familia que gestiona infusiones domiciliarias.
+  No se trata como ruido sin más; queda como caso dudoso, no como fallo confirmado.
+- **"¿A partir de cuánta fiebre tengo que acudir al médico?"** — vuelve a citar el mismo
+  documento. Este sí es un falso positivo claro: el PDF contiene una tabla de proceso
+  ("Fiebre / Dolor / Dificultad para respirar / Reacción cutánea → acudir a Urgencias")
+  específica para monitorizar reacciones durante una infusión de antibióticos IV por
+  catéter — coincidencia puramente léxica con la pregunta genérica sobre fiebre, sin
+  relación real de contexto.
+
+Se descartó explícitamente la hipótesis inicial de "contaminación de contexto entre
+turnos de conversación": revisado `rag/pipeline.py`
+(`RAGPipeline.query()`/`retrieve()`) y `chainlit/main_family.py` (`on_message`/`_answer`),
+ninguno pasa historial de chat al retriever ni al generador — cada pregunta se recupera y
+responde de forma completamente independiente (RAG naive, D-005; la memoria conversacional
+es alcance de E-08, no implementada todavía). La recurrencia del mismo documento en
+preguntas distintas de la misma sesión son aciertos de recuperación independientes, no
+fuga de estado.
+
+Con ya tres apariciones reales (10 jul, y dos más el 18 jul) en preguntas de temática muy
+distinta (contacto de urgencias, día a día, umbral de fiebre), este documento concreto es
+ahora un sospechoso recurrente — candidato de investigación propia (¿por qué su chunking/
+embedding le da tanto alcance semántico?) antes de decidir entre peso adaptativo de BM25 y
+la idea de keywords manuales por documento ya anotada en la actualización del 10 jul.
 - **Cuándo revisarlo:** repriorizado el 17 jul 2026 — no antes de cerrar E-09 (T-03,
   T-04, T-06 son criterios de aceptación de la épica, no opcionales). Si tras cerrar
   E-09 el margen hasta el 29 de julio sigue cómodo por encima de lo que necesitan E-08 y
