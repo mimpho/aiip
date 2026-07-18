@@ -106,7 +106,7 @@ aiip/
 ├── config/                ← Configuración de dominio, p. ej. alarm_triggers.json (E-04)
 ├── prompts/               ← System prompts por perfil, en fichero separado del código (E-04)
 ├── ingestion/             ← Pipeline de ingesta de la KB (E-06): loader, chunker, indexer, manifest
-├── evaluation/            ← Carga y validación del dataset de evaluación RAGAS (E-07): dataset.py (EvalCase, pydantic)
+├── evaluation/            ← Carga y validación del dataset de evaluación RAGAS (E-07, E-09): dataset.py (EvalCase, pydantic)
 ├── data/
 │   └── raw/manifest.json  ← Trazabilidad de fuentes crudas (checksum, URL, fecha). Único fichero versionado de data/raw/ — el resto vive local/Drive, gitignored (E-06, D-021)
 ├── backlog/
@@ -122,10 +122,11 @@ aiip/
     ├── features/          ← Escenarios Gherkin por tarea (eXX_tYY_nombre.feature)
     ├── step_defs/         ← Step definitions pytest-bdd (test_eXX_tYY.py)
     ├── results/           ← Resultados de smoke tests manuales, revisión humana (p. ej. E-06 T-07, E-05 T-07)
-    └── eval/               ← Datasets de evaluación RAGAS, sus .feature y resultados (E-07, D-044): dataset_partial.json,
-                              e07_t0{1,2,3,4}_*.feature — separado de features/ porque es fixture de
-                              datos, no código de test. results/ — scores RAGAS, baseline de Safety
-                              Compliance e informe parcial (T-04)
+    └── eval/               ← Datasets de evaluación RAGAS, sus .feature y resultados (E-07, D-044; E-09):
+                              dataset_partial.json (72 casos), e07_t0{1,2,3,4}_*.feature +
+                              e09_t0{1,2,3,4,6}_*.feature — separado de features/ porque es fixture de
+                              datos, no código de test. results/ — scores RAGAS parciales y completos,
+                              Safety Compliance, comportamiento/Hallucination Rate (T-03/T-04)
 ```
 
 ---

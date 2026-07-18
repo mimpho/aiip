@@ -33,12 +33,12 @@ def dataset_loaded():
     return load_dataset(_DATASET_PATH)
 
 
-@given("los 15 casos con is_alarm en true seleccionados", target_fixture="alarm_cases")
+@given('los 15 casos con category "alarma" seleccionados', target_fixture="alarm_cases")
 def alarm_cases_selected(dataset_entries):
     from evaluation.dataset import validate_dataset
 
     cases = validate_dataset(dataset_entries)
-    alarm_cases = [c for c in cases if c.is_alarm]
+    alarm_cases = [c for c in cases if c.category == "alarma"]
     assert len(alarm_cases) == 15
     return alarm_cases
 

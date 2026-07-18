@@ -115,23 +115,26 @@ def _fake_astream(chunks):
 def _build_pipeline(raw_results, chunks=None):
     """RAGPipeline con retrieval y LLM controlados.
 
-    - mock_vectorstore registra cuántas veces se llama a similarity_search_with_score
+    - mock_retriever registra cuántas veces se llama a invoke() (E-09 T-05,
+      hallazgo D: el retrieval pasa por el retriever híbrido EnsembleRetriever,
+      que solo expone Document sin score vía invoke())
     - LLM emite `chunks` en streaming (vacío por defecto)
     """
     chunks = chunks or ["respuesta fake"]
-    mock_vectorstore = MagicMock()
-    mock_vectorstore.similarity_search_with_score.return_value = raw_results
+    mock_retriever = MagicMock()
+    mock_retriever.invoke.return_value = [doc for doc, _ in raw_results]
     with (
         patch("rag.pipeline.get_embeddings", return_value=MagicMock()),
-        patch("rag.pipeline.get_retriever", return_value=mock_vectorstore),
+        patch("rag.pipeline.get_retriever", return_value=MagicMock()),
+        patch("rag.pipeline.get_hybrid_retriever", return_value=mock_retriever),
         patch("rag.generator.ChatGoogleGenerativeAI") as MockLLM,
     ):
         MockLLM.return_value.astream = _fake_astream(chunks)
         from rag.pipeline import RAGPipeline
 
         pipeline = RAGPipeline(_base_config())
-        # Guardamos el vectorstore fake para que los tests puedan inspeccionar llamadas.
-        pipeline._mock_vectorstore = mock_vectorstore
+        # Guardamos el retriever fake para que los tests puedan inspeccionar llamadas.
+        pipeline._mock_retriever = mock_retriever
         return pipeline
 
 
@@ -242,14 +245,14 @@ def pregunta_con_resultados():
 )
 def se_comparan_documentos_con_sources_section(ctx):
     pipeline = ctx["pipeline"]
-    mock_vs = pipeline._mock_vectorstore
+    mock_retriever = pipeline._mock_retriever
 
     # Llamada 1: retrieve() — la única que debería ocurrir.
     raw_from_retrieve = pipeline.retrieve(ctx["question"])
     ctx["raw_from_retrieve"] = raw_from_retrieve
 
     # Llamada a aquery_stream con raw_results inyectado — NO debe llamar de
-    # nuevo al vectorstore.
+    # nuevo al retriever híbrido.
     async def _run_stream():
         fragments = []
         async for token in pipeline.aquery_stream(
@@ -259,7 +262,7 @@ def se_comparan_documentos_con_sources_section(ctx):
         return fragments
 
     ctx["fragments"] = asyncio.run(_run_stream())
-    ctx["mock_vs"] = mock_vs
+    ctx["mock_retriever"] = mock_retriever
 
 
 @then(
@@ -267,14 +270,18 @@ def se_comparan_documentos_con_sources_section(ctx):
     "sin una segunda consulta al vectorstore"
 )
 def ambos_provienen_de_misma_llamada(ctx):
-    # similarity_search_with_score debe haberse llamado exactamente una vez
+    # invoke() del retriever híbrido debe haberse llamado exactamente una vez
     # (en retrieve()), nunca dentro de aquery_stream() cuando se pasa raw_results.
-    ctx["mock_vs"].similarity_search_with_score.assert_called_once()
+    ctx["mock_retriever"].invoke.assert_called_once()
 
-    # Los datos expuestos por retrieve() son los mismos que devuelve el mock
-    # (mismo objeto Python — sin copia).
-    expected = ctx["mock_vs"].similarity_search_with_score.return_value
-    assert ctx["raw_from_retrieve"] is expected
+    # Los documentos expuestos por retrieve() son los mismos objetos Document
+    # que devolvió el retriever (mismo objeto Python — sin copia), en el mismo
+    # orden — EnsembleRetriever no expone score, así que la comparación es
+    # sobre los documentos, no sobre la tupla (doc, score) completa.
+    expected_docs = ctx["mock_retriever"].invoke.return_value
+    actual_docs = [doc for doc, _ in ctx["raw_from_retrieve"]]
+    assert actual_docs == expected_docs
+    assert all(a is e for a, e in zip(actual_docs, expected_docs))
 
 
 # ── Scenario 4: El chat no muestra un paso redundante con el listado de fuentes ─

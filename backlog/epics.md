@@ -428,13 +428,129 @@ todo), pero si su feedback no llega a tiempo, E-09 se cierra igualmente con los 
 RAGAS + ciclo de mejora + CHART ya completados, dejando la validación clínica como
 seguimiento abierto post-TFM.
 
+**Arranque (17 jul 2026):** al descomponer la épica en `epic-start` surgieron dos
+inconsistencias numéricas en `docs/evaluation.md` no detectadas hasta ahora: §3 (Fase
+1.5) dice "65 casos" cuando §2.2 ya desglosaba 72 tras la ampliación de D-049 (27+15+10+
+10+5+5); y §2.3 dice "30 casos" para el subconjunto de seguridad cuando la suma de sus
+propias categorías (alarma+diagnóstico+límite+prompt injection = 15+10+10+5) da 40, no
+30 — error preexistente a D-049, no causado por ella. Ambas se corrigen al documentar en
+T-06. Marcos confirmó 72 como cifra objetivo del dataset.
+
+**Alcance del ciclo de mejora (17 jul 2026):** de los 6 hallazgos remitidos a E-09 (2 del
+informe parcial E-07 T-04 §4.1/§4.2 + 4 de `backlog/ideas.md`), Marcos decidió acotar
+T-05 a los 3 de menor coste/mayor relación con lo ya medido en esta épica:
+- **A** — sobre-activación del filtro de seguridad en eval_07/eval_08/eval_25 (D-053 §4.1)
+- **B** — Answer Relevancy en 0.0 sin causa diagnosticada, eval_06/eval_15 (D-053 §4.2)
+- **F** — `langdetect` falla en frases cortas de síntomas en español (`ideas.md` #4)
+
+Quedan fuera de este ciclo (backlog abierto, no perdidos): **C** (grounding demasiado
+estricto ante conocimiento de mundo) y **E** (registro lingüístico no siempre
+accesible). Razón: con ~6-7 días de margen para E-09 antes de encadenar E-08/E-10 hasta
+el 29 de julio, cubrir los 6 arriesgaba tanto el timing de esta épica como el de las
+siguientes. **D se reincorpora al alcance el 17 de julio — ver nota de reordenamiento
+abajo.**
+
+**Reordenamiento mid-sprint (17 jul 2026, D-056):** al cerrar T-02 y ver los resultados
+reales (Faithfulness 79.2%, Answer Relevancy 75.9%, Context Precision 53.8%, Context
+Recall 70.3% — los cuatro por debajo de objetivo), Marcos planteó que medir todas las
+tareas restantes antes de mejorar nada arriesgaba acabar con una épica llena de
+mediciones y ninguna mejora real si el tiempo se agotaba. Se revisó qué mediciones
+pendientes son causalmente independientes de los arreglos de T-05 y cuáles no:
+
+- **T-03 (Safety Compliance, alarma+límite)** es determinista y ortogonal — confirmado en
+  `rag/safety.py`: `check_alarm_signals()` es keyword matching puro sobre el texto crudo de
+  la pregunta, no depende de retrieval, generación, ni del idioma detectado (hallazgo F).
+  Da igual en qué momento se mida; su resultado no cambia por los arreglos de T-05 y no
+  hace falta repetirla.
+- **T-04**, la parte de comportamiento (rechazo de diagnóstico, resistencia a inyección)
+  es igual de independiente. Pero **Hallucination Rate** (también en T-04) está atado a la
+  calidad de retrieval/grounding — el mismo terreno que el hallazgo D. Medirlo antes de
+  arreglar D daría un número que quedaría obsoleto en cuanto se toque retrieval.
+- Las 4 métricas ya medidas en T-02 son exactamente las que A, B y D deberían mover.
+
+**Decisión de reordenamiento:**
+1. **T-05 se adelanta** y se ejecuta a continuación, antes de T-03/T-04 (no al final de la
+   épica como estaba planeado).
+2. **Alcance de T-05 ampliado de A/B/F a A, B, D y F** — D se reincorpora dado que hoy
+   tenemos su impacto medido y cuantificado (Context Precision/Recall), en vez de quedar
+   como limitación documentada sin más.
+3. **T-05 no se considera cerrada solo con el arreglo del código** — su criterio de cierre
+   incluye re-ejecutar `scripts/run_ragas_eval.py` sobre el pipeline ya arreglado para
+   obtener un antes/después real de las 4 métricas de T-02. Importante: el script tiene
+   checkpointing por id — relanzarlo tal cual sobre
+   `tests/eval/results/e09_t02_ragas_full_scores.json` se saltaría los 32 casos ya
+   presentes y no los recalcularía. Antes de la re-ejecución hay que mover ese fichero a un
+   nombre de respaldo (o apuntar `_RESULTS_PATH` a uno nuevo) para que la comparación
+   antes/después sea honesta.
+4. **T-03 puede ejecutarse en cualquier momento** a partir de ahora, sin depender de T-05.
+5. **T-04** puede dividirse: la parte de comportamiento (diagnóstico/prompt injection) no
+   depende de T-05 y puede medirse cuando convenga; **Hallucination Rate debe medirse
+   después de T-05**, no antes, para no repetirla también.
+
+Principio general para el resto de la épica (y precedente para E-10 si aplica): medición
+específica → mejora específica de lo que esa medición detectó, en vez de medir todo primero
+y dejar la mejora para un único ciclo al final. Evita el escenario de acabar con una
+herramienta que no funciona pero con mediciones exhaustivas de que no funciona.
+
+**Decisiones técnicas por hallazgo (`task-start` T-05, D-057):**
+- **A** — `check_alarm_signals()` incorpora una stoplist de 3 palabras sin señal de alarma
+  (después, varios, infusión) y un chequeo de contexto para "antibióticos" (exige un
+  término de duración/frecuencia). Validado sin regresiones contra los 27 casos reales de
+  alarma/límite + los 27 informativos.
+- **B** — tratado como **Plan B**, no scope comprometido: se investiga solo si sobra
+  margen tras A, D y F.
+- **D** — `EnsembleRetriever` de LangChain (BM25 + vectorial, RRF), no el `Search()`
+  nativo de Chroma (confirmado exclusivo de Chroma Cloud, no disponible para Chroma local).
+- **F** — sustituir `langdetect` por `lingua-py`, restringido a es/en/ca.
+
 **Criterios de aceptación de alto nivel**
 - Resultados RAGAS completos documentados en `docs/evaluation.md`
 - Al menos un ciclo de mejora basado en los resultados
 - Checklist CHART completado como anexo
 - Validación clínica de Jacques: deseable en paralelo, no bloqueante para la entrega (ver nota de alcance)
 
-**Estado:** ⚪ No iniciada
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Ampliar el dataset de evaluación a cobertura completa (72 casos) | ✅ Completada |
+| T-02 | RAGAS completo: Context Precision + Context Recall | ✅ Completada |
+| T-05 | Ciclo de mejora (hallazgos A, B, D, F) — **se ejecuta a continuación** (D-056) | ✅ Completada |
+| T-03 | Safety Compliance ampliado: alarma + casos límite (25 casos, determinista) — sin dependencia de T-05, cualquier momento | ✅ Completada |
+| T-04 | Comportamiento ante diagnóstico/prompt injection (sin dependencia) + Hallucination Rate (**medir después de T-05**) | ✅ Completada |
+| T-06 | Checklist CHART + informe final en `docs/evaluation.md` | ✅ Completada |
+
+**Estado:** ✅ Completada — 18 jul 2026
+
+**Entregables**
+- `evaluation/dataset.py` — schema `EvalCase` ampliado con `category` explícito y campos opcionales de idioma/prompt injection (T-01, D-054)
+- `tests/eval/dataset_partial.json` — dataset ampliado a 72 casos (D-046 a D-049), corrección de inconsistencias numéricas de `evaluation.md` §2.3/§3
+- `scripts/run_ragas_eval.py` — evaluación RAGAS completa (Faithfulness, Answer Relevancy, Context Precision, Context Recall) sobre 32 casos `informativo`/`otro_idioma`, con checkpointing (T-02, D-055)
+- `tests/eval/results/e09_t02_ragas_full_scores_pre_t05.json`, `e09_t02_ragas_full_scores.json` — resultados antes/después del ciclo de mejora
+- `rag/safety.py`, `config/alarm_triggers.json` — hallazgo A: stoplist + chequeo de contexto contra sobre-activación del filtro de seguridad (T-05, D-057)
+- `rag/retriever.py`, `rag/pipeline.py` — hallazgo D: `EnsembleRetriever` (BM25 + vectorial, RRF) — mitigación parcial de Context Precision (T-05, D-057)
+- `rag/language.py` — hallazgo F: sustitución de `langdetect` por `lingua-py` (T-05, D-057)
+- `tests/eval/results/e09_t05_cierre.md`, `e09_t05_plan_b_investigacion.md` — cierre del ciclo de mejora e investigación de hallazgo B (abierto, sin fix aplicado)
+- `tests/features/e09_t03_safety_compliance_expanded.feature`, `tests/eval/results/e09_t03_safety_compliance_full.json` — Safety Compliance ampliado, 25/25 casos (T-03, D-053)
+- `scripts/run_e09_t04_eval.py`, `tests/eval/results/e09_t04_behavior_hallucination.json` — comportamiento diagnóstico/prompt injection (LLM-as-judge + confirmación manual) y Hallucination Rate derivado de Faithfulness (T-04, D-058)
+- `prompts/system_prompt_family.txt` — restricción añadida contra repetir/confirmar frases inyectadas que contradigan el comportamiento de seguridad (hallazgo `eval_71`, D-058 addendum)
+- `docs/evaluation.md` — informe final: resultados RAGAS/Safety Compliance/Hallucination Rate, ciclo de mejora (§5), checklist CHART + TRIPOD-LLM (§6), métricas de éxito consolidadas (§7)
+- `tasks/E09-T01-plan.md` a `E09-T05-plan.md` — planes de implementación
+- `decisions.md` — D-054 a D-058
+
+**Resultados (Fase 1.5, post-ciclo de mejora)**
+
+| Métrica | Objetivo | Resultado | Estado |
+|---|---|---|---|
+| Faithfulness | > 95% | 83.7% (32 casos) | 🔴 Por debajo |
+| Answer Relevancy | > 90% | 79.5% (32 casos) | 🔴 Por debajo |
+| Context Precision | > 85% | 52.1% (32 casos) | 🔴 Por debajo |
+| Context Recall | > 85% | 75.5% (32 casos) | 🔴 Por debajo |
+| Safety Compliance | 100% | 100% (40/40) | ✅ Cumple |
+| Hallucination Rate | < 2% | 93.75% (30/32 casos) | 🔴 Muy por debajo |
+| Validación clínica | Deseable | Feedback de alarma aplicado (rondas 1-2); validación del conjunto E-09 no recibida a fecha de cierre | 🟡 Seguimiento post-TFM, no bloqueante |
+
+4 de las 6 métricas RAGAS/Hallucination quedan por debajo de objetivo tras el ciclo de mejora — el ciclo resolvió los hallazgos A y F, mitigó D solo parcialmente y dejó B abierto (investigado, sin fix). Documentado sin suavizar, siguiendo CHART/TRIPOD-LLM (`docs/evaluation.md` §6-7). Los criterios de aceptación de la épica (resultados documentados, ciclo de mejora ejecutado, checklist CHART completado) se cumplen igualmente — no exigían alcanzar los objetivos numéricos, solo completar el proceso de medición y mejora. Safety Compliance (Falso Negativo Cero) sí se cumple al 100%.
 
 ---
 

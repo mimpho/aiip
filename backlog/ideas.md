@@ -223,6 +223,80 @@ opciones juntas en E-07/E-09; para el directorio de hospitales en concreto, limp
 HTML antes de indexar (quitar boilerplate de maquetación) sería una mejora previa barata
 independiente de cuál de las dos estrategias se elija.
 
+**Actualización — 17 jul 2026 (E-09 T-05, hallazgo D — retrospectiva post-cierre):**
+implementado Hybrid Search real vía `EnsembleRetriever` de LangChain (BM25 + vectorial,
+fusión RRF, peso uniforme 0.4/0.6 para todas las consultas — ver D-057,
+`rag/retriever.py::get_hybrid_retriever`). Confirma la hipótesis original (el escenario
+de "hospitales en Barcelona" del `.feature` de T-05 recupera correctamente el chunk con
+el nombre de la ciudad), pero el análisis caso a caso de la re-medición de Context
+Precision (`tests/eval/results/e09_t02_ragas_full_scores.json` vs
+`..._pre_t05.json`) revela un patrón no anticipado:
+
+- 23 de los 32 casos no cambian en absoluto (delta 0.000) — el peso de BM25 no llega a
+  influir en el orden final para la mayoría de las preguntas.
+- De los 9 que sí cambian, 6 empeoran y solo 3 mejoran. Los que empeoran son preguntas
+  conceptuales/genéricas sin ningún término distintivo ("Are primary immunodeficiencies
+  hereditary?", "¿Existen grupos de apoyo...?", "¿Qué es la IDVC?", "¿Qué especialista
+  debe hacer el seguimiento?") — casos que ya recuperaban muy bien solo con vectorial
+  (Context Precision > 0.9) y bajan a 0.6-0.8 tras la fusión.
+- Lectura: en un corpus léxicamente homogéneo (casi todos los chunks mencionan
+  "inmunodeficiencia primaria"), BM25 no tiene término distintivo que aportar en
+  preguntas sin nombre propio/geográfico — su contribución en esos casos es ruido, no
+  señal, y un peso uniforme aplicado a todas las consultas por igual absorbe esa
+  pérdida en el mismo cómputo que la ganancia real en preguntas tipo "Barcelona". El
+  agregado (Context Precision 53.8% → 52.1%, T-02 vs post-T-05) es casi plano porque
+  ambos efectos se cancelan, no porque el ajuste sea neutro caso a caso.
+
+**Idea de solución (no implementada, evaluar si se retoma):** peso adaptativo en vez de
+uniforme — activar/ponderar BM25 solo cuando la query tiene una señal léxica fuerte
+(mayúscula inicial de nombre propio, término de baja frecuencia en el corpus, patrón de
+entidad geográfica/nombre), y dejar la búsqueda puramente vectorial para preguntas
+conceptuales sin esa señal. Más trabajo que retocar el peso fijo, pero ataca la causa
+real en vez de promediar ganancia y pérdida. Alternativa más barata a probar primero si
+se retoma: simplemente bajar el peso de BM25 (p. ej. 0.2/0.8) y volver a medir — no
+llegó a intentarse en T-05, el peso 0.4/0.6 de partida se aceptó sin iterar. Marcos
+prefiere ir directo al peso adaptativo en vez de la vía barata: el patrón encontrado es
+estructural (ayuda con nombre propio, perjudica en preguntas conceptuales), no un
+problema de calibración fina que un reajuste uniforme distinto fuera a resolver.
+
+**Actualización — 18 jul 2026 (conversación real en Chainlit, durante task-start E-09 T-04):**
+tercera y cuarta confirmación real del mismo documento ya señalado el 10 jul (CU-05),
+`data/raw/upiip/guia_antibiotics_esp_0.pdf`. Marcos probó el chat manualmente (fuera de
+los datasets sintéticos) y encadenó tres preguntas; se revisó el PDF directamente para
+confirmar la causa exacta en cada caso:
+
+- **"¿Cómo puedo cuidar el día a día de mi familiar?"** — cita `guia_antibiotics_esp_0.pdf`
+  entre las fuentes. Revisado el contenido: el documento sí tiene una sección
+  "Espacio para el tratamiento" con consejos de organización para administrar tratamiento
+  endovenoso en casa — relevante para una familia que gestiona infusiones domiciliarias.
+  No se trata como ruido sin más; queda como caso dudoso, no como fallo confirmado.
+- **"¿A partir de cuánta fiebre tengo que acudir al médico?"** — vuelve a citar el mismo
+  documento. Este sí es un falso positivo claro: el PDF contiene una tabla de proceso
+  ("Fiebre / Dolor / Dificultad para respirar / Reacción cutánea → acudir a Urgencias")
+  específica para monitorizar reacciones durante una infusión de antibióticos IV por
+  catéter — coincidencia puramente léxica con la pregunta genérica sobre fiebre, sin
+  relación real de contexto.
+
+Se descartó explícitamente la hipótesis inicial de "contaminación de contexto entre
+turnos de conversación": revisado `rag/pipeline.py`
+(`RAGPipeline.query()`/`retrieve()`) y `chainlit/main_family.py` (`on_message`/`_answer`),
+ninguno pasa historial de chat al retriever ni al generador — cada pregunta se recupera y
+responde de forma completamente independiente (RAG naive, D-005; la memoria conversacional
+es alcance de E-08, no implementada todavía). La recurrencia del mismo documento en
+preguntas distintas de la misma sesión son aciertos de recuperación independientes, no
+fuga de estado.
+
+Con ya tres apariciones reales (10 jul, y dos más el 18 jul) en preguntas de temática muy
+distinta (contacto de urgencias, día a día, umbral de fiebre), este documento concreto es
+ahora un sospechoso recurrente — candidato de investigación propia (¿por qué su chunking/
+embedding le da tanto alcance semántico?) antes de decidir entre peso adaptativo de BM25 y
+la idea de keywords manuales por documento ya anotada en la actualización del 10 jul.
+- **Cuándo revisarlo:** repriorizado el 17 jul 2026 — no antes de cerrar E-09 (T-03,
+  T-04, T-06 son criterios de aceptación de la épica, no opcionales). Si tras cerrar
+  E-09 el margen hasta el 29 de julio sigue cómodo por encima de lo que necesitan E-08 y
+  E-10, retomar aquí antes de arrancar E-08. No es condición de cierre de E-09 (D-056 ya
+  contemplaba que D quedase como limitación documentada si no daba tiempo).
+
 ### 3. Registro lingüístico no siempre accesible (8 jul 2026)
 - **Criticidad:** 🟡 Media — problema de comprensión, no de información incorrecta
 - **Problema:** detectado al hacer QA manual de E-05 T-04 — algunas respuestas generadas (ej. sobre el proceso de trasplante de médula) usan vocabulario clínico ("acondicionamiento", "recuperación del sistema inmunitario") que puede no ser comprensible para cualquier familiar sin formación médica, pese a que `[TONO — PERFIL FAMILIAR]` en `prompts/system_prompt_family.txt` ya pide "lenguaje accesible... sin tecnicismos innecesarios".
@@ -270,3 +344,22 @@ de urgencias, 112) — el fallo es solo de idioma, Falso Negativo Cero no se vio
 Evaluado como no bloqueante para el hito del 10 de julio (decisión de Marcos): se documenta aquí
 y se revisa junto al resto en E-07/E-09, no se aborda como fix puntual ahora. Detalle completo en
 `tests/results/e05_t07_smoke_test_results.md`.
+
+### 5. `eval_63` (inglés): Faithfulness 0.0 y Answer Relevancy 0.29, muy por debajo del resto del subconjunto `otro_idioma` (17 jul 2026)
+- **Criticidad:** 🟡 Media — un único caso muy por debajo de sus vecinos del mismo subconjunto, no un patrón confirmado todavía
+- **Problema:** detectado en la ejecución real de E-09 T-02 (RAGAS Context Precision/Recall,
+  `tests/eval/results/e09_t02_ragas_full_scores.json`) — la pregunta en inglés "What is a
+  primary immunodeficiency?" (`eval_63`) obtuvo Faithfulness 0.0 y Answer Relevancy 0.29,
+  muy por debajo del resto de los 5 casos del subconjunto `otro_idioma` (el resto entre
+  0.74 y 1.0 en Faithfulness). Context Precision (0.64) y Context Recall (0.5) no muestran
+  la misma caída, lo que apunta a un problema en la generación de la respuesta o en su
+  evaluación, no en el retrieval — a diferencia del hallazgo D (arriba), que sí es de
+  retrieval.
+- **Idea/Solución:** no investigado todavía. Revisar la respuesta real generada para
+  `eval_63` (no solo el score) para distinguir entre: (a) fallo real de grounding/relevancia
+  del LLM en inglés, (b) un artefacto puntual del LLM evaluador de RAGAS (parseo, formato de
+  salida) sobre ese caso concreto, o (c) algo específico de la pregunta/respuesta de
+  referencia en `tests/eval/dataset_partial.json`.
+- **Cuándo revisarlo:** al redactar el informe final de E-09 (T-06) — si aparecen más casos
+  con el mismo patrón al citar/inspeccionar el dataset completo, evaluar si merece
+  investigación propia antes de la entrega del 29 de julio.
