@@ -304,6 +304,22 @@ antes) sobre la persistencia entre sesiones + derecho al olvido (la capa
 más cara: esquema en Supabase, UI de borrado). Ver criterios de aceptación
 de E-08 más abajo.
 
+**Reordenamiento (18 jul 2026, D-059):** al plantear si E-08 podía arrancar
+justo después de E-09, se detectó un riesgo de secuenciación: E-09 cerró
+con 4 de 6 métricas por debajo de objetivo (ver resultados de E-09 más
+abajo) y varios hallazgos abiertos o fuera de alcance de su ciclo de
+mejora (D-056). Activar la capa 1 de E-08 (memoria conversacional de corto
+plazo, historial crudo pasado al LLM) sobre un pipeline cuya generación de
+una sola respuesta ya falla en la mayoría de métricas añadiría una
+variable de contexto no controlada, encareciendo el diagnóstico de
+cualquier fallo nuevo — mismo principio que D-056 ya aplicó ("medición
+específica → mejora específica", sin mezclar causas). Se crea **E-11**
+para cerrar/acotar esos hallazgos antes de tocar la capa 1 de E-08. Orden
+de ejecución actualizado: **E-09 → E-11 → E-10 → E-08 (capas 2 y 3: perfil
++ persistencia) → E-08 capa 1 (memoria conversacional)**, esta última
+candidata a quedar como seguimiento post-TFM si no hay margen antes del 29
+de julio. Detalle completo en D-059.
+
 ### E-07 — Evaluación RAGAS (parcial)
 Dataset de prueba y métricas básicas funcionando, ejecutada inmediatamente después del hito del 10 de julio.
 
@@ -401,6 +417,17 @@ la capa (3) —persistencia entre sesiones + derecho al olvido— es la
 candidata a recortar o dejar como versión mínima, por ser la más costosa
 (esquema Supabase, UI de borrado) y la que menos compromete que el agente
 siga siendo un producto completo sin ella.
+
+**Nota de bloqueo (18 jul 2026, D-059):** esta prioridad interna a E-08 queda
+invertida por una condición externa a la épica. La capa (1) —memoria
+conversacional, antes la más barata y prioritaria— es ahora la que más
+riesgo tiene de ejecutarse antes de tiempo: mezclar historial de
+conversación con un pipeline de generación de una sola respuesta cuya
+calidad todavía no está resuelta (ver E-09) haría muy difícil diagnosticar
+fallos nuevos. La capa (1) queda bloqueada hasta cerrar **E-11** (ciclo de
+mejora de calidad); las capas (2) y (3), al no tocar el contexto de
+generación de la misma forma, pueden ejecutarse después de E-10 sin
+esperar a E-11. Ver nota de reordenamiento en la introducción de esta fase.
 
 **Criterios de aceptación de alto nivel**
 - Memoria conversacional de corto plazo: el agente mantiene el hilo de la
@@ -564,6 +591,33 @@ Ajustes finales para la entrega.
 
 **Notas**
 - Al cerrar esta épica: ejecutar tests RAGAS end-to-end (E-07/E-09) sobre el sistema completo antes del PR final. Es el único momento en que se valida el pipeline integrado en su totalidad.
+- **Orden de ejecución (18 jul 2026):** E-11 pasa por delante de esta épica — ver nota de reordenamiento al inicio de la fase y D-059.
+
+**Estado:** ⚪ No iniciada
+
+---
+
+### E-11 — Ciclo de mejora de calidad (hallazgos post-E-09)
+
+Cierre acotado de los hallazgos de calidad que quedaron abiertos o fuera de alcance en el ciclo de mejora de E-09 (D-056), más una ampliación de la KB. Precede a la capa 1 de E-08 (memoria conversacional) — ver nota de bloqueo en E-08 y D-059.
+
+**Nota de origen (18 jul 2026):** surge al plantear si E-08 podía arrancar justo después de E-09. E-09 cerró con 4 de 6 métricas por debajo de objetivo (Faithfulness 83.7%, Answer Relevancy 79.5%, Context Precision 52.1%, Context Recall 75.5%, Hallucination Rate 93.75% vs <2%) y varios hallazgos sin resolver o fuera de alcance del ciclo de mejora de T-05. Mezclar memoria conversacional con una generación de una sola respuesta ya no resuelta encarecería el diagnóstico de fallos nuevos — mismo principio de D-056 ("medición específica → mejora específica"). Detalle completo del razonamiento en D-059.
+
+**Nota de alcance — ideas descartadas (18 jul 2026):** se evaluó y se descarta para esta épica subir `LLM_TEMPERATURE` (hoy 0.1, `rag/config.py`) y/o conectar el LLM a búsqueda web en vivo (Gemini "grounding with Google Search"), ambas propuestas para paliar la intuición de que la KB es limitada. Temperatura no es la palanca correcta: controla aleatoriedad de muestreo, no si el modelo usa el contexto recuperado o su conocimiento general — subirla tiende a empeorar Faithfulness, no a mejorarlo. Búsqueda web en vivo rompe la trazabilidad de fuentes (`data/raw/manifest.json`, D-021) y aumenta el riesgo frente a Falso Negativo Cero (D-002, no negociable) — contenido no vetted por Jacques en un dominio pediátrico es más peligroso que una respuesta evasiva. Si se retoma en el futuro, requiere épica propia + revisión clínica explícita, no un cambio de configuración. Se conserva sí la idea metodológica de Marcos de contrastar una respuesta con grounding más laxo frente a la estricta (pasando ambas por los mecanismos de seguridad existentes) como **técnica de investigación offline** del hallazgo C — nunca como comportamiento de producción.
+
+**Nota de alcance — ampliación de KB como primera tarea (18 jul 2026):** comprobado contra `data/raw/manifest.json` (37 documentos): 36 son monográficos por patología/procedimiento; solo `idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf` es un documento genuinamente general. Los casos con peor Context Precision/Recall de E-09 (eval_03/06/08/11/13/15/20/23/25/27/65) coinciden sistemáticamente con preguntas de vida diaria/FAQ (frecuencia de revisiones, viajar con medicación, convivencias, contagio, cura, por qué necesita infusiones) no cubiertas ni siquiera por las fuentes ya propuestas en `docs/kb-sources.md`. Esta tarea se ejecuta primero, antes que el resto del alcance técnico, por dos motivos: (1) puede resolver varios hallazgos de retrieval como efecto colateral, igual que le pasó a `eval_63` con el fix de hallazgo D en E-09 — evita investigar a fondo casos que podrían desaparecer solos; (2) cualquier ajuste del peso de BM25 debe calibrarse contra el corpus final, no contra uno que va a cambiar después. Cuello de botella: la búsqueda y vetado de fuentes depende del tiempo de Marcos (mismo criterio que E-06 T-08 — no inventar enlaces), no de trabajo técnico; arrancarla en paralelo al resto de la épica.
+
+**Criterios de aceptación de alto nivel**
+- KB ampliada con documentación general/FAQ de vida diaria (primera tarea) y casos de contexto pobre remedidos de forma dirigida tras la ampliación
+- Peso de BM25 en el retriever híbrido revisado (adaptativo o recalibrado) contra el corpus ya ampliado
+- Hallazgo C (grounding excesivamente estricto) acotado a una regla concreta y limitada (qué tipo de conector no-clínico se permite), no una relajación general del grounding
+- Hallazgo E (registro lingüístico) revisado con al menos una lectura cualitativa dirigida
+- `eval_15` investigado en profundidad como prioridad (más grave que el resto de "hallazgo B": único caso con Faithfulness bajo, 0.38, además de 0.0 en las otras tres métricas); cierre de `eval_63` confirmado antes de investigarlo de nuevo
+- Documento `guia_antibiotics_esp_0.pdf` investigado como sospechoso recurrente (3 apariciones espurias documentadas en `backlog/ideas.md`)
+- Decisión tomada sobre cómo reportar Hallucination Rate en el informe final — el 93.75% actual es un conteo binario (D-058: cualquier caso con faithfulness < 1.0 cuenta como "alucinado"); de los 30 casos, solo `eval_15` está realmente mal (< 0.5), el resto está entre 0.69 y 0.96 — valorar un desglose por severidad como métrica complementaria, no solo el binario
+- Resultados documentados en `docs/evaluation.md` como actualización post-E-09, con re-medición antes/después dirigida a los casos afectados (mismo criterio de transparencia que E-09 T-05)
+
+La descomposición formal en tareas con Gherkin se hace en `epic-start` al arrancar la épica.
 
 **Estado:** ⚪ No iniciada
 
@@ -604,4 +658,4 @@ Preparación para embeber el AIIP como widget o iframe en la web de la fundació
 
 ---
 
-*Última actualización: junio 2026*
+*Última actualización: 18 julio 2026 — E-11 creada (ciclo de mejora de calidad, D-059)*

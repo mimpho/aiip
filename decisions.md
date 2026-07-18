@@ -67,6 +67,7 @@
 - [D-056 — E-09: reordenamiento mid-sprint — medición específica → mejora específica en vez de medir todo primero; T-05 se adelanta y amplía a A, B, D, F](#d-056--e-09-reordenamiento-mid-sprint--medición-específica--mejora-específica-en-vez-de-medir-todo-primero-t-05-se-adelanta-y-amplía-a-a-b-d-f)
 - [D-057 — T-05 (E-09): decisiones técnicas por hallazgo — EnsembleRetriever para D, stoplist+contexto en alarm_triggers.json para A, lingua-py para F, B como Plan B](#d-057--t-05-e-09-decisiones-técnicas-por-hallazgo--ensembleretriever-para-d-stoplistcontexto-en-alarm_triggersjson-para-a-lingua-py-para-f-b-como-plan-b)
 - [D-058 — T-04 (E-09): juicio de comportamiento con LLM-as-judge + confirmación manual, y Hallucination Rate derivado de Faithfulness por caso (no del promedio)](#d-058--t-04-e-09-juicio-de-comportamiento-con-llm-as-judge--confirmación-manual-y-hallucination-rate-derivado-de-faithfulness-por-caso-no-del-promedio)
+- [D-059 — E-11 creada como gate de calidad antes de E-08 capa 1; temperatura/internet en vivo descartados, ampliación de KB como primera tarea](#d-059--e-11-creada-como-gate-de-calidad-antes-de-e-08-capa-1-temperaturainternet-en-vivo-descartados-ampliación-de-kb-como-primera-tarea)
 
 ---
 
@@ -2728,6 +2729,84 @@ restantes. Hallucination Rate no se re-mide: el ajuste es específico de un patr
 inyección de eco literal, sin relación con el estilo de respuesta a preguntas informativas
 — se documenta en el informe (T-06) que ese número corresponde al pipeline anterior a este
 ajuste puntual, mismo criterio de transparencia que los ficheros `_pre_t05`.
+
+---
+
+## D-059 — E-11 creada como gate de calidad antes de E-08 capa 1; temperatura/internet en vivo descartados, ampliación de KB como primera tarea
+
+**Fecha:** 18 de julio de 2026
+**Fase:** producto / técnica
+**Épicas relacionadas:** E-08, E-09, E-11
+
+**Contexto**
+Al planificar qué épica ejecutar después de E-09, se evaluó si E-08 (memoria de perfil e
+histórico) podía arrancar directamente. E-09 cerró con 4 de 6 métricas por debajo de
+objetivo (Faithfulness 83.7%, Answer Relevancy 79.5%, Context Precision 52.1%, Context
+Recall 75.5%, Hallucination Rate 93.75% vs <2%) y varios hallazgos abiertos (B) o fuera de
+alcance del ciclo de mejora de T-05 (C, E — D-056). Marcos planteó que activar memoria
+conversacional de corto plazo (capa 1 de E-08, historial crudo pasado al LLM) sobre un
+pipeline de generación de una sola respuesta ya con calidad no resuelta mezclaría dos
+variables (historial de conversación + retrieval/generación) — dificultando el diagnóstico
+de cualquier fallo nuevo, en tensión directa con el principio ya aplicado en D-056
+("medición específica → mejora específica, sin mezclar causas").
+
+En la misma conversación, Marcos propuso subir `LLM_TEMPERATURE` (hoy 0.1, `rag/config.py`)
+y/o conectar el LLM a búsqueda web en vivo, para paliar una intuición de que la KB actual es
+limitada — sobre la respuesta resultante, aplicar los mecanismos de seguridad existentes y
+contrastarla con la respuesta estricta desde la KB.
+
+**Decisión**
+
+1. **Nueva épica E-11**, numerada por orden de creación (no de ejecución — mismo criterio
+   que E-07/E-08/E-09/E-10, ver nota de numeración de Fase 1 en `backlog/epics.md`),
+   dedicada a cerrar/acotar los hallazgos de calidad pendientes antes de tocar la capa 1 de
+   E-08. Orden de ejecución actualizado: **E-09 → E-11 → E-10 → E-08 (capas 2 y 3: perfil +
+   persistencia) → E-08 capa 1 (memoria conversacional)**, esta última candidata a quedar
+   como seguimiento post-TFM si no hay margen antes del 29 de julio.
+2. **Temperatura descartada como palanca de calidad.** `LLM_TEMPERATURE`/`LLM_TOP_P`
+   controlan aleatoriedad de muestreo, no si el modelo usa el contexto recuperado o su
+   conocimiento general — subirla tiende a empeorar Faithfulness (RAGAS penaliza texto que
+   se aleja del contexto), no a mejorarlo. No es la herramienta correcta para la intuición
+   de "KB limitada".
+3. **Búsqueda web en vivo descartada para esta épica.** Aflojar el grounding a la KB curada
+   rompe la trazabilidad de fuentes (`data/raw/manifest.json`, D-021) y aumenta el riesgo
+   frente a Falso Negativo Cero (D-002, no negociable): contenido web no vetted por Jacques
+   en un dominio pediátrico es un riesgo mayor que una respuesta evasiva. Si se retoma en el
+   futuro, requiere épica propia + revisión clínica explícita, no un cambio de
+   configuración.
+4. **Ampliación de la KB como primera tarea de E-11.** Comprobado contra
+   `data/raw/manifest.json` (37 documentos): 36 son monográficos por patología/
+   procedimiento, solo `idf/manual-para-pacientes-y-familias-...pdf` es genuinamente
+   general. Los casos de peor Context Precision/Recall de E-09 (eval_03/06/08/11/13/15/20/
+   23/25/27/65) coinciden con preguntas de vida diaria (frecuencia de revisiones, viajar con
+   medicación, convivencias, contagio, cura, por qué necesita infusiones) no cubiertas ni
+   siquiera por las fuentes ya propuestas en `docs/kb-sources.md`. Se ejecuta antes que el
+   resto de tareas técnicas de E-11 (peso adaptativo de BM25, hallazgo C, etc.) porque (a)
+   puede resolver hallazgos existentes como efecto colateral, igual que pasó con `eval_63`
+   tras el fix de hallazgo D en E-09 — evita investigar a fondo casos que podrían desaparecer
+   solos —, y (b) cualquier ajuste de retrieval debe calibrarse contra el corpus final, no
+   contra uno que va a cambiar después.
+5. **Técnica de contraste conservada para hallazgo C, no como comportamiento de
+   producción.** La idea de Marcos de generar una respuesta con grounding más laxo y
+   contrastarla con la respuesta estricta (pasando ambas por los mecanismos de seguridad
+   existentes) se adopta como método de investigación offline del hallazgo C, para acotar
+   una regla concreta de qué conectores no-clínicos se permiten — nunca como una relajación
+   general del grounding en producción.
+
+**Alternativas descartadas**
+- Arrancar E-08 completa inmediatamente tras E-09: descartado por el riesgo de confusión de
+  causas descrito arriba.
+- Subir temperatura como fix de calidad: descartado, palanca equivocada (punto 2).
+- Conectar búsqueda web en vivo: descartado para esta épica, riesgo desproporcionado frente
+  a Falso Negativo Cero (punto 3).
+
+**Justificación**
+Prioriza cerrar (o al menos acotar con evidencia) los problemas de calidad ya medidos y
+documentados antes de añadir una nueva variable (memoria conversacional) que encarecería el
+diagnóstico de cualquier regresión futura. Mantiene Falso Negativo Cero como principio no
+negociable frente a atajos que lo comprometerían (temperatura, web abierta). Prioriza la
+palanca de contenido (ampliar KB curada) sobre la de algoritmo (retrieval) por ser más
+barata, más segura, y por resolver como efecto colateral varios hallazgos ya abiertos.
 
 ---
 
