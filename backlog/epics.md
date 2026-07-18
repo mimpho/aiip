@@ -516,7 +516,7 @@ herramienta que no funciona pero con mediciones exhaustivas de que no funciona.
 | T-01 | Ampliar el dataset de evaluación a cobertura completa (72 casos) | ✅ Completada |
 | T-02 | RAGAS completo: Context Precision + Context Recall | ✅ Completada |
 | T-05 | Ciclo de mejora (hallazgos A, B, D, F) — **se ejecuta a continuación** (D-056) | ✅ Completada |
-| T-03 | Safety Compliance ampliado: alarma + casos límite (25 casos, determinista) — sin dependencia de T-05, cualquier momento | ⚪ Pendiente |
+| T-03 | Safety Compliance ampliado: alarma + casos límite (25 casos, determinista) — sin dependencia de T-05, cualquier momento | ✅ Completada |
 | T-04 | Comportamiento ante diagnóstico/prompt injection (sin dependencia) + Hallucination Rate (**medir después de T-05**) | ⚪ Pendiente |
 | T-06 | Checklist CHART + informe final en `docs/evaluation.md` | ⚪ Pendiente |
 
