@@ -638,7 +638,7 @@ puntos resueltos sobre la propuesta inicial:
 | ID | Tarea | Estado |
 |---|---|---|
 | T-01 | Ampliación de la KB (fuentes generales/FAQ de vida diaria) | ✅ Completada |
-| T-02 | Re-medición RAGAS + peso adaptativo de BM25 contra el corpus ampliado | ⚪ Pendiente |
+| T-02 | Re-medición RAGAS + peso adaptativo de BM25 contra el corpus ampliado | ✅ Completada — revisada y confirmada por Marcos (19 jul 2026), `tests/eval/results/e11_t02_cierre.md` |
 | T-03 | Hallazgo C: regla acotada de grounding para conectores no clínicos | ⚪ Pendiente |
 | T-04 | Hallazgo E: revisión cualitativa del registro lingüístico | ⚪ Pendiente |
 | T-05 | Investigación dirigida: `eval_15`, confirmación `eval_63`, documento sospechoso `guia_antibiotics_esp_0.pdf` | ⚪ Pendiente |
@@ -688,4 +688,4 @@ Preparación para embeber el AIIP como widget o iframe en la web de la fundació
 
 ---
 
-*Última actualización: 18 julio 2026 — E-11 creada (ciclo de mejora de calidad, D-059)*
+*Última actualización: 19 julio 2026 — E-11 T-02 cerrada técnicamente (peso adaptativo de BM25, D-061; resultado en `tests/eval/results/e11_t02_cierre.md`), pendiente de confirmación de Marcos*

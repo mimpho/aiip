@@ -69,6 +69,7 @@
 - [D-058 — T-04 (E-09): juicio de comportamiento con LLM-as-judge + confirmación manual, y Hallucination Rate derivado de Faithfulness por caso (no del promedio)](#d-058--t-04-e-09-juicio-de-comportamiento-con-llm-as-judge--confirmación-manual-y-hallucination-rate-derivado-de-faithfulness-por-caso-no-del-promedio)
 - [D-059 — E-11 creada como gate de calidad antes de E-08 capa 1; temperatura/internet en vivo descartados, ampliación de KB como primera tarea](#d-059--e-11-creada-como-gate-de-calidad-antes-de-e-08-capa-1-temperaturainternet-en-vivo-descartados-ampliación-de-kb-como-primera-tarea)
 - [D-060 — T-01 (E-11): RAGAS re-measurement moved to T-02, source search narrowed to the 6 genuine coverage gaps](#d-060--t-01-e-11-ragas-re-measurement-moved-to-t-02-source-search-narrowed-to-the-6-genuine-coverage-gaps)
+- [D-061 — T-02 (E-11): mecanismo del peso adaptativo de BM25, recálculo por consulta y alcance de TDD](#d-061--t-02-e-11-mecanismo-del-peso-adaptativo-de-bm25-recálculo-por-consulta-y-alcance-de-tdd)
 
 ---
 
@@ -2864,6 +2865,93 @@ el criterio de cierre de T-01.
   duplica medición ya prevista en T-02 y consume cuota limitada sin necesidad.
 - Revisar los 11 casos igual de a fondo en T-01: descartado, arriesga vetar fuentes redundantes
   para temas que ya tienen documento — el problema ahí es de retrieval, no de contenido.
+
+---
+
+## D-061 — T-02 (E-11): mecanismo del peso adaptativo de BM25, recálculo por consulta y alcance de TDD
+
+**Fecha:** 19 de julio de 2026
+**Fase:** técnica
+**Épica:** E-11 (T-02)
+
+**Contexto**
+El `.feature` informal de T-02 (generado por `epic-start`) fijaba la señal de "consulta con
+señal léxica fuerte" como nombre propio/término geográfico, apoyándose en el ejemplo
+"hospitales en Barcelona" (D-057/`ideas.md`) y en la retrospectiva de E-09 T-05 ("9 casos
+cambian, 6 empeoran, 3 mejoran; los que mejoran tienen nombre propio/geográfico"). En la
+revisión crítica de `task-start` se recalcularon los deltas reales de Context Precision entre
+`tests/eval/results/e09_t02_ragas_full_scores_pre_t05.json` y `..._full_scores.json`: son 10
+casos con delta no nulo, no 9 — **6 empeoran** (`eval_64`, `eval_17`, `eval_16`, `eval_19`,
+`eval_02`, `eval_04`) y **4 mejoran** (`eval_07`, `eval_11`, `eval_01`, `eval_21`). Ninguno de
+los 4 que mejoran contiene nombre propio ni término geográfico (`eval_01` "¿Qué es una
+inmunodeficiencia primaria?" y `eval_11` "¿Cómo se diagnostica...?" son tan conceptuales como
+varios de los que empeoran). El ejemplo "Barcelona" no pertenece a los 32 casos del dataset
+RAGAS — viene de un smoke test manual distinto (E-05 T-07, CU-05). El criterio original
+("nombre propio/geográfico") queda sin soporte empírico suficiente para justificar por sí solo
+el detector de señal léxica.
+
+Además, dos puntos de diseño quedaban abiertos: (1) `RAGPipeline` construye el
+`EnsembleRetriever` una sola vez en `__init__` (`rag/pipeline.py:62`) con un peso fijo para
+toda la sesión — un peso "adaptativo por consulta" no encaja en ese ciclo de vida tal cual; (2)
+qué parte de la tarea lleva TDD y cuál sigue el patrón de script sin TDD (D-050/D-051) ya usado
+para las tareas de medición RAGAS.
+
+**Decisión**
+
+1. **Criterio de señal léxica fuerte, ampliado:** una consulta se considera "con señal" si
+   contiene (a) una palabra con mayúscula inicial que no está al principio de la pregunta
+   (aproximación a nombre propio, sin lista de topónimos que mantener), **o** (b) una palabra
+   de baja frecuencia dentro del propio corpus indexado — reutilizando el IDF que
+   `BM25Retriever`/`rank_bm25` ya calcula internamente al construirse, sin necesidad de una
+   fuente de datos nueva ni de mantenimiento manual. Se descarta la lista curada de topónimos
+   (alternativa evaluada) por coste de mantenimiento sin ganancia clara frente a (a)+(b) contra
+   los casos reales.
+2. **Recálculo del peso por consulta, no en la construcción:** el peso de `EnsembleRetriever`
+   se recalcula en cada llamada a `retrieve()`/`query()` de `RAGPipeline` (mutando el atributo
+   `weights` de la instancia ya cacheada antes de invocar) en lugar de fijarse una sola vez en
+   `__init__`. Mantiene la construcción cara (índice BM25 desde los documentos) cacheada como
+   hoy — solo cambia el peso, no se reconstruye el índice por consulta.
+3. **Alcance de TDD:** la detección de señal léxica y el cálculo/aplicación del peso son
+   funciones deterministas sin llamada a LLM — llevan tests automáticos normales (pytest-bdd
+   con asserts), como el resto del código del proyecto. La re-medición RAGAS completa (las dos
+   ejecuciones de `scripts/run_ragas_eval.py` de esta tarea, ver punto 4) sigue el patrón sin
+   TDD ya establecido en D-050/D-051 — instrumentación + revisión manual de Marcos, sin
+   asserts.
+4. **Dos re-mediciones, no una:** dado que T-01 (D-060) no ejecutó RAGAS, T-02 necesita (a) una
+   medición de línea base con el peso uniforme 0.4/0.6 actual sobre el corpus ya ampliado, para
+   aislar el efecto de la KB, respaldada antes de tocar BM25; y (b) la medición final tras
+   aplicar el peso adaptativo, para aislar el efecto del ajuste. Antes de cada una de las dos
+   ejecuciones se respalda/resetea `tests/eval/results/e09_t02_ragas_full_scores.json` — sin
+   este reset, la ejecución incremental del script (salta cualquier `id` ya presente) no
+   produciría ninguna medición nueva sobre el corpus ampliado, el mismo riesgo que D-060
+   detectó para T-01.
+
+**Consecuencias**
+- `rag/retriever.py::get_hybrid_retriever` expone un mecanismo para fijar/actualizar el peso
+  tras la construcción (en vez de solo en la llamada inicial).
+- `rag/pipeline.py::RAGPipeline.retrieve()`/`query()` calculan la señal léxica de la pregunta y
+  ajustan el peso del retriever cacheado antes de invocarlo.
+- `tests/features/e11_t02_bm25_adaptive_weight.feature` se reescribe: corrige 6/4 en vez de
+  6/3, retira la referencia a "Barcelona" como ejemplo de caso medido, añade el escenario de
+  las dos re-mediciones con reset explícito, y marca qué escenarios llevan asserts pytest-bdd
+  frente a los de verificación manual.
+- `tests/eval/results/e09_t02_ragas_full_scores.json` se respalda dos veces durante la tarea
+  (pre-baseline-ampliación y pre-ajuste-BM25) antes de cada reset.
+
+**Alternativas descartadas**
+- Mantener el criterio "nombre propio/geográfico" tal cual, sin ampliarlo: descartado, no
+  explica los casos reales que mejoraron en la retrospectiva de E-09 T-05.
+- Lista curada de topónimos/hospitales como señal adicional: descartada por coste de
+  mantenimiento sin evidencia de que aporte sobre el criterio de rareza en el corpus.
+- Ir directos al fallback de peso fijo recalibrado (opción barata) como vía principal:
+  descartado por Marcos — mantiene el peso adaptativo como prioridad ya fijada en
+  `epic-start`; el hallazgo obliga a ampliar el criterio, no a abandonar el enfoque.
+
+**Justificación**
+Construir un detector basado en un patrón que los propios datos no confirman habría arriesgado
+resolver el problema equivocado — el hallazgo se detecta en la revisión crítica antes de que
+Antigravity invierta tiempo implementándolo, mismo criterio que D-057 aplicó a Chroma
+`Search()` nativo.
 
 ---
 
