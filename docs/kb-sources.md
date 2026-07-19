@@ -44,6 +44,7 @@
 | [IPOPI — Vaccines and primary immunodeficiencies](https://ipopi.org/wp-content/uploads/2017/07/IPOPI_Vaccines.pdf) | Guía divulgativa (PDF) | EN | Validada | Marcos | E-11 T-01. Pauta de vacunación; referenciado desde la FAQ de viajes de IPOPI. |
 | [IPOPI — Can PID patients travel and live abroad? (FAQ)](https://ipopi.org/pids/pids-faqs/#toggle-id-25) | Página web (FAQ) | EN | Validada | Marcos | E-11 T-01. Cubre directamente `eval_15` (viajar en avión) y `eval_23` (informar destino de vacaciones). |
 | Protocolos del equipo de inmunología | Documentación interna | ES | Pendiente | PRD v1.9 §5 | Marcado como `[Pendiente]` en el PRD original. |
+| [MedlinePlus Genetics — Immune System and Disorders](https://medlineplus.gov/immunesystemanddisorders.html) | Fichas de enfermedad para pacientes (NIH/NLM) | EN | Propuesta | Marcos (E-13, D-063) | Dominio público, descarga masiva en un XML. Página curada acota a 43 fichas (`Title.Alternate: Primary Immunodeficiency Diseases`); 39 nuevas tras descontar solapamiento con `data/raw/upiip/` (Bruton's/XLA, CGD, SCID genérico, CVID). Fases en E-13 (3 lotes de 13, orden alfabético inverso). |
 
 ## Perfil Profesional (Fase 2B — condicional a decisión de alcance)
 

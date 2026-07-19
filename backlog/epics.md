@@ -429,6 +429,19 @@ mejora de calidad); las capas (2) y (3), al no tocar el contexto de
 generación de la misma forma, pueden ejecutarse después de E-10 sin
 esperar a E-11. Ver nota de reordenamiento en la introducción de esta fase.
 
+**Nota de aplazamiento completo (19 jul 2026, D-063):** al crear E-13
+(ampliación de KB con fuentes MedlinePlus Genetics) surgió la pregunta de
+qué recortar para hacerle sitio en el tiempo que queda antes del 29 de
+julio. Decisión: **E-08 se aplaza entera** (capas 1, 2 y 3) a seguimiento
+post-TFM, no solo la capa 1 ya señalada arriba. Las capas 2/3 no estaban
+bloqueadas por el motivo de D-059 (no mezclan historial con generación) —
+su aplazamiento es una decisión nueva de priorización (calidad de KB/RAG
+sobre completitud de producto), no una extensión de la lógica anterior.
+D-009 ya cubre el ángulo legal/ético: el TFM solo exige documentar la
+decisión de diseño sobre derecho al olvido, no implementarla, así que
+aplazar la capa 3 no deja ningún cabo suelto para la entrega. Detalle
+completo del razonamiento en D-063.
+
 **Criterios de aceptación de alto nivel**
 - Memoria conversacional de corto plazo: el agente mantiene el hilo de la
   conversación dentro de una misma sesión de chat abierta (sin necesidad de
@@ -684,6 +697,68 @@ números, no solo declarado.
 | ID | Tarea | Estado |
 |---|---|---|
 | T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | ⚪ Pendiente |
+
+**Estado:** ⚪ No iniciada
+
+---
+
+### E-13 — Ampliación de KB: fuentes MedlinePlus Genetics
+
+Incorporación de fichas de MedlinePlus Genetics (NIH/NLM) al perfil familiar, para cerrar
+huecos de profundidad por enfermedad que la KB actual no cubre, en fases priorizadas.
+
+**Nota de origen (19 jul 2026, D-063):** surge de investigar en Cowork un caso real — una
+consulta sobre "xiap" devolvía una respuesta que en realidad describía el síndrome IPEX,
+rastreado hasta un chunk de `manual-para-pacientes-y-familias-sobre-inmunodeficiencias-
+primarias-sexta.pdf` donde XIAP aparece solo de pasada dentro de un párrafo centrado en IPEX
+(problema de granularidad de chunk/ranking, no de embeddings al azar). Se evaluó Orphanet como
+fuente externa: el nomenclature pack (sinónimos/códigos) es gratis y sin trámite, pero el
+texto descriptivo en prosa exige Data Transfer Agreement — inviable en el plazo del TFM. El
+paper de clasificación fenotípica IUIS 2024 (ya "Propuesto" en `docs/kb-sources.md`) tampoco
+sirve: su contenido diagnóstico vive en 21 figuras de árbol de decisión (imágenes), no en texto
+extraíble. MedlinePlus Genetics sí cumple las tres condiciones (gratis, sin trámite, ya
+redactado para pacientes): dominio público, descarga masiva en un XML, y su página curada
+"Immune System and Disorders" (`Title.Alternate: Primary Immunodeficiency Diseases`) acota el
+universo relevante a 43 fichas — no las 559 de IUIS 2024 ni las 1.300+ del índice completo.
+Contrastadas contra `data/raw/upiip/`, 4 ya están cubiertas (Bruton's/XLA, enfermedad
+granulomatosa crónica, SCID genérico, inmunodeficiencia variable común) — quedan **39 fichas
+genuinamente nuevas**, incluyendo XIAP (X-linked lymphoproliferative disease) e IPEX.
+
+**Nota de alcance (19 jul 2026):** Marcos decide fases por lotes priorizados en **orden
+alfabético inverso** (criterio neutral — no favorece a propósito XIAP/IPEX, aunque por el
+propio orden caen en los lotes 1 y 2). 3 lotes de 13 fichas. Reutiliza íntegramente el playbook
+ya validado en E-11 T-01/T-02 (`kb-maintenance`, `smoke_test_rag.py --force-reingest`, scripts
+de RAGAS) — no requiere infraestructura nueva.
+
+**Nota de secuenciación (19 jul 2026, D-063):** creada como épica independiente, no como tareas
+nuevas dentro de E-11, para no comprometer el cierre ya aprobado de esa épica (T-03–T-07) —
+mismo principio que motivó crear E-11 en D-059. Para hacerle sitio, E-08 se aplaza entera (ver
+nota en su sección, D-063).
+
+**Nota de prioridad (19 jul 2026, D-064):** confirmado que E-13 **sí entra en Fase 1.5**, no
+post-TFM — ese era precisamente el motivo de aplazar E-08 entera. Orden de ejecución dentro de
+la fase: E-11 → **E-13** → E-10 → E-12. E-13 se ejecuta antes que E-10 (pulido de UX/responsive
+y CORS) porque el pulido ya se ha ido resolviendo de forma orgánica entre épicas y CORS solo
+importa si se embebe el asistente en una app/widget externo — no urgente ahora. De las épicas
+que quedan, **E-10 es la primera candidata a quedar fuera si falta tiempo antes del 29 de
+julio; E-12 (cierre del TFM) no es negociable en ningún caso.**
+
+**Criterios de aceptación de alto nivel**
+- Lote 1 (13 fichas, incluye X-linked lymphoproliferative disease/XIAP) ingerido, revisado en
+  registro lingüístico y remedido contra RAGAS
+- Lote 2 (13 fichas, incluye IPEX) — ídem
+- Lote 3 (13 fichas) — ídem
+- Fuente añadida a `docs/kb-sources.md` (perfil familiar)
+- Caso XIAP/IPEX original re-verificado tras el lote correspondiente
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Lote 1 — 13 fichas, orden alfabético inverso (Z→P), incluye XIAP | ⚪ Pendiente |
+| T-02 | Lote 2 — 13 fichas (P→F), incluye IPEX | ⚪ Pendiente |
+| T-03 | Lote 3 — 13 fichas (F→2) | ⚪ Pendiente |
+| T-04 | Remedición RAGAS + cierre | ⚪ Pendiente |
 
 **Estado:** ⚪ No iniciada
 

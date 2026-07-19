@@ -22,12 +22,12 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 |---|---|---|---|
 | Fase 0 — Documentación técnica | ✅ Completada | 12 jun 2026 | — (previa a la descomposición en épicas) |
 | Fase 1 — MVP core | ✅ Completada | 10 jul 2026 | E-01 a E-06 |
-| Fase 1.5 — MVP completo | 🔵 En curso | 29 jul 2026 | E-07, E-08, E-09, E-10, E-11, E-12 |
-| Features opcionales | ⚪ Backlog | Post-TFM | F-01 (perfil profesional, multimodal) |
+| Fase 1.5 — MVP completo | 🔵 En curso | 29 jul 2026 | E-07, E-09, E-11, E-13, E-10, E-12 |
+| Features opcionales | ⚪ Backlog | Post-TFM | E-08 (memoria de perfil e histórico), F-01 (perfil profesional, multimodal) |
 
 > **E-07 y E-08** se movieron de Fase 1 a Fase 1.5 el 10 jul 2026 — ninguna era requisito del hito "código funcional" (lo entrega E-05); ver notas en `backlog/epics.md`.
 >
-> **Orden de ejecución (18 jul 2026):** E-07 → E-09 → **E-11 → E-10** → E-08 (capas 2/3: perfil + persistencia) → E-08 capa 1 (memoria conversacional, candidata a seguimiento post-TFM) → **E-12** (retrospectiva final del roadmap, añadida el 19 jul 2026, D-062). E-11 (ciclo de mejora de calidad) se intercala antes de E-08 porque activar memoria conversacional sobre una generación cuya calidad todavía no está resuelta encarecería el diagnóstico de fallos nuevos. Ver D-059 y "Reordenamiento" en `backlog/epics.md`.
+> **Orden de ejecución (19 jul 2026, D-064):** E-07 → E-09 → **E-11 → E-13 → E-10** → **E-12** (retrospectiva final del roadmap, D-062). E-11 (ciclo de mejora de calidad) se intercala antes de lo que tocara memoria conversacional porque activar historial sobre una generación cuya calidad todavía no está resuelta encarecería el diagnóstico de fallos nuevos (D-059). **E-08 se aplaza entera** (las tres capas) a seguimiento post-TFM precisamente para hacerle sitio a **E-13** (ampliación de KB con MedlinePlus Genetics, creada el 19 jul 2026 a raíz del caso XIAP/IPEX) — E-13 sí entra en Fase 1.5, justo después de E-11 y antes de E-10. **E-10 va después de E-13** por ser de menor prioridad (el pulido de UX/responsive ya se ha ido resolviendo entre épicas; CORS solo importa si se embebe el asistente en una app/widget externo, no urgente ahora) y es, de las cuatro, **la primera candidata a quedar fuera si falta tiempo — nunca E-12**, que es el cierre del TFM y no es negociable. Ver D-059, D-063, D-064 y "Reordenamiento" en `backlog/epics.md`.
 
 ### Épicas
 
@@ -40,11 +40,12 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-05 | Interfaz conversacional (Chainlit) | ✅ Completada — 10 jul 2026 | E-02, E-04 |
 | E-06 | Ingesta y procesamiento de la KB | ✅ Completada — 08 jul 2026 | E-01 |
 | E-07 | Evaluación RAGAS parcial | ✅ Completada — 16 jul 2026 | E-06 |
-| E-08 | Memoria de perfil e histórico | ⚪ No iniciada | E-03, E-04, E-06, E-11 (capa 1) |
+| E-08 | Memoria de perfil e histórico | ⚪ No iniciada — aplazada a post-TFM (D-063) | E-03, E-04, E-06, E-11 (capa 1) |
 | E-09 | Evaluación RAGAS completa | ✅ Completada — 18 jul 2026 | E-07 |
-| E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada | E-05 |
+| E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada — opcional, si da tiempo | E-05 |
 | E-11 | Ciclo de mejora de calidad (post-E-09) | 🔵 En curso | E-09 |
-| E-12 | Retrospectiva final del roadmap (cierre TFM) | ⚪ No iniciada | E-08, E-10, E-11 |
+| E-12 | Retrospectiva final del roadmap (cierre TFM) — innegociable | ⚪ No iniciada | E-10, E-11, E-13 |
+| E-13 | Ampliación de KB — fuentes MedlinePlus Genetics | ⚪ No iniciada | E-11 |
 
 ---
 
@@ -85,11 +86,12 @@ gantt
     E-07 RAGAS parcial                :done,    e07, 2026-07-15, 2026-07-16
     E-09 RAGAS completo                :done,    e09, 2026-07-17, 2026-07-18
     E-11 Ciclo de mejora de calidad   :active,  e11, 2026-07-18, 2026-07-23
-    E-10 Pulido final                 :         e10, 2026-07-23, 2026-07-26
-    E-08 Memoria + histórico          :         e08, 2026-07-26, 2026-07-29
-    E-12 Retro final del roadmap      :         e12, 2026-07-29, 2026-07-29
+    E-13 Ampliación KB (MedlinePlus)  :         e13, 2026-07-23, 2026-07-27
+    E-10 Pulido final                 :         e10, 2026-07-27, 2026-07-28
+    E-12 Retro final del roadmap      :crit,    e12, 2026-07-28, 2026-07-29
 
     section Features opcionales
+    E-08 Memoria + histórico          :         e08, 2026-07-29, 2026-09-01
     Perfil profesional · Multimodal   :         fo, 2026-07-29, 2026-09-01
 
     section Hitos
@@ -98,7 +100,7 @@ gantt
     Entrega final TFM                 :milestone, 2026-07-29, 0d
 ```
 
-> Las fechas internas son orientativas — los únicos hitos inamovibles son el 12 de junio, el 10 de julio y el 29 de julio.
+> Las fechas internas son orientativas — los únicos hitos inamovibles son el 12 de junio, el 10 de julio y el 29 de julio. **E-12 es innegociable** (es el cierre del TFM); si falta tiempo, **E-10 es la primera candidata a quedar fuera**, no E-12 — ver D-064.
 
 ## Estructura del repositorio
 

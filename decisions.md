@@ -3007,4 +3007,131 @@ métricas antes/después (el de la ampliación de KB) y la entrada correspondien
 
 ---
 
+## D-063 — E-13 creada (ampliación de KB: MedlinePlus Genetics); E-08 aplazada por completo a seguimiento post-TFM
+
+**Fecha:** 19 de julio de 2026
+**Fase:** producto / técnica
+**Épicas relacionadas:** E-08, E-11, E-13 (creación)
+
+**Contexto**
+Al investigar en Cowork un caso real (una consulta sobre "xiap" devolvía una respuesta que
+describía en realidad el síndrome IPEX), se rastreó el fallo hasta un chunk concreto de
+`manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf`: XIAP aparece
+solo de pasada dentro de un párrafo centrado en IPEX, y ninguna de las dos consultas de prueba
+recuperó el chunk correcto que sí lo explica bien (líneas ~5434-5448 del mismo documento). No
+es un fallo de embeddings al azar, es un problema de granularidad de chunk/ranking sobre una
+KB que, además, solo tiene ese caso concreto cubierto en profundidad en un único documento.
+
+Se evaluó Orphanet como fuente estructurada externa para paliarlo. El nomenclature pack
+(sinónimos, códigos ORPHA, cruces con OMIM/ICD-10/ICD-11) es gratuito y sin trámite
+(Orphadata Science, CC BY 4.0). El texto descriptivo en prosa por enfermedad, en cambio, vive
+bajo "Orphadata Products" y exige como mínimo un Data Transfer Agreement para uso académico —
+inviable en el plazo del TFM (entrega 29 jul 2026). El propio paper de clasificación
+fenotípica IUIS 2024 (propuesto por Jacques Rivière en `docs/kb-sources.md`) tampoco sirve
+para esto: su contenido diagnóstico real vive en 21 figuras de árbol de decisión (imágenes),
+no en texto extraíble por el pipeline de ingesta actual.
+
+Se localizó **MedlinePlus Genetics** (NIH/NLM) como alternativa que sí cumple las tres
+condiciones (gratis, accesible sin trámite, ya redactado): dominio público, descarga masiva en
+un único XML, redactado para pacientes (registro que encaja con el perfil familiar sin
+necesitar reescritura). Su página curada "Immune System and Disorders" (metadato
+`Title.Alternate: Primary Immunodeficiency Diseases`) acota el universo relevante a 43 fichas
+— ni las 559 de la clasificación IUIS 2024 ni las 1.300+ del índice completo de MedlinePlus
+Genetics. Contrastadas contra `data/raw/upiip/`, 4 ya están cubiertas (Bruton's/XLA,
+enfermedad granulomatosa crónica, SCID genérico, inmunodeficiencia variable común) — quedan
+**39 fichas genuinamente nuevas**, incluyendo XIAP (X-linked lymphoproliferative disease) e
+IPEX, el caso que originó la investigación.
+
+Al plantear dónde encajaba este trabajo, surgió la misma bifurcación que en D-059: ¿tarea
+nueva dentro de una épica ya en marcha, o épica propia? Y, en paralelo, Marcos planteó si el
+hueco que esto abre en el calendario debía cubrirse recortando también las capas 2/3 de E-08
+(no solo la capa 1, ya señalada en D-059), dado que el propio TFM exige implementar un
+subconjunto de funcionalidades, no todas — prioridad de calidad de KB/RAG sobre completitud
+de producto.
+
+**Decisión**
+
+1. **Nueva épica E-13 — Ampliación de KB: fuentes MedlinePlus Genetics**, numerada por orden
+   de creación (no de ejecución, mismo criterio que E-07/E-08/E-09/E-10/E-11/E-12). Alcance:
+   las 39 fichas nuevas, organizadas en 3 lotes de 13 en **orden alfabético inverso** (criterio
+   neutral, decidido por Marcos — no prioriza a propósito XIAP/IPEX, aunque por el propio
+   orden caen en los lotes 1 y 2). Reutiliza íntegramente el playbook ya validado en E-11
+   T-01/T-02 (`kb-maintenance`, `smoke_test_rag.py --force-reingest`, scripts de RAGAS) — no
+   requiere infraestructura nueva. Se crea como épica independiente, no como tareas nuevas
+   dentro de E-11, para no comprometer el cierre ya aprobado de esa épica (T-03–T-07) — mismo
+   principio que motivó crear E-11 en D-059 en vez de tocar una épica en marcha.
+   **No se arranca con esta decisión**: queda reflejada en el roadmap como candidata a evaluar
+   tras el cierre de E-11, compitiendo por el tiempo restante de Fase 1.5 contra E-10/E-12, con
+   seguimiento post-TFM como destino por defecto si no hay margen.
+2. **E-08 se aplaza por completo** (capas 1, 2 y 3, no solo la capa 1 ya señalada en D-059) a
+   seguimiento post-TFM. Importante matiz: las capas 2/3 no estaban bloqueadas por el motivo de
+   D-059 (mezclar historial de conversación con una generación de calidad aún no resuelta) —
+   estaban aprobadas para ejecutarse después de E-10 sin depender de E-11. Aplazarlas ahora es
+   una decisión nueva de priorización de tiempo (calidad de KB > completitud de producto), no
+   una extensión automática de la lógica anterior. D-009 (protección de datos) ya establece que
+   el TFM solo exige documentar la decisión de diseño sobre derecho al olvido, no implementarla
+   — aplazar la capa 3 no abre ningún cabo suelto legal/ético para la entrega.
+3. Fuente MedlinePlus Genetics añadida a `docs/kb-sources.md` (perfil familiar) como
+   `Propuesta`, referenciando E-13.
+
+**Consecuencias**
+- `backlog/epics.md`: nueva sección E-13 (alcance, criterios de aceptación, tabla de tareas por
+  lote) y nota de aplazamiento completo añadida a la sección de E-08.
+- `README.md`: tabla de épicas, fila de Fase 1.5/Features opcionales y nota de "Orden de
+  ejecución" actualizadas — E-08 sale de Fase 1.5, E-13 aparece como candidata sin fecha fija.
+- `docs/kb-sources.md`: nueva fila en Perfil Familiar apuntando a MedlinePlus Genetics.
+
+**Alternativas descartadas**
+- Meter los 3 lotes como tareas T-08/T-09/T-10 dentro de E-11: descartada por el mismo riesgo
+  que D-059 ya evitó una vez — mezclaría alcance nuevo con el cierre ya aprobado de la épica.
+- Aplazar solo la capa 1 de E-08 y mantener 2/3 en Fase 1.5: descartada por Marcos al priorizar
+  explícitamente la profundidad de la KB/calidad del RAG sobre la completitud de producto.
+- Integrar Orphanet (texto descriptivo en prosa) en vez de MedlinePlus: descartada — exige
+  Data Transfer Agreement, inviable en el plazo del TFM; su dataset gratuito es estructurado
+  (códigos, genes, fenotipos), no prosa ya redactada.
+- Perseguir el paper de clasificación fenotípica IUIS 2024 como fuente de texto: descartada —
+  su contenido real vive en figuras de árbol de decisión (imágenes), no extraíble por el
+  pipeline de ingesta actual (verificado contra el PDF real en PMC).
+
+---
+
+## D-064 — E-13 confirmada dentro de Fase 1.5; E-12 innegociable, E-10 primera candidata a caer
+
+**Fecha:** 19 de julio de 2026
+**Fase:** producto / planificación
+**Épicas relacionadas:** E-10, E-12, E-13
+
+**Contexto**
+D-063 dejó a E-13 como candidata "a evaluar tras el cierre de E-11, con seguimiento post-TFM
+como destino por defecto si no hay margen" — redactado de forma demasiado ambigua. Marcos
+aclara que ese no era el espíritu: **aplazar E-08 entera se hizo precisamente para que E-13
+entrara en Fase 1.5**, no para dejarla fuera también. Al fijar esto, se plantea además el orden
+relativo de E-10 (pulido: responsive, CORS y UX) frente a E-13 y E-12: el pulido de UX/
+responsive de E-10 se ha ido resolviendo de forma orgánica entre épicas ya completadas, y CORS
+solo cobra sentido si en el futuro se embebe el asistente en una app/widget externo — no es una
+necesidad inmediata. Esto la sitúa por debajo de E-13 en prioridad.
+
+**Decisión**
+1. **E-13 entra en Fase 1.5**, no post-TFM. Orden de ejecución dentro de la fase:
+   E-11 → **E-13** → E-10 → E-12.
+2. **E-10 pasa a ser la primera candidata a quedar fuera** si no hay tiempo antes del 29 de
+   julio — no E-13 ni, sobre todo, E-12.
+3. **E-12 (retrospectiva final, cierre del TFM) es innegociable.** Se ejecuta sí o sí, aunque
+   implique recortar o eliminar E-10 por completo. No es una épica más del roadmap: es el
+   entregable que cierra formalmente el TFM.
+
+**Consecuencias**
+- `README.md`: Gantt, tabla de fases/épicas y nota de "Orden de ejecución" actualizados —
+  E-13 sale de "Features opcionales" y entra en Fase 1.5; E-12 marcada como innegociable
+  (`crit` en el Gantt); nota explícita de que E-10 es la primera candidata a caer.
+- `backlog/epics.md`: nota de prioridad añadida a la sección de E-13.
+
+**Alternativas descartadas**
+- Dejar E-13 como candidata ambigua (ni dentro ni fuera de Fase 1.5) tal como quedó en D-063:
+  descartada por Marcos por generar confusión sobre el objetivo real de aplazar E-08.
+- Priorizar E-10 sobre E-13: descartada — E-10 aporta pulido de una interfaz ya funcional;
+  E-13 aporta la profundidad de KB que motivó todo este bloque de decisiones (D-063).
+
+---
+
 *Próximas decisiones previstas: estrategia de chunking validada — tras primera evaluación RAGAS; estrategia incremental de reindexación basada en manifest, si el volumen de la KB lo justifica en el futuro (revisitar D-024).*
