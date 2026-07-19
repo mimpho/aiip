@@ -68,6 +68,7 @@
 - [D-057 — T-05 (E-09): decisiones técnicas por hallazgo — EnsembleRetriever para D, stoplist+contexto en alarm_triggers.json para A, lingua-py para F, B como Plan B](#d-057--t-05-e-09-decisiones-técnicas-por-hallazgo--ensembleretriever-para-d-stoplistcontexto-en-alarm_triggersjson-para-a-lingua-py-para-f-b-como-plan-b)
 - [D-058 — T-04 (E-09): juicio de comportamiento con LLM-as-judge + confirmación manual, y Hallucination Rate derivado de Faithfulness por caso (no del promedio)](#d-058--t-04-e-09-juicio-de-comportamiento-con-llm-as-judge--confirmación-manual-y-hallucination-rate-derivado-de-faithfulness-por-caso-no-del-promedio)
 - [D-059 — E-11 creada como gate de calidad antes de E-08 capa 1; temperatura/internet en vivo descartados, ampliación de KB como primera tarea](#d-059--e-11-creada-como-gate-de-calidad-antes-de-e-08-capa-1-temperaturainternet-en-vivo-descartados-ampliación-de-kb-como-primera-tarea)
+- [D-060 — T-01 (E-11): RAGAS re-measurement moved to T-02, source search narrowed to the 6 genuine coverage gaps](#d-060--t-01-e-11-ragas-re-measurement-moved-to-t-02-source-search-narrowed-to-the-6-genuine-coverage-gaps)
 
 ---
 
@@ -2807,6 +2808,62 @@ diagnóstico de cualquier regresión futura. Mantiene Falso Negativo Cero como p
 negociable frente a atajos que lo comprometerían (temperatura, web abierta). Prioriza la
 palanca de contenido (ampliar KB curada) sobre la de algoritmo (retrieval) por ser más
 barata, más segura, y por resolver como efecto colateral varios hallazgos ya abiertos.
+
+---
+
+## D-060 — T-01 (E-11): RAGAS re-measurement moved to T-02, source search narrowed to the 6 genuine coverage gaps
+
+**Fecha:** 18 de julio de 2026
+**Fase:** técnica
+**Épica:** E-11 (T-01)
+
+**Contexto**
+El `.feature` informal de T-01 (generado por `epic-start`) incluía un escenario para relanzar
+`scripts/run_ragas_eval.py` como línea base post-ampliación. Dos problemas detectados en la
+revisión crítica de `task-start`: (1) el script escribe siempre en
+`tests/eval/results/e09_t02_ragas_full_scores.json` y salta los casos cuyo `id` ya está
+presente (ejecución incremental para no repetir llamadas a Gemini bajo cuota limitada) —
+relanzarlo sin resetear el fichero no produciría ninguna medición nueva sobre los 32 casos ya
+puntuados en E-09; (2) T-02 ya tiene como criterio explícito "Re-medición RAGAS + peso
+adaptativo de BM25 contra el corpus ampliado", así que medir también en T-01 duplicaría
+llamadas a un recurso ya limitado y mezclaría cambio de contenido con medición — justo lo que
+D-056 pedía evitar al crear E-11 (D-059).
+
+Además, de los 11 casos `eval_XX` citados en el `.feature` como "preguntas de vida diaria sin
+cobertura" (eval_03/06/08/11/13/15/20/23/25/27/65), comprobado contra
+`data/raw/manifest.json`: 4 ya tienen documento indexado que cubre el tema — `eval_03`/`eval_65`
+("por qué necesita infusiones") con `aedip/tratamiento-con-inmunoglobulinas.html`; `eval_08`
+("antibióticos profilácticos") con `upiip/guia_antibiotics_esp_0.pdf` (el mismo documento que
+T-05 marca como "sospechoso" por apariciones espurias, no por ausencia); `eval_11`
+("diagnóstico") con `aedip/diagnostico-de-las-inmunodeficiencias-primarias.pdf`; `eval_13`
+("cuidados piel inyección subcutánea") con `aedip/infusiones-de-IGS-subcutaneas.pdf`. Su mal
+score en E-09 apunta a un problema de retrieval (BM25/chunking), no de contenido.
+
+**Decisión**
+1. T-01 se cierra con curación y vetado de fuentes + adición de documentos a `data/raw/` +
+   reingesta (`--force-reingest`), sin ejecutar ni tocar el pipeline RAGAS. La medición
+   antes/después sobre el corpus ampliado (y la calibración de BM25) es responsabilidad
+   exclusiva de T-02.
+2. La búsqueda de fuentes nuevas de T-01 se acota a los 6 huecos genuinos sin ningún documento
+   que los cubra hoy: frecuencia de revisiones con el inmunólogo (`eval_06`), viajar en avión
+   con la medicación (`eval_15`), informar al inmunólogo del destino de vacaciones (`eval_23`),
+   convivencias/salidas de varios días (`eval_25`), si es contagiosa (`eval_27`), si tiene cura
+   (`eval_20`). Los 4 casos con documento ya indexado (`eval_03`/`08`/`11`/`13`/`65`) quedan
+   fuera del alcance de T-01 — su investigación es de T-02 (retrieval) o T-05 (caso dirigido,
+   ya cubre `guia_antibiotics_esp_0.pdf`).
+
+**Consecuencias**
+Evita doblar el consumo de cuota de Gemini y mantiene el principio de D-056 (medición
+específica → mejora específica, sin mezclar causas) también dentro de E-11, no solo entre
+épicas. Si al vetar fuentes para los 6 huecos genuinos aparece naturalmente un documento mejor
+para alguno de los 4 casos ya cubiertos, se puede añadir sin reabrir esta decisión — pero no es
+el criterio de cierre de T-01.
+
+**Alternativas descartadas**
+- Mantener el gate RAGAS en T-01 con reset explícito del fichero de resultados: descartado,
+  duplica medición ya prevista en T-02 y consume cuota limitada sin necesidad.
+- Revisar los 11 casos igual de a fondo en T-01: descartado, arriesga vetar fuentes redundantes
+  para temas que ya tienen documento — el problema ahí es de retrieval, no de contenido.
 
 ---
 

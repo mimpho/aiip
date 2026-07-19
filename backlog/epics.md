@@ -637,7 +637,7 @@ puntos resueltos sobre la propuesta inicial:
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-01 | Ampliación de la KB (fuentes generales/FAQ de vida diaria) | ⚪ Pendiente |
+| T-01 | Ampliación de la KB (fuentes generales/FAQ de vida diaria) | ✅ Completada |
 | T-02 | Re-medición RAGAS + peso adaptativo de BM25 contra el corpus ampliado | ⚪ Pendiente |
 | T-03 | Hallazgo C: regla acotada de grounding para conectores no clínicos | ⚪ Pendiente |
 | T-04 | Hallazgo E: revisión cualitativa del registro lingüístico | ⚪ Pendiente |
