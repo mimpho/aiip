@@ -184,6 +184,51 @@
       "checksum": "sha256:391627a87f24448143d1af230ffcb8fc99700d03d59f2429ae722ee851a82e26",
       "url": "https://www.upiip.com/sites/upiip.com/files/triptic-traspas-digital_ES.pdf",
       "fecha": "2026-07-07"
+    },
+    "aedip/una-guia-para-escuelas.pdf": {
+      "checksum": "sha256:f4f38d9f647216a790bffc8420a97102bbd6d793b1ae147a8bb3dc02db55dc72",
+      "url": "https://aedip.com/pdf/una-guia-para-escuelas.pdf",
+      "fecha": "2026-07-19"
+    },
+    "aedip/mantenerse-saludable.pdf": {
+      "checksum": "sha256:2f70e5d51b37c45d103ddb53084c4234534f1a815280e1fae7da5e661566eb3a",
+      "url": "https://aedip.com/pdf/mantenerse-saludable.pdf",
+      "fecha": "2026-07-19"
+    },
+    "aedip/la-atencion-del-paso-de-nino-a-adulto.pdf": {
+      "checksum": "sha256:6605fdc61577c706a1d9069f7dc78f712c0a1569b900f48b9606a7bc8033079a",
+      "url": "https://aedip.com/pdf/la-atencion-del-paso-de-nino-a-adulto.pdf",
+      "fecha": "2026-07-19"
+    },
+    "aedip/Inmunodeficiencias-primarias-en-los-adultos.pdf": {
+      "checksum": "sha256:78003003bccf2dfc956e49717c2f7a8b63e7a1c995b5248aba05af841e956eec",
+      "url": "https://aedip.com/pdf/Inmunodeficiencias-primarias-en-los-adultos.pdf",
+      "fecha": "2026-07-19"
+    },
+    "aedip/haematopoietic-stem-cell-transplantation.pdf": {
+      "checksum": "sha256:20c656ac219cb291dba02b98aa78beb0631334a211313ff2d83f5fa28d93eaa9",
+      "url": "https://aedip.com/pdf/haematopoietic-stem-cell-transplantation.pdf",
+      "fecha": "2026-07-19"
+    },
+    "aedip/libro-hipogammaglobulinemias-4.pdf": {
+      "checksum": "sha256:f396f028319dfec79d607953c8c12d0e663b730c16e77a0e01a3d9849652db8d",
+      "url": "https://aedip.com/pdf/libro-hipogammaglobulinemias-4.pdf",
+      "fecha": "2026-07-19"
+    },
+    "seicap/50-preguntas-inmunodeficiencias.pdf": {
+      "checksum": "sha256:36dbd967d97820961eb1db477604755f880a46537560ea7dcbe2f765bf829bb5",
+      "url": "https://seicap.es/wp-content/uploads/2023/06/6307AB201-r.pdf",
+      "fecha": "2026-07-19"
+    },
+    "ipopi/IPOPI_Vaccines.pdf": {
+      "checksum": "sha256:4bd2eeae9cac9d454d71bd83365277bad035f0a41927fee0593cf2d661066df5",
+      "url": "https://ipopi.org/wp-content/uploads/2017/07/IPOPI_Vaccines.pdf",
+      "fecha": "2026-07-19"
+    },
+    "ipopi/pid-patients-travel.html": {
+      "checksum": "sha256:a96338c0f694735aac2fba3b68030a839d208937f91255acccb0e17b769693d3",
+      "url": "https://ipopi.org/pids/pids-faqs/#toggle-id-25",
+      "fecha": "2026-07-19"
     }
   }
 }
