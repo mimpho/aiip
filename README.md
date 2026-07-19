@@ -22,12 +22,12 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 |---|---|---|---|
 | Fase 0 — Documentación técnica | ✅ Completada | 12 jun 2026 | — (previa a la descomposición en épicas) |
 | Fase 1 — MVP core | ✅ Completada | 10 jul 2026 | E-01 a E-06 |
-| Fase 1.5 — MVP completo | 🔵 En curso | 29 jul 2026 | E-07, E-08, E-09, E-10, E-11 |
+| Fase 1.5 — MVP completo | 🔵 En curso | 29 jul 2026 | E-07, E-08, E-09, E-10, E-11, E-12 |
 | Features opcionales | ⚪ Backlog | Post-TFM | F-01 (perfil profesional, multimodal) |
 
 > **E-07 y E-08** se movieron de Fase 1 a Fase 1.5 el 10 jul 2026 — ninguna era requisito del hito "código funcional" (lo entrega E-05); ver notas en `backlog/epics.md`.
 >
-> **Orden de ejecución (18 jul 2026):** E-07 → E-09 → **E-11 → E-10** → E-08 (capas 2/3: perfil + persistencia) → E-08 capa 1 (memoria conversacional, candidata a seguimiento post-TFM). E-11 (ciclo de mejora de calidad) se intercala antes de E-08 porque activar memoria conversacional sobre una generación cuya calidad todavía no está resuelta encarecería el diagnóstico de fallos nuevos. Ver D-059 y "Reordenamiento" en `backlog/epics.md`.
+> **Orden de ejecución (18 jul 2026):** E-07 → E-09 → **E-11 → E-10** → E-08 (capas 2/3: perfil + persistencia) → E-08 capa 1 (memoria conversacional, candidata a seguimiento post-TFM) → **E-12** (retrospectiva final del roadmap, añadida el 19 jul 2026, D-062). E-11 (ciclo de mejora de calidad) se intercala antes de E-08 porque activar memoria conversacional sobre una generación cuya calidad todavía no está resuelta encarecería el diagnóstico de fallos nuevos. Ver D-059 y "Reordenamiento" en `backlog/epics.md`.
 
 ### Épicas
 
@@ -44,6 +44,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-09 | Evaluación RAGAS completa | ✅ Completada — 18 jul 2026 | E-07 |
 | E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada | E-05 |
 | E-11 | Ciclo de mejora de calidad (post-E-09) | 🔵 En curso | E-09 |
+| E-12 | Retrospectiva final del roadmap (cierre TFM) | ⚪ No iniciada | E-08, E-10, E-11 |
 
 ---
 
@@ -86,6 +87,7 @@ gantt
     E-11 Ciclo de mejora de calidad   :active,  e11, 2026-07-18, 2026-07-23
     E-10 Pulido final                 :         e10, 2026-07-23, 2026-07-26
     E-08 Memoria + histórico          :         e08, 2026-07-26, 2026-07-29
+    E-12 Retro final del roadmap      :         e12, 2026-07-29, 2026-07-29
 
     section Features opcionales
     Perfil profesional · Multimodal   :         fo, 2026-07-29, 2026-09-01

@@ -70,6 +70,7 @@
 - [D-059 — E-11 creada como gate de calidad antes de E-08 capa 1; temperatura/internet en vivo descartados, ampliación de KB como primera tarea](#d-059--e-11-creada-como-gate-de-calidad-antes-de-e-08-capa-1-temperaturainternet-en-vivo-descartados-ampliación-de-kb-como-primera-tarea)
 - [D-060 — T-01 (E-11): RAGAS re-measurement moved to T-02, source search narrowed to the 6 genuine coverage gaps](#d-060--t-01-e-11-ragas-re-measurement-moved-to-t-02-source-search-narrowed-to-the-6-genuine-coverage-gaps)
 - [D-061 — T-02 (E-11): mecanismo del peso adaptativo de BM25, recálculo por consulta y alcance de TDD](#d-061--t-02-e-11-mecanismo-del-peso-adaptativo-de-bm25-recálculo-por-consulta-y-alcance-de-tdd)
+- [D-062 — E-12 creada: retrospectiva final del roadmap como épica de cierre del TFM](#d-062--e-12-creada-retrospectiva-final-del-roadmap-como-épica-de-cierre-del-tfm)
 
 ---
 
@@ -2952,6 +2953,57 @@ Construir un detector basado en un patrón que los propios datos no confirman ha
 resolver el problema equivocado — el hallazgo se detecta en la revisión crítica antes de que
 Antigravity invierta tiempo implementándolo, mismo criterio que D-057 aplicó a Chroma
 `Search()` nativo.
+
+---
+
+## D-062 — E-12 creada: retrospectiva final del roadmap como épica de cierre del TFM
+
+**Fecha:** 19 de julio de 2026
+**Fase:** proceso / metodología
+**Épica:** E-12 (creación)
+
+**Contexto**
+Durante `task-start` de E-11 T-02, al revisar los resultados de la re-medición, Marcos pidió
+dejar documentado un caso demostrable de human-in-the-loop (intuición sobre KB limitado →
+verificación contra `data/raw/manifest.json` → tarea priorizada → +10.5pp de Context
+Precision). Al preguntar dónde encajaba esto para el TFM, surgió una pregunta más amplia:
+¿dónde queda reflejado cómo se ha ido "rompiendo" y recomponiendo el roadmap del proyecto —
+reordenamientos entre épicas (E-05 por delante de E-07, 7 jul; E-09→E-11→E-10→E-08, D-059),
+repriorizaciones dentro de una épica (D-056, mid-sprint E-09), e ideas descartadas
+conscientemente (temperatura/internet en vivo, D-059)? Comprobado: no hay ningún espacio
+para esto. `docs/process-log.md` es explícitamente per-épica (fricción de workflow *dentro*
+de una épica); `decisions.md` registra decisiones puntuales sin narrativa que las conecte;
+el Gantt del README solo marca "Entrega final TFM" como hito de 0 días, sin ninguna épica
+o tarea asociada.
+
+**Decisión**
+Se crea **E-12 — Retrospectiva final del roadmap (cierre TFM)**, última épica de la Fase 1.5,
+justo antes del hito del 29 de julio. Épica sin TDD (es documentación), pero con rama+PR
+igual que el resto del proyecto — mismo precedente que E-11 T-01/T-04/T-06 y E06-T07. Una
+sola tarea (T-01): documento que recorre cronológicamente los reordenamientos y
+repriorizaciones del proyecto citando su decisión/nota de origen, con al menos un caso de
+métricas antes/después (el de la ampliación de KB) y la entrada correspondiente en
+`prompts.md` (formato P-XXX, mismo patrón que P-015/P-017 sobre el rol de human-in-the-loop).
+
+**Consecuencias**
+- `backlog/epics.md`: nueva sección E-12 con criterios de aceptación y tabla de tareas.
+- `README.md`: tabla de épicas, Gantt y nota de "Orden de ejecución" actualizados con E-12
+  al final del roadmap.
+- El caso de human-in-the-loop de E-11 T-01/T-02 (ver memoria de sesión) es el primer
+  contenido candidato de E-12 T-01, no se redacta todavía — se recopila en el `epic-close`
+  de E-11 (Paso 4, borrador de `prompts.md`) y se consolida en E-12 cuando se arranque.
+
+**Alternativas descartadas**
+- Sección final en `process-log.md` sin épica propia: descartada por Marcos — prefiere un
+  entregable visible en `epics.md`/README, citable directamente en el TFM, no una sección
+  añadida a un fichero de propósito distinto.
+- Ampliar el `epic-close` de E-08 (última épica del roadmap actual) para cubrir también la
+  retro de todo el proyecto: descartada por mezclar la retro específica de E-08 con la
+  narrativa completa del roadmap en el mismo documento.
+- Rama propia off `main` (mismo patrón que `docs/e11-quality-cycle-planning`): evaluada y
+  descartada por Marcos por simplicidad — este cambio se integra directamente en
+  `epic/E11-quality-cycle` junto con el resto del trabajo en curso de la épica, en vez de
+  abrir una rama de documentación aislada.
 
 ---
 

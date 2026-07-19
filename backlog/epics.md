@@ -653,6 +653,42 @@ respectivamente. T-07 cierra la épica.
 
 ---
 
+### E-12 — Retrospectiva final del roadmap (cierre TFM)
+
+Épica de cierre, al final de la Fase 1.5, justo antes de la entrega del 29 de julio. Sin
+TDD — es documentación, mismo patrón que E-11 T-01/T-04/T-06 —, pero con rama+PR igual que
+el resto del proyecto (precedente E06-T07).
+
+**Origen (19 jul 2026):** durante `task-start` de E-11 T-02, Marcos señaló que el repo ya
+documenta bien las decisiones puntuales (`decisions.md`) y la fricción de workflow por
+épica (`docs/process-log.md`), pero no existe ningún sitio que sintetice cómo evolucionó el
+**roadmap completo**: reordenamientos entre épicas (E-05 por delante de E-07, 7 jul;
+E-09→E-11→E-10→E-08, D-059), repriorizaciones dentro de una épica (D-056, mid-sprint E-09),
+e ideas descartadas conscientemente (temperatura/internet en vivo como atajo de calidad,
+D-059). Es un ángulo de reflexión distinto al de `process-log.md` (que cubre fricción de
+proceso *dentro* de una épica, no evolución del plan *entre* épicas) — con valor directo
+para la memoria del TFM: metodología iterativa aplicada y human-in-the-loop demostrable con
+números, no solo declarado.
+
+**Criterios de aceptación de alto nivel**
+- Documento único que recorre cronológicamente los cambios de roadmap del proyecto
+  (reordenamientos, repriorizaciones, ideas descartadas), citando la decisión/nota de origen
+  de cada uno (`decisions.md`, notas en `epics.md`/`README.md`)
+- Al menos un caso con métricas antes/después que demuestre el valor de un ajuste de rumbo
+  (ej. ampliación de KB, E-11 T-01/T-02: Context Precision 52.1%→62.6%)
+- Entrada en `prompts.md` con el caso de human-in-the-loop ya identificado (intuición de
+  Marcos sobre KB limitado → verificación contra `manifest.json` → tarea priorizada)
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | ⚪ Pendiente |
+
+**Estado:** ⚪ No iniciada
+
+---
+
 ## Backlog de features opcionales
 *Entre entrega parcial y final, o post-TFM según tiempo disponible*
 
