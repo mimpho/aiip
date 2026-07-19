@@ -10,6 +10,17 @@ from langchain_core.embeddings import Embeddings
 _BM25_WEIGHT = 0.4
 _VECTOR_WEIGHT = 0.6
 
+# D-061 (E-11 T-02): peso adaptativo por consulta. Con señal léxica fuerte se
+# mantiene el peso uniforme de D-057 (validado en E-09 T-05); sin señal, BM25 se
+# reduce casi a cero pero no a 0.0 exacto — EnsembleRetriever exige
+# any(w > 0 for w in weights) en la validación de construcción, y aunque el peso se
+# reasigna por mutación (no reconstrucción), 0.05 evita depender de que ese
+# comportamiento no cambie.
+_SIGNAL_BM25_WEIGHT = 0.4
+_SIGNAL_VECTOR_WEIGHT = 0.6
+_NO_SIGNAL_BM25_WEIGHT = 0.05
+_NO_SIGNAL_VECTOR_WEIGHT = 0.95
+
 
 def get_retriever(
     embeddings: Embeddings,
@@ -52,6 +63,46 @@ def get_hybrid_retriever(vectorstore: Chroma, top_k: int = 5) -> EnsembleRetriev
         retrievers=[bm25_retriever, vector_retriever],
         weights=[_BM25_WEIGHT, _VECTOR_WEIGHT],
     )
+
+
+def has_lexical_signal(query: str, bm25_retriever: BM25Retriever) -> bool:
+    """Determina si `query` tiene señal léxica fuerte (D-061), de forma determinista.
+
+    Dos criterios, cualquiera activa la señal:
+    (a) una palabra con mayúscula que no es la primera palabra de la pregunta
+        (aproximación a nombre propio, sin lista de topónimos que mantener).
+    (b) una palabra de baja frecuencia en el corpus indexado: IDF (ya calculado por
+        `BM25Okapi` en `bm25_retriever.vectorizer`) por encima de la media del
+        corpus (`average_idf`). Se tokeniza con el mismo `preprocess_func` del
+        `bm25_retriever` para que las claves de búsqueda en `idf` coincidan con
+        las indexadas (D-061, punto 2 del contexto técnico).
+    """
+    words = query.split()
+    if any(word[0].isupper() for word in words[1:] if word):
+        return True
+
+    idf = bm25_retriever.vectorizer.idf
+    average_idf = bm25_retriever.vectorizer.average_idf
+    tokens = bm25_retriever.preprocess_func(query)
+    return any(idf.get(token, 0.0) > average_idf for token in tokens)
+
+
+def apply_adaptive_bm25_weight(retriever: EnsembleRetriever, query: str) -> None:
+    """Ajusta `retriever.weights` para `query` antes de invocar el retriever (D-061).
+
+    Muta el atributo `weights` de la instancia ya construida/cacheada — no
+    reconstruye `retriever.retrievers` ni el índice BM25, que es la parte cara.
+    Si el retriever no tiene BM25 (fallback de `get_hybrid_retriever` cuando el
+    vectorstore está vacío, un único retriever vectorial), no hace nada.
+    """
+    if len(retriever.retrievers) < 2:
+        return
+
+    bm25_retriever = retriever.retrievers[0]
+    if has_lexical_signal(query, bm25_retriever):
+        retriever.weights = [_SIGNAL_BM25_WEIGHT, _SIGNAL_VECTOR_WEIGHT]
+    else:
+        retriever.weights = [_NO_SIGNAL_BM25_WEIGHT, _NO_SIGNAL_VECTOR_WEIGHT]
 
 
 def distance_to_similarity(distance: float) -> float:
