@@ -71,6 +71,10 @@
 - [D-060 — T-01 (E-11): RAGAS re-measurement moved to T-02, source search narrowed to the 6 genuine coverage gaps](#d-060--t-01-e-11-ragas-re-measurement-moved-to-t-02-source-search-narrowed-to-the-6-genuine-coverage-gaps)
 - [D-061 — T-02 (E-11): mecanismo del peso adaptativo de BM25, recálculo por consulta y alcance de TDD](#d-061--t-02-e-11-mecanismo-del-peso-adaptativo-de-bm25-recálculo-por-consulta-y-alcance-de-tdd)
 - [D-062 — E-12 creada: retrospectiva final del roadmap como épica de cierre del TFM](#d-062--e-12-creada-retrospectiva-final-del-roadmap-como-épica-de-cierre-del-tfm)
+- [D-063 — E-13 creada (ampliación de KB: MedlinePlus Genetics); E-08 aplazada por completo a seguimiento post-TFM](#d-063--e-13-creada-ampliación-de-kb-medlineplus-genetics-e-08-aplazada-por-completo-a-seguimiento-post-tfm)
+- [D-064 — E-13 confirmada dentro de Fase 1.5; E-12 innegociable, E-10 primera candidata a caer](#d-064--e-13-confirmada-dentro-de-fase-15-e-12-innegociable-e-10-primera-candidata-a-caer)
+- [D-065 — T-03 (E-11): tarea sin TDD (checklist en tests/eval/), no código con asserts; exclusiones explícitas de alcance clínico en la regla de grounding](#d-065--t-03-e-11-tarea-sin-tdd-checklist-en-testseval-no-código-con-asserts-exclusiones-explícitas-de-alcance-clínico-en-la-regla-de-grounding)
+- [D-066 — T-03 (E-11): hallazgo C cerrado sin modificar el system prompt — el comportamiento evasivo original no se reproduce](#d-066--t-03-e-11-hallazgo-c-cerrado-sin-modificar-el-system-prompt--el-comportamiento-evasivo-original-no-se-reproduce)
 
 ---
 
@@ -3131,6 +3135,135 @@ necesidad inmediata. Esto la sitúa por debajo de E-13 en prioridad.
   descartada por Marcos por generar confusión sobre el objetivo real de aplazar E-08.
 - Priorizar E-10 sobre E-13: descartada — E-10 aporta pulido de una interfaz ya funcional;
   E-13 aporta la profundidad de KB que motivó todo este bloque de decisiones (D-063).
+
+---
+
+## D-065 — T-03 (E-11): tarea sin TDD (checklist en tests/eval/), no código con asserts; exclusiones explícitas de alcance clínico en la regla de grounding
+
+**Fecha:** 19 de julio de 2026
+**Fase:** técnica / proceso
+**Épica:** E-11 (T-03)
+
+**Contexto**
+El draft de `epic-start` (`tests/features/e11_t03_grounding_conectores.feature`, commit b58bc64)
+siguió el formato Gherkin estándar de `tests/features/` (código, TDD), igual que el resto de
+tareas de E-11. Al formalizar T-03 en `task-start` se revisó si esa premisa se sostenía, mismo
+criterio que D-053. A diferencia de T-02 (que sí incorpora funciones deterministas nuevas:
+`has_lexical_signal`, recálculo de peso por consulta), T-03 no añade ningún código determinista:
+el entregable es (a) una investigación offline no determinista contrastando respuesta laxa vs.
+estricta con el LLM real, (b) el texto de una regla de prompt redactada y aprobada por Marcos, y
+(c) una re-evaluación con LLM (RAGAS/revisión manual) para confirmar que no hay regresión.
+Ninguna de las tres partes es asserteable de forma determinista — mismo patrón que E-09 T-04
+(D-058, LLM-as-judge + confirmación manual), no el de T-02.
+
+Adicionalmente, se identificó que el ejemplo ilustrativo de referencia ("hospital cerca de Vic" /
+chunk "Barcelona", `backlog/ideas.md` "Hallazgos del RAG" punto 1) es una ilustración hipotética
+de Marcos durante la validación de E-05 T-03 — no corresponde a ningún caso del dataset RAGAS
+(`tests/eval/dataset_partial.json`) ni al smoke test E-05 T-07 CU-05 (esa pregunta real fue "¿A
+quién llamo si es fin de semana?", y confirma el Hallazgo 2 —ruido en dense vector search—, no
+el Hallazgo 1 de grounding). No invalida el escenario, pero debe tratarse como caso sintético a
+construir y verificar contra el KB real post-T-01, no como incidente ya documentado.
+
+**Decisión**
+1. **T-03 se trata como tarea sin TDD** (checklist manual, D-050/D-051), no como código con
+   asserts pytest-bdd. El `.feature` se mueve de `tests/features/e11_t03_grounding_conectores.feature`
+   a `tests/eval/e11_t03_grounding_conectores.feature`, mismo formato que
+   `tests/eval/e09_t04_behavior_hallucination.feature`. Sigue llevando rama + PR (precedente
+   E06-T07).
+2. **Autoría de la regla:** el agente redacta el borrador de la regla exacta tras la
+   investigación offline; Marcos la aprueba o pide ajustes antes de tocar
+   `prompts/system_prompt_family.txt` en producción (D-059 punto 5, sin cambios).
+3. **Alcance de la regla, exclusiones explícitas añadidas:** además de los ejemplos positivos ya
+   aprobados en `epic-start` (geografía básica, distancias, relaciones temporales obvias), el
+   `.feature` fija explícitamente que la regla **excluye**: nombres de fármacos o dosis,
+   protocolos de tratamiento, cualquier inferencia sobre el estado clínico del usuario, y
+   cualquier fuente externa no indexada en la KB. Se fija antes de la investigación offline, no
+   se deja a que emerja solo del contraste de casos.
+4. **Regresión de referencia corregida:** el escenario de regresión contra los 32 casos usa como
+   línea base el resultado final de T-02 (peso adaptativo BM25) —
+   `tests/eval/results/e09_t02_ragas_full_scores.json` (confirmado en
+   `tests/eval/results/e11_t02_cierre.md`) —, no una referencia combinada "T-01/T-02".
+
+**Consecuencias**
+- `tests/eval/e11_t03_grounding_conectores.feature` (nuevo, sustituye al draft en
+  `tests/features/`) — checklist de verificación manual.
+- El `.feature` antiguo en `tests/features/` se elimina, no queda duplicado.
+- No hay `tests/step_defs/test_e11_t03.py` — no aplica TDD.
+
+**Alternativas descartadas**
+- Mantener el draft de `epic-start` tal cual (`tests/features/`, TDD): descartada — no hay
+  código determinista que testear, hubiera sido coste sin señal real (mismo razonamiento que
+  D-053, a la inversa).
+- Dejar el alcance de exclusiones abierto a que emerja solo de la investigación offline:
+  descartada por Marcos — prefiere fijar el límite negativo por escrito antes de investigar.
+
+---
+
+## D-066 — T-03 (E-11): hallazgo C cerrado sin modificar el system prompt — el comportamiento evasivo original no se reproduce
+
+**Fecha:** 19 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-11 (T-03)
+
+**Contexto**
+El Bloque 1 (investigación offline, `scripts/run_e11_t03_grounding_investigation.py`) se
+ejecutó en Antigravity siguiendo `tasks/E11-T03-plan.md`. Caso sintético construido y
+verificado contra el KB real post-T-01: "¿hay algún hospital con inmunología cerca de Vic?"
+recupera el chunk de `data/raw/aedip/Hospitales-con-Servicios-de-Inmunologia.html`
+(hospitales Sant Joan de Déu y Vall d'Hebron etiquetados "Barcelona"), sin que ningún chunk
+mencione "Vic" — el caso reproduce fielmente la estructura del hallazgo original.
+
+Resultado inesperado: la respuesta **estricta** (prompt de producción, sin ningún cambio) ya
+conecta el concepto no clínico sin evasivas — *"no hay hospitales listados específicamente en
+Vic. Sin embargo, en Barcelona, que no está muy lejos, hay varios hospitales..."* — y la
+respuesta **laxa** (con el permiso experimental añadido solo en memoria) es prácticamente
+idéntica en contenido y tono, sin diferencia de comportamiento relevante. Transcripción
+completa en `tests/eval/results/e11_t03_investigacion_offline.json`, análisis en
+`tests/eval/results/e11_t03_cierre.md`.
+
+El comportamiento evasivo descrito en el hallazgo original (`backlog/ideas.md`, "Hallazgos
+del RAG" punto 1) fue observado por Marcos durante la validación de E-05 T-03. Desde entonces
+`prompts/system_prompt_family.txt` ha recibido varias revisiones no dirigidas a este hallazgo
+(D-026 listado de fuentes, D-040 auth, restricciones de E-09 T-04 contra repetir frases
+inseguras inyectadas) que pueden haber cambiado este comportamiento como efecto colateral.
+
+**Decisión**
+1. **Hallazgo C se cierra sin modificar `prompts/system_prompt_family.txt`.** No se redacta
+   ni se aplica ninguna regla de grounding para conectores no clínicos — el comportamiento
+   deseado ya se produce con el prompt actual.
+2. **No se ejecuta el Bloque 3 del plan** (aplicación de regla + re-medición de Faithfulness
+   sobre los 32 casos) — no hay cambio que verificar ni regresión que medir, al no tocarse
+   ningún fichero de producción.
+3. **Los escenarios del `.feature` dependientes de la redacción/aplicación de una regla
+   quedan sin aplicar** (no fallidos) — documentado explícitamente en
+   `tests/eval/results/e11_t03_cierre.md` §2, para que quede trazado por qué no se marcan en
+   verde de la forma esperada originalmente.
+
+**Justificación**
+Añadir una regla explícita al system prompt sin necesidad demostrada iría contra el criterio
+ya establecido en D-002/D-059 punto 3 (no aflojar grounding sin justificación real,
+minimización de superficie de cambio en un dominio de salud). El objetivo del hallazgo C
+siempre fue reducir evasividad en conectores no clínicos, no añadir una regla por sí misma —
+si el objetivo ya está cumplido, tocar el prompt de producción solo añadiría riesgo (una
+frase nueva en `[FUENTES]` podría interactuar de forma no anticipada con el resto de
+restricciones) sin beneficio medible.
+
+**Consecuencias**
+- `backlog/epics.md`: el criterio de alto nivel de E-11 ("Hallazgo C acotado a una regla
+  concreta y limitada") se satisface por la investigación y el cierre documentado, no por una
+  regla aplicada — mismo criterio que D-059 punto 4 aplicó a hallazgos que se resuelven como
+  efecto colateral de otro trabajo (`eval_63` tras el fix de hallazgo D en E-09).
+- `prompts/system_prompt_family.txt`: sin cambios.
+- No hace falta re-ejecutar `pytest tests/` ni RAGAS para esta tarea (sin cambios de código).
+
+**Alternativas descartadas**
+- Añadir la regla igualmente como refuerzo explícito ante futuros cambios de prompt/modelo:
+  descartada por Marcos — prefiere no tocar producción sin necesidad demostrada hoy: si el
+  comportamiento regresiona en el futuro (nuevo modelo, nueva revisión de prompt), se
+  detectará y se abordará entonces, con evidencia real en ese momento.
+- Investigar más casos (distancias, relaciones temporales) antes de decidir: descartada por
+  Marcos — el caso Vic/Barcelona ya reproduce fielmente la estructura del hallazgo original y
+  el resultado es suficientemente claro para cerrar.
 
 ---
 

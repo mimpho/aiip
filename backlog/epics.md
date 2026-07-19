@@ -652,7 +652,7 @@ puntos resueltos sobre la propuesta inicial:
 |---|---|---|
 | T-01 | Ampliación de la KB (fuentes generales/FAQ de vida diaria) | ✅ Completada |
 | T-02 | Re-medición RAGAS + peso adaptativo de BM25 contra el corpus ampliado | ✅ Completada — revisada y confirmada por Marcos (19 jul 2026), `tests/eval/results/e11_t02_cierre.md` |
-| T-03 | Hallazgo C: regla acotada de grounding para conectores no clínicos | ⚪ Pendiente |
+| T-03 | Hallazgo C: regla acotada de grounding para conectores no clínicos | ✅ Completada — cerrado sin cambio de prompt, comportamiento evasivo no se reproduce (D-066, `tests/eval/results/e11_t03_cierre.md`) |
 | T-04 | Hallazgo E: revisión cualitativa del registro lingüístico | ⚪ Pendiente |
 | T-05 | Investigación dirigida: `eval_15`, confirmación `eval_63`, documento sospechoso `guia_antibiotics_esp_0.pdf` | ⚪ Pendiente |
 | T-06 | Hallucination Rate: desglose por bandas de severidad | ⚪ Pendiente |
