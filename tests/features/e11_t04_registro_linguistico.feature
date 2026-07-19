@@ -24,8 +24,8 @@ Feature: Hallazgo E — revisión cualitativa del registro lingüístico
       médula, acondicionamiento, tratamiento con inmunoglobulinas)
     When se seleccionan preguntas representativas del dataset o se formulan preguntas
       dirigidas nuevas
-    Then queda una muestra dirigida suficiente para la lectura cualitativa (no todo el
-      dataset — revisión dirigida, no exhaustiva)
+    Then queda una muestra dirigida de 5 a 8 preguntas para la lectura cualitativa (no todo
+      el dataset — revisión dirigida, no exhaustiva)
 
   Scenario: Respuestas revisadas contra la instrucción de tono
     Given la muestra dirigida de preguntas
@@ -39,6 +39,7 @@ Feature: Hallazgo E — revisión cualitativa del registro lingüístico
     When se documentan los hallazgos
     Then cada término técnico problemático queda citado junto a la respuesta completa donde
       aparece, no solo el veredicto agregado
+    And los hallazgos quedan documentados en "tests/eval/results/e11_t04_cierre.md"
 
   Scenario: Decisión sobre si el hallazgo requiere ajuste
     Given los hallazgos documentados

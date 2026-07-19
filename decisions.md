@@ -75,6 +75,7 @@
 - [D-064 — E-13 confirmada dentro de Fase 1.5; E-12 innegociable, E-10 primera candidata a caer](#d-064--e-13-confirmada-dentro-de-fase-15-e-12-innegociable-e-10-primera-candidata-a-caer)
 - [D-065 — T-03 (E-11): tarea sin TDD (checklist en tests/eval/), no código con asserts; exclusiones explícitas de alcance clínico en la regla de grounding](#d-065--t-03-e-11-tarea-sin-tdd-checklist-en-testseval-no-código-con-asserts-exclusiones-explícitas-de-alcance-clínico-en-la-regla-de-grounding)
 - [D-066 — T-03 (E-11): hallazgo C cerrado sin modificar el system prompt — el comportamiento evasivo original no se reproduce](#d-066--t-03-e-11-hallazgo-c-cerrado-sin-modificar-el-system-prompt--el-comportamiento-evasivo-original-no-se-reproduce)
+- [D-067 — T-04 (E-11): hallazgo E cerrado ajustando `[TONO — PERFIL FAMILIAR]` — glosa obligatoria para fármacos, acrónimos y síndromes sin explicar](#d-067--t-04-e-11-hallazgo-e-cerrado-ajustando-tono--perfil-familiar--glosa-obligatoria-para-fármacos-acrónimos-y-síndromes-sin-explicar)
 
 ---
 
@@ -3264,6 +3265,70 @@ restricciones) sin beneficio medible.
 - Investigar más casos (distancias, relaciones temporales) antes de decidir: descartada por
   Marcos — el caso Vic/Barcelona ya reproduce fielmente la estructura del hallazgo original y
   el resultado es suficientemente claro para cerrar.
+
+---
+
+## D-067 — T-04 (E-11): hallazgo E cerrado ajustando `[TONO — PERFIL FAMILIAR]` — glosa obligatoria para fármacos, acrónimos y síndromes sin explicar
+
+**Fecha:** 19 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-11 (T-04)
+
+**Contexto**
+Revisión cualitativa dirigida (`tasks/E11-T04-plan.md`) sobre 7 preguntas contra
+`RAGPipeline.query()` real (perfil familiar), cubriendo los dos temas del hallazgo original
+(`backlog/ideas.md`, hallazgo #3: trasplante de médula, acondicionamiento) más 4 temas
+adicionales con vocabulario clínico denso (inmunoglobulinas, diagnóstico inmunológico,
+cribado neonatal, hipogammaglobulinemia, clasificación de IDP). Transcripción completa en
+`tests/eval/results/e11_t04_transcripcion.json`, análisis en
+`tests/eval/results/e11_t04_cierre.md`.
+
+El patrón encontrado no es "toda respuesta técnica es inaccesible": en 4 de 7 casos el
+modelo ya glosa espontáneamente conceptos técnicos con analogías (p. ej. "malas hierbas"
+para acondicionamiento, "linfocitos T" → "un tipo de glóbulos blancos" en cribado neonatal).
+El problema es específico: al enumerar nombres de fármacos, acrónimos de pruebas de
+laboratorio o nombres de síndromes, el modelo los reproduce tal cual aparecen en la fuente,
+sin ninguna glosa, incluso en el mismo párrafo donde sí explica otros términos igual de
+técnicos. Aparece en 3 de 7 casos (`ling_02`, `ling_04`, `ling_07`); `ling_02` reproduce
+exactamente el tema del hallazgo original con 7 nombres de fármaco/anticuerpo sin explicar en
+una sola respuesta. Ninguno de los 7 casos diluye contenido de seguridad (D-002 no está en
+riesgo — hallazgo puramente de registro/comprensibilidad).
+
+**Decisión**
+1. **Hallazgo E se cierra ajustando `[TONO — PERFIL FAMILIAR]`** en
+   `prompts/system_prompt_family.txt` — el patrón es específico, recurrente (43% de la
+   muestra dirigida) y reproduce el tema exacto del hallazgo original, no encaja como caso
+   puntual de backlog.
+2. **Texto añadido** (redactado por el agente en Cowork, aprobado tal cual por Marcos, sin
+   ajustes), a continuación del párrafo existente sobre destinatario paciente/familiar:
+   > Cuando la respuesta deba nombrar fármacos concretos, acrónimos de pruebas diagnósticas o
+   > nombres de síndromes o enfermedades, acompaña cada uno de una glosa breve en el momento
+   > (p. ej. "linfocitos T" → "un tipo de glóbulos blancos"), igual que ya haces con otros
+   > conceptos técnicos. Si el detalle no aporta valor sin formación médica, indica que la
+   > elección concreta la decide el equipo médico caso por caso, en vez de enumerar la lista
+   > sin explicación.
+3. **No se toca `[RESTRICCIONES ABSOLUTAS]` ni `[CIERRE OBLIGATORIO]`** — el ajuste solo
+   refuerza comprensibilidad, no contenido de seguridad.
+
+**Justificación**
+El propio modelo ya demuestra saber glosar términos igual de técnicos en otros pasajes de
+las mismas respuestas — no es una limitación general de capacidad, sino un punto ciego
+específico (listas de nombres propios/técnicos) que una instrucción dirigida puede corregir
+sin tocar seguridad ni fuentes.
+
+**Consecuencias**
+- `prompts/system_prompt_family.txt`: `[TONO — PERFIL FAMILIAR]` ampliado con la instrucción
+  anterior.
+- No se re-ejecuta RAGAS para esta tarea — el ajuste es de generación/tono, no de retrieval;
+  queda para T-07 (informe final) valorar si conviene una relectura cualitativa de regresión
+  puntual antes del cierre de la épica.
+
+**Alternativas descartadas**
+- Dejarlo como backlog abierto: descartada — el patrón no es puntual (3/7 casos) y reproduce
+  el tema exacto del hallazgo original con el ejemplo más denso de toda la muestra.
+- No hacer nada (el propio modelo ya glosa bien en la mayoría de casos): descartada — la
+  inconsistencia entre términos glosados y no glosados en la misma respuesta es precisamente
+  el problema a corregir, no una señal de que no hace falta intervenir.
 
 ---
 
