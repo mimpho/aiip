@@ -77,6 +77,7 @@
 - [D-066 — T-03 (E-11): hallazgo C cerrado sin modificar el system prompt — el comportamiento evasivo original no se reproduce](#d-066--t-03-e-11-hallazgo-c-cerrado-sin-modificar-el-system-prompt--el-comportamiento-evasivo-original-no-se-reproduce)
 - [D-067 — T-04 (E-11): hallazgo E cerrado ajustando `[TONO — PERFIL FAMILIAR]` — glosa obligatoria para fármacos, acrónimos y síndromes sin explicar](#d-067--t-04-e-11-hallazgo-e-cerrado-ajustando-tono--perfil-familiar--glosa-obligatoria-para-fármacos-acrónimos-y-síndromes-sin-explicar)
 - [D-068 — T-05 (E-11): `eval_63` confirmado, `eval_15` (problema original) cerrado como efecto colateral de T-01, `guia_antibiotics_esp_0.pdf` cerrado generalizando una restricción existente del system prompt](#d-068--t-05-e-11-eval_63-confirmado-eval_15-problema-original-cerrado-como-efecto-colateral-de-t-01-guia_antibiotics_esp_0pdf-cerrado-generalizando-una-restricción-existente-del-system-prompt)
+- [D-069 — T-06 (E-11): frontera 0.85 asignada a banda Leve, `eval_06` sustituye a `eval_15` como caso Grave y requiere investigación dirigida antes de cerrar el desglose](#d-069--t-06-e-11-frontera-085-asignada-a-banda-leve-eval_06-sustituye-a-eval_15-como-caso-grave-y-requiere-investigación-dirigida-antes-de-cerrar-el-desglose)
 
 ---
 
@@ -3424,6 +3425,68 @@ D-066 (hallazgo C).
 - Investigar `eval_15` (Context Precision/Recall) por reproducción manual en Chainlit
   (Opción A): descartada para esta parte — requiere inspeccionar el ranking de retrieval
   interno (chunks, scores, pesos de BM25 aplicados), no visible desde el chat.
+
+---
+
+## D-069 — T-06 (E-11): frontera 0.85 asignada a banda Leve, `eval_06` sustituye a `eval_15` como caso Grave y requiere investigación dirigida antes de cerrar el desglose
+
+**Fecha:** 20 de julio de 2026
+**Fase:** técnica
+**Épica:** E-11 (T-06)
+
+**Contexto**
+El `.feature` borrador de `epic-start` (18 jul, `tests/eval/e11_t06_hallucination_severity.feature`)
+definía las bandas de severidad de Faithfulness (D-058, aprobadas en `epic-start` de E-11:
+Grave <0.5, Moderada 0.5–0.85, Leve 0.85–<1.0, Sin desviación 1.0) dando por hecho que
+`eval_15` sería el caso a revisar en banda Grave. En `task-start` de T-06 (20 jul) se
+cruzaron las bandas contra los scores reales post-T-02 (`tests/eval/results/e09_t02_ragas_full_scores.json`,
+32 casos) y aparecieron dos desajustes: (1) el límite exacto 0.85 (caso `eval_13`) no
+estaba resuelto en ningún sentido; (2) `eval_15` ya no es el caso Grave — D-068 lo cerró
+con Faithfulness 0.875 (banda Leve) — y el caso real en banda Grave es `eval_06`
+(Faithfulness 0.385), cuyo valor ha caído dos veces a lo largo de la épica sin explicación
+registrada: 0.722 (pre-E-11, `e09_t02_ragas_full_scores_pre_e11_t02.json`) → 0.615 (tras
+T-01, ampliación de KB, `..._e11_t02_baseline.json`) → 0.385 (tras T-02, peso adaptativo de
+BM25, fichero final).
+
+**Decisión**
+
+1. **Frontera 0.85:** cae en banda Leve (Leve = 0.85–<1.0, cierre por la izquierda inclusive).
+   Afecta a un único caso (`eval_13`). Redondeo a favor del sistema, aprobado por Marcos.
+2. **`eval_06` sustituye a `eval_15` como caso Grave** en el desglose de T-06. No es un
+   hallazgo aislado nuevo: `eval_06` ya figuraba como uno de los tres casos de hallazgo B
+   (Answer Relevancy 0.0 en eval_06/eval_15/eval_25, 🔴 Abierto, `docs/evaluation.md` §5.1,
+   investigado en `tests/eval/results/e09_t05_plan_b_investigacion.md`), con Faithfulness
+   0.60 en ese momento y una hipótesis ya registrada (cita inline de documento/páginas
+   duplicando la sección de fuentes automática). Esa hipótesis no explica por qué la
+   Faithfulness volvió a caer dos veces después (T-01 y T-02).
+3. **Esto no se trata como el mismo tipo de aplazamiento que otros hallazgos abiertos de
+   esta épica** (p. ej. Context Precision/Recall de `eval_15` en D-068, punto 3, trasladado
+   sin investigar porque la causa — límite de KB — ya se conoce y no es accionable ahora).
+   Aquí la causa de las dos caídas no se conoce, así que se investiga antes de cerrar T-06:
+   se amplía el alcance de la tarea con una investigación dirigida de `eval_06`, mismo
+   patrón que la de `eval_15` en T-05 (script que reproduce la pregunta contra el pipeline
+   actual, captura respuesta real y contexto recuperado, compara contra la hipótesis ya
+   registrada de hallazgo B). Al requerir ejecución real del pipeline (ChromaDB, embeddings,
+   API de Gemini), esta parte se ejecuta en Antigravity, no en el sandbox de Cowork —
+   mismo criterio que el diagnóstico de `eval_15` en `tasks/E11-T05-plan.md`.
+
+**Alternativas descartadas**
+- Reportar `eval_06` sin investigar, igual que se aplazó Context Precision/Recall de
+  `eval_15` en D-068 — descartada: esa decisión aplazaba un hallazgo con causa ya conocida
+  y no accionable; aquí no hay causa conocida para las dos caídas, así que aplazar
+  documentaría un misterio como si estuviera entendido.
+- Mantener el escenario del `.feature` centrado en `eval_15` con una nota al margen sobre
+  `eval_06` — descartada: el caso real que hay que analizar es `eval_06`, mantener `eval_15`
+  como protagonista del escenario induciría a error a quien lea el `.feature` sin este
+  contexto.
+
+**Consecuencias**
+- `tests/eval/e11_t06_hallucination_severity.feature`: Escenario 3 reescrito para referirse
+  a `eval_06` (no `eval_15`) y vinculado explícitamente a hallazgo B.
+- `tasks/E11-T06-plan.md`: plan para Antigravity con el script de investigación dirigida de
+  `eval_06` (mismo patrón que `run_e11_t05_eval15_investigation.py`).
+- El desglose final de bandas y la actualización de `docs/evaluation.md` se cierran después
+  de traer el resultado de la investigación de vuelta a Cowork.
 
 ---
 
