@@ -78,6 +78,9 @@
 - [D-067 — T-04 (E-11): hallazgo E cerrado ajustando `[TONO — PERFIL FAMILIAR]` — glosa obligatoria para fármacos, acrónimos y síndromes sin explicar](#d-067--t-04-e-11-hallazgo-e-cerrado-ajustando-tono--perfil-familiar--glosa-obligatoria-para-fármacos-acrónimos-y-síndromes-sin-explicar)
 - [D-068 — T-05 (E-11): `eval_63` confirmado, `eval_15` (problema original) cerrado como efecto colateral de T-01, `guia_antibiotics_esp_0.pdf` cerrado generalizando una restricción existente del system prompt](#d-068--t-05-e-11-eval_63-confirmado-eval_15-problema-original-cerrado-como-efecto-colateral-de-t-01-guia_antibiotics_esp_0pdf-cerrado-generalizando-una-restricción-existente-del-system-prompt)
 - [D-069 — T-06 (E-11): frontera 0.85 asignada a banda Leve, `eval_06` sustituye a `eval_15` como caso Grave y requiere investigación dirigida antes de cerrar el desglose](#d-069--t-06-e-11-frontera-085-asignada-a-banda-leve-eval_06-sustituye-a-eval_15-como-caso-grave-y-requiere-investigación-dirigida-antes-de-cerrar-el-desglose)
+- [D-070 — T-07 (E-11): alcance ampliado con regresión de T-04/T-05 antes del informe final — suite pytest completa + relectura cualitativa dirigida + RAGAS acotado a casos afectados](#d-070--t-07-e-11-alcance-ampliado-con-regresión-de-t-04t-05-antes-del-informe-final--suite-pytest-completa--relectura-cualitativa-dirigida--ragas-acotado-a-casos-afectados)
+- [D-071 — T-07 (E-11): segunda ampliación de alcance — estabilidad del juez de Context Precision en eval_08/eval_13, e investigación de causa raíz de la citación duplicada (hallazgo nuevo)](#d-071--t-07-e-11-segunda-ampliación-de-alcance--estabilidad-del-juez-de-context-precision-en-eval_08eval_13-e-investigación-de-causa-raíz-de-la-citación-duplicada-hallazgo-nuevo)
+- [D-072 — T-07 (E-11): Context Precision de eval_08/eval_13 cerrado como ruido del juez; [FUENTES] reforzado aplicado a producción, cierra la citación duplicada](#d-072--t-07-e-11-context-precision-de-eval_08eval_13-cerrado-como-ruido-del-juez-fuentes-reforzado-aplicado-a-producción-cierra-la-citación-duplicada)
 
 ---
 
@@ -3487,6 +3490,240 @@ BM25, fichero final).
   `eval_06` (mismo patrón que `run_e11_t05_eval15_investigation.py`).
 - El desglose final de bandas y la actualización de `docs/evaluation.md` se cierran después
   de traer el resultado de la investigación de vuelta a Cowork.
+
+---
+
+## D-070 — T-07 (E-11): alcance ampliado con regresión de T-04/T-05 antes del informe final — suite pytest completa + relectura cualitativa dirigida + RAGAS acotado a casos afectados
+
+**Fecha:** 20 de julio de 2026
+**Fase:** técnica / proceso
+**Épica:** E-11 (T-07)
+
+**Contexto**
+El `.feature` borrador de T-07 (generado en `epic-start`, `tests/eval/e11_t07_informe_final.feature`)
+da por hecho que el cierre de la épica es puramente documental: consolidar en
+`docs/evaluation.md` los resultados ya cerrados de T-01 a T-06. En la revisión crítica de
+`task-start` se detectó que D-067 (T-04) y D-068 (T-05) modificaron
+`prompts/system_prompt_family.txt` en producción (instrucción de glosa de tono, y
+generalización de la restricción sobre información operativa de un centro concreto) **sin**
+re-ejecutar después ni la suite de regresión (`pytest tests/`) ni una re-medición RAGAS —
+ambas decisiones documentan explícitamente esto como una omisión consciente y trasladan la
+valoración a T-07 (D-067, sección "Consecuencias": *"No se re-ejecuta RAGAS para esta
+tarea... queda para T-07 (informe final) valorar si conviene una relectura cualitativa de
+regresión puntual antes del cierre de la épica"*). Los números que hoy figuran en
+`docs/evaluation.md` §5.1/§7 (y los que T-07 iba a consolidar) son los de T-02 —
+anteriores a ambos cambios de prompt.
+
+Planteadas dos opciones a Marcos: (A) documentar la limitación de transparencia sin
+verificar nada más, o (B) ejecutar una regresión antes de escribir el informe final.
+**Marcos elige (B) sin dudar.**
+
+**Decisión**
+
+T-07 se amplía con un paso de verificación en Antigravity, previo al bloque de
+documentación en Cowork:
+
+1. **Regresión funcional:** suite completa `PYTHONPATH=. pytest tests/ -v` — confirma que
+   ninguno de los dos cambios de prompt rompió nada a nivel de código (los tests actuales
+   no dependen de la redacción exacta del prompt, D-018, pero si algo más se ha desviado
+   debe verse aquí).
+2. **Relectura cualitativa dirigida — T-04:** re-ejecutar las mismas 7 preguntas de
+   `scripts/run_e11_t04_linguistic_review.py` (ya existente) contra el pipeline con el
+   ajuste de tono ya aplicado, y comparar contra `tests/eval/results/e11_t04_transcripcion.json`
+   (que es la transcripción **previa** al cambio — la base que motivó la decisión, no una
+   verificación posterior). Confirma si la glosa de fármacos/acrónimos/síndromes aparece
+   ahora de forma consistente en `ling_02`/`ling_04`/`ling_07` (los tres casos con hallazgo).
+3. **Relectura cualitativa dirigida — T-05:** repetir las 3 preguntas de reproducción manual
+   de `tests/eval/results/e11_t05_cierre.md` §3 contra el pipeline con la restricción ya
+   generalizada, confirmando que la salvedad de "información específica de un centro" 
+   aparece ahora para `guia_antibiotics_esp_0.pdf` sin diluir el resto de la respuesta.
+4. **RAGAS acotado, no los 32 casos completos:** por límite de cuota de Gemini (D-027,
+   ya documentado como restricción operativa), no se relanza la evaluación completa. Se
+   eligen los casos con relación temática directa a los dos cambios: `eval_08` (antibióticos
+   profilácticos — cita directa de `guia_antibiotics_esp_0.pdf`, afectado por T-05) y
+   `eval_03`/`eval_04`/`eval_13` (infusiones de inmunoglobulinas — temática con más densidad
+   de vocabulario técnico entre los 32 casos, afectado por T-04). Comparación contra los
+   valores ya registrados en `tests/eval/results/e09_t02_ragas_full_scores.json` (T-02,
+   última medición oficial) para esos 4 casos concretos, no un nuevo agregado de las 4
+   métricas sobre el corpus completo.
+5. **Sin asserts pytest-bdd para este paso** — mismo patrón que D-050/D-051 (script +
+   revisión manual de Marcos, no TDD, dado que depende de un LLM no determinista).
+6. **El informe final de `docs/evaluation.md` se escribe después**, con el resultado de
+   esta regresión ya incorporado: si los 4 casos RAGAS y las relecturas cualitativas no
+   muestran regresión, el informe lo dice con datos reales; si aparece alguna, se documenta
+   sin suavizar (mismo criterio CHART/TRIPOD-LLM que el resto del proyecto) y se decide en
+   Cowork si bloquea el cierre de la épica o se traslada a `backlog/ideas.md`.
+
+**Consecuencias**
+- `tests/eval/e11_t07_informe_final.feature` se reescribe añadiendo un bloque de escenarios
+  de regresión (pytest + relectura T-04/T-05 + RAGAS acotado) antes de los escenarios de
+  documentación ya existentes.
+- `tasks/E11-T07-plan.md`: plan para Antigravity con los 4 pasos de verificación, a
+  ejecutar antes de que Cowork escriba `docs/evaluation.md`.
+- T-07 deja de ser una tarea puramente documental de un solo bloque en Cowork — pasa a
+  tener un tramo de ejecución real en Antigravity (mismo patrón mixto ya usado en T-05/T-06:
+  investigación dirigida con script + cierre documental en Cowork).
+
+**Alternativas descartadas**
+- Opción A (documentar la limitación sin verificar): descartada por Marcos — cerrar la
+  épica sin confirmar que el prompt final no ha degradado nada deja una suposición sin
+  verificar en el informe de cierre del TFM.
+- Relanzar los 32 casos completos: descartada por coste de cuota de Gemini (D-027) sin
+  necesidad — los cambios de prompt son locales a temas concretos (glosa técnica,
+  atribución de fuente de un documento), no afectan a los 32 casos por igual.
+
+---
+
+## D-071 — T-07 (E-11): segunda ampliación de alcance — estabilidad del juez de Context Precision en eval_08/eval_13, e investigación de causa raíz de la citación duplicada (hallazgo nuevo)
+
+**Fecha:** 21 de julio de 2026
+**Fase:** técnica
+**Épica:** E-11 (T-07)
+
+**Contexto**
+Ejecutado el Bloque 0 de D-070 en Antigravity. Tres resultados relevantes revisados en
+Cowork:
+
+1. **Suite pytest:** 147 passed, 14 skipped, 1 xfailed — idéntico al baseline. Sin
+   regresión funcional.
+2. **Relectura cualitativa T-04/T-05:** confirma que los dos ajustes de prompt funcionan
+   como se esperaba (glosa de tono presente en `ling_04`/`ling_07`; salvedad de
+   información de centro presente en la pregunta de fin de semana de T-05).
+3. **RAGAS acotado (4 casos):** Faithfulness/Answer Relevancy/Context Recall dentro de
+   ruido o mejor. Context Precision cae más allá del umbral de ±0.10 en dos casos:
+   `eval_08` (0.500 → 0.200, Δ−0.300) y `eval_13` (0.143 → 0.000, Δ−0.143).
+4. **Hallazgo no buscado, detectado al leer las respuestas completas** (los scripts de
+   medición anteriores, `run_ragas_eval.py` incluido, siempre recortan la sección de
+   fuentes antes de puntuar — nadie había revisado sistemáticamente la respuesta íntegra
+   hasta ahora): en 11 de 17 transcripciones completas revisadas (T-04 pre-fix 3/7,
+   T-04 post-fix 5/7, T-05 3/3), el modelo genera su propio bloque
+   "Fuentes consultadas:" en texto plano *antes* del bloque determinista real (con
+   enlaces, `_build_sources_section()`), incumpliendo la instrucción explícita de
+   `[FUENTES]` ("No cites el nombre del documento... El sistema añade automáticamente el
+   listado"). Confirmado que **no lo causó T-04/T-05**: ya aparecía en el 3/7 pre-fix.
+   Análisis de correlación simple (longitud de respuesta, nº de fuentes del bloque final)
+   no muestra un patrón obvio — ver conteos en la revisión de Cowork del 21 jul.
+
+Presentadas dos decisiones a Marcos:
+1. Context Precision: ¿cerrar como ruido del juez (precedente D-068/D-069) o pedir
+   estabilidad extra? **Marcos pide estabilidad extra.**
+2. Citación duplicada: ¿backlog sin bloquear cierre, o investigar causa raíz antes de
+   cerrar E-11? **Marcos pide investigar causa raíz antes de cerrar.**
+
+**Decisión**
+
+T-07 se amplía por segunda vez con un nuevo bloque de investigación en Antigravity:
+
+1. **Estabilidad del juez — `eval_08`/`eval_13`:** mismo patrón que D-069 (`eval_06`):
+   una sola reproducción real (retrieval + generación) por caso, luego invocar
+   `ContextPrecision.single_turn_score()` dos veces sobre el mismo `SingleTurnSample` (sin
+   volver a llamar a `retrieve()`/`query()`). Si los dos scores coinciden entre sí pero no
+   con el valor de T-02, es evidencia de que la generación (no el juez) varía entre
+   ejecuciones — conclusión distinta a "es solo ruido del juez", así que se documenta con
+   precisión cuál de las dos fuentes de varianza aplica.
+2. **Investigación de causa raíz de la citación duplicada**, dos pasos, mismo patrón que
+   T-03 (`RAGGenerator` alternativo mutado en memoria, D-059 punto 5) y D-069 (repetición
+   sobre la misma pregunta):
+   a. **Consistencia por pregunta:** repetir `ling_07` (duplicó en las dos transcripciones
+      ya disponibles, pre y post-fix) 3 veces contra el generador de producción — si
+      duplica las 3, hay indicio de sesgo por pregunta; si no, es ruido de muestreo puro.
+   b. **Variante de instrucción reforzada:** un `RAGGenerator` alternativo con el bloque
+      `[FUENTES]` reescrito de forma más explícita y con un contraejemplo concreto (nunca
+      escrito a `prompts/system_prompt_family.txt`), ejecutado sobre las 10 preguntas ya
+      usadas en el Bloque 0 (7 `ling_XX` + 3 `t05_regr_XX`), comparando la tasa de
+      duplicación de esta variante contra la tasa ya observada en producción (11/17).
+3. **Ninguno de los dos pasos aplica un fix a producción.** Si la variante reforzada baja
+   la tasa de duplicación de forma clara, se propone la redacción concreta a Marcos en
+   Cowork (Bloque 2, mismo patrón que D-067) — no se aplica directamente desde
+   Antigravity.
+
+**Consecuencias**
+- `tests/eval/e11_t07_informe_final.feature`: dos escenarios nuevos en el Bloque 0.
+- `tasks/E11-T07-plan.md`: sección "Ronda 2" añadida con el detalle de ejecución.
+- El informe final de `docs/evaluation.md` se pospone hasta traer estos dos resultados de
+  vuelta a Cowork.
+
+**Alternativas descartadas**
+- Cerrar Context Precision como ruido sin verificar: descartado por Marcos — ya se citó el
+  precedente de D-068/D-069 como argumento suficiente, pero Marcos prefiere confirmarlo
+  con el mismo rigor aplicado a `eval_06`, no solo citarlo por analogía.
+- Backlog para la citación duplicada sin investigar: descartado por Marcos — a diferencia
+  de los hallazgos C/E (backlog explícitamente aceptado por Marcos en su momento), aquí
+  toca directamente una decisión ya cerrada (D-026) y aparece en más de la mitad de la
+  muestra revisada, no un caso puntual.
+
+**Justificación**
+Ambos pasos reutilizan patrones ya validados en la propia épica (D-069 para estabilidad de
+juez, D-059/T-03 para generador alternativo en memoria) en vez de diseñar un método nuevo,
+y ninguno de los dos requiere tocar código de producción — coherente con que T-07 sigue
+siendo investigación antes de documentación, no una tarea de fix.
+
+---
+
+## D-072 — T-07 (E-11): Context Precision de eval_08/eval_13 cerrado como ruido del juez; [FUENTES] reforzado aplicado a producción, cierra la citación duplicada
+
+**Fecha:** 21 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-11 (T-07)
+
+**Contexto**
+Resultado de la Ronda 2 (D-071), revisado en Cowork.
+
+1. **Estabilidad de Context Precision** (`tests/eval/results/e11_t07_context_precision_stability.json`):
+   - `eval_13`: dos invocaciones del juez sobre el mismo `SingleTurnSample` dieron 0.0 y
+     0.143 — literalmente los dos valores ya registrados en el histórico de la épica
+     (T-02: 0.143, Ronda 1: 0.0), reproducidos dentro de una sola ejecución. Evidencia
+     directa de inestabilidad del juez sobre input idéntico.
+   - `eval_08`: dos invocaciones dieron 0.5 y 0.5 (coinciden entre sí y con el valor
+     oficial de T-02), distinto del 0.2 medido en Ronda 1 — consistente con que 3 de 4
+     mediciones históricas caen en ~0.5 y la de Ronda 1 fue la muestra atípica.
+   - Contexto recuperado en ambos casos revisado manualmente: directamente relevante a la
+     pregunta en los dos (antibióticos profilácticos por patología; cuidado de la piel en
+     infusión subcutánea) — sin indicio de fallo de retrieval.
+2. **Investigación de citación duplicada** (`tests/eval/results/e11_t07_citation_duplication_investigation.json`):
+   - `ling_07` repetido 3 veces en producción: duplica 1 de 3 — confirma que es ruido de
+     muestreo, no una propiedad fija de esa pregunta/contexto.
+   - Variante con `[FUENTES]` reforzado (10 preguntas, generador mutado solo en memoria):
+     **0/10 duplicaciones**, frente al 11/17 (~65%) ya observado en producción (Ronda 1).
+     Las 10 respuestas mantienen el cierre obligatorio de derivación médica — sin
+     regresión de seguridad.
+
+**Decisión**
+
+1. **Context Precision de `eval_08`/`eval_13`: cerrado como ruido documentado del juez
+   LLM**, mismo patrón que `eval_06` (D-069) y `eval_15` (D-068). No se re-mide más, no se
+   toca `rag/retriever.py`. Se documenta en el informe final (`docs/evaluation.md` §5.1/§7)
+   como observación, no como regresión causada por T-04/T-05.
+2. **`[FUENTES]` reforzado aplicado directamente a `prompts/system_prompt_family.txt`**
+   (edición en Cowork, sin entorno de Antigravity — mismo patrón que D-068 con la
+   restricción de información de centro). Sustituye el párrafo `[FUENTES]` anterior:
+   añade la prohibición explícita ("No generes NUNCA un encabezado ni una lista con
+   nombres de fichero..."), el motivo (duplicaría el listado automático) y un
+   contraejemplo concreto de qué NO hacer. Aprobado por Marcos tal cual, sin ajustes,
+   dado el resultado 0/10 y la ausencia de regresión de seguridad en la variante probada.
+
+**Consecuencias**
+- `prompts/system_prompt_family.txt`: `[FUENTES]` reescrito.
+- No se re-ejecuta RAGAS ni la suite de regresión para este cambio — es un ajuste de
+  generación/formato, no de retrieval (mismo criterio que D-067/D-068); D-018 ya confirma
+  que ningún test depende de la redacción exacta del prompt.
+- T-07 puede pasar ya al Bloque 1 (informe final en `docs/evaluation.md`), con los
+  resultados de D-070/D-071/D-072 ya incorporados.
+
+**Alternativas descartadas**
+- Pedir una tercera ronda de verificación tras aplicar el `[FUENTES]` reforzado:
+  descartada — la evidencia (0/10 sobre 10 preguntas, sin regresión de seguridad) ya es
+  más sólida que la que sostuvo D-067/D-068 en su momento, y seguir iterando sobre este
+  punto concreto no es proporcional al hallazgo (formato de citación, no seguridad ni
+  contenido clínico).
+- Sustituir el score oficial de `eval_08`/`eval_13` en `e09_t02_ragas_full_scores.json`
+  por alguna de las nuevas mediciones: descartada, mismo criterio de D-058/D-069 de no
+  sustituir el número oficial por una lectura favorable.
+
+**Justificación**
+Cierra el bucle abierto por D-070/D-071 con evidencia directa (no solo por analogía) para
+ambos puntos, y aplica un fix real solo donde hay evidencia sólida de mejora sin coste de
+seguridad — coherente con el principio de no tocar producción sin justificación (D-059).
 
 ---
 

@@ -1,0 +1,43 @@
+{
+  "cases": [
+    {
+      "id": "eval_03",
+      "question": "¿Por qué mi hijo necesita infusiones de inmunoglobulinas?",
+      "faithfulness": 0.8301886792452831,
+      "answer_relevancy": 0.9388197263225319,
+      "context_precision": 0.9999999999,
+      "context_recall": 1.0
+    },
+    {
+      "id": "eval_04",
+      "question": "¿Cuál es la diferencia entre las infusiones de inmunoglobulinas intravenosas y subcutáneas?",
+      "faithfulness": 0.9491525423728814,
+      "answer_relevancy": 0.8572861135651207,
+      "context_precision": 0.555555555537037,
+      "context_recall": 1.0
+    },
+    {
+      "id": "eval_08",
+      "question": "¿Qué antibióticos se usan habitualmente como profilaxis en inmunodeficiencias primarias?",
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9734435290881086,
+      "context_precision": 0.19999999998,
+      "context_recall": 1.0
+    },
+    {
+      "id": "eval_13",
+      "question": "¿Qué cuidados hay que tener en la zona de la piel donde se pone la inyección subcutánea?",
+      "faithfulness": 0.7884615384615384,
+      "answer_relevancy": 0.9633810461177132,
+      "context_precision": 0.0,
+      "context_recall": 1.0
+    }
+  ],
+  "aggregate": {
+    "n_cases": 4,
+    "faithfulness_mean": 0.8919506900199257,
+    "answer_relevancy_mean": 0.9332326037733686,
+    "context_precision_mean": 0.43888888885425925,
+    "context_recall_mean": 1.0
+  }
+}
