@@ -76,6 +76,7 @@
 - [D-065 — T-03 (E-11): tarea sin TDD (checklist en tests/eval/), no código con asserts; exclusiones explícitas de alcance clínico en la regla de grounding](#d-065--t-03-e-11-tarea-sin-tdd-checklist-en-testseval-no-código-con-asserts-exclusiones-explícitas-de-alcance-clínico-en-la-regla-de-grounding)
 - [D-066 — T-03 (E-11): hallazgo C cerrado sin modificar el system prompt — el comportamiento evasivo original no se reproduce](#d-066--t-03-e-11-hallazgo-c-cerrado-sin-modificar-el-system-prompt--el-comportamiento-evasivo-original-no-se-reproduce)
 - [D-067 — T-04 (E-11): hallazgo E cerrado ajustando `[TONO — PERFIL FAMILIAR]` — glosa obligatoria para fármacos, acrónimos y síndromes sin explicar](#d-067--t-04-e-11-hallazgo-e-cerrado-ajustando-tono--perfil-familiar--glosa-obligatoria-para-fármacos-acrónimos-y-síndromes-sin-explicar)
+- [D-068 — T-05 (E-11): `eval_63` confirmado, `eval_15` (problema original) cerrado como efecto colateral de T-01, `guia_antibiotics_esp_0.pdf` cerrado generalizando una restricción existente del system prompt](#d-068--t-05-e-11-eval_63-confirmado-eval_15-problema-original-cerrado-como-efecto-colateral-de-t-01-guia_antibiotics_esp_0pdf-cerrado-generalizando-una-restricción-existente-del-system-prompt)
 
 ---
 
@@ -3329,6 +3330,100 @@ sin tocar seguridad ni fuentes.
 - No hacer nada (el propio modelo ya glosa bien en la mayoría de casos): descartada — la
   inconsistencia entre términos glosados y no glosados en la misma respuesta es precisamente
   el problema a corregir, no una señal de que no hace falta intervenir.
+
+---
+
+## D-068 — T-05 (E-11): `eval_63` confirmado, `eval_15` (problema original) cerrado como efecto colateral de T-01, `guia_antibiotics_esp_0.pdf` cerrado generalizando una restricción existente del system prompt
+
+**Fecha:** 20 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-11 (T-05)
+
+**Contexto**
+Revisión crítica en `task-start` (20 jul 2026) encontró que el criterio original de la
+épica para `eval_15` y `eval_63` ya no reflejaba el estado real del repo — ambos cruzados
+contra `tests/eval/results/e09_t02_ragas_full_scores_pre_e11_t02.json` (pre-E11) →
+`..._e11_t02_baseline.json` (tras T-01) → `..._e11_t02_ragas_full_scores.json` (tras T-02).
+
+**Decisión**
+
+1. **`eval_63`** — confirmado resuelto sin investigación adicional: Faithfulness estable
+   (~0.88) desde el fix de hallazgo D en E-09, Context Precision mejora de 0.639 a 0.804
+   con el peso adaptativo de BM25 (T-02). Coincide con lo ya anotado en
+   `backlog/ideas.md` #5.
+2. **`eval_15`, problema original** (Faithfulness 0.38, 0.0 en las otras tres métricas,
+   causa "hallazgo B"/respuesta evasiva investigada en el Plan B de E-09) — cerrado como
+   efecto colateral de T-01 (KB ampliada): Faithfulness sube a 0.9 (baseline) y se
+   mantiene en 0.875 (final); Answer Relevancy pasa de 0.0 a 0.84/0.839. La hipótesis de
+   "respuesta evasiva" (`tests/eval/results/e09_t05_plan_b_investigacion.md`) ya no se
+   reproduce. No se re-investiga la causa original.
+3. **Hallazgo nuevo de `eval_15` (no cerrado en esta decisión)** — Context Precision se
+   mantiene exactamente en 0.0 en las tres mediciones, pese a que T-01 añadió dos fuentes
+   que cubren el tema (SEICAP "50 preguntas clave", FAQ de IPOPI sobre viajes,
+   `docs/kb-sources.md` líneas 43/45); Context Recall retrocede de 1.0 (tras T-01) a 0.0
+   (tras T-02, peso adaptativo). Se traslada a Antigravity para diagnóstico dirigido
+   (`tasks/E11-T05-plan.md`) — no se concluye causa raíz en esta decisión.
+4. **`guia_antibiotics_esp_0.pdf` cerrado.** Reproducción manual guiada en Chainlit
+   (perfil familiar, corpus/BM25 actuales) de las 3 preguntas documentadas en
+   `backlog/ideas.md` ("Hallazgos del RAG" punto 1, actualizaciones 10/18 jul): el patrón
+   se repite en 2 de 3 ("¿A quién llamo si es fin de semana?", "¿A partir de cuánta fiebre
+   acudir al médico?"); el tercer caso ("¿Cómo cuidar el día a día?") es una cita
+   justificada — coincide con la sección real "Espacio para el tratamiento" del
+   documento, no es ruido.
+   - **Causa raíz identificada:** el documento (guía de la unidad UPIIP, Hospital Vall
+     d'Hebron) incluye una sección "Datos de contacto" con el teléfono de Urgencias
+     Pediátricas de ese hospital concreto (934 893 000 ext. 3371). Es un bloque compacto
+     y coherente que compite bien en el ranking frente a la fuente "canónica" alternativa
+     (`aedip/Hospitales-con-Servicios-de-Inmunologia.html`), cuyo contenido útil queda
+     diluido en unos pocos chunks grandes que mezclan ~30-40 hospitales — verificado
+     reproduciendo el mismo loader del pipeline (`BSHTMLLoader`, separador `\n\n`,
+     `ingestion/loader.py`) sobre el HTML real. El problema real no es que el documento
+     "se cuele" por ruido semántico, sino que su contenido es correcto pero específico de
+     un centro concreto, y la respuesta lo presenta sin esa salvedad — un usuario tratado
+     en otro hospital podría marcar un número que no es el suyo.
+   - **Fix aplicado:** en vez de una regla nueva y específica sobre "teléfonos", se
+     generalizó la restricción ya existente en `[RESTRICCIONES ABSOLUTAS]` de
+     `prompts/system_prompt_family.txt` sobre protocolos de tratamiento específicos de un
+     centro, para cubrir cualquier información operativa de un centro concreto (protocolo,
+     dato de contacto, nombre de servicio/unidad):
+     > Si el contexto incluye información operativa específica de un centro o equipo
+     > médico concreto (protocolo de un tratamiento, dato de contacto, nombre de un
+     > servicio o unidad), no la repitas como si fuera válida para cualquiera — es
+     > información que corresponde a ese centro específico, no una referencia general.
+     > Indícalo así y remite a confirmar con su propio equipo médico, en vez de
+     > presentarlo como un dato universal.
+   - Aplicado directamente en Cowork (edición de texto, sin entorno de Antigravity).
+     Verificado que ningún test depende de la redacción exacta del bloque
+     (`tests/step_defs/test_e04_t04.py` solo comprueba que el fichero existe, D-018).
+
+**Justificación**
+Reutilizar y generalizar la restricción ya validada en producción (en vez de añadir una
+regla ad-hoc de "teléfonos") cubre el caso nuevo sin aumentar la superficie de reglas del
+prompt ni requerir mantenimiento futuro por cada tipo de dato específico de centro que
+aparezca — mismo criterio de minimización de cambio que D-059 punto 3 y D-066. Cerrar
+`eval_63` y el problema original de `eval_15` sin re-investigar evita duplicar trabajo ya
+resuelto como efecto colateral, mismo criterio que D-059 punto 4 (`eval_63` en E-09) y
+D-066 (hallazgo C).
+
+**Consecuencias**
+- `prompts/system_prompt_family.txt`: bullet de `[RESTRICCIONES ABSOLUTAS]` generalizado
+  de "protocolos de tratamiento concreto" a "información operativa de un centro concreto".
+- `tests/eval/results/e11_t05_cierre.md` (pendiente, se genera al cerrar T-05 por completo
+  tras el diagnóstico de Antigravity): consolidará las 4 partes de T-05.
+- No se re-ejecuta RAGAS para el cambio de prompt — es un ajuste de generación/tono
+  (mismo criterio que D-067), no toca retrieval.
+- `eval_15` queda parcialmente cerrado: problema original resuelto, hallazgo nuevo de
+  Context Precision/Recall abierto y trasladado a `tasks/E11-T05-plan.md`.
+
+**Alternativas descartadas**
+- Regla nueva y específica sobre teléfonos/datos de contacto: descartada por Marcos —
+  demasiado específica, no generaliza a futuros casos similares con otro tipo de dato.
+- Re-chunkear `guia_antibiotics_esp_0.pdf` para aislar la sección de contacto: descartada
+  — el contenido no es ruido ni está mal formado, es información correcta que necesita
+  atribución, no reestructuración.
+- Investigar `eval_15` (Context Precision/Recall) por reproducción manual en Chainlit
+  (Opción A): descartada para esta parte — requiere inspeccionar el ranking de retrieval
+  interno (chunks, scores, pesos de BM25 aplicados), no visible desde el chat.
 
 ---
 
