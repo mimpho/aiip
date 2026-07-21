@@ -1,0 +1,239 @@
+{
+  "case_id": "eval_15",
+  "question": "¿Podemos viajar en avión llevando la medicación de inmunoglobulinas?",
+  "expected_answer": "En general es posible viajar llevando la medicación, pero conviene planificarlo con antelación: llevar un informe médico, respetar las condiciones de conservación (algunas inmunoglobulinas requieren frío) y consultar con el equipo médico o la farmacia hospitalaria las recomendaciones de transporte para el viaje concreto.",
+  "lexical_signal": {
+    "has_lexical_signal": true,
+    "weights_expected_by_d061": {
+      "bm25": 0.4,
+      "vector": 0.6
+    }
+  },
+  "production_retrieval": {
+    "applied_weights": [
+      0.4,
+      0.6
+    ],
+    "chunks": [
+      {
+        "source": "aedip",
+        "filename": "mantenerse-saludable.pdf",
+        "score": 1.0,
+        "content": "Inmunodeficiencias Primarias\nViajes\nTener una IDP no debe impedir que los pacientes viajen, pero  \nse recomiendan ciertas precauciones. El paciente debe discutir el plan \nde viaje con su inmunólogo, quien puede asesorarlo en cuestiones de \nseguridad y sobre la necesidad de vacunas. Antes de viajar, las personas \ncon IDP deben asegurarse tener una cobertura médica adecuada y seguro \nde viaje. Si es posible, deben pedir a su médico o centro especializado que \norganice toda terapia programada necesaria durante sus viajes.\nLos pacientes deben llevar una declaración que explique su condición,  \ny el objetivo de las drogas y otros equipos transportados. Esto puede ser  \nen una carta firmada por el inmunólogo y si es posible, traducido a la lengua \nde los países que se visitarán. Se pueden encontrar modelos de cartas  \nen en www.ipopi.org \nLas organizaciones nacionales para pacientes con IDP pueden bridar mayor \ncolaboración, así como los bancos de sangre locales o el servicio  \nde transfusión de la Cruz Roja en algunos casos específicos. \nAlimentación\nUna alimentación nutritiva y equilibrada es importante para la salud de \ntodos. Las personas con los IDP deben evitar los platos crudos o poco \ncocinados (por ej: carnes, huevos y quesos). La mayoría no necesita una \ndieta especial o suplementos como vitaminas adicionales. Los pacientes  \ny los padres deben consultar con el equipo de inmunólogos antes de tomar \ncualquier suplemento.\nLas personas con IDP deben evitar beber agua de origen desconocido,  \no que haya  permanecido demasiado tiempo en el mismo contenedor.\nCuidado de la piel\nAlgunas personas con IDP pueden tener que prestar especial atención  \nal cuidado de la piel, como tomar precauciones por la exposición al sol.  \nEn caso de duda, consulte a su médico.\nEjercicios y deporte\nLas personas con IDP pueden disfrutar del ejercicio y el deporte, como todo \nel mundo. Los pacientes con deficiencias de células fagocitarias (como la \nenfermedad granulomatosa crónica, o CGD por su sigla en inglés) deben \nevitar nadar en lagos o lagunas, y la jardinería que consista de excavación \no contacto con plantas o restos de árboles en estado de podredumbre. \nAlgunas IDP interfieren con la coagulación de la sangre y los pacientes con \nestas condiciones deben hablar con su inmunólogo sobre deportes seguros."
+      },
+      {
+        "source": "ipopi",
+        "filename": "TreatmentsForPIDs-Spanish.pdf",
+        "score": 0.5,
+        "content": "propio proceso de fabricación.\nLa inmunoglobulina está disponible en la mayoría \nde los países (ver www.ipopi.org), pero a menudo \nsólo en los centros que cuentan con un especialista \nen el tratamiento de las IDP . En diferentes países \nel sistema de salud paga el tratamiento con \ninmunoglobulina (o lo reembolsa) y varía  según los \nplanes de salud. Los pacientes y cuidadores tendrán \nque revisar su plan de salud local y seguir el consejo de su médico.  \nLos pacientes también pueden ponerse en contacto con su organización \nnacional de pacientes (a través de www.ipopi.org) para más información."
+      },
+      {
+        "source": "idf",
+        "filename": "manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf",
+        "score": 0.3333333333333333,
+        "content": "135\nManual de IDF para pacientes y familias\nCapítulo 28\nTerapia de reemplazo de inmunoglobulinas\nCarla Duff, CPNP , MSN, CCRP , IgCN Universidad del Sur de Florida, Tampa, Florida, EE. UU.\nDr. Mark Ballow, Universidad del Sur de Florida, Tampa, Florida, EE. UU.\nKristin Epland, FNP-C, Clínica de Inmunología del Medio Oeste, Plymouth, Minnesota, \nEE. UU.\nDra. Elena Perez, PhD, Asociados de Alergia de Palm Beaches, North Palm Beach, \nFlorida, EE. UU.\n¿Qué es la terapia de reemplazo \nde inmunoglobulinas?  \nExisten varias terapias médicas específicas disponibles \npara personas con IP que involucran deficiencias \nde anticuerpos. Las deficiencias de anticuerpos \nrepresentan más del 50% de los trastornos. Estas \nenfermedades, como la inmunodeficiencia común \nvariable (IDCV), la agammaglobulinemia ligada al \ncromosoma X (XLA) y otros trastornos, se caracterizan \npor una falta o deterioro de la función de los \nanticuerpos.\nLa inmunoglobulina o Ig, también conocida como \ngammaglobulina se refiere al componente plasmático \nlíquido de la sangre que contiene inmunoglobulinas \no anticuerpos. Estos anticuerpos tienen la importante \nfunción en el sistema inmunitario de neutralizar \nbacterias y virus y mejorar la fagocitosis y destrucción \nde bacterias, ciertos virus y otros patógenos.\nCuando las moléculas de anticuerpos reconocen \nun microorganismo como extraño, se adhieren \ninicialmente a él y desencadenan una compleja \ncadena de eventos que involucran a otros \ncomponentes del sistema inmunitario, que trabajan \npara eventualmente destruir la infección. Los \nanticuerpos varían con respecto a sus funciones \nespecializadas en el cuerpo. Estas variaciones \nestán determinadas por la estructura química del \nanticuerpo, que a su vez determina la clase del \nanticuerpo (o inmunoglobulina). Hay cinco clases \nprincipales de anticuerpos (IgG, IgA, IgM, IgD e IgE). \nLa IgG tiene cuatro subclases diferentes (IgG1, IgG2,"
+      },
+      {
+        "source": "ipopi",
+        "filename": "TreatmentsForPIDs-Spanish.pdf",
+        "score": 0.25,
+        "content": "Tratamientos para Inmunodeficiencias Primarias: Guía para el paciente y sus familias.\nSi bien el tratamiento sustitutivo \ncon inmunoglobulinas protege \ncontra muchas infecciones \ncomunes y graves, no impide \ntodas las infecciones. Los \npacientes tratados con \ninmunoglobulina igual  tienen \nque tomar precauciones contra \nlas infecciones, tales como una \nbuena higiene o en algunos casos \nel tratamiento con antibióticos. \nLos pacientes o los padres deben \ncomunicarse con el médico \ncuando sospechen una infección. \nEl médico o el enfermero pueden \nasesorar sobre cuáles infecciones \ndeben tener en cuenta.\n¿Cuáles son los posibles efectos secundarios?\nLa mayoría de los pacientes no experimentan efectos secundarios por las \ninmunoglobulinas. Algunos pacientes experimentan síntomas tales como \ndolor de  cabeza, mareos, fiebre, escalofríos, náuseas, vómitos o dolor en los \nmúsculos o en la espalda. Los efectos secundarios más graves, tales como \nla meningitis aséptica, la pérdida de glóbulos rojos de la sangre (anemia \nhemolítica), los eventos tromboembólicos (coágulos de sangre, por ejemplo, \nen el corazón, el cerebro o los pulmones) y reacciones alérgicas graves,  \nno son nada frecuentes. Estos efectos secundarios son menos comunes con \ninmunoglobulina subcutánea que con inmunoglobulina intravenosa. La infusión \nsubcutánea a veces causa inflamación y dolor en el lugar de la inyección.\nLas inmunoglobulinas se obtienen de plasma \nhumano de donantes sanos. Los tratamientos con \ninmunoglobulinas tienen un historial de seguridad \nexcelente. Si bien todos los productos biológicos \nconllevan un riesgo muy pequeño de infecciones por \nvirus, con la inmunoglobulina este riesgo se minimiza \na través de la selección cuidadosa de donantes de \nplasma, la verificación de las donaciones y por el  \npropio proceso de fabricación.\nLa inmunoglobulina está disponible en la mayoría \nde los países (ver www.ipopi.org), pero a menudo \nsólo en los centros que cuentan con un especialista \nen el tratamiento de las IDP . En diferentes países \nel sistema de salud paga el tratamiento con"
+      },
+      {
+        "source": "aedip",
+        "filename": "tratamiento-con-inmunoglobulinas.html",
+        "score": 0.2,
+        "content": "Tratamiento con inmunoglobulinas\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nEl tratamiento con Inmunoglobulinas (Ig’s)\n\n es la\n                                                principal indicación en los Déficits de la síntesis de anticuerpos tales\n                                                como: todas las formas de Hipo-Agammaglobulinemias, déficits de\n                                                subclases de la IgG con mala calidad de anticuerpos específicos,\n                                                defectos combinados de células B y T como las Inmunodeficiencias\n                                                combinadas graves (IDCG) previo al trasplante de Médula ósea, en el S.\n                                                de Wiskott-Aldrich (WA) con infecciones bacterianas, etc.\n\n\n\n\nLas Ig’s aprobadas para su uso actual son obtenidas mediante\n                                                fraccionamiento de grandes lotes de plasma para garantizar el más amplio\n                                                espectro de anticuerpos frente a las infecciones más frecuentes.\n\n\n\n\nHay distintas vías de administración de las Ig’s:\n\n\n\n\n\n\n\nLa administración \n\nintramuscular\n\n: únicamente para\n                                                    dosis aisladas (profilaxis de la hepatitis B, de la infección por\n                                                    tétanos, etc.)\n\n\n\n\nLa vía mas utilizada en Inmunodeficiencias primarias (IDP) es la de\n                                                    administración \n\nintravenosa-IV\n\n (1): cada 3 semanas,\n                                                    y a dosis de 400-500 mg/ Kg peso, se consiguen mantener unos niveles\n                                                    de IgG siempre superiores a 600 mg%. Hasta la actualidad, y en\n                                                    nuestro país desde 1981, esta administración se realiza en régimen\n                                                    de Hospital de día. La pauta de inicio debe ser individualizada\n                                                    hasta conseguir una mejoría o desaparición de las manifestaciones\n                                                    clínicas.\n\n\n\n\nDisponemos fácilmente de 3 marcas de Ig´s de administración IV\n                                                    (\n\nFlebogamma\n\n de Grifols; \n\nKiovig\n\n de\n                                                    Baxter;Octagamocta de \n\nOctapharma\n\n (hay alguna otra\n                                                    de uso compasivo, como Gammagard de Baxter, si hay reacciones\n                                                    adversas por Ac anti-IgA).\n\n\n\n\nLa \n\nvía subcutánea-SC\n\n (2), de reciente introducción\n                                                    en nuestro país, permite mantener unos niveles adecuados con pautas\n                                                    de administración semanal (100-150 mg/ Kg /dosis) y a domicilio. Los\n                                                    niveles que se alcanzan son mas uniformes y las reacciones adversas\n                                                    de menor intensidad y de carácter local. Disponemos de una marca de\n                                                    Ig´s para administración subcutánea, \n\nVivaglobin"
+      },
+      {
+        "source": "upiip",
+        "filename": "guia_antibiotics_esp_0.pdf",
+        "score": 0.16666666666666666,
+        "content": "79\nMaterial o\nMedicamento\n• Llame al Servicio de Farmacia.\n• No utilice el material ni la medicación.\n• Llame al Servicio de Farmacia.\nAntes de la infusión:\n• Prepare nueva medicación y deseche el resto.\nDurante la infusión:\n• Averigüe la dosis perdida. \n– Opción 1: Añada la dosis restante. \n– Opción 2: Llame al Servicio de Farmacia.\nProceso\nFalta material\no medicamento\nPérdida de\nmedicación\naccidental\nDefecto en el \nmaterial\no la medicación"
+      },
+      {
+        "source": "upiip",
+        "filename": "guia_antibiotics_esp_0.pdf",
+        "score": 0.14285714285714285,
+        "content": "40\nPREPARACIÓN\n05\nPASO 4. Preparación del antibiótico\nCuando tenga que reconstituir el medicamento: \nHablamos de reconstituir cuando se mezcla el fármaco \nen polvo con el diluyente (agua estéril o suero). \nSiga los pasos 1 a 10 indicados a continuación \nCuando no tenga que reconstituir el \nmedicamento: \nSolo tendrá que cargar la medicación en la jeringa \nhasta retirar el volumen (ml) necesario para obtener \nla dosis prescrita. Para ello, siga los pasos 5 al 10.\n• Puede consultar las proporciones para \nreconstituir correctamente la medicación \n(mililitros de diluyente que hay que añadir y \nconcentración final de la mezcla) en la ficha \nde farmacia específica de cada antibiótico, en \nfunción de la dosis que administrará al niño/a. \n(Véase el apartado Información práctica, \nTabla de preparación de antibióticos por vía \nintravenosa)."
+      },
+      {
+        "source": "upiip",
+        "filename": "guia_antibiotics_esp_0.pdf",
+        "score": 0.125,
+        "content": "41\nRetire la tapa metálica del vial y limpie \nla superficie con gasas mojadas con \nclorhexidina alcohólica 0,5 %. A partir de \neste momento, no toque con las manos \nnada que vaya a entrar en contacto con la \nmedicación o con la vía.\nAntes de empezar a preparar la medicación, \nconfirme que el antibiótico prescrito \npresenta un aspecto normal. Si tiene un \ncolor o una textura extraña, rechácelo y \navise al Servicio de Farmacia para que  \npueda hacer un seguimiento. (Véase el \napartado Información práctica, Donde \ntirar los residuos de las curas).\nIntroduzca la cantidad de diluyente \nindicada en el vial que contiene el fármaco \nen polvo, poco a poco y a través de la aguja \nde una jeringa.\n1\n2\n3\nPara preparar la medicación tiene que \nseguir los siguientes pasos:\nContinúa en la página siguiente"
+      },
+      {
+        "source": "upiip",
+        "filename": "guia_antibiotics_esp_0.pdf",
+        "score": 0.1111111111111111,
+        "content": "54\nADMINISTRACIÓN\n06\n¿Qué es un dispositivo elastomérico?\nEs un dispositivo de un solo uso para la \nadministración de medicación por vía \nendovenosa que funciona de manera autónoma \nsin necesidad de corriente eléctrica. El globo \nelastomérico, una vez llenado con el líquido \nque contiene el medicamento, se desinfla a una \nvelocidad constante. \n \nPara evitar infecciones y garantizar la \nadministración segura de la medicación solo \npodemos utilizar una vez cada dispositivo\nPor sus características, el dispositivo \nelastomérico permite administrar la medicación \nmediante un flujo continuo durante todo el \ntiempo de la infusión. Ventajas de este sistema:\n• Facilita el tratamiento endovenoso a domicilio, \nsin necesidad de ingreso en el hospital.\n• Funciona de manera autónoma sin necesidad \nde electricidad. \n• Es fácil de usar. \n• Proporciona autonomía y permite la movilidad \ndel niño/a durante la administración."
+      },
+      {
+        "source": "idf",
+        "filename": "manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf",
+        "score": 0.1,
+        "content": "184\nACEITES\nSALUDABLES\nCapítulo 38: Cuidados generales\nhaya un grupo de padres que no vacunan a sus hijos. \nAlgunas personas optan por usar una mascarilla. Lo \nmejor es consultar al proveedor de atención sobre \nesto. Las mascarillas tienden a humedecerse por \nsecreciones nasales u orales secreciones rápidamente. \nUna vez que las mascarillas se humedecen, dejan de \nser efectivas. Las personas que usan mascarillas a \nveces tienen una falsa sensación de seguridad y se \nolvidan de otras medidas preventivas más efectivas, \ncomo lavarse las manos con frecuencia.\nMuchas personas con IP tienen preguntas sobre volar \no viajar. Dependiendo del tipo específico de IP que \ntenga una persona, es posible que no sea aconsejable \nviajar a un lugar en particular. Por ejemplo, en algunas \npartes del mundo la fiebre amarilla es un problema \ngrave. La vacuna para esta enfermedad es una vacuna \nde virus vivos y está contraindicada para algunas \npersonas con deficiencias de anticuerpos. Viajar a una \nzona donde hay fiebre amarilla no sería una buena \nidea para estas personas. De manera similar, viajar a \nuna parte del mundo donde los servicios de atención \nmédica no estén fácilmente disponibles puede no \nser una buena idea. Siempre es aconsejable que la \npersona con un IP consulte al equipo de inmunología \ncuando considere realizar un viaje extenso. También \npuede estar indicada la consulta con un proveedor \nespecializado en medicina de viajes.\nNutrición\nUna dieta sana y equilibrada aporta los elementos \nnecesarios para un adecuado crecimiento y desarrollo, \nasí como para la reparación y mantenimiento del \norganismo. Si bien los buenos hábitos alimentarios \nson importantes para todos, son especialmente \nimportantes para una persona con un IP . La falta \nde una nutrición adecuada puede predisponer a \nlas personas a desarrollar muchas enfermedades, \nincluidas infecciones a las que una persona con una IP \nya es susceptible.\nLas pautas dietéticas para los estadounidenses \nmotivan a comer una variedad de alimentos, incluidos \nalmidón y fibra, alcanzar y mantener un peso corporal \nideal y limitar la ingesta de grasas, colesterol, azúcar, \nsal y alcohol. (Ver Figura 38:1). El proveedor de \natención médica primaria es un excelente recurso \nde orientación y asesoramiento sobre una dieta \nsaludable. \nDietas especiales\nA menos que el individuo con una IP tenga otra \nafección como diabetes, alergias alimentarias o \nsensibilidad al gluten, generalmente no se necesitan"
+      }
+    ]
+  },
+  "new_sources_check": {
+    "present": [],
+    "missing": [
+      "ipopi/pid-patients-travel.html",
+      "seicap/50-preguntas-inmunodeficiencias.pdf"
+    ],
+    "actual_sources_in_topk": [
+      "aedip/mantenerse-saludable.pdf",
+      "aedip/tratamiento-con-inmunoglobulinas.html",
+      "idf/manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf",
+      "ipopi/TreatmentsForPIDs-Spanish.pdf",
+      "upiip/guia_antibiotics_esp_0.pdf"
+    ]
+  },
+  "claim_coverage_lexical_aid": {
+    "posible_viajar_con_planificacion": true,
+    "llevar_informe_medico": false,
+    "condiciones_conservacion_frio": true,
+    "consultar_equipo_medico_o_farmacia": true
+  },
+  "judge_stability": {
+    "runs": [
+      {
+        "context_precision": 0.0,
+        "context_recall": 1.0
+      },
+      {
+        "context_precision": 0.0,
+        "context_recall": 1.0
+      }
+    ],
+    "stable": true,
+    "evaluator_model": "gemini-2.5-flash",
+    "evaluator_temperature": 0.1
+  },
+  "no_signal_weight_contrast": {
+    "weights_used": [
+      0.05,
+      0.95
+    ],
+    "note": "Contraste informativo, no es el peso que se aplica en producción para esta consulta (señal léxica True => D-061 usa el peso uniforme/SIGNAL).",
+    "chunks": [
+      {
+        "source": "aedip",
+        "filename": "mantenerse-saludable.pdf",
+        "score": 1.0,
+        "content": "Inmunodeficiencias Primarias\nViajes\nTener una IDP no debe impedir que los pacientes viajen, pero  \nse recomiendan ciertas precauciones. El paciente debe discutir el plan \nde viaje con su inmunólogo, quien puede asesorarlo en cuestiones de \nseguridad y sobre la necesidad de vacunas. Antes de viajar, las personas \ncon IDP deben asegurarse tener una cobertura médica adecuada y seguro \nde viaje. Si es posible, deben pedir a su médico o centro especializado que \norganice toda terapia programada necesaria durante sus viajes.\nLos pacientes deben llevar una declaración que explique su condición,  \ny el objetivo de las drogas y otros equipos transportados. Esto puede ser  \nen una carta firmada por el inmunólogo y si es posible, traducido a la lengua \nde los países que se visitarán. Se pueden encontrar modelos de cartas  \nen en www.ipopi.org \nLas organizaciones nacionales para pacientes con IDP pueden bridar mayor \ncolaboración, así como los bancos de sangre locales o el servicio  \nde transfusión de la Cruz Roja en algunos casos específicos. \nAlimentación\nUna alimentación nutritiva y equilibrada es importante para la salud de \ntodos. Las personas con los IDP deben evitar los platos crudos o poco \ncocinados (por ej: carnes, huevos y quesos). La mayoría no necesita una \ndieta especial o suplementos como vitaminas adicionales. Los pacientes  \ny los padres deben consultar con el equipo de inmunólogos antes de tomar \ncualquier suplemento.\nLas personas con IDP deben evitar beber agua de origen desconocido,  \no que haya  permanecido demasiado tiempo en el mismo contenedor.\nCuidado de la piel\nAlgunas personas con IDP pueden tener que prestar especial atención  \nal cuidado de la piel, como tomar precauciones por la exposición al sol.  \nEn caso de duda, consulte a su médico.\nEjercicios y deporte\nLas personas con IDP pueden disfrutar del ejercicio y el deporte, como todo \nel mundo. Los pacientes con deficiencias de células fagocitarias (como la \nenfermedad granulomatosa crónica, o CGD por su sigla en inglés) deben \nevitar nadar en lagos o lagunas, y la jardinería que consista de excavación \no contacto con plantas o restos de árboles en estado de podredumbre. \nAlgunas IDP interfieren con la coagulación de la sangre y los pacientes con \nestas condiciones deben hablar con su inmunólogo sobre deportes seguros."
+      },
+      {
+        "source": "ipopi",
+        "filename": "TreatmentsForPIDs-Spanish.pdf",
+        "score": 0.5,
+        "content": "propio proceso de fabricación.\nLa inmunoglobulina está disponible en la mayoría \nde los países (ver www.ipopi.org), pero a menudo \nsólo en los centros que cuentan con un especialista \nen el tratamiento de las IDP . En diferentes países \nel sistema de salud paga el tratamiento con \ninmunoglobulina (o lo reembolsa) y varía  según los \nplanes de salud. Los pacientes y cuidadores tendrán \nque revisar su plan de salud local y seguir el consejo de su médico.  \nLos pacientes también pueden ponerse en contacto con su organización \nnacional de pacientes (a través de www.ipopi.org) para más información."
+      },
+      {
+        "source": "idf",
+        "filename": "manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf",
+        "score": 0.3333333333333333,
+        "content": "135\nManual de IDF para pacientes y familias\nCapítulo 28\nTerapia de reemplazo de inmunoglobulinas\nCarla Duff, CPNP , MSN, CCRP , IgCN Universidad del Sur de Florida, Tampa, Florida, EE. UU.\nDr. Mark Ballow, Universidad del Sur de Florida, Tampa, Florida, EE. UU.\nKristin Epland, FNP-C, Clínica de Inmunología del Medio Oeste, Plymouth, Minnesota, \nEE. UU.\nDra. Elena Perez, PhD, Asociados de Alergia de Palm Beaches, North Palm Beach, \nFlorida, EE. UU.\n¿Qué es la terapia de reemplazo \nde inmunoglobulinas?  \nExisten varias terapias médicas específicas disponibles \npara personas con IP que involucran deficiencias \nde anticuerpos. Las deficiencias de anticuerpos \nrepresentan más del 50% de los trastornos. Estas \nenfermedades, como la inmunodeficiencia común \nvariable (IDCV), la agammaglobulinemia ligada al \ncromosoma X (XLA) y otros trastornos, se caracterizan \npor una falta o deterioro de la función de los \nanticuerpos.\nLa inmunoglobulina o Ig, también conocida como \ngammaglobulina se refiere al componente plasmático \nlíquido de la sangre que contiene inmunoglobulinas \no anticuerpos. Estos anticuerpos tienen la importante \nfunción en el sistema inmunitario de neutralizar \nbacterias y virus y mejorar la fagocitosis y destrucción \nde bacterias, ciertos virus y otros patógenos.\nCuando las moléculas de anticuerpos reconocen \nun microorganismo como extraño, se adhieren \ninicialmente a él y desencadenan una compleja \ncadena de eventos que involucran a otros \ncomponentes del sistema inmunitario, que trabajan \npara eventualmente destruir la infección. Los \nanticuerpos varían con respecto a sus funciones \nespecializadas en el cuerpo. Estas variaciones \nestán determinadas por la estructura química del \nanticuerpo, que a su vez determina la clase del \nanticuerpo (o inmunoglobulina). Hay cinco clases \nprincipales de anticuerpos (IgG, IgA, IgM, IgD e IgE). \nLa IgG tiene cuatro subclases diferentes (IgG1, IgG2,"
+      },
+      {
+        "source": "ipopi",
+        "filename": "TreatmentsForPIDs-Spanish.pdf",
+        "score": 0.25,
+        "content": "Tratamientos para Inmunodeficiencias Primarias: Guía para el paciente y sus familias.\nSi bien el tratamiento sustitutivo \ncon inmunoglobulinas protege \ncontra muchas infecciones \ncomunes y graves, no impide \ntodas las infecciones. Los \npacientes tratados con \ninmunoglobulina igual  tienen \nque tomar precauciones contra \nlas infecciones, tales como una \nbuena higiene o en algunos casos \nel tratamiento con antibióticos. \nLos pacientes o los padres deben \ncomunicarse con el médico \ncuando sospechen una infección. \nEl médico o el enfermero pueden \nasesorar sobre cuáles infecciones \ndeben tener en cuenta.\n¿Cuáles son los posibles efectos secundarios?\nLa mayoría de los pacientes no experimentan efectos secundarios por las \ninmunoglobulinas. Algunos pacientes experimentan síntomas tales como \ndolor de  cabeza, mareos, fiebre, escalofríos, náuseas, vómitos o dolor en los \nmúsculos o en la espalda. Los efectos secundarios más graves, tales como \nla meningitis aséptica, la pérdida de glóbulos rojos de la sangre (anemia \nhemolítica), los eventos tromboembólicos (coágulos de sangre, por ejemplo, \nen el corazón, el cerebro o los pulmones) y reacciones alérgicas graves,  \nno son nada frecuentes. Estos efectos secundarios son menos comunes con \ninmunoglobulina subcutánea que con inmunoglobulina intravenosa. La infusión \nsubcutánea a veces causa inflamación y dolor en el lugar de la inyección.\nLas inmunoglobulinas se obtienen de plasma \nhumano de donantes sanos. Los tratamientos con \ninmunoglobulinas tienen un historial de seguridad \nexcelente. Si bien todos los productos biológicos \nconllevan un riesgo muy pequeño de infecciones por \nvirus, con la inmunoglobulina este riesgo se minimiza \na través de la selección cuidadosa de donantes de \nplasma, la verificación de las donaciones y por el  \npropio proceso de fabricación.\nLa inmunoglobulina está disponible en la mayoría \nde los países (ver www.ipopi.org), pero a menudo \nsólo en los centros que cuentan con un especialista \nen el tratamiento de las IDP . En diferentes países \nel sistema de salud paga el tratamiento con"
+      },
+      {
+        "source": "aedip",
+        "filename": "tratamiento-con-inmunoglobulinas.html",
+        "score": 0.2,
+        "content": "Tratamiento con inmunoglobulinas\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nEl tratamiento con Inmunoglobulinas (Ig’s)\n\n es la\n                                                principal indicación en los Déficits de la síntesis de anticuerpos tales\n                                                como: todas las formas de Hipo-Agammaglobulinemias, déficits de\n                                                subclases de la IgG con mala calidad de anticuerpos específicos,\n                                                defectos combinados de células B y T como las Inmunodeficiencias\n                                                combinadas graves (IDCG) previo al trasplante de Médula ósea, en el S.\n                                                de Wiskott-Aldrich (WA) con infecciones bacterianas, etc.\n\n\n\n\nLas Ig’s aprobadas para su uso actual son obtenidas mediante\n                                                fraccionamiento de grandes lotes de plasma para garantizar el más amplio\n                                                espectro de anticuerpos frente a las infecciones más frecuentes.\n\n\n\n\nHay distintas vías de administración de las Ig’s:\n\n\n\n\n\n\n\nLa administración \n\nintramuscular\n\n: únicamente para\n                                                    dosis aisladas (profilaxis de la hepatitis B, de la infección por\n                                                    tétanos, etc.)\n\n\n\n\nLa vía mas utilizada en Inmunodeficiencias primarias (IDP) es la de\n                                                    administración \n\nintravenosa-IV\n\n (1): cada 3 semanas,\n                                                    y a dosis de 400-500 mg/ Kg peso, se consiguen mantener unos niveles\n                                                    de IgG siempre superiores a 600 mg%. Hasta la actualidad, y en\n                                                    nuestro país desde 1981, esta administración se realiza en régimen\n                                                    de Hospital de día. La pauta de inicio debe ser individualizada\n                                                    hasta conseguir una mejoría o desaparición de las manifestaciones\n                                                    clínicas.\n\n\n\n\nDisponemos fácilmente de 3 marcas de Ig´s de administración IV\n                                                    (\n\nFlebogamma\n\n de Grifols; \n\nKiovig\n\n de\n                                                    Baxter;Octagamocta de \n\nOctapharma\n\n (hay alguna otra\n                                                    de uso compasivo, como Gammagard de Baxter, si hay reacciones\n                                                    adversas por Ac anti-IgA).\n\n\n\n\nLa \n\nvía subcutánea-SC\n\n (2), de reciente introducción\n                                                    en nuestro país, permite mantener unos niveles adecuados con pautas\n                                                    de administración semanal (100-150 mg/ Kg /dosis) y a domicilio. Los\n                                                    niveles que se alcanzan son mas uniformes y las reacciones adversas\n                                                    de menor intensidad y de carácter local. Disponemos de una marca de\n                                                    Ig´s para administración subcutánea, \n\nVivaglobin"
+      },
+      {
+        "source": "upiip",
+        "filename": "guia_antibiotics_esp_0.pdf",
+        "score": 0.16666666666666666,
+        "content": "79\nMaterial o\nMedicamento\n• Llame al Servicio de Farmacia.\n• No utilice el material ni la medicación.\n• Llame al Servicio de Farmacia.\nAntes de la infusión:\n• Prepare nueva medicación y deseche el resto.\nDurante la infusión:\n• Averigüe la dosis perdida. \n– Opción 1: Añada la dosis restante. \n– Opción 2: Llame al Servicio de Farmacia.\nProceso\nFalta material\no medicamento\nPérdida de\nmedicación\naccidental\nDefecto en el \nmaterial\no la medicación"
+      },
+      {
+        "source": "upiip",
+        "filename": "guia_antibiotics_esp_0.pdf",
+        "score": 0.14285714285714285,
+        "content": "40\nPREPARACIÓN\n05\nPASO 4. Preparación del antibiótico\nCuando tenga que reconstituir el medicamento: \nHablamos de reconstituir cuando se mezcla el fármaco \nen polvo con el diluyente (agua estéril o suero). \nSiga los pasos 1 a 10 indicados a continuación \nCuando no tenga que reconstituir el \nmedicamento: \nSolo tendrá que cargar la medicación en la jeringa \nhasta retirar el volumen (ml) necesario para obtener \nla dosis prescrita. Para ello, siga los pasos 5 al 10.\n• Puede consultar las proporciones para \nreconstituir correctamente la medicación \n(mililitros de diluyente que hay que añadir y \nconcentración final de la mezcla) en la ficha \nde farmacia específica de cada antibiótico, en \nfunción de la dosis que administrará al niño/a. \n(Véase el apartado Información práctica, \nTabla de preparación de antibióticos por vía \nintravenosa)."
+      },
+      {
+        "source": "upiip",
+        "filename": "guia_antibiotics_esp_0.pdf",
+        "score": 0.125,
+        "content": "41\nRetire la tapa metálica del vial y limpie \nla superficie con gasas mojadas con \nclorhexidina alcohólica 0,5 %. A partir de \neste momento, no toque con las manos \nnada que vaya a entrar en contacto con la \nmedicación o con la vía.\nAntes de empezar a preparar la medicación, \nconfirme que el antibiótico prescrito \npresenta un aspecto normal. Si tiene un \ncolor o una textura extraña, rechácelo y \navise al Servicio de Farmacia para que  \npueda hacer un seguimiento. (Véase el \napartado Información práctica, Donde \ntirar los residuos de las curas).\nIntroduzca la cantidad de diluyente \nindicada en el vial que contiene el fármaco \nen polvo, poco a poco y a través de la aguja \nde una jeringa.\n1\n2\n3\nPara preparar la medicación tiene que \nseguir los siguientes pasos:\nContinúa en la página siguiente"
+      },
+      {
+        "source": "upiip",
+        "filename": "guia_antibiotics_esp_0.pdf",
+        "score": 0.1111111111111111,
+        "content": "54\nADMINISTRACIÓN\n06\n¿Qué es un dispositivo elastomérico?\nEs un dispositivo de un solo uso para la \nadministración de medicación por vía \nendovenosa que funciona de manera autónoma \nsin necesidad de corriente eléctrica. El globo \nelastomérico, una vez llenado con el líquido \nque contiene el medicamento, se desinfla a una \nvelocidad constante. \n \nPara evitar infecciones y garantizar la \nadministración segura de la medicación solo \npodemos utilizar una vez cada dispositivo\nPor sus características, el dispositivo \nelastomérico permite administrar la medicación \nmediante un flujo continuo durante todo el \ntiempo de la infusión. Ventajas de este sistema:\n• Facilita el tratamiento endovenoso a domicilio, \nsin necesidad de ingreso en el hospital.\n• Funciona de manera autónoma sin necesidad \nde electricidad. \n• Es fácil de usar. \n• Proporciona autonomía y permite la movilidad \ndel niño/a durante la administración."
+      },
+      {
+        "source": "idf",
+        "filename": "manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf",
+        "score": 0.1,
+        "content": "184\nACEITES\nSALUDABLES\nCapítulo 38: Cuidados generales\nhaya un grupo de padres que no vacunan a sus hijos. \nAlgunas personas optan por usar una mascarilla. Lo \nmejor es consultar al proveedor de atención sobre \nesto. Las mascarillas tienden a humedecerse por \nsecreciones nasales u orales secreciones rápidamente. \nUna vez que las mascarillas se humedecen, dejan de \nser efectivas. Las personas que usan mascarillas a \nveces tienen una falsa sensación de seguridad y se \nolvidan de otras medidas preventivas más efectivas, \ncomo lavarse las manos con frecuencia.\nMuchas personas con IP tienen preguntas sobre volar \no viajar. Dependiendo del tipo específico de IP que \ntenga una persona, es posible que no sea aconsejable \nviajar a un lugar en particular. Por ejemplo, en algunas \npartes del mundo la fiebre amarilla es un problema \ngrave. La vacuna para esta enfermedad es una vacuna \nde virus vivos y está contraindicada para algunas \npersonas con deficiencias de anticuerpos. Viajar a una \nzona donde hay fiebre amarilla no sería una buena \nidea para estas personas. De manera similar, viajar a \nuna parte del mundo donde los servicios de atención \nmédica no estén fácilmente disponibles puede no \nser una buena idea. Siempre es aconsejable que la \npersona con un IP consulte al equipo de inmunología \ncuando considere realizar un viaje extenso. También \npuede estar indicada la consulta con un proveedor \nespecializado en medicina de viajes.\nNutrición\nUna dieta sana y equilibrada aporta los elementos \nnecesarios para un adecuado crecimiento y desarrollo, \nasí como para la reparación y mantenimiento del \norganismo. Si bien los buenos hábitos alimentarios \nson importantes para todos, son especialmente \nimportantes para una persona con un IP . La falta \nde una nutrición adecuada puede predisponer a \nlas personas a desarrollar muchas enfermedades, \nincluidas infecciones a las que una persona con una IP \nya es susceptible.\nLas pautas dietéticas para los estadounidenses \nmotivan a comer una variedad de alimentos, incluidos \nalmidón y fibra, alcanzar y mantener un peso corporal \nideal y limitar la ingesta de grasas, colesterol, azúcar, \nsal y alcohol. (Ver Figura 38:1). El proveedor de \natención médica primaria es un excelente recurso \nde orientación y asesoramiento sobre una dieta \nsaludable. \nDietas especiales\nA menos que el individuo con una IP tenga otra \nafección como diabetes, alergias alimentarias o \nsensibilidad al gluten, generalmente no se necesitan"
+      }
+    ],
+    "new_sources_present": []
+  },
+  "historical_scores_comparison": {
+    "note": "Comparación con los 3 ficheros históricos ya generados para eval_15 (sin volver a ejecutar RAGAS sobre esos casos, solo lectura de resultados existentes).",
+    "pre_e11_t02": {
+      "file": "e09_t02_ragas_full_scores_pre_e11_t02.json",
+      "context_precision": 0.0,
+      "context_recall": 0.0
+    },
+    "e11_t02_baseline_peso_uniforme": {
+      "file": "e09_t02_ragas_full_scores_e11_t02_baseline.json",
+      "context_precision": 0.0,
+      "context_recall": 1.0
+    },
+    "e11_t02_peso_adaptativo_archivado": {
+      "file": "e09_t02_ragas_full_scores.json",
+      "context_precision": 0.0,
+      "context_recall": 0.0
+    },
+    "esta_investigacion_dos_ejecuciones_frescas": [
+      {"context_precision": 0.0, "context_recall": 1.0},
+      {"context_precision": 0.0, "context_recall": 1.0}
+    ],
+    "observation": "Con el retrieval actual (peso adaptativo, idéntico al peso uniforme para esta consulta porque lexical_signal=True, ver production_retrieval.applied_weights == [0.4, 0.6]), las DOS ejecuciones frescas del juez en este script dan context_recall=1.0 las dos veces: coincide con el valor archivado de T-01 (peso uniforme), no con el 0.0 archivado de T-02. Como el retrieval no cambió entre T-01 y T-02 para esta consulta concreta (mismos pesos, mismo top-k -- confirmado también por no_signal_weight_contrast: forzar el peso NO_SIGNAL no cambia el top-k), la única variable que explica 1.0 (T-01 archivado) frente a 0.0 (T-02 archivado) frente a 1.0/1.0 (esta investigación, mismo contexto que T-02) es el juez LLM entre llamadas distintas: evidencia directa a favor de la hipótesis 2 (ruido de medición) para el retroceso de context_recall. context_precision, en cambio, se mantiene en 0.0 de forma consistente en las 3 mediciones históricas Y en las 2 ejecuciones frescas (5 mediciones independientes, mismo resultado) -- sin evidencia de ruido; ver manual_phrase_by_phrase_contrast para por qué el top-k no satisface el criterio de precisión de forma estable."
+  },
+  "manual_phrase_by_phrase_contrast": {
+    "method": "Lectura manual de production_retrieval.chunks (top-10) frase a frase contra expected_answer, tras detectar que claim_coverage_lexical_aid (paso 5, chequeo léxico automático) produce falsos positivos documentados en cada claim de abajo.",
+    "claims": [
+      {
+        "claim": "En general es posible viajar llevando la medicación",
+        "covered": true,
+        "evidence": "chunk 0 (aedip/mantenerse-saludable.pdf, sección 'Viajes'): 'Tener una IDP no debe impedir que los pacientes viajen, pero se recomiendan ciertas precauciones.'"
+      },
+      {
+        "claim": "conviene planificarlo con antelación",
+        "covered": "parcial",
+        "evidence": "chunk 0: 'El paciente debe discutir el plan de viaje con su inmunólogo... Antes de viajar... deben asegurarse tener una cobertura médica adecuada y seguro de viaje.' No usa la palabra 'antelación' pero el contenido implica planificación previa al viaje."
+      },
+      {
+        "claim": "llevar un informe médico",
+        "covered": "parcial (semántico, no léxico)",
+        "evidence": "chunk 0: 'Los pacientes deben llevar una declaración que explique su condición... en una carta firmada por el inmunólogo.' Es el mismo concepto (documento médico para el viaje) con otras palabras -- explica por qué claim_coverage_lexical_aid.llevar_informe_medico dio False (busca literalmente 'informe médico') pese a que el contenido sí lo cubre semánticamente."
+      },
+      {
+        "claim": "respetar las condiciones de conservación (algunas inmunoglobulinas requieren frío)",
+        "covered": false,
+        "evidence": "Ningún chunk del top-10 menciona conservación, temperatura o cadena de frío de la medicación durante el viaje. claim_coverage_lexical_aid.condiciones_conservacion_frio dio True por un falso positivo: 'frío' aparece como substring de 'escalofríos' (síntoma, chunk 3 ipopi/TreatmentsForPIDs-Spanish.pdf, sección de efectos secundarios de la inmunoglobulina), no como la palabra 'frío' en el sentido de refrigeración."
+      },
+      {
+        "claim": "consultar con el equipo médico o la farmacia hospitalaria las recomendaciones de transporte",
+        "covered": "parcial",
+        "evidence": "chunk 0 recomienda consultar al 'inmunólogo'/'médico o centro especializado' (próximo en significado a 'equipo médico', no la frase exacta), pero ningún chunk menciona 'farmacia hospitalaria' en el sentido de recomendaciones de transporte para el viaje. claim_coverage_lexical_aid.consultar_equipo_medico_o_farmacia dio True por un falso positivo de tema: los 3 chunks que contienen 'farmacia' (upiip/guia_antibiotics_esp_0.pdf, chunks 5-7) tratan de qué hacer si falta material o hay un defecto en la medicación durante la administración de antibióticos IV en casa -- un tema distinto (preparación/incidencias de antibióticos, no transporte de inmunoglobulinas en avión)."
+      }
+    ],
+    "conclusion": "El top-10 sí cubre razonablemente el mensaje general ('se puede viajar, hay que planificar, llevar documentación del inmunólogo') a través de un único chunk (aedip/mantenerse-saludable.pdf, sección 'Viajes') que NO es ninguna de las dos fuentes nuevas de T-01 esperadas (SEICAP capítulo de viajes / IPOPI FAQ de viajes) -- ver new_sources_check, ninguna de las dos aparece en el top-10 (ni con el peso de producción ni forzando NO_SIGNAL). El top-10 no cubre dos afirmaciones específicas de expected_answer: condiciones de conservación en frío, y la recomendación concreta de consultar la farmacia hospitalaria. Esto es coherente con que context_precision se mantenga en 0.0 de forma estable en las 5 mediciones disponibles (3 históricas + 2 de esta investigación): el top-k mezcla un chunk parcialmente relevante (viajes en general) con contenido irrelevante para esta pregunta concreta (antibióticos IV en casa, efectos secundarios de la inmunoglobulina) -- un problema de retrieval real (hipótesis 1), aunque no por ausencia total de contenido relevante sino por relevancia parcial/dispersa. La fluctuación de context_recall (1.0/0.0 entre mediciones con el MISMO retrieval, ver historical_scores_comparison) es más compatible con que el juez LLM decida de forma no determinista si las claims 'parcial'/semánticas (informe médico, equipo médico) cuentan como atribuibles al contexto recuperado -- hipótesis 2. Lectura conjunta: las dos hipótesis del plan no son mutuamente excluyentes para este caso -- context_precision bajo parece un problema de retrieval real (relevancia parcial, fuentes nuevas de T-01 ausentes del top-k), mientras que la inestabilidad de context_recall entre mediciones con retrieval idéntico apunta a ruido del juez LLM sobre las claims semánticas límite."
+  }
+}

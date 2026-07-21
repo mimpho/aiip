@@ -3,7 +3,7 @@ from typing import AsyncIterator
 from rag.embeddings import get_embeddings
 from rag.generator import RAGGenerator
 from rag.language import detect_language
-from rag.retriever import get_hybrid_retriever, get_retriever
+from rag.retriever import apply_adaptive_bm25_weight, get_hybrid_retriever, get_retriever
 from rag.safety import apply_safety_filter, check_alarm_signals
 
 _DEFAULT_COLLECTION = "family"
@@ -68,7 +68,12 @@ class RAGPipeline:
         D-057 (E-09 T-05, hallazgo D): EnsembleRetriever no expone un score de
         similitud comparable al de Chroma — el score aquí es posicional
         (1/rank), no una medida de distancia/similitud coseno.
+
+        D-061 (E-11 T-02): el peso de BM25 se recalcula para cada pregunta
+        (mutando `weights` del retriever ya cacheado) antes de invocar — no
+        reconstruye el índice BM25.
         """
+        apply_adaptive_bm25_weight(self._retriever, question)
         docs = self._retriever.invoke(question)
         return [(doc, 1.0 / (i + 1)) for i, doc in enumerate(docs)]
 

@@ -305,8 +305,8 @@ body::after {
    starter chips) that should stay neutral.
    screens-chat.html:62 dark / :115 light (identical in both modes). */
 [data-step-type="user_message"] .bg-accent {
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--secondary-foreground));
   border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
   padding: 11px 16px;
   font-size: var(--text-base);

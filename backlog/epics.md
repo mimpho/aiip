@@ -429,6 +429,19 @@ mejora de calidad); las capas (2) y (3), al no tocar el contexto de
 generación de la misma forma, pueden ejecutarse después de E-10 sin
 esperar a E-11. Ver nota de reordenamiento en la introducción de esta fase.
 
+**Nota de aplazamiento completo (19 jul 2026, D-063):** al crear E-13
+(ampliación de KB con fuentes MedlinePlus Genetics) surgió la pregunta de
+qué recortar para hacerle sitio en el tiempo que queda antes del 29 de
+julio. Decisión: **E-08 se aplaza entera** (capas 1, 2 y 3) a seguimiento
+post-TFM, no solo la capa 1 ya señalada arriba. Las capas 2/3 no estaban
+bloqueadas por el motivo de D-059 (no mezclan historial con generación) —
+su aplazamiento es una decisión nueva de priorización (calidad de KB/RAG
+sobre completitud de producto), no una extensión de la lógica anterior.
+D-009 ya cubre el ángulo legal/ético: el TFM solo exige documentar la
+decisión de diseño sobre derecho al olvido, no implementarla, así que
+aplazar la capa 3 no deja ningún cabo suelto para la entrega. Detalle
+completo del razonamiento en D-063.
+
 **Criterios de aceptación de alto nivel**
 - Memoria conversacional de corto plazo: el agente mantiene el hilo de la
   conversación dentro de una misma sesión de chat abierta (sin necesidad de
@@ -617,7 +630,149 @@ Cierre acotado de los hallazgos de calidad que quedaron abiertos o fuera de alca
 - Decisión tomada sobre cómo reportar Hallucination Rate en el informe final — el 93.75% actual es un conteo binario (D-058: cualquier caso con faithfulness < 1.0 cuenta como "alucinado"); de los 30 casos, solo `eval_15` está realmente mal (< 0.5), el resto está entre 0.69 y 0.96 — valorar un desglose por severidad como métrica complementaria, no solo el binario
 - Resultados documentados en `docs/evaluation.md` como actualización post-E-09, con re-medición antes/después dirigida a los casos afectados (mismo criterio de transparencia que E-09 T-05)
 
-La descomposición formal en tareas con Gherkin se hace en `epic-start` al arrancar la épica.
+**Nota de cierre — criterio de `eval_15` cumplido de forma distinta a la redacción original (21 jul 2026):** el criterio asumía que `eval_15` seguiría siendo el caso "Grave" a investigar en profundidad. En la ejecución, T-01 (ampliación de KB) resolvió como efecto colateral el problema original de `eval_15` (Faithfulness 0.38 → 0.875, Answer Relevancy 0.0 → 0.84; D-068) antes de llegar a T-05, dejando solo un hallazgo nuevo y distinto (Context Precision/Recall en 0.0, hueco de contenido genuino sobre conservación en frío de la medicación en viaje — documentado en `backlog/ideas.md`, no bloqueante). Al recalcular las bandas de severidad en T-06, `eval_06` — no investigado en el criterio original — pasó a ser el único caso "Grave" y requirió su propia investigación dirigida (D-069). Las dos investigaciones dirigidas que pedía el criterio se hicieron igualmente, solo que repartidas entre `eval_15` (T-05) y `eval_06` (T-06) en vez de concentradas en `eval_15`.
+
+**Descomposición y decisiones de `epic-start` (18 jul 2026):** aprobada por Marcos con tres
+puntos resueltos sobre la propuesta inicial:
+- **T-02:** prioridad confirmada en el peso adaptativo de BM25 (activar/ponderar solo ante
+  señal léxica fuerte — nombre propio, término de baja frecuencia, patrón geográfico), con la
+  recalibración simple del peso fijo (ej. 0.2/0.8) como fallback barato solo si el adaptativo
+  no cierra a tiempo.
+- **T-03:** Marcos aprueba explícitamente la redacción exacta de la regla de grounding para
+  conectores no-clínicos antes de que toque `prompts/system_prompt_family.txt` en producción —
+  no se despliega solo con el veredicto de la investigación offline.
+- **T-06:** aclarado que el 93.75% no refleja un fallo de medición — RAGAS Faithfulness
+  calcula bien el soporte por afirmación, pero D-058 cuenta como "alucinado" cualquier caso con
+  faithfulness < 1.0, sin matices; de los 30 casos, 29 están entre 0.69 y 0.96 (matiz/parafraseo,
+  no dato inventado) y solo `eval_15` es grave (0.38). Bandas de severidad aprobadas: **Grave**
+  (< 0.5), **Moderada** (0.5–0.85), **Leve** (0.85–<1.0), **Sin desviación** (1.0). El binario
+  93.75% se mantiene en el informe por continuidad con E-09, acompañado de este desglose.
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Ampliación de la KB (fuentes generales/FAQ de vida diaria) | ✅ Completada |
+| T-02 | Re-medición RAGAS + peso adaptativo de BM25 contra el corpus ampliado | ✅ Completada — revisada y confirmada por Marcos (19 jul 2026), `tests/eval/results/e11_t02_cierre.md` |
+| T-03 | Hallazgo C: regla acotada de grounding para conectores no clínicos | ✅ Completada — cerrado sin cambio de prompt, comportamiento evasivo no se reproduce (D-066, `tests/eval/results/e11_t03_cierre.md`) |
+| T-04 | Hallazgo E: revisión cualitativa del registro lingüístico | ✅ Completada — ajuste de tono aplicado y confirmado por Marcos (19 jul 2026), D-067, `tests/eval/results/e11_t04_cierre.md` |
+| T-05 | Investigación dirigida: `eval_15`, confirmación `eval_63`, documento sospechoso `guia_antibiotics_esp_0.pdf` | ✅ Completada — `eval_63` confirmado, `eval_15` cerrado (hallazgo nuevo documentado en backlog, no bloqueante), `guia_antibiotics_esp_0.pdf` cerrado con ajuste de prompt (D-068, `tests/eval/results/e11_t05_cierre.md`) |
+| T-06 | Hallucination Rate: desglose por bandas de severidad | ✅ Completada — desglose en `docs/evaluation.md` §5.3, `eval_06` investigado y marcado cuestionado (D-069, `tests/eval/results/e11_t06_cierre.md`) |
+| T-07 | Cierre: informe final en `docs/evaluation.md` | ✅ Completada |
+
+Orden de ejecución: T-01 primero (bottleneck: tiempo de Marcos para vetar fuentes), en
+paralelo con T-03/T-04/T-06 (no dependen del corpus). T-02 y T-05 dependen de T-01/T-02
+respectivamente. T-07 cierra la épica.
+
+**Entregables**
+- `data/raw/manifest.json`, `docs/kb-sources.md` — 9 fuentes generales/FAQ nuevas vetadas por Marcos, cubriendo los 6 huecos genuinos acotados en D-060 (T-01)
+- `rag/retriever.py` — peso adaptativo de BM25 por señal léxica (T-02, D-061)
+- `prompts/system_prompt_family.txt` — ajuste de tono `[TONO — PERFIL FAMILIAR]` (T-04, D-067), generalización de `[RESTRICCIONES ABSOLUTAS]` a información operativa de centro concreto (T-05, D-068) y refuerzo de `[FUENTES]` contra citación duplicada (T-07, D-072)
+- `docs/evaluation.md` — §5.1/§5.4/§7 actualizados con resultados post-E-11 y desglose de Hallucination Rate por severidad
+- `backlog/ideas.md` — hueco de KB de `eval_15` (conservación en frío en viaje) y cierre de `guia_antibiotics_esp_0.pdf` documentados
+- `tests/features/e11_t01_kb_expansion.feature`, `e11_t02_bm25_adaptive_weight.feature`, `e11_t04_registro_linguistico.feature`, `investigacion_eval15_eval63_antibiotics.feature` — TDD de las tareas con test
+- `tests/eval/e11_t03_grounding_conectores.feature`, `e11_t06_hallucination_severity.feature`, `e11_t07_informe_final.feature` — checklists/escenarios sin TDD estricto
+- `tests/eval/results/e11_t0{2,3,4,5,6,7}_cierre.md` — informes de cierre por tarea
+- `scripts/run_e11_t05_eval15_investigation.py`, `run_e11_t06_eval06_investigation.py`, `run_e11_t07_*.py` — scripts de investigación dirigida y regresión
+- `decisions.md` — D-059 a D-072
+
+**Estado:** ✅ Completada — 21 jul 2026
+
+---
+
+### E-12 — Retrospectiva final del roadmap (cierre TFM)
+
+Épica de cierre, al final de la Fase 1.5, justo antes de la entrega del 29 de julio. Sin
+TDD — es documentación, mismo patrón que E-11 T-01/T-04/T-06 —, pero con rama+PR igual que
+el resto del proyecto (precedente E06-T07).
+
+**Origen (19 jul 2026):** durante `task-start` de E-11 T-02, Marcos señaló que el repo ya
+documenta bien las decisiones puntuales (`decisions.md`) y la fricción de workflow por
+épica (`docs/process-log.md`), pero no existe ningún sitio que sintetice cómo evolucionó el
+**roadmap completo**: reordenamientos entre épicas (E-05 por delante de E-07, 7 jul;
+E-09→E-11→E-10→E-08, D-059), repriorizaciones dentro de una épica (D-056, mid-sprint E-09),
+e ideas descartadas conscientemente (temperatura/internet en vivo como atajo de calidad,
+D-059). Es un ángulo de reflexión distinto al de `process-log.md` (que cubre fricción de
+proceso *dentro* de una épica, no evolución del plan *entre* épicas) — con valor directo
+para la memoria del TFM: metodología iterativa aplicada y human-in-the-loop demostrable con
+números, no solo declarado.
+
+**Criterios de aceptación de alto nivel**
+- Documento único que recorre cronológicamente los cambios de roadmap del proyecto
+  (reordenamientos, repriorizaciones, ideas descartadas), citando la decisión/nota de origen
+  de cada uno (`decisions.md`, notas en `epics.md`/`README.md`)
+- Al menos un caso con métricas antes/después que demuestre el valor de un ajuste de rumbo
+  (ej. ampliación de KB, E-11 T-01/T-02: Context Precision 52.1%→62.6%)
+- Entrada en `prompts.md` con el caso de human-in-the-loop ya identificado (intuición de
+  Marcos sobre KB limitado → verificación contra `manifest.json` → tarea priorizada)
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | ⚪ Pendiente |
+
+**Estado:** ⚪ No iniciada
+
+---
+
+### E-13 — Ampliación de KB: fuentes MedlinePlus Genetics
+
+Incorporación de fichas de MedlinePlus Genetics (NIH/NLM) al perfil familiar, para cerrar
+huecos de profundidad por enfermedad que la KB actual no cubre, en fases priorizadas.
+
+**Nota de origen (19 jul 2026, D-063):** surge de investigar en Cowork un caso real — una
+consulta sobre "xiap" devolvía una respuesta que en realidad describía el síndrome IPEX,
+rastreado hasta un chunk de `manual-para-pacientes-y-familias-sobre-inmunodeficiencias-
+primarias-sexta.pdf` donde XIAP aparece solo de pasada dentro de un párrafo centrado en IPEX
+(problema de granularidad de chunk/ranking, no de embeddings al azar). Se evaluó Orphanet como
+fuente externa: el nomenclature pack (sinónimos/códigos) es gratis y sin trámite, pero el
+texto descriptivo en prosa exige Data Transfer Agreement — inviable en el plazo del TFM. El
+paper de clasificación fenotípica IUIS 2024 (ya "Propuesto" en `docs/kb-sources.md`) tampoco
+sirve: su contenido diagnóstico vive en 21 figuras de árbol de decisión (imágenes), no en texto
+extraíble. MedlinePlus Genetics sí cumple las tres condiciones (gratis, sin trámite, ya
+redactado para pacientes): dominio público, descarga masiva en un XML, y su página curada
+"Immune System and Disorders" (`Title.Alternate: Primary Immunodeficiency Diseases`) acota el
+universo relevante a 43 fichas — no las 559 de IUIS 2024 ni las 1.300+ del índice completo.
+Contrastadas contra `data/raw/upiip/`, 4 ya están cubiertas (Bruton's/XLA, enfermedad
+granulomatosa crónica, SCID genérico, inmunodeficiencia variable común) — quedan **39 fichas
+genuinamente nuevas**, incluyendo XIAP (X-linked lymphoproliferative disease) e IPEX.
+
+**Nota de alcance (19 jul 2026):** Marcos decide fases por lotes priorizados en **orden
+alfabético inverso** (criterio neutral — no favorece a propósito XIAP/IPEX, aunque por el
+propio orden caen en los lotes 1 y 2). 3 lotes de 13 fichas. Reutiliza íntegramente el playbook
+ya validado en E-11 T-01/T-02 (`kb-maintenance`, `smoke_test_rag.py --force-reingest`, scripts
+de RAGAS) — no requiere infraestructura nueva.
+
+**Nota de secuenciación (19 jul 2026, D-063):** creada como épica independiente, no como tareas
+nuevas dentro de E-11, para no comprometer el cierre ya aprobado de esa épica (T-03–T-07) —
+mismo principio que motivó crear E-11 en D-059. Para hacerle sitio, E-08 se aplaza entera (ver
+nota en su sección, D-063).
+
+**Nota de prioridad (19 jul 2026, D-064):** confirmado que E-13 **sí entra en Fase 1.5**, no
+post-TFM — ese era precisamente el motivo de aplazar E-08 entera. Orden de ejecución dentro de
+la fase: E-11 → **E-13** → E-10 → E-12. E-13 se ejecuta antes que E-10 (pulido de UX/responsive
+y CORS) porque el pulido ya se ha ido resolviendo de forma orgánica entre épicas y CORS solo
+importa si se embebe el asistente en una app/widget externo — no urgente ahora. De las épicas
+que quedan, **E-10 es la primera candidata a quedar fuera si falta tiempo antes del 29 de
+julio; E-12 (cierre del TFM) no es negociable en ningún caso.**
+
+**Criterios de aceptación de alto nivel**
+- Lote 1 (13 fichas, incluye X-linked lymphoproliferative disease/XIAP) ingerido, revisado en
+  registro lingüístico y remedido contra RAGAS
+- Lote 2 (13 fichas, incluye IPEX) — ídem
+- Lote 3 (13 fichas) — ídem
+- Fuente añadida a `docs/kb-sources.md` (perfil familiar)
+- Caso XIAP/IPEX original re-verificado tras el lote correspondiente
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Lote 1 — 13 fichas, orden alfabético inverso (Z→P), incluye XIAP | ⚪ Pendiente |
+| T-02 | Lote 2 — 13 fichas (P→F), incluye IPEX | ⚪ Pendiente |
+| T-03 | Lote 3 — 13 fichas (F→2) | ⚪ Pendiente |
+| T-04 | Remedición RAGAS + cierre | ⚪ Pendiente |
 
 **Estado:** ⚪ No iniciada
 
@@ -658,4 +813,4 @@ Preparación para embeber el AIIP como widget o iframe en la web de la fundació
 
 ---
 
-*Última actualización: 18 julio 2026 — E-11 creada (ciclo de mejora de calidad, D-059)*
+*Última actualización: 19 julio 2026 — E-11 T-02 cerrada técnicamente (peso adaptativo de BM25, D-061; resultado en `tests/eval/results/e11_t02_cierre.md`), pendiente de confirmación de Marcos*

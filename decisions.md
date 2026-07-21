@@ -68,6 +68,19 @@
 - [D-057 — T-05 (E-09): decisiones técnicas por hallazgo — EnsembleRetriever para D, stoplist+contexto en alarm_triggers.json para A, lingua-py para F, B como Plan B](#d-057--t-05-e-09-decisiones-técnicas-por-hallazgo--ensembleretriever-para-d-stoplistcontexto-en-alarm_triggersjson-para-a-lingua-py-para-f-b-como-plan-b)
 - [D-058 — T-04 (E-09): juicio de comportamiento con LLM-as-judge + confirmación manual, y Hallucination Rate derivado de Faithfulness por caso (no del promedio)](#d-058--t-04-e-09-juicio-de-comportamiento-con-llm-as-judge--confirmación-manual-y-hallucination-rate-derivado-de-faithfulness-por-caso-no-del-promedio)
 - [D-059 — E-11 creada como gate de calidad antes de E-08 capa 1; temperatura/internet en vivo descartados, ampliación de KB como primera tarea](#d-059--e-11-creada-como-gate-de-calidad-antes-de-e-08-capa-1-temperaturainternet-en-vivo-descartados-ampliación-de-kb-como-primera-tarea)
+- [D-060 — T-01 (E-11): RAGAS re-measurement moved to T-02, source search narrowed to the 6 genuine coverage gaps](#d-060--t-01-e-11-ragas-re-measurement-moved-to-t-02-source-search-narrowed-to-the-6-genuine-coverage-gaps)
+- [D-061 — T-02 (E-11): mecanismo del peso adaptativo de BM25, recálculo por consulta y alcance de TDD](#d-061--t-02-e-11-mecanismo-del-peso-adaptativo-de-bm25-recálculo-por-consulta-y-alcance-de-tdd)
+- [D-062 — E-12 creada: retrospectiva final del roadmap como épica de cierre del TFM](#d-062--e-12-creada-retrospectiva-final-del-roadmap-como-épica-de-cierre-del-tfm)
+- [D-063 — E-13 creada (ampliación de KB: MedlinePlus Genetics); E-08 aplazada por completo a seguimiento post-TFM](#d-063--e-13-creada-ampliación-de-kb-medlineplus-genetics-e-08-aplazada-por-completo-a-seguimiento-post-tfm)
+- [D-064 — E-13 confirmada dentro de Fase 1.5; E-12 innegociable, E-10 primera candidata a caer](#d-064--e-13-confirmada-dentro-de-fase-15-e-12-innegociable-e-10-primera-candidata-a-caer)
+- [D-065 — T-03 (E-11): tarea sin TDD (checklist en tests/eval/), no código con asserts; exclusiones explícitas de alcance clínico en la regla de grounding](#d-065--t-03-e-11-tarea-sin-tdd-checklist-en-testseval-no-código-con-asserts-exclusiones-explícitas-de-alcance-clínico-en-la-regla-de-grounding)
+- [D-066 — T-03 (E-11): hallazgo C cerrado sin modificar el system prompt — el comportamiento evasivo original no se reproduce](#d-066--t-03-e-11-hallazgo-c-cerrado-sin-modificar-el-system-prompt--el-comportamiento-evasivo-original-no-se-reproduce)
+- [D-067 — T-04 (E-11): hallazgo E cerrado ajustando `[TONO — PERFIL FAMILIAR]` — glosa obligatoria para fármacos, acrónimos y síndromes sin explicar](#d-067--t-04-e-11-hallazgo-e-cerrado-ajustando-tono--perfil-familiar--glosa-obligatoria-para-fármacos-acrónimos-y-síndromes-sin-explicar)
+- [D-068 — T-05 (E-11): `eval_63` confirmado, `eval_15` (problema original) cerrado como efecto colateral de T-01, `guia_antibiotics_esp_0.pdf` cerrado generalizando una restricción existente del system prompt](#d-068--t-05-e-11-eval_63-confirmado-eval_15-problema-original-cerrado-como-efecto-colateral-de-t-01-guia_antibiotics_esp_0pdf-cerrado-generalizando-una-restricción-existente-del-system-prompt)
+- [D-069 — T-06 (E-11): frontera 0.85 asignada a banda Leve, `eval_06` sustituye a `eval_15` como caso Grave y requiere investigación dirigida antes de cerrar el desglose](#d-069--t-06-e-11-frontera-085-asignada-a-banda-leve-eval_06-sustituye-a-eval_15-como-caso-grave-y-requiere-investigación-dirigida-antes-de-cerrar-el-desglose)
+- [D-070 — T-07 (E-11): alcance ampliado con regresión de T-04/T-05 antes del informe final — suite pytest completa + relectura cualitativa dirigida + RAGAS acotado a casos afectados](#d-070--t-07-e-11-alcance-ampliado-con-regresión-de-t-04t-05-antes-del-informe-final--suite-pytest-completa--relectura-cualitativa-dirigida--ragas-acotado-a-casos-afectados)
+- [D-071 — T-07 (E-11): segunda ampliación de alcance — estabilidad del juez de Context Precision en eval_08/eval_13, e investigación de causa raíz de la citación duplicada (hallazgo nuevo)](#d-071--t-07-e-11-segunda-ampliación-de-alcance--estabilidad-del-juez-de-context-precision-en-eval_08eval_13-e-investigación-de-causa-raíz-de-la-citación-duplicada-hallazgo-nuevo)
+- [D-072 — T-07 (E-11): Context Precision de eval_08/eval_13 cerrado como ruido del juez; [FUENTES] reforzado aplicado a producción, cierra la citación duplicada](#d-072--t-07-e-11-context-precision-de-eval_08eval_13-cerrado-como-ruido-del-juez-fuentes-reforzado-aplicado-a-producción-cierra-la-citación-duplicada)
 
 ---
 
@@ -2807,6 +2820,910 @@ diagnóstico de cualquier regresión futura. Mantiene Falso Negativo Cero como p
 negociable frente a atajos que lo comprometerían (temperatura, web abierta). Prioriza la
 palanca de contenido (ampliar KB curada) sobre la de algoritmo (retrieval) por ser más
 barata, más segura, y por resolver como efecto colateral varios hallazgos ya abiertos.
+
+---
+
+## D-060 — T-01 (E-11): RAGAS re-measurement moved to T-02, source search narrowed to the 6 genuine coverage gaps
+
+**Fecha:** 18 de julio de 2026
+**Fase:** técnica
+**Épica:** E-11 (T-01)
+
+**Contexto**
+El `.feature` informal de T-01 (generado por `epic-start`) incluía un escenario para relanzar
+`scripts/run_ragas_eval.py` como línea base post-ampliación. Dos problemas detectados en la
+revisión crítica de `task-start`: (1) el script escribe siempre en
+`tests/eval/results/e09_t02_ragas_full_scores.json` y salta los casos cuyo `id` ya está
+presente (ejecución incremental para no repetir llamadas a Gemini bajo cuota limitada) —
+relanzarlo sin resetear el fichero no produciría ninguna medición nueva sobre los 32 casos ya
+puntuados en E-09; (2) T-02 ya tiene como criterio explícito "Re-medición RAGAS + peso
+adaptativo de BM25 contra el corpus ampliado", así que medir también en T-01 duplicaría
+llamadas a un recurso ya limitado y mezclaría cambio de contenido con medición — justo lo que
+D-056 pedía evitar al crear E-11 (D-059).
+
+Además, de los 11 casos `eval_XX` citados en el `.feature` como "preguntas de vida diaria sin
+cobertura" (eval_03/06/08/11/13/15/20/23/25/27/65), comprobado contra
+`data/raw/manifest.json`: 4 ya tienen documento indexado que cubre el tema — `eval_03`/`eval_65`
+("por qué necesita infusiones") con `aedip/tratamiento-con-inmunoglobulinas.html`; `eval_08`
+("antibióticos profilácticos") con `upiip/guia_antibiotics_esp_0.pdf` (el mismo documento que
+T-05 marca como "sospechoso" por apariciones espurias, no por ausencia); `eval_11`
+("diagnóstico") con `aedip/diagnostico-de-las-inmunodeficiencias-primarias.pdf`; `eval_13`
+("cuidados piel inyección subcutánea") con `aedip/infusiones-de-IGS-subcutaneas.pdf`. Su mal
+score en E-09 apunta a un problema de retrieval (BM25/chunking), no de contenido.
+
+**Decisión**
+1. T-01 se cierra con curación y vetado de fuentes + adición de documentos a `data/raw/` +
+   reingesta (`--force-reingest`), sin ejecutar ni tocar el pipeline RAGAS. La medición
+   antes/después sobre el corpus ampliado (y la calibración de BM25) es responsabilidad
+   exclusiva de T-02.
+2. La búsqueda de fuentes nuevas de T-01 se acota a los 6 huecos genuinos sin ningún documento
+   que los cubra hoy: frecuencia de revisiones con el inmunólogo (`eval_06`), viajar en avión
+   con la medicación (`eval_15`), informar al inmunólogo del destino de vacaciones (`eval_23`),
+   convivencias/salidas de varios días (`eval_25`), si es contagiosa (`eval_27`), si tiene cura
+   (`eval_20`). Los 4 casos con documento ya indexado (`eval_03`/`08`/`11`/`13`/`65`) quedan
+   fuera del alcance de T-01 — su investigación es de T-02 (retrieval) o T-05 (caso dirigido,
+   ya cubre `guia_antibiotics_esp_0.pdf`).
+
+**Consecuencias**
+Evita doblar el consumo de cuota de Gemini y mantiene el principio de D-056 (medición
+específica → mejora específica, sin mezclar causas) también dentro de E-11, no solo entre
+épicas. Si al vetar fuentes para los 6 huecos genuinos aparece naturalmente un documento mejor
+para alguno de los 4 casos ya cubiertos, se puede añadir sin reabrir esta decisión — pero no es
+el criterio de cierre de T-01.
+
+**Alternativas descartadas**
+- Mantener el gate RAGAS en T-01 con reset explícito del fichero de resultados: descartado,
+  duplica medición ya prevista en T-02 y consume cuota limitada sin necesidad.
+- Revisar los 11 casos igual de a fondo en T-01: descartado, arriesga vetar fuentes redundantes
+  para temas que ya tienen documento — el problema ahí es de retrieval, no de contenido.
+
+---
+
+## D-061 — T-02 (E-11): mecanismo del peso adaptativo de BM25, recálculo por consulta y alcance de TDD
+
+**Fecha:** 19 de julio de 2026
+**Fase:** técnica
+**Épica:** E-11 (T-02)
+
+**Contexto**
+El `.feature` informal de T-02 (generado por `epic-start`) fijaba la señal de "consulta con
+señal léxica fuerte" como nombre propio/término geográfico, apoyándose en el ejemplo
+"hospitales en Barcelona" (D-057/`ideas.md`) y en la retrospectiva de E-09 T-05 ("9 casos
+cambian, 6 empeoran, 3 mejoran; los que mejoran tienen nombre propio/geográfico"). En la
+revisión crítica de `task-start` se recalcularon los deltas reales de Context Precision entre
+`tests/eval/results/e09_t02_ragas_full_scores_pre_t05.json` y `..._full_scores.json`: son 10
+casos con delta no nulo, no 9 — **6 empeoran** (`eval_64`, `eval_17`, `eval_16`, `eval_19`,
+`eval_02`, `eval_04`) y **4 mejoran** (`eval_07`, `eval_11`, `eval_01`, `eval_21`). Ninguno de
+los 4 que mejoran contiene nombre propio ni término geográfico (`eval_01` "¿Qué es una
+inmunodeficiencia primaria?" y `eval_11` "¿Cómo se diagnostica...?" son tan conceptuales como
+varios de los que empeoran). El ejemplo "Barcelona" no pertenece a los 32 casos del dataset
+RAGAS — viene de un smoke test manual distinto (E-05 T-07, CU-05). El criterio original
+("nombre propio/geográfico") queda sin soporte empírico suficiente para justificar por sí solo
+el detector de señal léxica.
+
+Además, dos puntos de diseño quedaban abiertos: (1) `RAGPipeline` construye el
+`EnsembleRetriever` una sola vez en `__init__` (`rag/pipeline.py:62`) con un peso fijo para
+toda la sesión — un peso "adaptativo por consulta" no encaja en ese ciclo de vida tal cual; (2)
+qué parte de la tarea lleva TDD y cuál sigue el patrón de script sin TDD (D-050/D-051) ya usado
+para las tareas de medición RAGAS.
+
+**Decisión**
+
+1. **Criterio de señal léxica fuerte, ampliado:** una consulta se considera "con señal" si
+   contiene (a) una palabra con mayúscula inicial que no está al principio de la pregunta
+   (aproximación a nombre propio, sin lista de topónimos que mantener), **o** (b) una palabra
+   de baja frecuencia dentro del propio corpus indexado — reutilizando el IDF que
+   `BM25Retriever`/`rank_bm25` ya calcula internamente al construirse, sin necesidad de una
+   fuente de datos nueva ni de mantenimiento manual. Se descarta la lista curada de topónimos
+   (alternativa evaluada) por coste de mantenimiento sin ganancia clara frente a (a)+(b) contra
+   los casos reales.
+2. **Recálculo del peso por consulta, no en la construcción:** el peso de `EnsembleRetriever`
+   se recalcula en cada llamada a `retrieve()`/`query()` de `RAGPipeline` (mutando el atributo
+   `weights` de la instancia ya cacheada antes de invocar) en lugar de fijarse una sola vez en
+   `__init__`. Mantiene la construcción cara (índice BM25 desde los documentos) cacheada como
+   hoy — solo cambia el peso, no se reconstruye el índice por consulta.
+3. **Alcance de TDD:** la detección de señal léxica y el cálculo/aplicación del peso son
+   funciones deterministas sin llamada a LLM — llevan tests automáticos normales (pytest-bdd
+   con asserts), como el resto del código del proyecto. La re-medición RAGAS completa (las dos
+   ejecuciones de `scripts/run_ragas_eval.py` de esta tarea, ver punto 4) sigue el patrón sin
+   TDD ya establecido en D-050/D-051 — instrumentación + revisión manual de Marcos, sin
+   asserts.
+4. **Dos re-mediciones, no una:** dado que T-01 (D-060) no ejecutó RAGAS, T-02 necesita (a) una
+   medición de línea base con el peso uniforme 0.4/0.6 actual sobre el corpus ya ampliado, para
+   aislar el efecto de la KB, respaldada antes de tocar BM25; y (b) la medición final tras
+   aplicar el peso adaptativo, para aislar el efecto del ajuste. Antes de cada una de las dos
+   ejecuciones se respalda/resetea `tests/eval/results/e09_t02_ragas_full_scores.json` — sin
+   este reset, la ejecución incremental del script (salta cualquier `id` ya presente) no
+   produciría ninguna medición nueva sobre el corpus ampliado, el mismo riesgo que D-060
+   detectó para T-01.
+
+**Consecuencias**
+- `rag/retriever.py::get_hybrid_retriever` expone un mecanismo para fijar/actualizar el peso
+  tras la construcción (en vez de solo en la llamada inicial).
+- `rag/pipeline.py::RAGPipeline.retrieve()`/`query()` calculan la señal léxica de la pregunta y
+  ajustan el peso del retriever cacheado antes de invocarlo.
+- `tests/features/e11_t02_bm25_adaptive_weight.feature` se reescribe: corrige 6/4 en vez de
+  6/3, retira la referencia a "Barcelona" como ejemplo de caso medido, añade el escenario de
+  las dos re-mediciones con reset explícito, y marca qué escenarios llevan asserts pytest-bdd
+  frente a los de verificación manual.
+- `tests/eval/results/e09_t02_ragas_full_scores.json` se respalda dos veces durante la tarea
+  (pre-baseline-ampliación y pre-ajuste-BM25) antes de cada reset.
+
+**Alternativas descartadas**
+- Mantener el criterio "nombre propio/geográfico" tal cual, sin ampliarlo: descartado, no
+  explica los casos reales que mejoraron en la retrospectiva de E-09 T-05.
+- Lista curada de topónimos/hospitales como señal adicional: descartada por coste de
+  mantenimiento sin evidencia de que aporte sobre el criterio de rareza en el corpus.
+- Ir directos al fallback de peso fijo recalibrado (opción barata) como vía principal:
+  descartado por Marcos — mantiene el peso adaptativo como prioridad ya fijada en
+  `epic-start`; el hallazgo obliga a ampliar el criterio, no a abandonar el enfoque.
+
+**Justificación**
+Construir un detector basado en un patrón que los propios datos no confirman habría arriesgado
+resolver el problema equivocado — el hallazgo se detecta en la revisión crítica antes de que
+Antigravity invierta tiempo implementándolo, mismo criterio que D-057 aplicó a Chroma
+`Search()` nativo.
+
+---
+
+## D-062 — E-12 creada: retrospectiva final del roadmap como épica de cierre del TFM
+
+**Fecha:** 19 de julio de 2026
+**Fase:** proceso / metodología
+**Épica:** E-12 (creación)
+
+**Contexto**
+Durante `task-start` de E-11 T-02, al revisar los resultados de la re-medición, Marcos pidió
+dejar documentado un caso demostrable de human-in-the-loop (intuición sobre KB limitado →
+verificación contra `data/raw/manifest.json` → tarea priorizada → +10.5pp de Context
+Precision). Al preguntar dónde encajaba esto para el TFM, surgió una pregunta más amplia:
+¿dónde queda reflejado cómo se ha ido "rompiendo" y recomponiendo el roadmap del proyecto —
+reordenamientos entre épicas (E-05 por delante de E-07, 7 jul; E-09→E-11→E-10→E-08, D-059),
+repriorizaciones dentro de una épica (D-056, mid-sprint E-09), e ideas descartadas
+conscientemente (temperatura/internet en vivo, D-059)? Comprobado: no hay ningún espacio
+para esto. `docs/process-log.md` es explícitamente per-épica (fricción de workflow *dentro*
+de una épica); `decisions.md` registra decisiones puntuales sin narrativa que las conecte;
+el Gantt del README solo marca "Entrega final TFM" como hito de 0 días, sin ninguna épica
+o tarea asociada.
+
+**Decisión**
+Se crea **E-12 — Retrospectiva final del roadmap (cierre TFM)**, última épica de la Fase 1.5,
+justo antes del hito del 29 de julio. Épica sin TDD (es documentación), pero con rama+PR
+igual que el resto del proyecto — mismo precedente que E-11 T-01/T-04/T-06 y E06-T07. Una
+sola tarea (T-01): documento que recorre cronológicamente los reordenamientos y
+repriorizaciones del proyecto citando su decisión/nota de origen, con al menos un caso de
+métricas antes/después (el de la ampliación de KB) y la entrada correspondiente en
+`prompts.md` (formato P-XXX, mismo patrón que P-015/P-017 sobre el rol de human-in-the-loop).
+
+**Consecuencias**
+- `backlog/epics.md`: nueva sección E-12 con criterios de aceptación y tabla de tareas.
+- `README.md`: tabla de épicas, Gantt y nota de "Orden de ejecución" actualizados con E-12
+  al final del roadmap.
+- El caso de human-in-the-loop de E-11 T-01/T-02 (ver memoria de sesión) es el primer
+  contenido candidato de E-12 T-01, no se redacta todavía — se recopila en el `epic-close`
+  de E-11 (Paso 4, borrador de `prompts.md`) y se consolida en E-12 cuando se arranque.
+
+**Alternativas descartadas**
+- Sección final en `process-log.md` sin épica propia: descartada por Marcos — prefiere un
+  entregable visible en `epics.md`/README, citable directamente en el TFM, no una sección
+  añadida a un fichero de propósito distinto.
+- Ampliar el `epic-close` de E-08 (última épica del roadmap actual) para cubrir también la
+  retro de todo el proyecto: descartada por mezclar la retro específica de E-08 con la
+  narrativa completa del roadmap en el mismo documento.
+- Rama propia off `main` (mismo patrón que `docs/e11-quality-cycle-planning`): evaluada y
+  descartada por Marcos por simplicidad — este cambio se integra directamente en
+  `epic/E11-quality-cycle` junto con el resto del trabajo en curso de la épica, en vez de
+  abrir una rama de documentación aislada.
+
+---
+
+## D-063 — E-13 creada (ampliación de KB: MedlinePlus Genetics); E-08 aplazada por completo a seguimiento post-TFM
+
+**Fecha:** 19 de julio de 2026
+**Fase:** producto / técnica
+**Épicas relacionadas:** E-08, E-11, E-13 (creación)
+
+**Contexto**
+Al investigar en Cowork un caso real (una consulta sobre "xiap" devolvía una respuesta que
+describía en realidad el síndrome IPEX), se rastreó el fallo hasta un chunk concreto de
+`manual-para-pacientes-y-familias-sobre-inmunodeficiencias-primarias-sexta.pdf`: XIAP aparece
+solo de pasada dentro de un párrafo centrado en IPEX, y ninguna de las dos consultas de prueba
+recuperó el chunk correcto que sí lo explica bien (líneas ~5434-5448 del mismo documento). No
+es un fallo de embeddings al azar, es un problema de granularidad de chunk/ranking sobre una
+KB que, además, solo tiene ese caso concreto cubierto en profundidad en un único documento.
+
+Se evaluó Orphanet como fuente estructurada externa para paliarlo. El nomenclature pack
+(sinónimos, códigos ORPHA, cruces con OMIM/ICD-10/ICD-11) es gratuito y sin trámite
+(Orphadata Science, CC BY 4.0). El texto descriptivo en prosa por enfermedad, en cambio, vive
+bajo "Orphadata Products" y exige como mínimo un Data Transfer Agreement para uso académico —
+inviable en el plazo del TFM (entrega 29 jul 2026). El propio paper de clasificación
+fenotípica IUIS 2024 (propuesto por Jacques Rivière en `docs/kb-sources.md`) tampoco sirve
+para esto: su contenido diagnóstico real vive en 21 figuras de árbol de decisión (imágenes),
+no en texto extraíble por el pipeline de ingesta actual.
+
+Se localizó **MedlinePlus Genetics** (NIH/NLM) como alternativa que sí cumple las tres
+condiciones (gratis, accesible sin trámite, ya redactado): dominio público, descarga masiva en
+un único XML, redactado para pacientes (registro que encaja con el perfil familiar sin
+necesitar reescritura). Su página curada "Immune System and Disorders" (metadato
+`Title.Alternate: Primary Immunodeficiency Diseases`) acota el universo relevante a 43 fichas
+— ni las 559 de la clasificación IUIS 2024 ni las 1.300+ del índice completo de MedlinePlus
+Genetics. Contrastadas contra `data/raw/upiip/`, 4 ya están cubiertas (Bruton's/XLA,
+enfermedad granulomatosa crónica, SCID genérico, inmunodeficiencia variable común) — quedan
+**39 fichas genuinamente nuevas**, incluyendo XIAP (X-linked lymphoproliferative disease) e
+IPEX, el caso que originó la investigación.
+
+Al plantear dónde encajaba este trabajo, surgió la misma bifurcación que en D-059: ¿tarea
+nueva dentro de una épica ya en marcha, o épica propia? Y, en paralelo, Marcos planteó si el
+hueco que esto abre en el calendario debía cubrirse recortando también las capas 2/3 de E-08
+(no solo la capa 1, ya señalada en D-059), dado que el propio TFM exige implementar un
+subconjunto de funcionalidades, no todas — prioridad de calidad de KB/RAG sobre completitud
+de producto.
+
+**Decisión**
+
+1. **Nueva épica E-13 — Ampliación de KB: fuentes MedlinePlus Genetics**, numerada por orden
+   de creación (no de ejecución, mismo criterio que E-07/E-08/E-09/E-10/E-11/E-12). Alcance:
+   las 39 fichas nuevas, organizadas en 3 lotes de 13 en **orden alfabético inverso** (criterio
+   neutral, decidido por Marcos — no prioriza a propósito XIAP/IPEX, aunque por el propio
+   orden caen en los lotes 1 y 2). Reutiliza íntegramente el playbook ya validado en E-11
+   T-01/T-02 (`kb-maintenance`, `smoke_test_rag.py --force-reingest`, scripts de RAGAS) — no
+   requiere infraestructura nueva. Se crea como épica independiente, no como tareas nuevas
+   dentro de E-11, para no comprometer el cierre ya aprobado de esa épica (T-03–T-07) — mismo
+   principio que motivó crear E-11 en D-059 en vez de tocar una épica en marcha.
+   **No se arranca con esta decisión**: queda reflejada en el roadmap como candidata a evaluar
+   tras el cierre de E-11, compitiendo por el tiempo restante de Fase 1.5 contra E-10/E-12, con
+   seguimiento post-TFM como destino por defecto si no hay margen.
+2. **E-08 se aplaza por completo** (capas 1, 2 y 3, no solo la capa 1 ya señalada en D-059) a
+   seguimiento post-TFM. Importante matiz: las capas 2/3 no estaban bloqueadas por el motivo de
+   D-059 (mezclar historial de conversación con una generación de calidad aún no resuelta) —
+   estaban aprobadas para ejecutarse después de E-10 sin depender de E-11. Aplazarlas ahora es
+   una decisión nueva de priorización de tiempo (calidad de KB > completitud de producto), no
+   una extensión automática de la lógica anterior. D-009 (protección de datos) ya establece que
+   el TFM solo exige documentar la decisión de diseño sobre derecho al olvido, no implementarla
+   — aplazar la capa 3 no abre ningún cabo suelto legal/ético para la entrega.
+3. Fuente MedlinePlus Genetics añadida a `docs/kb-sources.md` (perfil familiar) como
+   `Propuesta`, referenciando E-13.
+
+**Consecuencias**
+- `backlog/epics.md`: nueva sección E-13 (alcance, criterios de aceptación, tabla de tareas por
+  lote) y nota de aplazamiento completo añadida a la sección de E-08.
+- `README.md`: tabla de épicas, fila de Fase 1.5/Features opcionales y nota de "Orden de
+  ejecución" actualizadas — E-08 sale de Fase 1.5, E-13 aparece como candidata sin fecha fija.
+- `docs/kb-sources.md`: nueva fila en Perfil Familiar apuntando a MedlinePlus Genetics.
+
+**Alternativas descartadas**
+- Meter los 3 lotes como tareas T-08/T-09/T-10 dentro de E-11: descartada por el mismo riesgo
+  que D-059 ya evitó una vez — mezclaría alcance nuevo con el cierre ya aprobado de la épica.
+- Aplazar solo la capa 1 de E-08 y mantener 2/3 en Fase 1.5: descartada por Marcos al priorizar
+  explícitamente la profundidad de la KB/calidad del RAG sobre la completitud de producto.
+- Integrar Orphanet (texto descriptivo en prosa) en vez de MedlinePlus: descartada — exige
+  Data Transfer Agreement, inviable en el plazo del TFM; su dataset gratuito es estructurado
+  (códigos, genes, fenotipos), no prosa ya redactada.
+- Perseguir el paper de clasificación fenotípica IUIS 2024 como fuente de texto: descartada —
+  su contenido real vive en figuras de árbol de decisión (imágenes), no extraíble por el
+  pipeline de ingesta actual (verificado contra el PDF real en PMC).
+
+---
+
+## D-064 — E-13 confirmada dentro de Fase 1.5; E-12 innegociable, E-10 primera candidata a caer
+
+**Fecha:** 19 de julio de 2026
+**Fase:** producto / planificación
+**Épicas relacionadas:** E-10, E-12, E-13
+
+**Contexto**
+D-063 dejó a E-13 como candidata "a evaluar tras el cierre de E-11, con seguimiento post-TFM
+como destino por defecto si no hay margen" — redactado de forma demasiado ambigua. Marcos
+aclara que ese no era el espíritu: **aplazar E-08 entera se hizo precisamente para que E-13
+entrara en Fase 1.5**, no para dejarla fuera también. Al fijar esto, se plantea además el orden
+relativo de E-10 (pulido: responsive, CORS y UX) frente a E-13 y E-12: el pulido de UX/
+responsive de E-10 se ha ido resolviendo de forma orgánica entre épicas ya completadas, y CORS
+solo cobra sentido si en el futuro se embebe el asistente en una app/widget externo — no es una
+necesidad inmediata. Esto la sitúa por debajo de E-13 en prioridad.
+
+**Decisión**
+1. **E-13 entra en Fase 1.5**, no post-TFM. Orden de ejecución dentro de la fase:
+   E-11 → **E-13** → E-10 → E-12.
+2. **E-10 pasa a ser la primera candidata a quedar fuera** si no hay tiempo antes del 29 de
+   julio — no E-13 ni, sobre todo, E-12.
+3. **E-12 (retrospectiva final, cierre del TFM) es innegociable.** Se ejecuta sí o sí, aunque
+   implique recortar o eliminar E-10 por completo. No es una épica más del roadmap: es el
+   entregable que cierra formalmente el TFM.
+
+**Consecuencias**
+- `README.md`: Gantt, tabla de fases/épicas y nota de "Orden de ejecución" actualizados —
+  E-13 sale de "Features opcionales" y entra en Fase 1.5; E-12 marcada como innegociable
+  (`crit` en el Gantt); nota explícita de que E-10 es la primera candidata a caer.
+- `backlog/epics.md`: nota de prioridad añadida a la sección de E-13.
+
+**Alternativas descartadas**
+- Dejar E-13 como candidata ambigua (ni dentro ni fuera de Fase 1.5) tal como quedó en D-063:
+  descartada por Marcos por generar confusión sobre el objetivo real de aplazar E-08.
+- Priorizar E-10 sobre E-13: descartada — E-10 aporta pulido de una interfaz ya funcional;
+  E-13 aporta la profundidad de KB que motivó todo este bloque de decisiones (D-063).
+
+---
+
+## D-065 — T-03 (E-11): tarea sin TDD (checklist en tests/eval/), no código con asserts; exclusiones explícitas de alcance clínico en la regla de grounding
+
+**Fecha:** 19 de julio de 2026
+**Fase:** técnica / proceso
+**Épica:** E-11 (T-03)
+
+**Contexto**
+El draft de `epic-start` (`tests/features/e11_t03_grounding_conectores.feature`, commit b58bc64)
+siguió el formato Gherkin estándar de `tests/features/` (código, TDD), igual que el resto de
+tareas de E-11. Al formalizar T-03 en `task-start` se revisó si esa premisa se sostenía, mismo
+criterio que D-053. A diferencia de T-02 (que sí incorpora funciones deterministas nuevas:
+`has_lexical_signal`, recálculo de peso por consulta), T-03 no añade ningún código determinista:
+el entregable es (a) una investigación offline no determinista contrastando respuesta laxa vs.
+estricta con el LLM real, (b) el texto de una regla de prompt redactada y aprobada por Marcos, y
+(c) una re-evaluación con LLM (RAGAS/revisión manual) para confirmar que no hay regresión.
+Ninguna de las tres partes es asserteable de forma determinista — mismo patrón que E-09 T-04
+(D-058, LLM-as-judge + confirmación manual), no el de T-02.
+
+Adicionalmente, se identificó que el ejemplo ilustrativo de referencia ("hospital cerca de Vic" /
+chunk "Barcelona", `backlog/ideas.md` "Hallazgos del RAG" punto 1) es una ilustración hipotética
+de Marcos durante la validación de E-05 T-03 — no corresponde a ningún caso del dataset RAGAS
+(`tests/eval/dataset_partial.json`) ni al smoke test E-05 T-07 CU-05 (esa pregunta real fue "¿A
+quién llamo si es fin de semana?", y confirma el Hallazgo 2 —ruido en dense vector search—, no
+el Hallazgo 1 de grounding). No invalida el escenario, pero debe tratarse como caso sintético a
+construir y verificar contra el KB real post-T-01, no como incidente ya documentado.
+
+**Decisión**
+1. **T-03 se trata como tarea sin TDD** (checklist manual, D-050/D-051), no como código con
+   asserts pytest-bdd. El `.feature` se mueve de `tests/features/e11_t03_grounding_conectores.feature`
+   a `tests/eval/e11_t03_grounding_conectores.feature`, mismo formato que
+   `tests/eval/e09_t04_behavior_hallucination.feature`. Sigue llevando rama + PR (precedente
+   E06-T07).
+2. **Autoría de la regla:** el agente redacta el borrador de la regla exacta tras la
+   investigación offline; Marcos la aprueba o pide ajustes antes de tocar
+   `prompts/system_prompt_family.txt` en producción (D-059 punto 5, sin cambios).
+3. **Alcance de la regla, exclusiones explícitas añadidas:** además de los ejemplos positivos ya
+   aprobados en `epic-start` (geografía básica, distancias, relaciones temporales obvias), el
+   `.feature` fija explícitamente que la regla **excluye**: nombres de fármacos o dosis,
+   protocolos de tratamiento, cualquier inferencia sobre el estado clínico del usuario, y
+   cualquier fuente externa no indexada en la KB. Se fija antes de la investigación offline, no
+   se deja a que emerja solo del contraste de casos.
+4. **Regresión de referencia corregida:** el escenario de regresión contra los 32 casos usa como
+   línea base el resultado final de T-02 (peso adaptativo BM25) —
+   `tests/eval/results/e09_t02_ragas_full_scores.json` (confirmado en
+   `tests/eval/results/e11_t02_cierre.md`) —, no una referencia combinada "T-01/T-02".
+
+**Consecuencias**
+- `tests/eval/e11_t03_grounding_conectores.feature` (nuevo, sustituye al draft en
+  `tests/features/`) — checklist de verificación manual.
+- El `.feature` antiguo en `tests/features/` se elimina, no queda duplicado.
+- No hay `tests/step_defs/test_e11_t03.py` — no aplica TDD.
+
+**Alternativas descartadas**
+- Mantener el draft de `epic-start` tal cual (`tests/features/`, TDD): descartada — no hay
+  código determinista que testear, hubiera sido coste sin señal real (mismo razonamiento que
+  D-053, a la inversa).
+- Dejar el alcance de exclusiones abierto a que emerja solo de la investigación offline:
+  descartada por Marcos — prefiere fijar el límite negativo por escrito antes de investigar.
+
+---
+
+## D-066 — T-03 (E-11): hallazgo C cerrado sin modificar el system prompt — el comportamiento evasivo original no se reproduce
+
+**Fecha:** 19 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-11 (T-03)
+
+**Contexto**
+El Bloque 1 (investigación offline, `scripts/run_e11_t03_grounding_investigation.py`) se
+ejecutó en Antigravity siguiendo `tasks/E11-T03-plan.md`. Caso sintético construido y
+verificado contra el KB real post-T-01: "¿hay algún hospital con inmunología cerca de Vic?"
+recupera el chunk de `data/raw/aedip/Hospitales-con-Servicios-de-Inmunologia.html`
+(hospitales Sant Joan de Déu y Vall d'Hebron etiquetados "Barcelona"), sin que ningún chunk
+mencione "Vic" — el caso reproduce fielmente la estructura del hallazgo original.
+
+Resultado inesperado: la respuesta **estricta** (prompt de producción, sin ningún cambio) ya
+conecta el concepto no clínico sin evasivas — *"no hay hospitales listados específicamente en
+Vic. Sin embargo, en Barcelona, que no está muy lejos, hay varios hospitales..."* — y la
+respuesta **laxa** (con el permiso experimental añadido solo en memoria) es prácticamente
+idéntica en contenido y tono, sin diferencia de comportamiento relevante. Transcripción
+completa en `tests/eval/results/e11_t03_investigacion_offline.json`, análisis en
+`tests/eval/results/e11_t03_cierre.md`.
+
+El comportamiento evasivo descrito en el hallazgo original (`backlog/ideas.md`, "Hallazgos
+del RAG" punto 1) fue observado por Marcos durante la validación de E-05 T-03. Desde entonces
+`prompts/system_prompt_family.txt` ha recibido varias revisiones no dirigidas a este hallazgo
+(D-026 listado de fuentes, D-040 auth, restricciones de E-09 T-04 contra repetir frases
+inseguras inyectadas) que pueden haber cambiado este comportamiento como efecto colateral.
+
+**Decisión**
+1. **Hallazgo C se cierra sin modificar `prompts/system_prompt_family.txt`.** No se redacta
+   ni se aplica ninguna regla de grounding para conectores no clínicos — el comportamiento
+   deseado ya se produce con el prompt actual.
+2. **No se ejecuta el Bloque 3 del plan** (aplicación de regla + re-medición de Faithfulness
+   sobre los 32 casos) — no hay cambio que verificar ni regresión que medir, al no tocarse
+   ningún fichero de producción.
+3. **Los escenarios del `.feature` dependientes de la redacción/aplicación de una regla
+   quedan sin aplicar** (no fallidos) — documentado explícitamente en
+   `tests/eval/results/e11_t03_cierre.md` §2, para que quede trazado por qué no se marcan en
+   verde de la forma esperada originalmente.
+
+**Justificación**
+Añadir una regla explícita al system prompt sin necesidad demostrada iría contra el criterio
+ya establecido en D-002/D-059 punto 3 (no aflojar grounding sin justificación real,
+minimización de superficie de cambio en un dominio de salud). El objetivo del hallazgo C
+siempre fue reducir evasividad en conectores no clínicos, no añadir una regla por sí misma —
+si el objetivo ya está cumplido, tocar el prompt de producción solo añadiría riesgo (una
+frase nueva en `[FUENTES]` podría interactuar de forma no anticipada con el resto de
+restricciones) sin beneficio medible.
+
+**Consecuencias**
+- `backlog/epics.md`: el criterio de alto nivel de E-11 ("Hallazgo C acotado a una regla
+  concreta y limitada") se satisface por la investigación y el cierre documentado, no por una
+  regla aplicada — mismo criterio que D-059 punto 4 aplicó a hallazgos que se resuelven como
+  efecto colateral de otro trabajo (`eval_63` tras el fix de hallazgo D en E-09).
+- `prompts/system_prompt_family.txt`: sin cambios.
+- No hace falta re-ejecutar `pytest tests/` ni RAGAS para esta tarea (sin cambios de código).
+
+**Alternativas descartadas**
+- Añadir la regla igualmente como refuerzo explícito ante futuros cambios de prompt/modelo:
+  descartada por Marcos — prefiere no tocar producción sin necesidad demostrada hoy: si el
+  comportamiento regresiona en el futuro (nuevo modelo, nueva revisión de prompt), se
+  detectará y se abordará entonces, con evidencia real en ese momento.
+- Investigar más casos (distancias, relaciones temporales) antes de decidir: descartada por
+  Marcos — el caso Vic/Barcelona ya reproduce fielmente la estructura del hallazgo original y
+  el resultado es suficientemente claro para cerrar.
+
+---
+
+## D-067 — T-04 (E-11): hallazgo E cerrado ajustando `[TONO — PERFIL FAMILIAR]` — glosa obligatoria para fármacos, acrónimos y síndromes sin explicar
+
+**Fecha:** 19 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-11 (T-04)
+
+**Contexto**
+Revisión cualitativa dirigida (`tasks/E11-T04-plan.md`) sobre 7 preguntas contra
+`RAGPipeline.query()` real (perfil familiar), cubriendo los dos temas del hallazgo original
+(`backlog/ideas.md`, hallazgo #3: trasplante de médula, acondicionamiento) más 4 temas
+adicionales con vocabulario clínico denso (inmunoglobulinas, diagnóstico inmunológico,
+cribado neonatal, hipogammaglobulinemia, clasificación de IDP). Transcripción completa en
+`tests/eval/results/e11_t04_transcripcion.json`, análisis en
+`tests/eval/results/e11_t04_cierre.md`.
+
+El patrón encontrado no es "toda respuesta técnica es inaccesible": en 4 de 7 casos el
+modelo ya glosa espontáneamente conceptos técnicos con analogías (p. ej. "malas hierbas"
+para acondicionamiento, "linfocitos T" → "un tipo de glóbulos blancos" en cribado neonatal).
+El problema es específico: al enumerar nombres de fármacos, acrónimos de pruebas de
+laboratorio o nombres de síndromes, el modelo los reproduce tal cual aparecen en la fuente,
+sin ninguna glosa, incluso en el mismo párrafo donde sí explica otros términos igual de
+técnicos. Aparece en 3 de 7 casos (`ling_02`, `ling_04`, `ling_07`); `ling_02` reproduce
+exactamente el tema del hallazgo original con 7 nombres de fármaco/anticuerpo sin explicar en
+una sola respuesta. Ninguno de los 7 casos diluye contenido de seguridad (D-002 no está en
+riesgo — hallazgo puramente de registro/comprensibilidad).
+
+**Decisión**
+1. **Hallazgo E se cierra ajustando `[TONO — PERFIL FAMILIAR]`** en
+   `prompts/system_prompt_family.txt` — el patrón es específico, recurrente (43% de la
+   muestra dirigida) y reproduce el tema exacto del hallazgo original, no encaja como caso
+   puntual de backlog.
+2. **Texto añadido** (redactado por el agente en Cowork, aprobado tal cual por Marcos, sin
+   ajustes), a continuación del párrafo existente sobre destinatario paciente/familiar:
+   > Cuando la respuesta deba nombrar fármacos concretos, acrónimos de pruebas diagnósticas o
+   > nombres de síndromes o enfermedades, acompaña cada uno de una glosa breve en el momento
+   > (p. ej. "linfocitos T" → "un tipo de glóbulos blancos"), igual que ya haces con otros
+   > conceptos técnicos. Si el detalle no aporta valor sin formación médica, indica que la
+   > elección concreta la decide el equipo médico caso por caso, en vez de enumerar la lista
+   > sin explicación.
+3. **No se toca `[RESTRICCIONES ABSOLUTAS]` ni `[CIERRE OBLIGATORIO]`** — el ajuste solo
+   refuerza comprensibilidad, no contenido de seguridad.
+
+**Justificación**
+El propio modelo ya demuestra saber glosar términos igual de técnicos en otros pasajes de
+las mismas respuestas — no es una limitación general de capacidad, sino un punto ciego
+específico (listas de nombres propios/técnicos) que una instrucción dirigida puede corregir
+sin tocar seguridad ni fuentes.
+
+**Consecuencias**
+- `prompts/system_prompt_family.txt`: `[TONO — PERFIL FAMILIAR]` ampliado con la instrucción
+  anterior.
+- No se re-ejecuta RAGAS para esta tarea — el ajuste es de generación/tono, no de retrieval;
+  queda para T-07 (informe final) valorar si conviene una relectura cualitativa de regresión
+  puntual antes del cierre de la épica.
+
+**Alternativas descartadas**
+- Dejarlo como backlog abierto: descartada — el patrón no es puntual (3/7 casos) y reproduce
+  el tema exacto del hallazgo original con el ejemplo más denso de toda la muestra.
+- No hacer nada (el propio modelo ya glosa bien en la mayoría de casos): descartada — la
+  inconsistencia entre términos glosados y no glosados en la misma respuesta es precisamente
+  el problema a corregir, no una señal de que no hace falta intervenir.
+
+---
+
+## D-068 — T-05 (E-11): `eval_63` confirmado, `eval_15` (problema original) cerrado como efecto colateral de T-01, `guia_antibiotics_esp_0.pdf` cerrado generalizando una restricción existente del system prompt
+
+**Fecha:** 20 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-11 (T-05)
+
+**Contexto**
+Revisión crítica en `task-start` (20 jul 2026) encontró que el criterio original de la
+épica para `eval_15` y `eval_63` ya no reflejaba el estado real del repo — ambos cruzados
+contra `tests/eval/results/e09_t02_ragas_full_scores_pre_e11_t02.json` (pre-E11) →
+`..._e11_t02_baseline.json` (tras T-01) → `..._e11_t02_ragas_full_scores.json` (tras T-02).
+
+**Decisión**
+
+1. **`eval_63`** — confirmado resuelto sin investigación adicional: Faithfulness estable
+   (~0.88) desde el fix de hallazgo D en E-09, Context Precision mejora de 0.639 a 0.804
+   con el peso adaptativo de BM25 (T-02). Coincide con lo ya anotado en
+   `backlog/ideas.md` #5.
+2. **`eval_15`, problema original** (Faithfulness 0.38, 0.0 en las otras tres métricas,
+   causa "hallazgo B"/respuesta evasiva investigada en el Plan B de E-09) — cerrado como
+   efecto colateral de T-01 (KB ampliada): Faithfulness sube a 0.9 (baseline) y se
+   mantiene en 0.875 (final); Answer Relevancy pasa de 0.0 a 0.84/0.839. La hipótesis de
+   "respuesta evasiva" (`tests/eval/results/e09_t05_plan_b_investigacion.md`) ya no se
+   reproduce. No se re-investiga la causa original.
+3. **Hallazgo nuevo de `eval_15` (no cerrado en esta decisión)** — Context Precision se
+   mantiene exactamente en 0.0 en las tres mediciones, pese a que T-01 añadió dos fuentes
+   que cubren el tema (SEICAP "50 preguntas clave", FAQ de IPOPI sobre viajes,
+   `docs/kb-sources.md` líneas 43/45); Context Recall retrocede de 1.0 (tras T-01) a 0.0
+   (tras T-02, peso adaptativo). Se traslada a Antigravity para diagnóstico dirigido
+   (`tasks/E11-T05-plan.md`) — no se concluye causa raíz en esta decisión.
+4. **`guia_antibiotics_esp_0.pdf` cerrado.** Reproducción manual guiada en Chainlit
+   (perfil familiar, corpus/BM25 actuales) de las 3 preguntas documentadas en
+   `backlog/ideas.md` ("Hallazgos del RAG" punto 1, actualizaciones 10/18 jul): el patrón
+   se repite en 2 de 3 ("¿A quién llamo si es fin de semana?", "¿A partir de cuánta fiebre
+   acudir al médico?"); el tercer caso ("¿Cómo cuidar el día a día?") es una cita
+   justificada — coincide con la sección real "Espacio para el tratamiento" del
+   documento, no es ruido.
+   - **Causa raíz identificada:** el documento (guía de la unidad UPIIP, Hospital Vall
+     d'Hebron) incluye una sección "Datos de contacto" con el teléfono de Urgencias
+     Pediátricas de ese hospital concreto (934 893 000 ext. 3371). Es un bloque compacto
+     y coherente que compite bien en el ranking frente a la fuente "canónica" alternativa
+     (`aedip/Hospitales-con-Servicios-de-Inmunologia.html`), cuyo contenido útil queda
+     diluido en unos pocos chunks grandes que mezclan ~30-40 hospitales — verificado
+     reproduciendo el mismo loader del pipeline (`BSHTMLLoader`, separador `\n\n`,
+     `ingestion/loader.py`) sobre el HTML real. El problema real no es que el documento
+     "se cuele" por ruido semántico, sino que su contenido es correcto pero específico de
+     un centro concreto, y la respuesta lo presenta sin esa salvedad — un usuario tratado
+     en otro hospital podría marcar un número que no es el suyo.
+   - **Fix aplicado:** en vez de una regla nueva y específica sobre "teléfonos", se
+     generalizó la restricción ya existente en `[RESTRICCIONES ABSOLUTAS]` de
+     `prompts/system_prompt_family.txt` sobre protocolos de tratamiento específicos de un
+     centro, para cubrir cualquier información operativa de un centro concreto (protocolo,
+     dato de contacto, nombre de servicio/unidad):
+     > Si el contexto incluye información operativa específica de un centro o equipo
+     > médico concreto (protocolo de un tratamiento, dato de contacto, nombre de un
+     > servicio o unidad), no la repitas como si fuera válida para cualquiera — es
+     > información que corresponde a ese centro específico, no una referencia general.
+     > Indícalo así y remite a confirmar con su propio equipo médico, en vez de
+     > presentarlo como un dato universal.
+   - Aplicado directamente en Cowork (edición de texto, sin entorno de Antigravity).
+     Verificado que ningún test depende de la redacción exacta del bloque
+     (`tests/step_defs/test_e04_t04.py` solo comprueba que el fichero existe, D-018).
+
+**Justificación**
+Reutilizar y generalizar la restricción ya validada en producción (en vez de añadir una
+regla ad-hoc de "teléfonos") cubre el caso nuevo sin aumentar la superficie de reglas del
+prompt ni requerir mantenimiento futuro por cada tipo de dato específico de centro que
+aparezca — mismo criterio de minimización de cambio que D-059 punto 3 y D-066. Cerrar
+`eval_63` y el problema original de `eval_15` sin re-investigar evita duplicar trabajo ya
+resuelto como efecto colateral, mismo criterio que D-059 punto 4 (`eval_63` en E-09) y
+D-066 (hallazgo C).
+
+**Consecuencias**
+- `prompts/system_prompt_family.txt`: bullet de `[RESTRICCIONES ABSOLUTAS]` generalizado
+  de "protocolos de tratamiento concreto" a "información operativa de un centro concreto".
+- `tests/eval/results/e11_t05_cierre.md` (pendiente, se genera al cerrar T-05 por completo
+  tras el diagnóstico de Antigravity): consolidará las 4 partes de T-05.
+- No se re-ejecuta RAGAS para el cambio de prompt — es un ajuste de generación/tono
+  (mismo criterio que D-067), no toca retrieval.
+- `eval_15` queda parcialmente cerrado: problema original resuelto, hallazgo nuevo de
+  Context Precision/Recall abierto y trasladado a `tasks/E11-T05-plan.md`.
+
+**Alternativas descartadas**
+- Regla nueva y específica sobre teléfonos/datos de contacto: descartada por Marcos —
+  demasiado específica, no generaliza a futuros casos similares con otro tipo de dato.
+- Re-chunkear `guia_antibiotics_esp_0.pdf` para aislar la sección de contacto: descartada
+  — el contenido no es ruido ni está mal formado, es información correcta que necesita
+  atribución, no reestructuración.
+- Investigar `eval_15` (Context Precision/Recall) por reproducción manual en Chainlit
+  (Opción A): descartada para esta parte — requiere inspeccionar el ranking de retrieval
+  interno (chunks, scores, pesos de BM25 aplicados), no visible desde el chat.
+
+---
+
+## D-069 — T-06 (E-11): frontera 0.85 asignada a banda Leve, `eval_06` sustituye a `eval_15` como caso Grave y requiere investigación dirigida antes de cerrar el desglose
+
+**Fecha:** 20 de julio de 2026
+**Fase:** técnica
+**Épica:** E-11 (T-06)
+
+**Contexto**
+El `.feature` borrador de `epic-start` (18 jul, `tests/eval/e11_t06_hallucination_severity.feature`)
+definía las bandas de severidad de Faithfulness (D-058, aprobadas en `epic-start` de E-11:
+Grave <0.5, Moderada 0.5–0.85, Leve 0.85–<1.0, Sin desviación 1.0) dando por hecho que
+`eval_15` sería el caso a revisar en banda Grave. En `task-start` de T-06 (20 jul) se
+cruzaron las bandas contra los scores reales post-T-02 (`tests/eval/results/e09_t02_ragas_full_scores.json`,
+32 casos) y aparecieron dos desajustes: (1) el límite exacto 0.85 (caso `eval_13`) no
+estaba resuelto en ningún sentido; (2) `eval_15` ya no es el caso Grave — D-068 lo cerró
+con Faithfulness 0.875 (banda Leve) — y el caso real en banda Grave es `eval_06`
+(Faithfulness 0.385), cuyo valor ha caído dos veces a lo largo de la épica sin explicación
+registrada: 0.722 (pre-E-11, `e09_t02_ragas_full_scores_pre_e11_t02.json`) → 0.615 (tras
+T-01, ampliación de KB, `..._e11_t02_baseline.json`) → 0.385 (tras T-02, peso adaptativo de
+BM25, fichero final).
+
+**Decisión**
+
+1. **Frontera 0.85:** cae en banda Leve (Leve = 0.85–<1.0, cierre por la izquierda inclusive).
+   Afecta a un único caso (`eval_13`). Redondeo a favor del sistema, aprobado por Marcos.
+2. **`eval_06` sustituye a `eval_15` como caso Grave** en el desglose de T-06. No es un
+   hallazgo aislado nuevo: `eval_06` ya figuraba como uno de los tres casos de hallazgo B
+   (Answer Relevancy 0.0 en eval_06/eval_15/eval_25, 🔴 Abierto, `docs/evaluation.md` §5.1,
+   investigado en `tests/eval/results/e09_t05_plan_b_investigacion.md`), con Faithfulness
+   0.60 en ese momento y una hipótesis ya registrada (cita inline de documento/páginas
+   duplicando la sección de fuentes automática). Esa hipótesis no explica por qué la
+   Faithfulness volvió a caer dos veces después (T-01 y T-02).
+3. **Esto no se trata como el mismo tipo de aplazamiento que otros hallazgos abiertos de
+   esta épica** (p. ej. Context Precision/Recall de `eval_15` en D-068, punto 3, trasladado
+   sin investigar porque la causa — límite de KB — ya se conoce y no es accionable ahora).
+   Aquí la causa de las dos caídas no se conoce, así que se investiga antes de cerrar T-06:
+   se amplía el alcance de la tarea con una investigación dirigida de `eval_06`, mismo
+   patrón que la de `eval_15` en T-05 (script que reproduce la pregunta contra el pipeline
+   actual, captura respuesta real y contexto recuperado, compara contra la hipótesis ya
+   registrada de hallazgo B). Al requerir ejecución real del pipeline (ChromaDB, embeddings,
+   API de Gemini), esta parte se ejecuta en Antigravity, no en el sandbox de Cowork —
+   mismo criterio que el diagnóstico de `eval_15` en `tasks/E11-T05-plan.md`.
+
+**Alternativas descartadas**
+- Reportar `eval_06` sin investigar, igual que se aplazó Context Precision/Recall de
+  `eval_15` en D-068 — descartada: esa decisión aplazaba un hallazgo con causa ya conocida
+  y no accionable; aquí no hay causa conocida para las dos caídas, así que aplazar
+  documentaría un misterio como si estuviera entendido.
+- Mantener el escenario del `.feature` centrado en `eval_15` con una nota al margen sobre
+  `eval_06` — descartada: el caso real que hay que analizar es `eval_06`, mantener `eval_15`
+  como protagonista del escenario induciría a error a quien lea el `.feature` sin este
+  contexto.
+
+**Consecuencias**
+- `tests/eval/e11_t06_hallucination_severity.feature`: Escenario 3 reescrito para referirse
+  a `eval_06` (no `eval_15`) y vinculado explícitamente a hallazgo B.
+- `tasks/E11-T06-plan.md`: plan para Antigravity con el script de investigación dirigida de
+  `eval_06` (mismo patrón que `run_e11_t05_eval15_investigation.py`).
+- El desglose final de bandas y la actualización de `docs/evaluation.md` se cierran después
+  de traer el resultado de la investigación de vuelta a Cowork.
+
+---
+
+## D-070 — T-07 (E-11): alcance ampliado con regresión de T-04/T-05 antes del informe final — suite pytest completa + relectura cualitativa dirigida + RAGAS acotado a casos afectados
+
+**Fecha:** 20 de julio de 2026
+**Fase:** técnica / proceso
+**Épica:** E-11 (T-07)
+
+**Contexto**
+El `.feature` borrador de T-07 (generado en `epic-start`, `tests/eval/e11_t07_informe_final.feature`)
+da por hecho que el cierre de la épica es puramente documental: consolidar en
+`docs/evaluation.md` los resultados ya cerrados de T-01 a T-06. En la revisión crítica de
+`task-start` se detectó que D-067 (T-04) y D-068 (T-05) modificaron
+`prompts/system_prompt_family.txt` en producción (instrucción de glosa de tono, y
+generalización de la restricción sobre información operativa de un centro concreto) **sin**
+re-ejecutar después ni la suite de regresión (`pytest tests/`) ni una re-medición RAGAS —
+ambas decisiones documentan explícitamente esto como una omisión consciente y trasladan la
+valoración a T-07 (D-067, sección "Consecuencias": *"No se re-ejecuta RAGAS para esta
+tarea... queda para T-07 (informe final) valorar si conviene una relectura cualitativa de
+regresión puntual antes del cierre de la épica"*). Los números que hoy figuran en
+`docs/evaluation.md` §5.1/§7 (y los que T-07 iba a consolidar) son los de T-02 —
+anteriores a ambos cambios de prompt.
+
+Planteadas dos opciones a Marcos: (A) documentar la limitación de transparencia sin
+verificar nada más, o (B) ejecutar una regresión antes de escribir el informe final.
+**Marcos elige (B) sin dudar.**
+
+**Decisión**
+
+T-07 se amplía con un paso de verificación en Antigravity, previo al bloque de
+documentación en Cowork:
+
+1. **Regresión funcional:** suite completa `PYTHONPATH=. pytest tests/ -v` — confirma que
+   ninguno de los dos cambios de prompt rompió nada a nivel de código (los tests actuales
+   no dependen de la redacción exacta del prompt, D-018, pero si algo más se ha desviado
+   debe verse aquí).
+2. **Relectura cualitativa dirigida — T-04:** re-ejecutar las mismas 7 preguntas de
+   `scripts/run_e11_t04_linguistic_review.py` (ya existente) contra el pipeline con el
+   ajuste de tono ya aplicado, y comparar contra `tests/eval/results/e11_t04_transcripcion.json`
+   (que es la transcripción **previa** al cambio — la base que motivó la decisión, no una
+   verificación posterior). Confirma si la glosa de fármacos/acrónimos/síndromes aparece
+   ahora de forma consistente en `ling_02`/`ling_04`/`ling_07` (los tres casos con hallazgo).
+3. **Relectura cualitativa dirigida — T-05:** repetir las 3 preguntas de reproducción manual
+   de `tests/eval/results/e11_t05_cierre.md` §3 contra el pipeline con la restricción ya
+   generalizada, confirmando que la salvedad de "información específica de un centro" 
+   aparece ahora para `guia_antibiotics_esp_0.pdf` sin diluir el resto de la respuesta.
+4. **RAGAS acotado, no los 32 casos completos:** por límite de cuota de Gemini (D-027,
+   ya documentado como restricción operativa), no se relanza la evaluación completa. Se
+   eligen los casos con relación temática directa a los dos cambios: `eval_08` (antibióticos
+   profilácticos — cita directa de `guia_antibiotics_esp_0.pdf`, afectado por T-05) y
+   `eval_03`/`eval_04`/`eval_13` (infusiones de inmunoglobulinas — temática con más densidad
+   de vocabulario técnico entre los 32 casos, afectado por T-04). Comparación contra los
+   valores ya registrados en `tests/eval/results/e09_t02_ragas_full_scores.json` (T-02,
+   última medición oficial) para esos 4 casos concretos, no un nuevo agregado de las 4
+   métricas sobre el corpus completo.
+5. **Sin asserts pytest-bdd para este paso** — mismo patrón que D-050/D-051 (script +
+   revisión manual de Marcos, no TDD, dado que depende de un LLM no determinista).
+6. **El informe final de `docs/evaluation.md` se escribe después**, con el resultado de
+   esta regresión ya incorporado: si los 4 casos RAGAS y las relecturas cualitativas no
+   muestran regresión, el informe lo dice con datos reales; si aparece alguna, se documenta
+   sin suavizar (mismo criterio CHART/TRIPOD-LLM que el resto del proyecto) y se decide en
+   Cowork si bloquea el cierre de la épica o se traslada a `backlog/ideas.md`.
+
+**Consecuencias**
+- `tests/eval/e11_t07_informe_final.feature` se reescribe añadiendo un bloque de escenarios
+  de regresión (pytest + relectura T-04/T-05 + RAGAS acotado) antes de los escenarios de
+  documentación ya existentes.
+- `tasks/E11-T07-plan.md`: plan para Antigravity con los 4 pasos de verificación, a
+  ejecutar antes de que Cowork escriba `docs/evaluation.md`.
+- T-07 deja de ser una tarea puramente documental de un solo bloque en Cowork — pasa a
+  tener un tramo de ejecución real en Antigravity (mismo patrón mixto ya usado en T-05/T-06:
+  investigación dirigida con script + cierre documental en Cowork).
+
+**Alternativas descartadas**
+- Opción A (documentar la limitación sin verificar): descartada por Marcos — cerrar la
+  épica sin confirmar que el prompt final no ha degradado nada deja una suposición sin
+  verificar en el informe de cierre del TFM.
+- Relanzar los 32 casos completos: descartada por coste de cuota de Gemini (D-027) sin
+  necesidad — los cambios de prompt son locales a temas concretos (glosa técnica,
+  atribución de fuente de un documento), no afectan a los 32 casos por igual.
+
+---
+
+## D-071 — T-07 (E-11): segunda ampliación de alcance — estabilidad del juez de Context Precision en eval_08/eval_13, e investigación de causa raíz de la citación duplicada (hallazgo nuevo)
+
+**Fecha:** 21 de julio de 2026
+**Fase:** técnica
+**Épica:** E-11 (T-07)
+
+**Contexto**
+Ejecutado el Bloque 0 de D-070 en Antigravity. Tres resultados relevantes revisados en
+Cowork:
+
+1. **Suite pytest:** 147 passed, 14 skipped, 1 xfailed — idéntico al baseline. Sin
+   regresión funcional.
+2. **Relectura cualitativa T-04/T-05:** confirma que los dos ajustes de prompt funcionan
+   como se esperaba (glosa de tono presente en `ling_04`/`ling_07`; salvedad de
+   información de centro presente en la pregunta de fin de semana de T-05).
+3. **RAGAS acotado (4 casos):** Faithfulness/Answer Relevancy/Context Recall dentro de
+   ruido o mejor. Context Precision cae más allá del umbral de ±0.10 en dos casos:
+   `eval_08` (0.500 → 0.200, Δ−0.300) y `eval_13` (0.143 → 0.000, Δ−0.143).
+4. **Hallazgo no buscado, detectado al leer las respuestas completas** (los scripts de
+   medición anteriores, `run_ragas_eval.py` incluido, siempre recortan la sección de
+   fuentes antes de puntuar — nadie había revisado sistemáticamente la respuesta íntegra
+   hasta ahora): en 11 de 17 transcripciones completas revisadas (T-04 pre-fix 3/7,
+   T-04 post-fix 5/7, T-05 3/3), el modelo genera su propio bloque
+   "Fuentes consultadas:" en texto plano *antes* del bloque determinista real (con
+   enlaces, `_build_sources_section()`), incumpliendo la instrucción explícita de
+   `[FUENTES]` ("No cites el nombre del documento... El sistema añade automáticamente el
+   listado"). Confirmado que **no lo causó T-04/T-05**: ya aparecía en el 3/7 pre-fix.
+   Análisis de correlación simple (longitud de respuesta, nº de fuentes del bloque final)
+   no muestra un patrón obvio — ver conteos en la revisión de Cowork del 21 jul.
+
+Presentadas dos decisiones a Marcos:
+1. Context Precision: ¿cerrar como ruido del juez (precedente D-068/D-069) o pedir
+   estabilidad extra? **Marcos pide estabilidad extra.**
+2. Citación duplicada: ¿backlog sin bloquear cierre, o investigar causa raíz antes de
+   cerrar E-11? **Marcos pide investigar causa raíz antes de cerrar.**
+
+**Decisión**
+
+T-07 se amplía por segunda vez con un nuevo bloque de investigación en Antigravity:
+
+1. **Estabilidad del juez — `eval_08`/`eval_13`:** mismo patrón que D-069 (`eval_06`):
+   una sola reproducción real (retrieval + generación) por caso, luego invocar
+   `ContextPrecision.single_turn_score()` dos veces sobre el mismo `SingleTurnSample` (sin
+   volver a llamar a `retrieve()`/`query()`). Si los dos scores coinciden entre sí pero no
+   con el valor de T-02, es evidencia de que la generación (no el juez) varía entre
+   ejecuciones — conclusión distinta a "es solo ruido del juez", así que se documenta con
+   precisión cuál de las dos fuentes de varianza aplica.
+2. **Investigación de causa raíz de la citación duplicada**, dos pasos, mismo patrón que
+   T-03 (`RAGGenerator` alternativo mutado en memoria, D-059 punto 5) y D-069 (repetición
+   sobre la misma pregunta):
+   a. **Consistencia por pregunta:** repetir `ling_07` (duplicó en las dos transcripciones
+      ya disponibles, pre y post-fix) 3 veces contra el generador de producción — si
+      duplica las 3, hay indicio de sesgo por pregunta; si no, es ruido de muestreo puro.
+   b. **Variante de instrucción reforzada:** un `RAGGenerator` alternativo con el bloque
+      `[FUENTES]` reescrito de forma más explícita y con un contraejemplo concreto (nunca
+      escrito a `prompts/system_prompt_family.txt`), ejecutado sobre las 10 preguntas ya
+      usadas en el Bloque 0 (7 `ling_XX` + 3 `t05_regr_XX`), comparando la tasa de
+      duplicación de esta variante contra la tasa ya observada en producción (11/17).
+3. **Ninguno de los dos pasos aplica un fix a producción.** Si la variante reforzada baja
+   la tasa de duplicación de forma clara, se propone la redacción concreta a Marcos en
+   Cowork (Bloque 2, mismo patrón que D-067) — no se aplica directamente desde
+   Antigravity.
+
+**Consecuencias**
+- `tests/eval/e11_t07_informe_final.feature`: dos escenarios nuevos en el Bloque 0.
+- `tasks/E11-T07-plan.md`: sección "Ronda 2" añadida con el detalle de ejecución.
+- El informe final de `docs/evaluation.md` se pospone hasta traer estos dos resultados de
+  vuelta a Cowork.
+
+**Alternativas descartadas**
+- Cerrar Context Precision como ruido sin verificar: descartado por Marcos — ya se citó el
+  precedente de D-068/D-069 como argumento suficiente, pero Marcos prefiere confirmarlo
+  con el mismo rigor aplicado a `eval_06`, no solo citarlo por analogía.
+- Backlog para la citación duplicada sin investigar: descartado por Marcos — a diferencia
+  de los hallazgos C/E (backlog explícitamente aceptado por Marcos en su momento), aquí
+  toca directamente una decisión ya cerrada (D-026) y aparece en más de la mitad de la
+  muestra revisada, no un caso puntual.
+
+**Justificación**
+Ambos pasos reutilizan patrones ya validados en la propia épica (D-069 para estabilidad de
+juez, D-059/T-03 para generador alternativo en memoria) en vez de diseñar un método nuevo,
+y ninguno de los dos requiere tocar código de producción — coherente con que T-07 sigue
+siendo investigación antes de documentación, no una tarea de fix.
+
+---
+
+## D-072 — T-07 (E-11): Context Precision de eval_08/eval_13 cerrado como ruido del juez; [FUENTES] reforzado aplicado a producción, cierra la citación duplicada
+
+**Fecha:** 21 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-11 (T-07)
+
+**Contexto**
+Resultado de la Ronda 2 (D-071), revisado en Cowork.
+
+1. **Estabilidad de Context Precision** (`tests/eval/results/e11_t07_context_precision_stability.json`):
+   - `eval_13`: dos invocaciones del juez sobre el mismo `SingleTurnSample` dieron 0.0 y
+     0.143 — literalmente los dos valores ya registrados en el histórico de la épica
+     (T-02: 0.143, Ronda 1: 0.0), reproducidos dentro de una sola ejecución. Evidencia
+     directa de inestabilidad del juez sobre input idéntico.
+   - `eval_08`: dos invocaciones dieron 0.5 y 0.5 (coinciden entre sí y con el valor
+     oficial de T-02), distinto del 0.2 medido en Ronda 1 — consistente con que 3 de 4
+     mediciones históricas caen en ~0.5 y la de Ronda 1 fue la muestra atípica.
+   - Contexto recuperado en ambos casos revisado manualmente: directamente relevante a la
+     pregunta en los dos (antibióticos profilácticos por patología; cuidado de la piel en
+     infusión subcutánea) — sin indicio de fallo de retrieval.
+2. **Investigación de citación duplicada** (`tests/eval/results/e11_t07_citation_duplication_investigation.json`):
+   - `ling_07` repetido 3 veces en producción: duplica 1 de 3 — confirma que es ruido de
+     muestreo, no una propiedad fija de esa pregunta/contexto.
+   - Variante con `[FUENTES]` reforzado (10 preguntas, generador mutado solo en memoria):
+     **0/10 duplicaciones**, frente al 11/17 (~65%) ya observado en producción (Ronda 1).
+     Las 10 respuestas mantienen el cierre obligatorio de derivación médica — sin
+     regresión de seguridad.
+
+**Decisión**
+
+1. **Context Precision de `eval_08`/`eval_13`: cerrado como ruido documentado del juez
+   LLM**, mismo patrón que `eval_06` (D-069) y `eval_15` (D-068). No se re-mide más, no se
+   toca `rag/retriever.py`. Se documenta en el informe final (`docs/evaluation.md` §5.1/§7)
+   como observación, no como regresión causada por T-04/T-05.
+2. **`[FUENTES]` reforzado aplicado directamente a `prompts/system_prompt_family.txt`**
+   (edición en Cowork, sin entorno de Antigravity — mismo patrón que D-068 con la
+   restricción de información de centro). Sustituye el párrafo `[FUENTES]` anterior:
+   añade la prohibición explícita ("No generes NUNCA un encabezado ni una lista con
+   nombres de fichero..."), el motivo (duplicaría el listado automático) y un
+   contraejemplo concreto de qué NO hacer. Aprobado por Marcos tal cual, sin ajustes,
+   dado el resultado 0/10 y la ausencia de regresión de seguridad en la variante probada.
+
+**Consecuencias**
+- `prompts/system_prompt_family.txt`: `[FUENTES]` reescrito.
+- No se re-ejecuta RAGAS ni la suite de regresión para este cambio — es un ajuste de
+  generación/formato, no de retrieval (mismo criterio que D-067/D-068); D-018 ya confirma
+  que ningún test depende de la redacción exacta del prompt.
+- T-07 puede pasar ya al Bloque 1 (informe final en `docs/evaluation.md`), con los
+  resultados de D-070/D-071/D-072 ya incorporados.
+
+**Alternativas descartadas**
+- Pedir una tercera ronda de verificación tras aplicar el `[FUENTES]` reforzado:
+  descartada — la evidencia (0/10 sobre 10 preguntas, sin regresión de seguridad) ya es
+  más sólida que la que sostuvo D-067/D-068 en su momento, y seguir iterando sobre este
+  punto concreto no es proporcional al hallazgo (formato de citación, no seguridad ni
+  contenido clínico).
+- Sustituir el score oficial de `eval_08`/`eval_13` en `e09_t02_ragas_full_scores.json`
+  por alguna de las nuevas mediciones: descartada, mismo criterio de D-058/D-069 de no
+  sustituir el número oficial por una lectura favorable.
+
+**Justificación**
+Cierra el bucle abierto por D-070/D-071 con evidencia directa (no solo por analogía) para
+ambos puntos, y aplica un fix real solo donde hay evidencia sólida de mejora sin coste de
+seguridad — coherente con el principio de no tocar producción sin justificación (D-059).
 
 ---
 

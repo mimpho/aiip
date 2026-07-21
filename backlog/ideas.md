@@ -348,7 +348,7 @@ y se revisa junto al resto en E-07/E-09, no se aborda como fix puntual ahora. De
 `tests/results/e05_t07_smoke_test_results.md`.
 
 ### 5. `eval_63` (inglés): Faithfulness 0.0 y Answer Relevancy 0.29, muy por debajo del resto del subconjunto `otro_idioma` (17 jul 2026)
-- **Criticidad:** 🟡 Media — un único caso muy por debajo de sus vecinos del mismo subconjunto, no un patrón confirmado todavía
+- **Criticidad:** ✅ Resuelta — no aplica nivel (cerrada 20 jul 2026, D-068/E-11 T-05: Faithfulness ~0.88 estable, Context Precision 0.639→0.804 con el peso adaptativo de BM25. Confirmación sin investigación adicional.)
 - **Problema:** detectado en la ejecución real de E-09 T-02 (RAGAS Context Precision/Recall,
   `tests/eval/results/e09_t02_ragas_full_scores.json`) — la pregunta en inglés "What is a
   primary immunodeficiency?" (`eval_63`) obtuvo Faithfulness 0.0 y Answer Relevancy 0.29,
@@ -362,9 +362,43 @@ y se revisa junto al resto en E-07/E-09, no se aborda como fix puntual ahora. De
   del LLM en inglés, (b) un artefacto puntual del LLM evaluador de RAGAS (parseo, formato de
   salida) sobre ese caso concreto, o (c) algo específico de la pregunta/respuesta de
   referencia en `tests/eval/dataset_partial.json`.
-- **Cuándo revisarlo:** 🟡 probablemente ya resuelto como efecto colateral — en la
-  re-medición post-T05 (`tests/eval/results/e09_t02_ragas_full_scores.json`), `eval_63`
-  tiene Faithfulness 0.877 (vs. 0.0 pre-T05), en línea con el resto del subconjunto
-  `otro_idioma`. Consistente con el fix del hallazgo D (EnsembleRetriever). Asignado a
-  **E-11** (18 jul 2026, D-059) solo como confirmación de cierre — no como investigación
-  nueva desde cero.
+- **Cuándo revisarlo:** cerrado — ver Criticidad arriba.
+
+---
+
+## Huecos de KB — temas coloquiales pendientes de ampliar
+
+> Lista viva, distinta de "Hallazgos del RAG" de arriba (esos son problemas de
+> retrieval/generación/idioma; esto es específicamente contenido que no existe en ningún
+> documento de la KB, verificado por búsqueda directa en el texto, no solo por un score
+> RAGAS bajo). Nace de `eval_15` (E-11 T-05, 20 jul 2026): un score bajo puede parecer un
+> problema de retrieval y en realidad ser un hueco de contenido genuino que ninguna mejora
+> de BM25/chunking puede resolver. Decisión de Marcos (20 jul 2026): en vez de ir
+> resolviendo cada hueco puntual según aparece (una fuente nueva, un ciclo de vetado cada
+> vez), acumularlos aquí y abordarlos juntos en una futura ampliación de KB — mismo patrón
+> que ya funcionó en E-11 T-01 (6 huecos genuinos resueltos de una vez, D-060). Cada entrada
+> debe confirmar que el hueco es real (grep/lectura directa del contenido, no solo un caso
+> con score bajo) antes de añadirse aquí, para no acumular ruido.
+
+### 1. Conservación en frío de inmunoglobulinas durante el transporte/viaje (`eval_15`, 20 jul 2026)
+- **Criticidad:** 🟡 Media — afecta a un caso real del dataset de evaluación, pero es
+  información logística, no una alarma de seguridad (Falso Negativo Cero no está en juego:
+  la respuesta ya remite a consultar con el equipo médico/farmacia)
+- **Problema:** `eval_15` ("¿Podemos viajar en avión llevando la medicación de
+  inmunoglobulinas?") tiene Context Precision 0.0 estable en 5 mediciones independientes
+  (E-09 T-05, E-11 T-01 baseline, E-11 T-02 final, y 2 ejecuciones frescas de la
+  investigación de E-11 T-05). Verificado por búsqueda directa (no solo por el score): cero
+  menciones de "nevera", "refrigeración", "cadena de frío" (ni equivalentes en inglés) en
+  los 41 PDFs + HTMLs de `data/raw/`. Las dos fuentes que T-01 añadió para este caso (SEICAP
+  cap. 6 "viajes", FAQ de IPOPI) cubren el mensaje general (se puede viajar, planificarlo,
+  carta del inmunólogo) pero no el detalle de temperatura/conservación que pide
+  `expected_answer` del dataset (`tests/eval/dataset_partial.json`, `eval_15`).
+- **Idea/Solución:** fuente curada específica sobre transporte/conservación de
+  inmunoglobulinas en viaje (ficha del fabricante, guía de sociedad de inmunología, o
+  sección específica de una guía ya vetada que no se haya revisado a fondo). Mismo proceso
+  de vetado que E-06/E-11 T-01 — no rellenar con conocimiento general del LLM (descartado
+  explícitamente, `AGENTS.md` corolario D-059: contenido de manejo de fármacos sin fuente
+  vetada es más arriesgado que dejar el hueco documentado).
+- **Cuándo revisarlo:** próxima ampliación de KB agrupada (post-TFM, o si se acumulan más
+  entradas en esta lista antes). No bloquea el cierre de E-11 T-05 — documentado como hueco
+  abierto en `tests/eval/results/e11_t05_cierre.md`.

@@ -22,6 +22,11 @@ cot = "full"
 [features]
 # Deshabilitar telemetría de Chainlit
 telemetry = false
+# Evita que el scroll siga el streaming de la respuesta hasta el final;
+# se queda arriba, en el inicio del mensaje, para que se pueda leer desde
+# el principio (config real de la app familiar — CHAINLIT_APP_ROOT=chainlit/family,
+# D-039; el .chainlit/config.toml de la raíz del repo no lo usa esta app).
+assistant_message_autoscroll = false
 
 [meta]
 # Requerido por Chainlit — chainlit/config.py::load_settings() rechaza
