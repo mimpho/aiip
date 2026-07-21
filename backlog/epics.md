@@ -758,23 +758,39 @@ que quedan, **E-10 es la primera candidata a quedar fuera si falta tiempo antes 
 julio; E-12 (cierre del TFM) no es negociable en ningún caso.**
 
 **Criterios de aceptación de alto nivel**
-- Lote 1 (13 fichas, incluye X-linked lymphoproliferative disease/XIAP) ingerido, revisado en
-  registro lingüístico y remedido contra RAGAS
-- Lote 2 (13 fichas, incluye IPEX) — ídem
-- Lote 3 (13 fichas) — ídem
-- Fuente añadida a `docs/kb-sources.md` (perfil familiar)
+- Lote 1 (13 fichas, incluye X-linked lymphoproliferative disease/XIAP) ingerido y revisado
+  en registro lingüístico; verificación dirigida del caso XIAP (RAGAS completo solo en T-04)
+- Lote 2 (13 fichas, incluye IPEX) — ídem, verificación dirigida del caso IPEX
+- Lote 3 (13 fichas) — ídem, sin caso de verificación dirigida propio
+- Fuente añadida a `docs/kb-sources.md` (perfil familiar), de "Propuesta" a "Validada" en T-04
 - Caso XIAP/IPEX original re-verificado tras el lote correspondiente
+
+**Descomposición y decisiones de `epic-start` (21 jul 2026):** aprobada por Marcos con tres
+puntos resueltos sobre la propuesta inicial:
+- **Cadencia de RAGAS:** remedición completa (32 casos) solo una vez en T-04, al cierre de
+  los 3 lotes — cada lote (T-01/T-02/T-03) lleva solo verificación dirigida puntual (repetir
+  la consulta original XIAP/IPEX, revisión de registro lingüístico), no la suite RAGAS
+  completa. Evita triplicar llamadas a Gemini por contenido que no toca retrieval/algoritmo,
+  a diferencia de E-11 T-02 (que sí cambiaba código).
+- **Extracción de fichas:** T-01 incluye un script que parsea el XML masivo de MedlinePlus
+  Genetics (no copia manual página a página como en E-11 T-01) — la ventaja explícita de
+  esta fuente señalada en D-063.
+- **Solapamiento con `data/raw/upiip/` (4 temas: Bruton's/XLA, CGD, SCID genérico, CVID):**
+  no se descartan de forma automática. T-01 añade una revisión rápida ficha por ficha —
+  Marcos decide si la ficha de MedlinePlus aporta valor genuino (más completa/mejor
+  redactada) y se añade igualmente, o si es redundante y se descarta, sin duplicar contenido
+  sin criterio (mismo cuidado que E-11 T-01).
 
 ### Tareas
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-01 | Lote 1 — 13 fichas, orden alfabético inverso (Z→P), incluye XIAP | ⚪ Pendiente |
+| T-01 | Preparación de datos (lista definitiva de 39 fichas) + Lote 1 — 13 fichas, orden alfabético inverso (Z→P), incluye XIAP | ⚪ Pendiente |
 | T-02 | Lote 2 — 13 fichas (P→F), incluye IPEX | ⚪ Pendiente |
-| T-03 | Lote 3 — 13 fichas (F→2) | ⚪ Pendiente |
+| T-03 | Lote 3 — 13 fichas restantes | ⚪ Pendiente |
 | T-04 | Remedición RAGAS + cierre | ⚪ Pendiente |
 
-**Estado:** ⚪ No iniciada
+**Estado:** 🔵 En curso
 
 ---
 

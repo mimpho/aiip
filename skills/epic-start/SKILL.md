@@ -152,6 +152,26 @@ Este es el gate clínico: el .feature define exactamente qué se va a testear.
 
 ---
 
+## Paso 3 — Commit y push de lo generado [antes de pasar a task-start]
+
+Tras el Paso 2, el agente ha creado/modificado ficheros sobre `epic/E[nn]-nombre`
+(`backlog/epics.md`, `README.md`, los `.feature` de `tests/features/`/`tests/eval/`) pero
+no los ha subido — `commit`/`push` son de Marcos, no del agente (reparto de git,
+`AGENTS.md`). Antes de dar el arranque de la épica por cerrado, proporciona el comando
+exacto:
+
+```bash
+git add backlog/epics.md README.md tests/features/eXX_t*.feature tests/eval/eXX_t*.feature
+git commit -m "docs: E-XX epic-start — task decomposition and .feature scaffolding"
+git push
+```
+
+**No arranques `task-start` hasta que Marcos confirme que el push se ha hecho.** La
+primera tarea nace de `epic/E[nn]-nombre` en origin (`task-start` Paso 0) — si el commit
+de `epic-start` no está subido, la rama de tarea se crea sin ese contexto en remoto.
+
+---
+
 ## Resumen de gates
 
 La estructura de ramas del proyecto es:
@@ -171,3 +191,4 @@ La rama de la primera tarea la crea `task-start` — no hace falta crearla aquí
 | 0 | Crea la rama de épica en git | Los ficheros deben crearse sobre la rama correcta, no sobre main |
 | 1 | Lista de tareas + Gherkin informal | Define el alcance de la épica |
 | 2 | Ficheros .feature (pytest-bdd) | Valida que los tests miden lo correcto antes de escribir código |
+| 3 | Commit y push de lo generado | `task-start` parte de la rama de épica en origin, no en local |
