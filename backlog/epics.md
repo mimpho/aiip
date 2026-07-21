@@ -630,6 +630,8 @@ Cierre acotado de los hallazgos de calidad que quedaron abiertos o fuera de alca
 - Decisión tomada sobre cómo reportar Hallucination Rate en el informe final — el 93.75% actual es un conteo binario (D-058: cualquier caso con faithfulness < 1.0 cuenta como "alucinado"); de los 30 casos, solo `eval_15` está realmente mal (< 0.5), el resto está entre 0.69 y 0.96 — valorar un desglose por severidad como métrica complementaria, no solo el binario
 - Resultados documentados en `docs/evaluation.md` como actualización post-E-09, con re-medición antes/después dirigida a los casos afectados (mismo criterio de transparencia que E-09 T-05)
 
+**Nota de cierre — criterio de `eval_15` cumplido de forma distinta a la redacción original (21 jul 2026):** el criterio asumía que `eval_15` seguiría siendo el caso "Grave" a investigar en profundidad. En la ejecución, T-01 (ampliación de KB) resolvió como efecto colateral el problema original de `eval_15` (Faithfulness 0.38 → 0.875, Answer Relevancy 0.0 → 0.84; D-068) antes de llegar a T-05, dejando solo un hallazgo nuevo y distinto (Context Precision/Recall en 0.0, hueco de contenido genuino sobre conservación en frío de la medicación en viaje — documentado en `backlog/ideas.md`, no bloqueante). Al recalcular las bandas de severidad en T-06, `eval_06` — no investigado en el criterio original — pasó a ser el único caso "Grave" y requirió su propia investigación dirigida (D-069). Las dos investigaciones dirigidas que pedía el criterio se hicieron igualmente, solo que repartidas entre `eval_15` (T-05) y `eval_06` (T-06) en vez de concentradas en `eval_15`.
+
 **Descomposición y decisiones de `epic-start` (18 jul 2026):** aprobada por Marcos con tres
 puntos resueltos sobre la propuesta inicial:
 - **T-02:** prioridad confirmada en el peso adaptativo de BM25 (activar/ponderar solo ante
@@ -662,7 +664,19 @@ Orden de ejecución: T-01 primero (bottleneck: tiempo de Marcos para vetar fuent
 paralelo con T-03/T-04/T-06 (no dependen del corpus). T-02 y T-05 dependen de T-01/T-02
 respectivamente. T-07 cierra la épica.
 
-**Estado:** 🔵 En curso
+**Entregables**
+- `data/raw/manifest.json`, `docs/kb-sources.md` — 9 fuentes generales/FAQ nuevas vetadas por Marcos, cubriendo los 6 huecos genuinos acotados en D-060 (T-01)
+- `rag/retriever.py` — peso adaptativo de BM25 por señal léxica (T-02, D-061)
+- `prompts/system_prompt_family.txt` — ajuste de tono `[TONO — PERFIL FAMILIAR]` (T-04, D-067), generalización de `[RESTRICCIONES ABSOLUTAS]` a información operativa de centro concreto (T-05, D-068) y refuerzo de `[FUENTES]` contra citación duplicada (T-07, D-072)
+- `docs/evaluation.md` — §5.1/§5.4/§7 actualizados con resultados post-E-11 y desglose de Hallucination Rate por severidad
+- `backlog/ideas.md` — hueco de KB de `eval_15` (conservación en frío en viaje) y cierre de `guia_antibiotics_esp_0.pdf` documentados
+- `tests/features/e11_t01_kb_expansion.feature`, `e11_t02_bm25_adaptive_weight.feature`, `e11_t04_registro_linguistico.feature`, `investigacion_eval15_eval63_antibiotics.feature` — TDD de las tareas con test
+- `tests/eval/e11_t03_grounding_conectores.feature`, `e11_t06_hallucination_severity.feature`, `e11_t07_informe_final.feature` — checklists/escenarios sin TDD estricto
+- `tests/eval/results/e11_t0{2,3,4,5,6,7}_cierre.md` — informes de cierre por tarea
+- `scripts/run_e11_t05_eval15_investigation.py`, `run_e11_t06_eval06_investigation.py`, `run_e11_t07_*.py` — scripts de investigación dirigida y regresión
+- `decisions.md` — D-059 a D-072
+
+**Estado:** ✅ Completada — 21 jul 2026
 
 ---
 

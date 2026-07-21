@@ -43,7 +43,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-08 | Memoria de perfil e histórico | ⚪ No iniciada — aplazada a post-TFM (D-063) | E-03, E-04, E-06, E-11 (capa 1) |
 | E-09 | Evaluación RAGAS completa | ✅ Completada — 18 jul 2026 | E-07 |
 | E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada — opcional, si da tiempo | E-05 |
-| E-11 | Ciclo de mejora de calidad (post-E-09) | 🔵 En curso | E-09 |
+| E-11 | Ciclo de mejora de calidad (post-E-09) | ✅ Completada — 21 jul 2026 | E-09 |
 | E-12 | Retrospectiva final del roadmap (cierre TFM) — innegociable | ⚪ No iniciada | E-10, E-11, E-13 |
 | E-13 | Ampliación de KB — fuentes MedlinePlus Genetics | ⚪ No iniciada | E-11 |
 
@@ -85,8 +85,8 @@ gantt
     section Fase 1.5 — MVP completo
     E-07 RAGAS parcial                :done,    e07, 2026-07-15, 2026-07-16
     E-09 RAGAS completo                :done,    e09, 2026-07-17, 2026-07-18
-    E-11 Ciclo de mejora de calidad   :active,  e11, 2026-07-18, 2026-07-23
-    E-13 Ampliación KB (MedlinePlus)  :         e13, 2026-07-23, 2026-07-27
+    E-11 Ciclo de mejora de calidad   :done,    e11, 2026-07-18, 2026-07-21
+    E-13 Ampliación KB (MedlinePlus)  :         e13, 2026-07-21, 2026-07-27
     E-10 Pulido final                 :         e10, 2026-07-27, 2026-07-28
     E-12 Retro final del roadmap      :crit,    e12, 2026-07-28, 2026-07-29
 
@@ -219,4 +219,4 @@ El perfil profesional (`chainlit/professional/`) es un stub fuera de alcance del
 
 ---
 
-*Última actualización: 18 julio 2026 — E-09 (Evaluación RAGAS completa) completada; E-11 (ciclo de mejora de calidad) creada y priorizada antes de E-08 capa 1 (D-059)*
+*Última actualización: 21 julio 2026 — E-11 (ciclo de mejora de calidad) completada: KB ampliada, peso adaptativo de BM25, Context Recall supera el 85% por primera vez en el proyecto*

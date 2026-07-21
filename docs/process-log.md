@@ -226,3 +226,48 @@ desarrollo asistido por IA a lo largo del proyecto.
   `skills/epic-close/SKILL.md`. Pendiente de sincronizar al plugin de Cowork.
 
 ---
+
+## E-11 — Ciclo de mejora de calidad (hallazgos post-E-09)
+**Periodo:** 18–21 jul 2026
+**Tareas:** T-01 a T-07 (7 tareas, todas completadas)
+
+### ¿Qué funcionó bien en el proceso?
+
+- **Verificar la hipótesis "KB limitada" antes de tocar el retriever (D-060).** Cruzar los 11
+  casos de peor Context Precision/Recall de E-09 contra `data/raw/manifest.json` distinguió 6
+  huecos de contenido genuino de 4 problemas de retrieval reales, evitando vetar fuentes
+  redundantes o calibrar BM25 contra un corpus que iba a cambiar. La ampliación de KB (T-01)
+  produjo por sí sola +10.5pp de Context Precision y +8.4pp de Context Recall, antes de tocar
+  BM25 — confirma que la mayor palanca de calidad de retrieval en este proyecto fue contenido,
+  no ranking.
+- **"Generalizar una restricción existente en vez de crear una regla ad-hoc" se repitió con
+  éxito en tres hallazgos distintos** (D-066: hallazgo C sin cambio de prompt; D-068:
+  restricción de protocolo de centro ampliada a cualquier información operativa; D-072:
+  `[FUENTES]` reforzado) sin hinchar el system prompt con reglas puntuales por caso.
+- **`decisions.md` mantuvo trazabilidad limpia en una épica con cierres parciales y
+  reaperturas** (`eval_15` cerrado por T-01 pero con hallazgo nuevo distinto abierto por T-05;
+  `eval_06` sustituyendo a `eval_15` como caso "Grave" en T-06) — cada reapertura quedó anotada
+  con su decisión (D-060, D-068, D-069) en vez de perderse entre tareas.
+
+### ¿Qué generó fricción o retraso?
+
+- **El criterio de aceptación original de `eval_15` quedó obsoleto a mitad de épica.** Se
+  redactó asumiendo que `eval_15` seguiría siendo el caso a investigar en profundidad, pero
+  T-01 lo resolvió como efecto colateral antes de llegar a T-05. `task-start` lo detectó
+  cruzando el borrador contra el estado real del repo (precedente ya recogido en memoria:
+  `feedback_task_start_scope_check`) y redirigió el alcance a tiempo.
+- **T-07 (cierre) amplió su alcance dos veces sobre el borrador de `epic-start`** (D-070,
+  D-071): los cambios de prompt de T-04/T-05 no se habían re-verificado con tests/RAGAS al
+  aplicarse, y esa verificación no estaba presupuestada en la tarea de cierre original.
+- **El "ruido del juez LLM" (`eval_06`, `eval_08`, `eval_13`, `eval_15`) se investigó cada vez
+  con un script ad-hoc de repetición distinto**, sin un patrón único reutilizable.
+
+### ¿Qué cambió en las skills o el workflow?
+
+- **`epic-start` (auto-revisión antes del gate, punto 6 nuevo):** si alguna tarea de la épica
+  edita `prompts/system_prompt_*.txt` en producción antes de la tarea de cierre, se presupuesta
+  por defecto un paso de regresión (tests + RAGAS acotado a los casos afectados) en esa tarea de
+  cierre — aplicado en `skills/epic-start/SKILL.md`. Pendiente de sincronizar al plugin de
+  Cowork.
+
+---
