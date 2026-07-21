@@ -822,7 +822,7 @@ puntos resueltos sobre la propuesta inicial:
 | ID | Tarea | Estado |
 |---|---|---|
 | T-01 | Preparación de datos (lista definitiva de 36 fichas, D-075) + Lote 1 — 13 fichas (Z→P, incluye XIAP) + 4 fichas de revisión ya resueltas (D-076: 22q11.2/DiGeorge + 3 subtipos de SCID) | ✅ Completada |
-| T-02 | Lote 2 — 13 fichas (posiciones 14-26, O→D), incluye IPEX | 🔄 En progreso |
+| T-02 | Lote 2 — 13 fichas (posiciones 14-26, O→D), incluye IPEX | ✅ Completada |
 | T-03 | Lote 3 — 10 fichas restantes (posiciones 27-36, C→A) | ⚪ Pendiente |
 | T-04 | Remedición RAGAS + cierre | ⚪ Pendiente |
 
