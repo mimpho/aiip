@@ -81,6 +81,12 @@
 - [D-070 — T-07 (E-11): alcance ampliado con regresión de T-04/T-05 antes del informe final — suite pytest completa + relectura cualitativa dirigida + RAGAS acotado a casos afectados](#d-070--t-07-e-11-alcance-ampliado-con-regresión-de-t-04t-05-antes-del-informe-final--suite-pytest-completa--relectura-cualitativa-dirigida--ragas-acotado-a-casos-afectados)
 - [D-071 — T-07 (E-11): segunda ampliación de alcance — estabilidad del juez de Context Precision en eval_08/eval_13, e investigación de causa raíz de la citación duplicada (hallazgo nuevo)](#d-071--t-07-e-11-segunda-ampliación-de-alcance--estabilidad-del-juez-de-context-precision-en-eval_08eval_13-e-investigación-de-causa-raíz-de-la-citación-duplicada-hallazgo-nuevo)
 - [D-072 — T-07 (E-11): Context Precision de eval_08/eval_13 cerrado como ruido del juez; [FUENTES] reforzado aplicado a producción, cierra la citación duplicada](#d-072--t-07-e-11-context-precision-de-eval_08eval_13-cerrado-como-ruido-del-juez-fuentes-reforzado-aplicado-a-producción-cierra-la-citación-duplicada)
+- [D-073 — E-13 T-01: fuente real del XML de MedlinePlus Genetics y relleno automático de URL en el manifest](#d-073--e-13-t-01-fuente-real-del-xml-de-medlineplus-genetics-y-relleno-automático-de-url-en-el-manifest)
+- [D-074 — E-13 T-01: corrección del solapamiento "SCID genérico" — 3 fichas de subtipo, no 1:1](#d-074--e-13-t-01-corrección-del-solapamiento-scid-genérico--3-fichas-de-subtipo-no-11)
+- [D-075 — E-13 T-01: solapamiento DiGeorge/22q11.2 (4º candidato de revisión), corrección de la base real a 36 fichas, y fix del gen ausente en el texto extraído](#d-075--e-13-t-01-solapamiento-digeorge22q112-4º-candidato-de-revisión-corrección-de-la-base-real-a-36-fichas-y-fix-del-gen-ausente-en-el-texto-extraído)
+- [D-076 — E-13 T-01: resolución de la revisión ficha por ficha — las 4 candidatas se incluyen](#d-076--e-13-t-01-resolución-de-la-revisión-ficha-por-ficha--las-4-candidatas-se-incluyen)
+- [D-077 — E-13 T-01: la sección "Causes" no está en el XML/JSON masivo — scraping por ficha para no depender de conocimiento general del LLM](#d-077--e-13-t-01-la-sección-causes-no-está-en-el-xmljson-masivo--scraping-por-ficha-para-no-depender-de-conocimiento-general-del-llm)
+- [D-078 — Bug preexistente en detect_language() expuesto por E-13: "xiap" sin tilde en "qué" clasifica como catalán](#d-078--bug-preexistente-en-detect_language-expuesto-por-e-13-xiap-sin-tilde-en-qué-clasifica-como-catalán)
 
 ---
 
@@ -3727,4 +3733,366 @@ seguridad — coherente con el principio de no tocar producción sin justificaci
 
 ---
 
-*Próximas decisiones previstas: estrategia de chunking validada — tras primera evaluación RAGAS; estrategia incremental de reindexación basada en manifest, si el volumen de la KB lo justifica en el futuro (revisitar D-024).*
+## D-073 — E-13 T-01: fuente real del XML de MedlinePlus Genetics y relleno automático de URL en el manifest
+
+**Fecha:** 21 de julio de 2026
+**Fase:** técnica
+**Épica:** E-13 (T-01)
+
+**Contexto**
+En la revisión crítica de `task-start` para T-01 aparecieron dos puntos abiertos que el
+`.feature` borrador de `epic-start` daba por resueltos sin comprobación: (1) no había URL de
+descarga documentada para el XML masivo de MedlinePlus Genetics ni el fichero existía en el
+repo — Marcos no quiso posponer la comprobación al research de Paso 4, por si no llegaba a
+existir; (2) el escenario de reingesta asumía que `data/raw/manifest.json` queda con URL real
+inmediatamente después de `--force-reingest`, pero `ingestion/manifest.py::sync_entry()`
+siempre crea entradas nuevas con `url: None` — los 46 documentos actuales solo tienen URL real
+porque alguien la rellenó a mano después (sección 6 de `kb-maintenance.md`).
+
+Verificado contra la web oficial de NLM/MedlinePlus (páginas vigentes, ficheros generados a
+fecha de 18 jul 2026):
+- Índice de todas las páginas de MedlinePlus Genetics (títulos, URLs, sinónimos):
+  `https://medlineplus.gov/download/TopicIndex.xml`.
+- Compendio con el texto completo de cada ficha (condición/gen/cromosoma/mtDNA) en un solo
+  XML: `https://medlineplus.gov/download/ghr-summaries.xml`.
+- Cada página tiene URL fija y predecible: `https://medlineplus.gov/genetics/condition/{slug}`
+  — el mismo slug que usa la API de descarga individual
+  (`https://medlineplus.gov/download/genetics/condition/{slug}.xml`).
+
+**Decisión**
+
+1. El script de extracción de T-01 descarga `ghr-summaries.xml` (compendio completo) como
+   fuente del contenido de las 39 fichas — no depende de que Marcos aporte el fichero.
+2. El script lee la URL real de cada ficha directamente del elemento `<ghr-page>` de su
+   entrada en `ghr-summaries.xml` (no hace falta derivarla de un slug) y rellena
+   `data/raw/manifest.json` con esa URL inmediatamente tras `--force-reingest` — sin dejar
+   `url: null` a la espera de un relleno manual posterior, y sin modificar
+   `ingestion/manifest.py::sync_entry()` (D-063 ya fijó que E-13 "no requiere infraestructura
+   nueva"; el mapeo fichero→URL vive en el script de extracción, no en la infraestructura de
+   ingesta compartida).
+3. El script acepta el rango de fichas (lote) como parámetro, para ser reutilizado sin
+   reescritura en T-02 y T-03 (T-02 ya lo asume explícitamente en su `.feature`).
+
+**Consecuencias**
+- `tests/features/e13_t01_lote1_medlineplus.feature`: el "Given" de descarga del XML deja de
+  ser una precondición externa implícita y pasa a ser parte del escenario; el "Then" de URL
+  real queda respaldado por el mapeo del propio script, no por relleno manual.
+- Precedente para T-02/T-03: mismo script, mismo mecanismo de URL — no se repite la pregunta.
+- No se toca `ingestion/manifest.py` ni el comportamiento estándar de `sync_entry()` para el
+  resto de fuentes de la KB.
+
+**Alternativas descartadas**
+- Dejar `url: null` tras el reingest y posponer el relleno a un paso manual posterior (patrón
+  estándar de `kb-maintenance.md` sección 6): descartada por Marcos — la ventaja explícita de
+  esta fuente (D-063: "descarga masiva en un XML" con metadata ya estructurada) es precisamente
+  evitar que haya que buscar 39 URLs una por una a mano.
+- Modificar `ingestion/manifest.py::sync_entry()` para aceptar una URL en la creación de la
+  entrada: descartada — cambiaría el comportamiento compartido por todas las fuentes de la KB
+  por una necesidad de una sola fuente; el mapeo slug→URL resuelto en el script de extracción
+  logra el mismo resultado sin tocar infraestructura común.
+
+---
+
+## D-074 — E-13 T-01: corrección del solapamiento "SCID genérico" — 3 fichas de subtipo, no 1:1
+
+**Fecha:** 21 de julio de 2026
+**Fase:** técnica
+**Épica:** E-13 (T-01)
+
+**Contexto**
+Verificando la página curada real (`https://medlineplus.gov/immunesystemanddisorders.html`,
+sección "Genetics", 43 enlaces — cuadra exacto con D-063) contra `data/raw/upiip/`, tres de los
+cuatro solapamientos asumidos en D-063 son coincidencias exactas 1:1:
+- Bruton's/XLA → `x-linked-agammaglobulinemia`
+- CGD → `chronic-granulomatous-disease`
+- CVID → `common-variable-immune-deficiency`
+
+El cuarto ("SCID genérico") no lo es. Las 43 fichas no incluyen ninguna "Severe combined
+immunodeficiency" genérica — incluyen tres subtipos genéticos específicos: *JAK3-deficient
+severe combined immunodeficiency*, *X-linked severe combined immunodeficiency* y *ZAP70-related
+severe combined immunodeficiency*. El documento ya indexado
+(`upiip/04_Immunodeficiencia_Combinada_Greu_ES.pdf`) es genérico y no duplica exactamente
+ninguna de las tres.
+
+**Decisión**
+El escenario "Los temas solapados se revisan ficha por ficha antes de descartarlos" de
+`tests/features/e13_t01_lote1_medlineplus.feature` pasa de comparar 4 pares 1:1 a comparar 3
+pares exactos (Bruton's/CGD/CVID) más las 3 fichas de subtipo de SCID contra el único
+documento genérico ya indexado. Marcos revisa las 3 y decide, ficha por ficha, incluir ninguna,
+una, dos o las tres — ninguna es descartable por duplicado exacto. Se mantiene sin cambios el
+criterio ya aprobado de que cualquier ficha añadida por este motivo queda fuera de los 3 lotes
+de 39 (no desplaza el orden alfabético inverso).
+
+**Consecuencias**
+- El total final de fichas indexadas en E-13 puede superar 39 (hasta 42) según cuántos
+  subtipos de SCID se añadan — no afecta al tamaño de los 3 lotes de 13, que se calculan sobre
+  las 39 fichas sin solapamiento exacto.
+- `backlog/epics.md` (sección E-13) y `docs/kb-sources.md` (fila MedlinePlus Genetics):
+  corregir la mención de "SCID genérico" como solapamiento 1:1.
+- `tests/features/e13_t01_lote1_medlineplus.feature`: escenario de solapamiento actualizado.
+
+**Alternativas descartadas**
+- Mantener el criterio simple de D-063 sin corregir (opción "b" planteada a Marcos): descartada
+  — Marcos prefiere fidelidad a los datos reales aunque cambie el conteo, sobre todo estando ya
+  verificado con la fuente real antes de escribir el script de extracción.
+
+---
+
+## D-075 — E-13 T-01: solapamiento DiGeorge/22q11.2 (4º candidato de revisión), corrección de la base real a 36 fichas, y fix del gen ausente en el texto extraído
+
+**Fecha:** 21 de julio de 2026
+**Fase:** técnica
+**Épica:** E-13 (T-01)
+
+**Contexto**
+Al escribir `scripts/extract_medlineplus_genetics.py` y ejecutarlo contra las fuentes reales
+(D-073) aparecieron dos problemas que ni D-063 ni D-074 habían detectado, porque ambas
+decisiones se tomaron sin cruzar todavía la lista completa de 43 fichas contra el contenido
+real de `data/raw/upiip/` ficha por ficha:
+
+1. **Un quinto candidato de solapamiento no documentado.** La ficha "22q11.2 deletion
+   syndrome" (primera del orden alfabético inverso, fuera ya de los 3 lotes de T-01/T-02) es
+   la misma entidad clínica que `upiip/09_Sindrome_DiGeorge_ES.pdf` — el propio texto de
+   MedlinePlus lo confirma ("Doctors named these conditions DiGeorge syndrome... this
+   condition is usually called 22q11.2 deletion syndrome"). Ni D-063 ni D-074 la mencionan.
+   Marcos decide (consultado explícitamente): mismo criterio que los 3 subtipos de SCID —
+   revisión ficha por ficha, no descarte automático ni inclusión automática.
+2. **La aritmética de "39 fichas base" no correspondía a los datos reales.** 43 fichas
+   totales − 3 solapamientos exactos (Bruton's/CGD/CVID) = 40, no 39; y si además se
+   apartan las 4 fichas de revisión ficha por ficha (3 SCID + DiGeorge/22q11.2, ninguna
+   descartada ni incluida automáticamente) quedan **36 fichas de base**. El "39" de D-063 era
+   la cuenta original (pre-D-074), nunca recalculada tras la corrección de D-074 ni tras este
+   hallazgo. Confirmado ejecutando `extract_medlineplus_genetics.py --build-list` contra la
+   página curada real y `ghr-summaries.xml`.
+
+Además, verificando el caso original de XIAP tras la primera reingesta de prueba, la ficha
+nueva no aparecía en el retrieval híbrido ni en el top-10 para la consulta literal "xiap" —
+el mismo síntoma que motivó E-13 (D-063), pese a tener ya la ficha indexada. Causa raíz: el
+párrafo `text-role="description"` de `ghr-summaries.xml` describe la enfermedad (XLP, EBV,
+linfohistiocitosis...) pero **no menciona el símbolo del gen causante** — vive aparte, en
+`<related-gene-list>/<related-gene>/<gene-symbol>` (metadato estructurado, no en la prosa).
+El texto extraído para "X-linked lymphoproliferative disease" no contenía la cadena "XIAP"
+en ningún punto, así que ni BM25 ni la búsqueda vectorial podían encontrarlo por ese término
+— exactamente el caso real que originó la investigación.
+
+**Decisión**
+
+1. **DiGeorge/22q11.2 se trata igual que los 3 subtipos de SCID** (D-074): fuera de la
+   numeración de los 3 lotes, revisión ficha por ficha frente a
+   `upiip/09_Sindrome_DiGeorge_ES.pdf`, se extrae con `--extract-one` solo si Marcos confirma
+   valor genuino.
+2. **La base real de los 3 lotes es 36 fichas, no 39** — 43 totales, 3 descartadas por
+   solapamiento exacto, 4 apartadas para revisión ficha por ficha (no cuentan para el tamaño
+   de lote salvo que se aprueben, y en ese caso se añaden fuera de la numeración, sin
+   desplazar el orden ya fijado). Lote 1 se mantiene en 13 fichas (Z→P, incluye XIAP en
+   posición 2) sin cambios; Lote 2 pasa a ser fichas 14-26 (rango real O→D, incluye IPEX en
+   posición 20, no exactamente "P→F" como estimaba `backlog/epics.md` antes de tener la lista
+   real); Lote 3 queda en 10 fichas (27-36, C→A), no 13.
+3. **`scripts/extract_medlineplus_genetics.py` añade los genes relacionados
+   (`<related-gene-list>`) como párrafo final del texto extraído** ("Related gene(s): ...")
+   cuando el XML los declara. No es una decisión de contenido editorial — es corregir que el
+   texto indexado represente fielmente la ficha para el caso de uso que motivó la fuente
+   (D-063: búsquedas literales por símbolo de gen). Aplicado retroactivamente a las 13 fichas
+   ya extraídas del Lote 1 antes de la reingesta real.
+
+**Consecuencias**
+- `backlog/epics.md` (sección E-13, tabla de tareas) y `docs/kb-sources.md` (fila MedlinePlus
+  Genetics): conteo corregido a 36 base + 4 revisión + 3 exactos = 43; tamaño de Lote 3
+  corregido a 10.
+- `tests/features/e13_t01_lote1_medlineplus.feature`: escenario 1 ("Then") corregido de 39 a
+  36 fichas de base; escenario 2 amplía la lista de fichas a revisar de 3 (SCID) a 4
+  (+ DiGeorge/22q11.2).
+- Verificación re-ejecutada tras el fix del gen: la consulta real "xiap" contra
+  `RAGPipeline.query()` (colección `family` real, retrieval híbrido BM25+vectorial)
+  recupera ahora la ficha nueva en primera posición y la respuesta generada describe XLP/XIAP
+  correctamente, no IPEX — cierra el caso original de D-063.
+
+**Alternativas descartadas**
+- Dejar la cuenta en "39" en la documentación y ajustar la composición de los lotes para que
+  cuadrase artificialmente (p. ej. forzando alguna ficha de revisión dentro de la base):
+  descartada — Marcos ya fijó en D-074 que prefiere fidelidad a los datos reales sobre
+  mantener un número previamente publicado.
+- No incluir los genes relacionados en el texto extraído y en su lugar ajustar el retriever
+  (pesos BM25/vectorial, D-057/D-061) para este caso concreto: descartada — el problema no es
+  de ranking, es que el término buscado literalmente no estaba en el texto indexado; tocar
+  parámetros de retrieval compartidos por toda la KB para compensar un dato incompleto de una
+  sola fuente sería un parche en el lugar equivocado.
+
+---
+
+## D-076 — E-13 T-01: resolución de la revisión ficha por ficha — las 4 candidatas se incluyen
+
+**Fecha:** 21 de julio de 2026
+**Fase:** producto
+**Épica:** E-13 (T-01)
+
+**Contexto**
+D-074/D-075 dejaron 4 fichas pendientes de revisión ficha por ficha frente a los documentos ya
+indexados en `data/raw/upiip/`: 22q11.2 deletion syndrome (vs. `09_Sindrome_DiGeorge_ES.pdf`),
+y JAK3-deficient / X-linked / ZAP70-related SCID (las tres vs. el único documento genérico
+`04_Immunodeficiencia_Combinada_Greu_ES.pdf`). Comparado el contenido real (texto extraído de
+los PDF de `upiip/` vs. las 4 fichas de MedlinePlus Genetics): ninguna es duplicado exacto.
+
+- `09_Sindrome_DiGeorge_ES.pdf` es un resumen familiar sólido pero no nombra los genes
+  causantes (TBX1, COMT), no explica que "DiGeorge" es un nombre antiguo ya unificado bajo
+  "22q11.2 deletion syndrome", y no menciona la asociación con TDAH/espectro autista.
+- `04_Immunodeficiencia_Combinada_Greu_ES.pdf` es genérico (una página, sin nombrar ningún gen;
+  solo indica que "la forma más frecuente está ligada al cromosoma X"). Ninguna de las tres
+  fichas de subtipo (JAK3, IL2RG, ZAP70) es redundante con él — cada una nombra el gen causante
+  y su patrón de herencia específico, exactamente el tipo de dato ausente que motivó el fix de
+  D-075 (búsqueda literal por símbolo de gen).
+
+**Decisión**
+Se incluyen las 4 candidatas en T-01, extraídas con `--extract-one` fuera de la numeración de
+los 3 lotes de 36 (mismo criterio ya fijado en D-074/D-075 — no desplazan el orden alfabético
+inverso). Total de fichas nuevas de E-13 tras esta resolución: 40 (36 en 3 lotes + estas 4),
+sobre las 43 de la página curada menos las 3 con solapamiento exacto (Bruton's/XLA, CGD, CVID).
+
+**Consecuencias**
+- `tests/features/e13_t01_lote1_medlineplus.feature`: escenario de solapamiento cerrado con el
+  resultado real (las 4 se incluyen).
+- `backlog/epics.md` y `docs/kb-sources.md`: conteo total actualizado a 40.
+- T-02/T-03 no cambian de tamaño (13 y 10 fichas respectivamente, ya fijado en D-075) — las 4
+  añadidas aquí no consumen ni desplazan su numeración.
+
+**Alternativas descartadas**
+- Descartar alguna de las 4 por prudencia ante la duda: descartada — la comparación real no
+  deja duda, ninguna es redundante y las 4 aportan vocabulario/gen específico que la KB no
+  tenía antes de E-13.
+
+---
+
+## D-077 — E-13 T-01: la sección "Causes" no está en el XML/JSON masivo — scraping por ficha para no depender de conocimiento general del LLM
+
+**Fecha:** 21 de julio de 2026
+**Fase:** técnica
+**Épica:** E-13 (T-01)
+
+**Contexto**
+Verificando en producción la consulta "xiap" (ya con el Lote 1 + las 4 candidatas indexadas),
+Marcos detectó que la respuesta afirmaba correctamente "XLP2, también conocida como
+deficiencia de XIAP" — pero, comprobando la ficha citada, esa relación causal concreta
+(qué gen provoca qué subtipo) no aparece en absoluto en el texto indexado.
+
+Comprobado contra la fuente real: tanto `ghr-summaries.xml` como el endpoint JSON individual
+(`https://medlineplus.gov/download/genetics/condition/{slug}.json`) **solo incluyen el
+`text-role="description"`** — el bloque de introducción. La sección "Causes" de la página web
+(donde sí se explica, en prosa, qué hace cada gen y por qué sus mutaciones causan el subtipo
+correspondiente — p. ej. "*XIAP* gene mutations cause XLP2. The XIAP gene provides
+instructions for making a protein that helps protect cells from undergoing apoptosis...")
+**no está en ningún formato descargable masivo**, solo se renderiza en el HTML de cada página
+individual. El fix de D-075 (añadir "Related gene(s): XIAP, SH2D1A" como lista plana) hace el
+símbolo de gen buscable por término literal, pero no incluye esa explicación causal — por lo
+que la respuesta correcta observada probablemente se apoya, al menos en parte, en conocimiento
+general de Gemini y no en la KB, lo cual choca con el principio de no relajar el grounding
+(D-059).
+
+**Decisión**
+El script de extracción amplía su alcance: además de `ghr-summaries.xml` (para "Description" y
+los datos estructurados), hace **una petición HTTP por ficha** a la página individual
+(`https://medlineplus.gov/genetics/condition/{slug}/`), parsea el HTML y extrae el contenido
+de la sección "Causes" (el texto entre el encabezado "Causes" y el siguiente encabezado del
+mismo nivel — verificado que el patrón `## Description → ## Frequency → ## Causes →
+### Learn more about the gene(s)... → ## Inheritance` es consistente entre fichas de una sola
+página y de varios genes). Se añade como párrafo adicional al texto indexado, junto al ya
+existente "Related gene(s)". Si una ficha no tiene sección "Causes" (caso no observado pero
+posible), el script continúa sin fallar y registra un aviso — no bloquea la extracción del
+resto del lote.
+
+Se re-extraen y re-reingestan las 17 fichas ya indexadas del Lote 1 (13 base + 4 de revisión)
+con este cambio, antes de dar la tarea por cerrada.
+
+**Consecuencias**
+- `scripts/extract_medlineplus_genetics.py`: pasa de 1 petición HTTP (el XML masivo) a 1 + N
+  peticiones (una por ficha del lote) — sigue sin necesitar infraestructura nueva (`requests`/
+  `BeautifulSoup` ya son dependencias disponibles en el proyecto), pero ya no es una descarga
+  puramente masiva para el contenido narrativo — D-073 queda matizada en este punto.
+- T-02/T-03 heredan el mismo comportamiento sin cambios de diseño (D-073 ya fijó que el script
+  es reutilizable por lote).
+- Reduce el riesgo de que otras fichas presenten el mismo patrón (respuesta correcta por
+  casualidad del LLM, no por grounding real) antes de que aparezca en un caso menos afortunado.
+
+**Alternativas descartadas**
+- Documentar como hallazgo abierto para T-04 sin tocar la extracción ahora (opción "a"
+  planteada a Marcos): descartada — Marcos prefiere no depender de que el LLM acierte por
+  conocimiento propio en un proyecto con principio explícito de Falso Negativo Cero y
+  grounding estricto (D-059), aun a costa de ampliar el alcance técnico de T-01 tan cerca de
+  la entrega.
+- Ajustar el prompt para pedirle a Gemini que no complete con conocimiento propio: descartada
+  sin probar — no resuelve la causa (falta de contenido indexado), sería pedirle al modelo que
+  se abstenga de decir algo correcto en vez de dárselo fundamentado.
+
+**Implementado y verificado (21 jul 2026):**
+- `scripts/extract_medlineplus_genetics.py::fetch_causes_paragraphs()` — una petición HTTP por
+  ficha a la página individual, extrae `<div data-bookmark="causes">` (solo los párrafos reales,
+  descarta la caja "Learn more about the gene(s)..."), con fallo tolerante (aviso + continúa)
+  si falla la petición o no hay sección Causes. Muestra comprobada antes de implementar (6/6
+  fichas con Causes, incluyendo un caso de mutación somática no hereditaria) se confirmó en las
+  17 fichas reales del Lote 1: las 17 tenían sección Causes, sin avisos.
+- Bug encontrado durante la implementación: `get_text(strip=True)` de BeautifulSoup pega
+  palabras cuando el texto tiene etiquetas anidadas (`<i>`/`<a>` en nombres de gen — p. ej.
+  "theXIAPgene"), porque descarta los nodos de espacio en blanco entre etiquetas. Corregido con
+  `" ".join(get_text().split())`. Verificado sin patrones pegados en las 17 fichas.
+- Verificación final contra el pipeline real: la consulta "xiap" ahora responde "El gen XIAP
+  está relacionado con el XLP tipo 2 (XLP2)" con esa relación viniendo del chunk indexado, no
+  de conocimiento general del LLM — cierra el hallazgo de este mismo D-077.
+
+---
+
+## D-078 — Bug preexistente en detect_language() expuesto por E-13: "xiap" sin tilde en "qué" clasifica como catalán
+
+**Fecha:** 21 de julio de 2026
+**Fase:** técnica
+**Épica:** E-13 (T-01) — bug en `rag/language.py`, no en el contenido de la KB
+
+**Contexto**
+Tras cerrar D-077, Marcos probó "que es el xiap" en el servicio real (reiniciado) y la
+respuesta fue un volcado casi literal del prompt (system prompt + `[CONTEXTO]`), cortado a
+media frase. Primera hipótesis (duplicación de contexto entre chunks del mismo documento tras
+D-077, en Cowork): descartada por Antigravity mediante aislamiento de variable — el mismo
+contexto repetitivo, forzando `language="es"` a mano, produce una respuesta limpia y completa
+(1009 caracteres, sin truncar).
+
+Causa real, aislada reproduciendo `pipeline.query("que es el xiap")`:
+`response_metadata` mostraba `finish_reason='MAX_TOKENS'` con `output_tokens=1024` (el máximo).
+`detect_language()` (`rag/language.py`, lingua-py, D-057) clasifica "que es el xiap" y "que es
+xiap" (sin tilde en "qué") como **catalán**, no español — con un margen de confianza de solo
+0.035-0.05 entre catalán y español, un empate técnico. Artefacto de que "xiap" en minúscula
+tiene estadísticas de n-gramas parecidas a palabras catalanas (xarxa, xic...). Al forzarse la
+instrucción de idioma a catalán, el modelo intenta traducir el contexto (mayormente en inglés)
+en vez de sintetizar una respuesta, agota `max_output_tokens=1024` a media traducción, y lo que
+llega al usuario es ese volcado cortado — no un bug de código ni de contenido duplicado.
+
+Medido contra los 37 casos de `config/alarm_triggers.json` más la muestra larga es/en/ca ya
+validada (D-057): el margen de confianza real en los casos correctos nunca baja de 0.64 — muy
+por encima del 0.035-0.05 del caso roto. Es preexistente (no depende del contenido de la KB) y
+llevaba ahí desde D-057, pero nadie había escrito literalmente "xiap" en minúscula sin tilde en
+"qué" contra el pipeline real hasta esta verificación de E-13 — precisamente la palabra que
+originó la épica entera (D-063).
+
+**Decisión**
+`detect_language()` exige un margen mínimo de confianza (`_MIN_CONFIDENCE_MARGIN = 0.2`) entre
+el idioma ganador y el segundo antes de confiar en la clasificación; si no lo alcanza, devuelve
+`default` (`"es"`). 0.2 deja margen de sobra a ambos lados sin afectar a ningún caso ya
+validado (los correctos nunca bajan de 0.64; el roto nunca sube de 0.05).
+
+**Consecuencias**
+- `rag/language.py`: `detect_language()` con el umbral de margen, documentado en el propio
+  código.
+- No se toca D-057 (elección de lingua-py sobre langdetect) ni la construcción del detector —
+  el fix es un guardarraíl adicional, no una sustitución de la fuente de detección.
+- **Hallazgo de proceso:** la "verificación dirigida puntual" de E-13 (repetir la consulta
+  original XIAP/IPEX, ver `.feature` de T-01/T-02) nunca fijó la redacción exacta a probar
+  (con/sin tilde, mayúsculas) — ahí estaba la mina, no en el volumen de contenido. Para T-02
+  (IPEX) y T-03, añadir a la verificación dirigida una comprobación directa de
+  `detect_language()` sobre la frase disparadora tal cual la escribiría un usuario real, además
+  de la verificación de retrieval — es determinista, no necesita llamar a Gemini, y hubiera
+  detectado este caso al instante.
+
+**Alternativas descartadas**
+- Aumentar `max_output_tokens` para que la traducción quepa entera: descartada — no resuelve la
+  causa (idioma mal detectado), solo oculta el síntoma y sigue enviando instrucciones
+  incorrectas al modelo.
+- Excluir "xiap" o palabras cortas similares como caso especial hardcodeado: descartada — no
+  generaliza a otras palabras técnicas cortas que puedan aparecer en E-13 T-02/T-03 o en
+  fuentes futuras; el umbral de margen es la solución de fondo.

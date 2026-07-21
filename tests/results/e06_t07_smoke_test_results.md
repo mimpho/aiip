@@ -1,6 +1,6 @@
 # E-06 T-07 — Resultados del smoke test manual del pipeline RAG
 
-Generado: 2026-07-19
+Generado: 2026-07-21
 
 Resultado de ejecutar `RAGPipeline` real (sin mocks) contra la KB real indexada en la colección `family`. Ver `tests/features/e06_t07_rag_smoke_test.feature`.
 
@@ -25,24 +25,19 @@ Cada entrada queda pendiente de revisión manual de Marcos antes de dar por buen
 
 **Respuesta generada:**
 
-> Hola. Entiendo que tienes dudas sobre qué es una inmunodeficiencia primaria. Estoy aquí para ayudarte a comprenderlo mejor.
+> Hola, soy AIIP y estoy aquí para acompañarte e informarte sobre las Inmunodeficiencias Primarias.
 
-Las inmunodeficiencias primarias (IDP) son un grupo amplio de trastornos que ocurren cuando algunos componentes del sistema inmunológico, como células y proteínas, no funcionan correctamente. Esto significa que el sistema inmune de la persona afectada tiene dificultades o es incapaz de combatir las infecciones de manera efectiva.
+Las Inmunodeficiencias Primarias (IDP) son un grupo de trastornos que ocurren cuando algunas partes del sistema inmunológico, como ciertas células y proteínas, no funcionan correctamente. Esto significa que el cuerpo tiene más dificultad para combatir infecciones causadas por gérmenes como bacterias, virus u hongos.
 
-Aquí te detallo algunos puntos clave sobre las IDP:
+Algunas IDP son leves, mientras que otras pueden ser más graves. Aunque a menudo se identifican en la infancia, también pueden diagnosticarse en adultos. Es importante saber que las IDP no están relacionadas con el SIDA (síndrome de inmunodeficiencia adquirida), que es causado por una infección viral (VIH).
 
-*   **Causas:** Son causadas por defectos básicos en la función inmune que son inherentes a las células y proteínas del sistema inmunitario. La mayoría son enfermedades hereditarias y pueden venir de familia, aunque en algunos casos la causa es desconocida y se cree que factores genéticos y ambientales pueden influir.
-*   **Manifestaciones:** Debido a que el sistema inmunitario no funciona adecuadamente, las personas con IDP son más propensas a las infecciones. Estas infecciones pueden ser más frecuentes de lo habitual, más graves, difíciles de curar o causadas por microorganismos inusuales. Pueden aparecer en cualquier parte del cuerpo, como los senos paranasales, los bronquios, los pulmones o el tracto intestinal.
-*   **Gravedad:** Algunas IDP son relativamente leves, mientras que otras pueden ser graves.
-*   **Diagnóstico:** Aunque con frecuencia se identifican durante la infancia, también pueden ser diagnosticadas en adultos.
-*   **Diferencia con el SIDA:** Es importante saber que las IDP no están relacionadas con el SIDA (síndrome de inmunodeficiencia adquirida), que es causado por una infección viral (VIH).
-*   **Otras complicaciones:** Además de las infecciones, las IDP también pueden hacer que el sistema inmunológico ataque al propio cuerpo, lo que se conoce como "autoinmunidad". Esto puede causar síntomas como dolor e inflamación en las articulaciones (artritis) o erupciones en la piel.
+El sistema inmunológico de las personas con IDP puede tener una mayor susceptibilidad a las infecciones, lo que significa que pueden tener infecciones más frecuentes, más difíciles de curar, inusualmente graves o causadas por microorganismos poco comunes. Estas infecciones pueden aparecer en cualquier parte del cuerpo, como los oídos, los senos paranasales, los pulmones o el tracto intestinal.
 
-Existen más de 350 formas de IDP, y pueden afectar a una o varias partes del sistema inmunitario, como las células T, las células B, los anticuerpos, entre otros.
+Además de las infecciones, las IDP también pueden hacer que el sistema inmunológico ataque al propio cuerpo, lo que se conoce como "autoinmunidad". Esto puede causar síntomas como dolor e inflamación en las articulaciones (artritis) o erupciones en la piel.
 
-Espero que esta información te sea útil para entender qué son las inmunodeficiencias primarias.
+Existen más de 350 tipos de IDP, y algunas son más comunes que otras. Pueden afectar a una sola célula o proteína del sistema inmunitario, o a varios componentes. La mayoría son hereditarias, es decir, pueden venir de familia, aunque en algunos casos la causa no es clara y se cree que influyen factores genéticos y ambientales.
 
-Recuerda que soy AIIP, un asistente informativo. Si tú o la persona a tu cargo tenéis dudas de salud o necesitáis información sobre un diagnóstico o tratamiento, es fundamental que consultéis siempre con vuestro equipo médico de referencia. Ellos son quienes pueden ofreceros la atención y las indicaciones adecuadas.
+Espero que esta información te sea útil. Recuerda que mi función es informativa y no puedo diagnosticar ni recomendar tratamientos. Si tú o la persona a tu cargo tenéis dudas sobre la salud, es fundamental que consultéis siempre con vuestro equipo médico de referencia.
 
 Fuentes consultadas:
 - [50-preguntas-inmunodeficiencias.pdf](https://seicap.es/wp-content/uploads/2023/06/6307AB201-r.pdf)
@@ -75,26 +70,20 @@ Fuentes consultadas:
 
 **Respuesta generada:**
 
-> Hola, soy AIIP. Entiendo que tienes dudas sobre las recomendaciones de vacunación para pacientes con Inmunodeficiencias Primarias (IDP). Es una pregunta muy importante para la salud de las personas con estas condiciones.
+> Hola. Entiendo tu interés en las recomendaciones de vacunación para pacientes con inmunodeficiencias primarias (IDP). Es un tema importante para la salud de quienes viven con estas condiciones.
 
 Aquí te comparto información general sobre las recomendaciones de vacunación:
 
-*   **Vacunas inactivadas:** Estas vacunas son seguras y, en general, pueden administrarse a todos los pacientes con Errores Congénitos de la Inmunidad (ECI), que es otro término para las IDP. Sin embargo, si la persona está recibiendo terapia de sustitución de inmunoglobulina, es posible que estas vacunas no sean muy efectivas para desarrollar anticuerpos específicos. Aún así, la vacuna antigripal es una excepción y sí se debe administrar anualmente, ya que cambia cada año.
-*   **Vacunas de microorganismos vivos (atenuadas):** Generalmente, estas vacunas están contraindicadas para pacientes con ECI, ya que pueden causar infecciones. Algunas de estas vacunas incluyen la de rotavirus, la de polio oral, la triple vírica (sarampión, paperas y rubéola), las vacunas contra la varicela y la vacuna BCG contra la tuberculosis. Sin embargo, hay algunas excepciones, como en pacientes con déficit selectivo de inmunoglobulina A (IgA) o defectos de complemento. Siempre se debe realizar una valoración individual para decidir si se administra alguna de estas vacunas.
-*   **Vacuna de la gripe:** Se recomienda anualmente para todos los pacientes con un ECI, incluso si hay dudas sobre la respuesta que puedan tener a ella.
-*   **Vacuna frente al SARS-CoV-2 (COVID-19):** No existe contraindicación para su administración en ninguna ECI.
-*   **Vacunación de los convivientes:** Es muy importante que las personas que conviven con un paciente con IDP se vacunen normalmente para ayudar a evitar infecciones en el hogar. Se recomienda que reciban la vacunación antigripal anual. La mayoría de las vacunas atenuadas no están contraindicadas en convivientes. En el caso de lactantes vacunados que conviven con personas inmunodeprimidas, se recomienda evitar manipular sus pañales durante cuatro semanas después de la vacunación.
-*   **Profesionales sanitarios:** Aquellos que atienden a estos pacientes deben recibir anualmente la vacuna antigripal y confirmar su inmunidad frente al sarampión y la varicela.
+*   **Vacunas inactivadas:** Estas vacunas, que contienen microorganismos muertos, son seguras y pueden administrarse a todos los pacientes con errores congénitos de la inmunidad (ECI), que es otro nombre para las IDP. Sin embargo, es posible que no sean muy efectivas para producir anticuerpos específicos en pacientes que reciben terapia de sustitución de inmunoglobulina, ya que las inmunoglobulinas que reciben ya contienen anticuerpos protectores. La vacuna anual contra la gripe es una excepción y se recomienda para todos los pacientes con ECI, incluso si hay dudas sobre su respuesta, porque el virus de la gripe cambia cada año.
+*   **Vacunas de microorganismos vivos (atenuadas):** Estas vacunas, que contienen microorganismos vivos debilitados, generalmente están contraindicadas para pacientes con IDP, ya que pueden causar infecciones. Ejemplos de estas vacunas incluyen la del rotavirus, la polio oral, la triple vírica (sarampión, paperas y rubéola), la varicela y la BCG (contra la tuberculosis). Sin embargo, existen algunas excepciones, como en pacientes con déficit selectivo de inmunoglobulina A (IgA) o defectos del complemento. La decisión de administrar estas vacunas siempre debe ser una valoración individualizada por parte del equipo médico.
+*   **Vacuna contra el SARS-CoV2 (COVID-19):** No hay contraindicación para su administración en ninguna IDP.
+*   **Vacunación de convivientes:** Se recomienda que las personas que viven con un paciente con IDP reciban la vacunación anual contra la gripe. La mayoría de las vacunas atenuadas no están contraindicadas para los convivientes. Es importante que la familia de un paciente se vacune normalmente para ayudar a prevenir infecciones en el hogar.
 
-Es fundamental recordar que las particularidades de cada IDP pueden influir en la respuesta a las vacunas, por lo que la eficacia, seguridad y contraindicaciones dependen de cada caso y del grado de inmunosupresión.
+Es fundamental recordar que las particularidades de cada inmunodeficiencia primaria pueden influir en la respuesta a las vacunas, por lo que la eficacia, seguridad y contraindicaciones dependen de cada caso y del grado de inmunosupresión.
 
-Como AIIP, mi función es ofrecer información general. Para cualquier decisión sobre vacunación, es crucial que tú o la persona a tu cargo consultéis siempre con vuestro equipo médico. Ellos podrán evaluar la situación específica y dar las recomendaciones más adecuadas.
+Siempre que tengas dudas sobre la vacunación o cualquier otro aspecto de la salud, es crucial que tú o la persona a tu cargo consultéis con vuestro equipo médico. Ellos son quienes mejor conocen la situación específica y pueden ofrecer las recomendaciones más adecuadas.
 
----
-Fuentes consultadas:
-* 50 preguntas en Inmunodeficiencias primarias y secundarias
-* Inmunodeficiencias Primarias: Mantenerse saludable! Guía para el paciente y sus familias.
-* Primary immunodeficiencies
+Recuerda que AIIP es un asistente informativo y no puede diagnosticar ni recomendar tratamientos. Para cualquier decisión sobre la salud, por favor, consultad siempre con vuestro equipo médico.
 
 Fuentes consultadas:
 - [50-preguntas-inmunodeficiencias.pdf](https://seicap.es/wp-content/uploads/2023/06/6307AB201-r.pdf)
@@ -123,13 +112,7 @@ Fuentes consultadas:
 
 **Respuesta generada:**
 
-> Primary immunodeficiencies (PIDs) are a group of rare diseases where the immune system's ability to fight infections is compromised or completely absent. They are caused by defects in the function of immune cells and proteins. There are over 350 forms of PIDs, some common and others very rare.
-
-These conditions can affect a single component of the immune system or multiple parts, such as T cells, B cells, NK cells, neutrophils, monocytes, antibodies, cytokines, or the complement system. Most PIDs are hereditary, meaning they can run in families, like X-linked agammaglobulinemia (XLA) or severe combined immunodeficiency (SCID). However, some, like common variable immunodeficiency (CVID) and selective IgA deficiency, don't always have clear inheritance patterns, and their cause is thought to involve a combination of genetic and environmental factors.
-
-Because the immune system's main role is to protect against infections, people with PIDs are more susceptible to them. This can manifest as frequent, hard-to-treat, unusually severe, or unusual infections. These infections can occur anywhere in the body, commonly affecting the sinuses (sinusitis), bronchi (bronchitis), lungs (pneumonia), or intestinal tract (infectious diarrhea).
-
-It's important to remember that AIIP is an informational assistant and cannot provide medical diagnoses or treatment recommendations. If you or the person in your care have health concerns, please consult your medical team.
+> I'm sorry, but I can only respond in the language in which you write. Please ask your question in Spanish.
 
 Sources consulted:
 - [IPOPI_Vaccines.pdf](https://ipopi.org/wp-content/uploads/2017/07/IPOPI_Vaccines.pdf)
@@ -160,21 +143,13 @@ Sources consulted:
 
 **Respuesta generada:**
 
-> Hola, entiendo tu preocupación por la fiebre alta y persistente de tu hijo. Es natural tener dudas cuando se presenta una situación así, especialmente en el contexto de una inmunodeficiencia primaria.
+> Hola. Entiendo tu preocupación por la fiebre alta y persistente de tu hijo. Es natural sentirse inquieto en estas situaciones.
 
-Las inmunodeficiencias primarias pueden manifestarse con una variedad de síntomas, y la fiebre recurrente es uno de ellos. En niños pequeños, es común identificar procesos infecciosos benignos acompañados de fiebre, con un límite de unos 12 episodios al año, sobre todo en aquellos que asisten a la guardería.
+En el contexto de las inmunodeficiencias primarias (IP), la fiebre puede ser un síntoma de diversas situaciones. Por ejemplo, en los primeros años de vida, es común que los niños, especialmente los que asisten a guardería, presenten procesos infecciosos benignos acompañados de fiebre, con un límite de unos 12 episodios al año. Sin embargo, las enfermedades autoinflamatorias, que son raras en la edad pediátrica, también pueden manifestarse con fiebre sin una causa infecciosa clara, junto con otros síntomas como erupciones en la piel, sordera, conjuntivitis, artritis o dolor abdominal o torácico, y afectación del estado general.
 
-Sin embargo, una fiebre muy alta (40 grados) que dura varios días, como la que describes, siempre debe ser evaluada por un profesional médico. Aunque las enfermedades autoinflamatorias en la edad pediátrica, que son raras, suelen presentarse con fiebre sin un agente etiológico claro y elevación de reactantes de fase aguda, junto con otros síntomas como exantema, sordera, conjuntivitis, artritis o dolor abdominal o torácico con afectación del estado general, es fundamental que un médico determine la causa.
+Es importante recordar que la fiebre alta y persistente, como la que describes, siempre debe ser evaluada por un profesional de la salud. Aunque las inmunodeficiencias primarias pueden presentar un abanico de síntomas que incluyen fiebre recurrente, solo un médico puede determinar la causa específica de la fiebre de tu hijo y si está relacionada con su inmunodeficiencia o con otra condición.
 
-Además, si un resfriado dura más de una semana y está acompañado de fiebre, tos productiva y/o dificultad para respirar, podría ser algo más serio y se debe consultar a un proveedor de atención primaria. La gripe, por ejemplo, puede ser una infección muy grave, especialmente en alguien con inmunodeficiencia primaria, y se recomienda encarecidamente buscar atención médica.
-
-Por favor, consulta con el equipo médico que atiende a tu hijo lo antes posible para que puedan evaluar su situación y determinar el mejor curso de acción.
-
-Recuerda que AIIP es un asistente informativo y no puede diagnosticar ni recomendar tratamientos. Siempre es crucial que cualquier duda sobre la salud de tu hijo o de la persona a tu cargo sea consultada con vuestro equipo médico.
-
----
-**Fuentes consultadas:**
-* 50 preguntas clave en Inmunodeficiencias primarias y secundarias en niños y adultos.
+Mi función es ofrecerte información general y acompañarte, pero nunca puedo diagnosticar ni recomendar tratamientos. Ante cualquier duda sobre la salud de tu hijo, especialmente con síntomas como fiebre alta que dura varios días, es fundamental que consultes con su equipo médico. Ellos son quienes tienen el conocimiento y la capacidad para evaluar su situación particular y ofrecerle la atención adecuada.
 
 Ante esta situación, te recomendamos consultar con tu equipo médico cuanto antes.
 
@@ -207,11 +182,9 @@ Fuentes consultadas:
 
 > Hola. Entiendo que tienes una pregunta sobre cómo hacer una tortilla de patatas.
 
-Mi función es proporcionar información sobre Inmunodeficiencias Primarias. La información que tengo disponible no incluye recetas de cocina, como la de la tortilla de patatas.
+Mi función es proporcionar información sobre Inmunodeficiencias Primarias. La información sobre recetas de cocina, como la tortilla de patatas, no está dentro de mi área de especialización ni se encuentra en los documentos que me han proporcionado.
 
-Si tienes alguna pregunta relacionada con las Inmunodeficiencias Primarias, la nutrición en este contexto, o cualquier otro tema que esté dentro de mi especialidad, estaré encantado de ayudarte.
-
-Recuerda que soy un asistente informativo y no puedo diagnosticar ni recomendar tratamientos. Para cualquier duda sobre tu salud o la de la persona a tu cargo, es fundamental que consultes siempre con vuestro equipo médico.
+Si tú o la persona a tu cargo tenéis alguna duda relacionada con las Inmunodeficiencias Primarias o vuestra salud, os animo a consultarlo con vuestro equipo médico de referencia. Ellos son quienes mejor pueden ofreceros orientación y apoyo.
 
 Fuentes consultadas:
 - [guia_antibiotics_esp_0.pdf](https://www.upiip.com/sites/upiip.com/files/guia_antibiotics_esp_0.pdf)

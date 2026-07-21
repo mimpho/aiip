@@ -734,9 +734,44 @@ extraíble. MedlinePlus Genetics sí cumple las tres condiciones (gratis, sin tr
 redactado para pacientes): dominio público, descarga masiva en un XML, y su página curada
 "Immune System and Disorders" (`Title.Alternate: Primary Immunodeficiency Diseases`) acota el
 universo relevante a 43 fichas — no las 559 de IUIS 2024 ni las 1.300+ del índice completo.
-Contrastadas contra `data/raw/upiip/`, 4 ya están cubiertas (Bruton's/XLA, enfermedad
-granulomatosa crónica, SCID genérico, inmunodeficiencia variable común) — quedan **39 fichas
-genuinamente nuevas**, incluyendo XIAP (X-linked lymphoproliferative disease) e IPEX.
+Contrastadas contra `data/raw/upiip/`, 3 ya están cubiertas de forma exacta (Bruton's/XLA,
+enfermedad granulomatosa crónica, inmunodeficiencia variable común) — quedan **39 fichas
+genuinamente nuevas** de base, incluyendo XIAP (X-linked lymphoproliferative disease) e IPEX.
+**Corrección (21 jul 2026, D-074, task-start T-01):** el cuarto solapamiento asumido
+("SCID genérico") no es 1:1 — las 43 fichas no incluyen ninguna SCID genérica, sino tres
+subtipos específicos (JAK3-deficient, X-linked, ZAP70-related) frente al único documento
+genérico ya indexado. Se revisan los tres ficha por ficha (mismo criterio que los demás
+solapamientos).
+**Corrección (21 jul 2026, D-075, ejecución T-01):** apareció un cuarto candidato de revisión
+no detectado antes ("22q11.2 deletion syndrome" = síndrome de DiGeorge, ya indexado como
+`upiip/09_Sindrome_DiGeorge_ES.pdf`) — mismo criterio de revisión ficha por ficha que los 3
+subtipos de SCID. Con la lista real construida por el script de extracción (43 totales, 3
+descartadas por solapamiento exacto, 4 apartadas para revisión), la base de los 3 lotes es
+**36 fichas, no 39** — el "39" de D-063 nunca se recalculó tras estas dos correcciones. Lote 1
+se mantiene en 13 (Z→P, XIAP en posición 2); Lote 2 pasa a 13 (posiciones 14-26, rango real
+O→D, IPEX en posición 20); Lote 3 queda en 10 (posiciones 27-36, C→A), no 13.
+**Resolución (21 jul 2026, D-076):** las 4 candidatas de revisión (22q11.2/DiGeorge + 3
+subtipos de SCID) se incluyen — comparado el contenido real, ninguna es duplicado exacto de
+los documentos genéricos/antiguos de `upiip/`, que no nombran ningún gen causante. **Total
+final de fichas nuevas de E-13: 40** (36 en los 3 lotes + estas 4, extraídas dentro de T-01
+fuera de la numeración de lotes).
+**Corrección de grounding (21 jul 2026, D-077):** verificando "xiap" en producción se detectó
+que el texto indexado (solo "Description" + genes relacionados) no incluye la relación causal
+gen→subtipo — esa explicación solo vive en la sección "Causes" de la página individual, ausente
+del XML/JSON masivo. El script amplía su alcance con una petición por ficha para extraer
+"Causes". Las 17 fichas del Lote 1 quedan re-extraídas y re-reingestadas; verificado que la
+respuesta a "xiap" ahora atribuye XIAP→XLP2 al chunk indexado, no a conocimiento del LLM.
+**Bug de idioma encontrado y corregido (21 jul 2026, D-078):** al reiniciar el servicio tras
+D-077, "que es el xiap" (sin tilde en "qué") devolvía un volcado del prompt cortado a media
+frase — no era D-077 ni contenido duplicado (descartado por aislamiento de variable), sino que
+`detect_language()` clasificaba esa frase como catalán con un margen de confianza de solo
+0.035-0.05 (empate técnico), forzando al modelo a traducir el contexto en vez de responder y
+agotando `max_output_tokens`. Bug preexistente a E-13, expuesto por casualidad al escribir
+justo la palabra que originó la épica (D-063). Corregido con un margen mínimo de confianza en
+`rag/language.py` (0.2, sin afectar a ningún caso ya validado). **Hallazgo de proceso:** T-02
+(IPEX)/T-03 deben añadir a su verificación dirigida una comprobación directa de
+`detect_language()` sobre la frase disparadora tal cual la escribiría un usuario real, no solo
+la verificación de retrieval.
 
 **Nota de alcance (19 jul 2026):** Marcos decide fases por lotes priorizados en **orden
 alfabético inverso** (criterio neutral — no favorece a propósito XIAP/IPEX, aunque por el
@@ -761,7 +796,7 @@ julio; E-12 (cierre del TFM) no es negociable en ningún caso.**
 - Lote 1 (13 fichas, incluye X-linked lymphoproliferative disease/XIAP) ingerido y revisado
   en registro lingüístico; verificación dirigida del caso XIAP (RAGAS completo solo en T-04)
 - Lote 2 (13 fichas, incluye IPEX) — ídem, verificación dirigida del caso IPEX
-- Lote 3 (13 fichas) — ídem, sin caso de verificación dirigida propio
+- Lote 3 (10 fichas, corregido en D-075) — ídem, sin caso de verificación dirigida propio
 - Fuente añadida a `docs/kb-sources.md` (perfil familiar), de "Propuesta" a "Validada" en T-04
 - Caso XIAP/IPEX original re-verificado tras el lote correspondiente
 
@@ -775,19 +810,20 @@ puntos resueltos sobre la propuesta inicial:
 - **Extracción de fichas:** T-01 incluye un script que parsea el XML masivo de MedlinePlus
   Genetics (no copia manual página a página como en E-11 T-01) — la ventaja explícita de
   esta fuente señalada en D-063.
-- **Solapamiento con `data/raw/upiip/` (4 temas: Bruton's/XLA, CGD, SCID genérico, CVID):**
-  no se descartan de forma automática. T-01 añade una revisión rápida ficha por ficha —
-  Marcos decide si la ficha de MedlinePlus aporta valor genuino (más completa/mejor
-  redactada) y se añade igualmente, o si es redundante y se descarta, sin duplicar contenido
-  sin criterio (mismo cuidado que E-11 T-01).
+- **Solapamiento con `data/raw/upiip/` (Bruton's/XLA, CGD, CVID exactos; 3 subtipos de SCID +
+  DiGeorge/22q11.2 en revisión — D-074, D-075):** los exactos se descartan automáticamente,
+  los de revisión no. T-01 añade una revisión rápida ficha por ficha — Marcos decide si la
+  ficha de MedlinePlus aporta valor genuino (más completa/mejor redactada) y se añade
+  igualmente, o si es redundante y se descarta, sin duplicar contenido sin criterio (mismo
+  cuidado que E-11 T-01).
 
 ### Tareas
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-01 | Preparación de datos (lista definitiva de 39 fichas) + Lote 1 — 13 fichas, orden alfabético inverso (Z→P), incluye XIAP | ⚪ Pendiente |
-| T-02 | Lote 2 — 13 fichas (P→F), incluye IPEX | ⚪ Pendiente |
-| T-03 | Lote 3 — 13 fichas restantes | ⚪ Pendiente |
+| T-01 | Preparación de datos (lista definitiva de 36 fichas, D-075) + Lote 1 — 13 fichas (Z→P, incluye XIAP) + 4 fichas de revisión ya resueltas (D-076: 22q11.2/DiGeorge + 3 subtipos de SCID) | ✅ Completada |
+| T-02 | Lote 2 — 13 fichas (posiciones 14-26, O→D), incluye IPEX | ⚪ Pendiente |
+| T-03 | Lote 3 — 10 fichas restantes (posiciones 27-36, C→A) | ⚪ Pendiente |
 | T-04 | Remedición RAGAS + cierre | ⚪ Pendiente |
 
 **Estado:** 🔵 En curso
