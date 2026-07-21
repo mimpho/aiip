@@ -87,6 +87,7 @@
 - [D-076 — E-13 T-01: resolución de la revisión ficha por ficha — las 4 candidatas se incluyen](#d-076--e-13-t-01-resolución-de-la-revisión-ficha-por-ficha--las-4-candidatas-se-incluyen)
 - [D-077 — E-13 T-01: la sección "Causes" no está en el XML/JSON masivo — scraping por ficha para no depender de conocimiento general del LLM](#d-077--e-13-t-01-la-sección-causes-no-está-en-el-xmljson-masivo--scraping-por-ficha-para-no-depender-de-conocimiento-general-del-llm)
 - [D-078 — Bug preexistente en detect_language() expuesto por E-13: "xiap" sin tilde en "qué" clasifica como catalán](#d-078--bug-preexistente-en-detect_language-expuesto-por-e-13-xiap-sin-tilde-en-qué-clasifica-como-catalán)
+- [D-079 — E-13 T-03: resolución del hallazgo de proceso de D-078 — se añade verificación dirigida de detect_language() sin caso de contenido propio](#d-079--e-13-t-03-resolución-del-hallazgo-de-proceso-de-d-078--se-añade-verificación-dirigida-de-detect_language-sin-caso-de-contenido-propio)
 
 ---
 
@@ -4106,3 +4107,45 @@ umbral está haciendo trabajo real con términos técnicos cortos, no es una cor
 para "xiap". T-03 debe repetir la misma comprobación directa sobre su propia frase disparadora
 y seguir vigilando el margen — si aparece un caso por debajo de 0.2 con una frase legítima en
 español/catalán, el umbral necesitará revisión, no un nuevo caso especial hardcodeado.
+
+---
+
+## D-079 — E-13 T-03: resolución del hallazgo de proceso de D-078 — se añade verificación dirigida de detect_language() sin caso de contenido propio
+
+**Fecha:** 22 de julio de 2026
+**Fase:** proceso
+**Épica:** E-13 (T-03)
+
+**Contexto**
+D-078 dejó un hallazgo de proceso: T-02 (IPEX) y T-03 deben añadir a su verificación dirigida
+una comprobación directa de `detect_language()` sobre la frase disparadora tal cual la
+escribiría un usuario real. T-02 tenía un caso propio (IPEX, la consulta que originalmente
+"robaba" la respuesta a XIAP) sobre el que aplicar la comprobación. T-03, por definición de la
+épica (criterios de aceptación: "sin caso de verificación dirigida propio" — ninguno de los
+temas del lote 3 motivó la investigación original de D-063), no tiene una frase disparadora
+equivalente a la que anclar el escenario.
+
+En `task-start` T-03 se plantearon a Marcos dos opciones: (A) no añadir verificación propia,
+apoyándose en que el fix de `detect_language()` (margen mínimo de confianza 0.2) es general y
+ya quedó verificado en T-01 (caso XIAP) y T-02 (caso IPEX); (B) añadir igualmente un escenario
+de comprobación directa sobre una frase corta representativa de una de las 10 fichas nuevas del
+lote 3, aunque no sea "el caso que originó la duda".
+
+**Decisión**
+Opción B. `tests/features/e13_t03_lote3_medlineplus.feature` incluye un escenario de
+verificación dirigida de `detect_language()` sobre una frase corta representativa de una de las
+fichas del lote 3 — la ficha concreta se elige durante la ejecución de la tarea (no hay una
+candidata obvia a priori, a diferencia de XIAP/IPEX, que eran los casos que motivaron la
+épica). Amplía la superficie de cobertura del fix de D-078 con un término técnico corto más,
+sin depender de que se repita el caso que originó E-13.
+
+**Consecuencias**
+- `tests/features/e13_t03_lote3_medlineplus.feature`: escenario adicional de verificación
+  dirigida (retrieval + `detect_language()`) sobre una frase representativa del lote 3.
+- Sigue sin ser RAGAS completo (eso es T-04) ni un caso "que originó" la épica — es
+  verificación dirigida puntual, mismo criterio que T-01/T-02.
+
+**Alternativas descartadas**
+- Opción A (no añadir verificación propia): descartada por Marcos — prefiere ampliar la
+  cobertura del fix de D-078 con un término técnico más, aunque el lote 3 no tenga un caso que
+  motivara la épica.
