@@ -1,6 +1,15 @@
 # E-13 T-02 — Lote 2: 13 fichas MedlinePlus Genetics (P→F, incluye IPEX)
 # Tipo: Configuración/curación de contenido — sin TDD, mismo patrón que T-01.
 # Depende de T-01 (lista definitiva de 39 fichas ya generada, fichas 14-26 de esa lista).
+#
+# NOTA para task-start de T-02 (pendiente de formalizar — este fichero es aún el borrador de
+# epic-start, sin corregir contra D-074/D-075/D-076/D-077/D-078 de T-01):
+# - El conteo "39"/"fichas 14-26" hay que recalcularlo contra la lista real de T-01 (36 de
+#   base + 4 de revisión ya resueltas, D-076) antes de aceptar el alcance tal cual.
+# - D-078 (T-01): detect_language() puede clasificar mal frases cortas con términos técnicos
+#   (ver rag/language.py). La verificación dirigida de IPEX debe fijar la redacción exacta a
+#   probar tal cual la escribiría un usuario real (con/sin tildes) e incluir una comprobación
+#   directa de detect_language() sobre esa frase, no solo la verificación de retrieval.
 
 Feature: Lote 2 de MedlinePlus Genetics (P→F, incluye IPEX)
 
