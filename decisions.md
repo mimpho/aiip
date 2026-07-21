@@ -4096,3 +4096,13 @@ validado (los correctos nunca bajan de 0.64; el roto nunca sube de 0.05).
 - Excluir "xiap" o palabras cortas similares como caso especial hardcodeado: descartada — no
   generaliza a otras palabras técnicas cortas que puedan aparecer en E-13 T-02/T-03 o en
   fuentes futuras; el umbral de margen es la solución de fondo.
+
+**Actualización (21 jul 2026, verificación dirigida E-13 T-02):** la comprobación directa de
+`detect_language()` añadida a la verificación dirigida (hallazgo de proceso de este mismo
+D-078) se ejecutó sobre la consulta real de IPEX. Clasificó correctamente el idioma y superó
+el umbral mínimo de 0.2, pero con un margen de nuevo bajo (mismo patrón que el caso XIAP roto,
+aunque esta vez por encima del umbral) — no bloquea el cierre de T-02, pero confirma que el
+umbral está haciendo trabajo real con términos técnicos cortos, no es una corrección puntual
+para "xiap". T-03 debe repetir la misma comprobación directa sobre su propia frase disparadora
+y seguir vigilando el margen — si aparece un caso por debajo de 0.2 con una frase legítima en
+español/catalán, el umbral necesitará revisión, no un nuevo caso especial hardcodeado.
