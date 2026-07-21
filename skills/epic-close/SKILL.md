@@ -4,10 +4,11 @@ description: >
   Cierre de una épica de desarrollo en AIIP. Se lanza desde Cowork. Úsala cuando
   todos los tests de la épica pasan y Marcos confirma que está lista para cerrar.
   Orquesta el cierre completo: deja la rama de la épica actualizada, revisa el
-  trabajo realizado, actualiza backlog/epics.md, README.md y AGENTS.md, genera
-  el borrador de entradas para prompts.md, hace una retrospectiva del workflow
-  con mejoras inmediatas a las skills si aplica, y por último — con todo lo
-  anterior ya actualizado — prepara la descripción del PR final (epic→main).
+  trabajo realizado, actualiza backlog/epics.md, README.md y AGENTS.md, redacta
+  y escribe en prompts.md las entradas que Marcos apruebe, hace una retrospectiva
+  del workflow con mejoras inmediatas a las skills si aplica, y por último — con
+  todo lo anterior ya actualizado de verdad en los ficheros, no solo presentado en
+  el chat — prepara la descripción del PR final (epic→main).
   Actívala cuando el usuario diga "cerramos la E-XX", "épica terminada", "vamos
   a cerrar" o similar.
 ---
@@ -196,6 +197,13 @@ Criterios para incluir una entrada:
 
 Presenta el borrador a Marcos para revisión. Marcos decide qué entra en el log.
 
+**Una vez que Marcos confirma qué entradas se quedan, escríbelas tú mismo en
+`prompts.md`** (edición de fichero — no es una acción git restringida, ver
+"Reparto git" en `AGENTS.md`) antes de pasar al Paso 5. No lo dejes como contenido
+solo del chat a la espera de que Marcos lo pegue él: eso es precisamente lo que dejó
+el Paso 6 en falso en el cierre de E-11 — la PR se redactó dando por "cerrado" un
+borrador que en el fichero real seguía sin existir.
+
 ---
 
 ## Paso 5 — Retrospectiva del workflow
@@ -254,12 +262,17 @@ de forma independiente, sin asumir contexto de la sesión.
 
 ## Paso 6 — PR final de la épica
 
-Este es el último paso, no antes. `epics.md`, `README.md`, `AGENTS.md`, el borrador
-de `prompts.md` y la retrospectiva en `docs/process-log.md` (Pasos 3-5) ya están
-cerrados — la retro también genera documentación del repo, así que cuenta como
-parte de "todo lo anterior actualizado". Generar la PR description en cualquier
-punto anterior daría la falsa impresión de que la épica ya está lista para `main`
-mientras el propio repo todavía no lo refleja.
+Este es el último paso, no antes. `epics.md`, `README.md`, `AGENTS.md`, `prompts.md`
+(las entradas ya escritas en el fichero, no solo presentadas en el chat — ver Paso 4)
+y la retrospectiva en `docs/process-log.md` (Pasos 3-5) ya están cerrados — la retro
+también genera documentación del repo, así que cuenta como parte de "todo lo anterior
+actualizado". Antes de redactar la PR description, comprueba con `git status`/`git
+diff` que los cinco ficheros aparecen modificados de verdad — no solo que se
+presentaron en el chat. Generar la PR description en cualquier punto anterior, o sin
+verificar que el fichero refleja lo acordado, daría la falsa impresión de que la
+épica ya está lista para `main` mientras el propio repo todavía no lo refleja
+(precedente: cierre de E-11, donde la PR se redactó con `prompts.md` todavía sin
+las entradas acordadas).
 
 El PR es de la rama de épica a main: `epic/E[nn]-nombre → main`.
 
@@ -305,6 +318,6 @@ No crees ningún fichero .md para el PR. Solo en el chat.
 | Estado + tareas + entregables | `backlog/epics.md` | Agente |
 | Tabla de épicas actualizada | `README.md` | Agente |
 | Estructura del repo actualizada | `AGENTS.md` (si aplica) | Agente |
-| Borrador de entradas | `prompts.md` | Marcos (tras revisión) |
+| Entradas escritas en el fichero | `prompts.md` | Agente (tras aprobación de Marcos sobre qué entra) |
 | Retrospectiva del workflow | `docs/process-log.md` | Agente (Marcos valida) |
 | Descripción del PR (generada al final, Paso 6) | Chat (copiar en GitHub) | Marcos |
