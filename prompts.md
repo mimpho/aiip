@@ -857,3 +857,105 @@ Un juez automático puede fallar en el mismo matiz de seguridad que se está eva
 (precedente D-002/D-053); con volumen bajo (15 casos), la revisión manual es casi gratis
 y detectó `eval_71`, que el juez había dado por bueno en su veredicto. Patrón reutilizable
 para cualquier evaluación futura que toque Falso Negativo Cero.
+
+---
+
+### P-032 — KB limitada como hipótesis prioritaria antes de tocar retrieval
+**Fecha:** 18 julio 2026
+**Fase:** E-11 (T-01)
+**Tipo:** decisión de arquitectura de IA
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Ante 11 casos con Context Precision/Recall bajos en E-09, la intuición de Marcos fue que
+la causa raíz probable era cobertura documental insuficiente, no un problema de ranking
+BM25/chunking. Antes de tocar `rag/retriever.py`, se cruzaron los 11 casos contra
+`data/raw/manifest.json`: 4 ya tenían documento indexado (problema de retrieval real),
+6 no tenían ninguna fuente que cubriera el tema (problema de contenido). Se acotó T-01 a
+vetar fuentes solo para esos 6 huecos genuinos, dejando la calibración de BM25 para T-02
+sobre el corpus ya ampliado (D-060).
+
+**Resultado / aprendizaje:**
+Ampliar la KB por sí sola (sin tocar BM25) produjo +10.5pp en Context Precision y +8.4pp
+en Context Recall (T-02, línea base post-ampliación vs E-09). El ajuste posterior de BM25
+aportó solo +0.6pp/+2.6pp adicionales. Confirma la hipótesis: la mayor palanca de calidad
+de retrieval en este proyecto fue contenido, no ranking — verificar cobertura documental
+antes de invertir en ajuste fino del retriever es la secuencia correcta a repetir en
+futuras rondas de mejora de calidad.
+
+---
+
+### P-033 — System prompt: glosa obligatoria de fármacos/acrónimos/síndromes sin explicar
+**Fecha:** 19 julio 2026
+**Fase:** E-11 (T-04)
+**Tipo:** system prompt
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Revisión cualitativa de 7 preguntas mostró que el modelo ya glosa espontáneamente
+conceptos técnicos en 4/7 casos, pero en 3/7 reproduce nombres de fármacos, acrónimos de
+pruebas o síndromes sin explicar, en el mismo párrafo donde sí glosa otros términos
+igual de técnicos. Se añade a `[TONO — PERFIL FAMILIAR]` en
+`prompts/system_prompt_family.txt`:
+
+> Cuando la respuesta deba nombrar fármacos concretos, acrónimos de pruebas diagnósticas o
+> nombres de síndromes o enfermedades, acompaña cada uno de una glosa breve en el momento
+> (p. ej. "linfocitos T" → "un tipo de glóbulos blancos"), igual que ya haces con otros
+> conceptos técnicos. Si el detalle no aporta valor sin formación médica, indica que la
+> elección concreta la decide el equipo médico caso por caso, en vez de enumerar la lista
+> sin explicación.
+
+**Resultado / aprendizaje:**
+El punto ciego no era falta de capacidad del modelo (ya glosaba bien en otros pasajes),
+sino inconsistencia específica con listas de nombres propios/técnicos — una instrucción
+dirigida a ese patrón concreto, sin tocar `[RESTRICCIONES ABSOLUTAS]`, bastó. Aprobado por
+Marcos sin ajustes (D-067).
+
+---
+
+### P-034 — System prompt: generalizar una restricción existente en vez de crear una regla ad-hoc
+**Fecha:** 20 julio 2026
+**Fase:** E-11 (T-05)
+**Tipo:** system prompt
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+`guia_antibiotics_esp_0.pdf` aparecía citado espuriamente porque incluye datos de
+contacto de un hospital concreto, presentados sin indicar que son específicos de ese
+centro. En vez de añadir una regla nueva sobre "teléfonos", se generalizó la restricción
+ya existente en `[RESTRICCIONES ABSOLUTAS]` (protocolos de tratamiento de un centro
+concreto) para cubrir cualquier información operativa de centro (protocolo, contacto,
+nombre de servicio/unidad):
+
+> Si el contexto incluye información operativa específica de un centro o equipo médico
+> concreto (protocolo de un tratamiento, dato de contacto, nombre de un servicio o
+> unidad), no la repitas como si fuera válida para cualquiera — es información que
+> corresponde a ese centro específico, no una referencia general. Indícalo así y remite a
+> confirmar con su propio equipo médico, en vez de presentarlo como un dato universal.
+
+**Resultado / aprendizaje:**
+Reutilizar y generalizar una regla ya validada en producción cubre casos nuevos sin
+aumentar la superficie de reglas del prompt ni requerir mantenimiento por cada tipo de
+dato específico de centro que aparezca. Patrón a repetir: antes de añadir una regla nueva,
+comprobar si una restricción existente puede ampliarse (D-068).
+
+---
+
+### P-035 — System prompt: prohibición explícita + contraejemplo para cerrar citación duplicada
+**Fecha:** 21 julio 2026
+**Fase:** E-11 (T-07)
+**Tipo:** system prompt
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+`[FUENTES]` original no impedía que el modelo generase ocasionalmente su propio bloque de
+fuentes además del listado automático (duplicación en ~65% de una muestra reproducida).
+Reescrito con prohibición explícita ("No generes NUNCA un encabezado ni una lista con
+nombres de fichero...", motivo: duplicaría el listado automático) y un contraejemplo
+concreto de qué no hacer.
+
+**Resultado / aprendizaje:**
+Probado en memoria sobre 10 preguntas antes de aplicar a producción: 0/10 duplicaciones
+(frente al ~65% previo), sin regresión de seguridad. Confirma un patrón ya visto en
+P-030/P-033/P-034: una instrucción vaga ("no dupliques fuentes") no basta frente a una
+prohibición explícita con contraejemplo concreto.
