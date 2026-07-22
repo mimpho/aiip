@@ -4581,3 +4581,104 @@ presenta como una alucinación grave confirmada y estable.
 - Re-medir Faithfulness varias veces y quedarse con el valor más favorable: descartado por
   el mismo criterio de D-058/D-069 — no se suaviza el número oficial del dataset, se marca
   como cuestionado en el texto en vez de sustituirlo.
+
+---
+
+## D-086 — E-13 T-04: desglose caso a caso de la caída de Context Precision (−3.7pp) — concentrada en 5/32 casos, no dilución generalizada; `eval_08` resuelto como ruido ya documentado (D-072)
+
+**Fecha:** 22 de julio de 2026
+**Fase:** técnica
+**Épica:** E-13 (T-04, remedición de cierre)
+
+**Contexto**
+Tras revisar `eval_25` (D-085), Marcos pidió investigar la causa de la caída agregada de
+Context Precision (63.2%→59.5%, sección 1 de `e13_t04_cierre.md`), que quedaba con dos
+hipótesis abiertas sin distinguir (dilución del corpus vs. ruido del juez). Antes de pedir
+una investigación con pipeline real (Antigravity), se hizo un análisis local en Cowork
+comparando caso a caso `e09_t02_ragas_full_scores_pre_e13_t04.json` contra
+`e09_t02_ragas_full_scores.json` (32 casos) — no requiere red ni Gemini, solo lectura de
+los ficheros de resultados ya generados.
+
+**Hallazgo**
+De los 32 casos, **26 no cambian en absoluto** (delta 0.000), **1 mejora** (`eval_17`,
++0.025) y **5 empeoran**, y la caída agregada de −3.7pp está enteramente concentrada en
+esos 5:
+
+| Caso | Pre-E-13 | Post-E-13 | Delta | Pregunta |
+|---|---|---|---|---|
+| `eval_22` | 0.917 | 0.500 | **−0.417** | ¿Tendríamos que informar al inmunólogo de referencia si salimos del país de vacaciones? |
+| `eval_08` | 0.500 | 0.200 | −0.300 | ¿Qué antibióticos se usan habitualmente como profilaxis...? |
+| `eval_10` | 1.000 | 0.700 | −0.300 | ¿Es seguro que mi hijo vaya al colegio con una inmunodeficiencia primaria? |
+| `eval_63` | 0.804 | 0.650 | −0.154 | What is a primary immunodeficiency? (`otro_idioma`) |
+| `eval_20` | 0.450 | 0.425 | −0.025 | ¿Las inmunodeficiencias primarias tienen cura? |
+
+Esto **refuta la hipótesis de dilución generalizada** (si el corpus ampliado degradara el
+retrieval en general, se esperaría un patrón más disperso sobre los 32 casos, no 26
+completamente inmóviles) y apunta a un efecto concentrado — mecanismo todavía por
+determinar caso a caso.
+
+**`eval_08` ya resuelto, sin necesidad de investigación nueva:** sus valores históricos de
+Context Precision (`tests/eval/results/e11_t07_context_precision_stability.json`, D-072)
+son exactamente **{0.5, 0.2}** — T-02 oficial 0.5, Ronda 1 (atípica) 0.2, verificación de
+estabilidad del juez con dos invocaciones dando 0.5/0.5. El par pre/post-E-13 de esta tarea
+(0.5→0.2) reproduce con precisión ese mismo patrón bimodal ya documentado y cerrado como
+ruido del juez — no un efecto nuevo de las 40 fichas de MedlinePlus.
+
+**3 casos quedan sin explicar** (`eval_22`, `eval_10`, `eval_63`) — no tienen historial de
+inestabilidad del juez documentado, y distinguir dilución de retrieval vs. ruido del juez
+para ellos requiere ver el contexto recuperado real (pre y post) y una comprobación de
+estabilidad, que no se puede hacer sin pipeline real (`RAGPipeline.retrieve()`, bge-m3) —
+fuera del alcance de este sandbox de Cowork. `eval_20` (delta −0.025) se considera
+demasiado pequeño para distinguirse de ruido de redondeo del juez, dado que los deltas de
+ruido ya observados en el proyecto (D-072: 0.5→0.2, 0.3 de rango) son un orden de magnitud
+mayor — no se prioriza investigación dedicada.
+
+**Decisión**
+Añadir un paso nuevo al plan de T-04 (paso 13, Antigravity) para investigar `eval_22`,
+`eval_10` y `eval_63` con el pipeline real: comparar contexto recuperado pre/post (¿entran
+chunks de `medlineplus_genetics` desplazando a otros mejor rankeados? — evidencia directa
+de dilución) y estabilidad del juez (mismo patrón D-069/D-072/D-085 — evidencia de ruido).
+`eval_20` no se investiga (delta demasiado pequeño). El paso 12 (confirmación de cierre de
+Marcos) queda detrás del resultado de esta investigación.
+
+**Consecuencias**
+- `tasks/E13-T04-plan.md`: paso 13 añadido.
+- Si los 3 casos restantes resultan ser también ruido del juez (como `eval_08`, `eval_06`
+  D-069, `eval_25` D-085), la lectura de conjunto de E-13 cambiaría de forma relevante: la
+  caída de Context Precision dejaría de ser un hallazgo "sin causa raíz confirmada" y
+  pasaría a estar mayoritariamente explicada por varianza de muestreo del evaluador RAGAS,
+  no por un efecto real de la ampliación de KB — hipótesis a confirmar, no a asumir.
+- Si en cambio se confirma dilución real en alguno de los 3 (chunks de MedlinePlus
+  desplazando contexto relevante), sería el primer caso documentado en el proyecto de un
+  coste medible de ampliar la KB sobre preguntas no relacionadas con el contenido nuevo —
+  relevante para el hallazgo estructural ya anotado en `docs/e12-retro-notes.md` (22 jul
+  2026).
+
+**Alternativas descartadas**
+- Pedir directamente la investigación de pipeline en Antigravity para los 5 casos sin el
+  análisis local previo: hubiera gastado la investigación cara (pipeline real, llamadas a
+  Gemini) en `eval_08`, cuyo patrón ya estaba resuelto y documentado en D-072 — el análisis
+  local barato (comparar JSON ya generados) evita repetir trabajo ya hecho.
+
+**Resultado de la investigación (22 jul 2026, Antigravity,
+`scripts/run_e13_t04_context_precision_investigation.py`,
+`tests/eval/results/e13_t04_context_precision_investigacion.json`):** `eval_22` y `eval_10`
+no recuperan **ningún** chunk de `medlineplus_genetics` (10/10 chunks de fuentes
+preexistentes en ambos) — la ampliación de KB no puede ser la causa de su caída — y el juez
+de Context Precision es **inestable** sobre el mismo `SingleTurnSample` (`eval_22`:
+0.500/0.917; `eval_10`: 0.700/1.000), con rangos que reproducen casi exactamente sus deltas
+oficiales registrados. Ruido del juez confirmado con evidencia directa y limpia, sin ningún
+chunk nuevo involucrado. `eval_63` sí recupera un chunk de MedlinePlus
+(`leukocyte-adhesion-deficiency-type-1.html`), pero en la última posición del top-9 (score
+más bajo, impacto ponderado mínimo en una métrica sensible a la posición); el juez es
+estable en esta sesión (0.804/0.804), pero ese valor coincide con el histórico pre-E-13
+(0.804), no con el post-E-13 oficial registrado (0.650) — indicio más fuerte hacia varianza
+de sesión del evaluador que hacia dilución real, sin la misma contundencia que
+`eval_22`/`eval_10` (no se pudo reproducir el `SingleTurnSample` exacto de la medición
+oficial). **Conclusión final:** de los 5 casos que concentran la caída de Context Precision,
+4 (`eval_08`, `eval_20`, `eval_22`, `eval_10`) quedan explicados por ruido del evaluador y
+el quinto (`eval_63`) tiene indicios hacia lo mismo sin confirmación tan limpia — no se
+reabre el alcance de retrieval/BM25 (sin evidencia clara y consistente de dilución en los 3
+casos investigados con pipeline). `tests/eval/results/e13_t04_cierre.md` (sección
+3quater) y `docs/evaluation.md` (§5.5/§7) actualizados con la lectura final. El paso 14 del
+plan (confirmación de cierre de Marcos) queda reactivado.

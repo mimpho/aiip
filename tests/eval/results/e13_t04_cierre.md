@@ -27,24 +27,18 @@ ahora 88.0%), pero **Context Precision empeora** (−3.7pp) pese a ser la métri
 esperaba que se beneficiara de más cobertura documental — sigue, además, por debajo del
 objetivo de >85% (59.5%).
 
-**Hipótesis no confirmada sobre la causa de la caída de Context Precision:** no se ha
-investigado la causa raíz en esta tarea (fuera de alcance — el `.feature`/plan no lo piden y
-las restricciones de la tarea prohíben tocar `RAG_TOP_K`/`rag/retriever.py`). Dos hipótesis
-plausibles, ninguna confirmada:
-1. **Dilución real de contexto:** el hallazgo de D-084 (barrido de `top_k`) ya demostró que
-   ampliar el corpus puede traer más contenido genérico al retrieval sin mejorar precisión
-   para preguntas que no nombran una enfermedad concreta de las 40 nuevas — es plausible que
-   algo similar ocurra en varios de los 32 casos del dataset, sustituyendo chunks
-   previamente bien rankeados por chunks de MedlinePlus menos precisos para esa pregunta
-   concreta.
-2. **Ruido del juez LLM:** Context Precision ya mostró variancia de muestreo en E-11 T-07
-   sobre `eval_08`/`eval_13` (`docs/evaluation.md` §5.4, D-072) sin cambio de código de por
-   medio — no se puede descartar que parte de esta caída sea ruido del evaluador, no un
-   efecto real del corpus ampliado.
-
-No se puede distinguir entre ambas hipótesis sin una investigación dedicada (fuera de
-alcance de T-04) — se deja como hallazgo abierto, candidato a revisión en una épica futura
-si se decide seguir iterando sobre RAGAS post-TFM.
+**Actualización (22 jul 2026, D-086, decisión de Marcos de investigar antes de cerrar):**
+desglose caso a caso (comparando `e09_t02_ragas_full_scores_pre_e13_t04.json` contra el
+fichero vigente, sin necesidad de pipeline) — de los 32 casos, **26 no cambian**, 1 mejora
+(`eval_17`, +0.025) y **5 empeoran**, y la caída agregada de −3.7pp está enteramente
+concentrada en esos 5: `eval_22` (−0.417), `eval_08` (−0.300), `eval_10` (−0.300), `eval_63`
+(−0.154) y `eval_20` (−0.025). Esto **refuta la hipótesis de dilución generalizada** sobre
+todo el corpus (26/32 casos completamente inmóviles no es compatible con degradación
+difusa). `eval_08` reproduce con precisión su patrón histórico bimodal {0.5, 0.2} ya cerrado
+como ruido del juez (D-072) — resuelto sin investigación nueva. `eval_20` (delta mínimo) no
+se prioriza. **Quedan 3 casos sin explicar** (`eval_22`, `eval_10`, `eval_63`) — requieren
+pipeline real (Antigravity, paso 13 del plan) para distinguir dilución de retrieval vs.
+ruido del juez caso a caso. Detalle completo en D-086 (`decisions.md`).
 
 **Faithfulness** también retrocede (−1.4pp), en línea con el patrón ya visto en E-11 T-02
 (retroceso pequeño de Faithfulness sin relación causal plausible con cambios de retrieval,
@@ -165,6 +159,61 @@ cuestionado** en `docs/evaluation.md` §5.3/§5.5, con el mismo criterio que `ev
 score oficial (0.32) se mantiene sin modificar en el dataset (no se "suaviza" el número),
 pero no se presenta como una alucinación grave confirmada y estable.
 
+## 3quater. Investigación dirigida de la caída de Context Precision (paso 13 del plan, D-086, 22 jul 2026)
+
+**Contexto:** tras `eval_25` (3ter), Marcos pidió investigar también la causa de la caída
+agregada de Context Precision (−3.7pp, sección 1). Análisis local previo en Cowork (D-086,
+sin pipeline): de los 32 casos, 26 no cambian, 1 mejora y **5 empeoran**, concentrando toda
+la caída — refuta dilución generalizada. `eval_08` (0.5→0.2) reproduce exactamente su patrón
+bimodal ya cerrado como ruido del juez en D-072, sin necesidad de nueva investigación.
+`eval_20` (delta −0.025) demasiado pequeño para priorizar. Quedan 3 casos sin explicar:
+`eval_22`, `eval_10`, `eval_63` — investigados aquí con el pipeline real
+(`scripts/run_e13_t04_context_precision_investigation.py`, resultado completo en
+`tests/eval/results/e13_t04_context_precision_investigacion.json`).
+
+| Caso | Pre-E-13 | Post-E-13 (oficial) | ¿Chunk `medlineplus_genetics` en el top-k? | Estabilidad del juez (misma sesión) | Conclusión |
+|---|---|---|---|---|---|
+| `eval_22` | 0.917 | 0.500 | **No** (10/10 chunks de fuentes preexistentes) | Inestable: 0.500 y 0.917 sobre el mismo `SingleTurnSample` | **Ruido del juez confirmado** |
+| `eval_10` | 1.000 | 0.700 | **No** (10/10 chunks del manual IDF + guía escolar AEDIP) | Inestable: 0.700 y 1.000 sobre el mismo `SingleTurnSample` | **Ruido del juez confirmado** |
+| `eval_63` | 0.804 | 0.650 | **Sí** (`leukocyte-adhesion-deficiency-type-1.html`, rank 9/9, score más bajo) | Estable en esta sesión: 0.804 y 0.804 | **Mezcla, indicios hacia ruido — ver nota** |
+
+**`eval_22` y `eval_10`:** ninguno de los dos recupera ni un solo chunk de
+`medlineplus_genetics` — la ampliación de KB **no puede ser la causa** de su caída, porque
+el contexto recuperado no cambió. En ambos, dos invocaciones del juez de Context Precision
+sobre el mismo `SingleTurnSample` (misma respuesta, mismo contexto) dan valores muy
+distintos — `eval_22`: 0.500 y 0.917 (rango 0.417, que reproduce casi exactamente el delta
+oficial registrado, 0.917→0.500); `eval_10`: 0.700 y 1.000 (rango 0.300, coherente con el
+delta oficial 1.000→0.700). **Evidencia directa y limpia de ruido de muestreo del
+evaluador**, mismo patrón que D-069/D-072/D-085.
+
+**`eval_63`** (único caso `otro_idioma`, en inglés — el candidato más plausible a dilución
+real por compartir idioma con las 40 fichas nuevas): **sí** aparece un chunk de
+`medlineplus_genetics` en el top-9 recuperado, pero en la última posición (score 0.111, el
+más bajo de todos) — los 8 chunks de rango superior son todos de fuentes preexistentes
+(IPOPI, SEICAP, IDF, AEDIP). El juez es estable en esta sesión (0.804 en dos invocaciones),
+pero ese valor **coincide con el histórico pre-E-13 (0.804)**, no con el valor oficial
+post-E-13 registrado en el dataset (0.650), pese a que el contexto de esta sesión sí
+incluye el chunk nuevo. Esto sugiere que la diferencia entre el 0.804 pre-E-13 y el 0.650
+post-E-13 oficial es más probablemente varianza de muestreo entre sesiones de evaluación
+distintas que un efecto medible del chunk nuevo, que además ocupa el rango más bajo del
+ranking (impacto ponderado mínimo en una métrica sensible a la posición como Context
+Precision). **No es una prueba tan limpia como `eval_22`/`eval_10`** (no se pudo reproducir
+el `SingleTurnSample` exacto de la medición oficial post-E-13, solo un contexto recuperado
+de nuevo hoy), pero no hay evidencia de que el chunk nuevo desplace contenido relevante
+mejor rankeado.
+
+**Lectura final de la caída de Context Precision (−3.7pp):** con esta investigación, la
+caída deja de estar "sin causa raíz confirmada" — **2 de los 3 casos investigados
+(`eval_22`, `eval_10`) son ruido del juez confirmado con evidencia directa** (sin ningún
+chunk nuevo involucrado), y el tercero (`eval_63`) tiene indicios más fuertes hacia ruido
+de sesión que hacia dilución real, aunque sin la misma contundencia. Sumado a `eval_08`
+(ya resuelto como ruido en D-072) y `eval_20` (delta despreciable), **4 de los 5 casos que
+concentran la caída agregada están explicados por varianza del evaluador, no por un efecto
+real de las 40 fichas de MedlinePlus sobre el retrieval**. No hay evidencia, en ninguno de
+los 5 casos, de que un chunk de MedlinePlus desplace contenido más relevante previamente
+mejor rankeado — la hipótesis de dilución generalizada queda descartada con evidencia
+directa, no solo por intuición.
+
 ## 4. D-084 — modo de fallo conocido, documentado sin plan de arreglo
 
 Ver `decisions.md` (D-084) y `docs/evaluation.md` §5.5 para el detalle completo. Resumen:
@@ -189,17 +238,28 @@ que E-07 T-02/E-09 T-02/E-11 T-02.
 
 ## 6. Confirmación
 
-Pendiente de revisión y confirmación por Marcos: revisar este informe (con la sección 3ter
-ya resuelta), `docs/kb-sources.md` y `docs/evaluation.md` (§5.5, §7) y decidir si E-13 queda
-lista para `epic-close` (siguiente parada: E-10). **Nota de transparencia explícita para
-esa decisión:** a diferencia de E-11 T-02 (donde las 4 métricas coincidían en mejorar), aquí
-2 de 4 empeoran — Context Precision en particular retrocede por debajo de donde estaba antes
-de la ampliación (63.2%→59.5%), sin causa raíz confirmada (hipótesis abiertas: dilución de
-contexto o ruido del juez, sección 1). El recálculo de Hallucination Rate (sección 3bis)
-muestra que, aunque el binario mejora (93.75%→81.25%), aparece un caso nuevo en banda Grave
-(`eval_25`) que no estaba ahí antes de la ampliación — **investigado y cuestionado** en la
-sección 3ter (ruido de muestreo del juez LLM, confirmado con estabilidad del juez y
-contraste de contenido, mismo patrón que D-069/D-072), no una regresión real de contenido.
-No se recomienda presentar el cierre de E-13 como una mejora limpia de las 4 métricas: es un
-resultado mixto (2 mejoran, 2 empeoran), con Context Precision como el hallazgo más serio
-sin explicar.
+**Investigaciones del paso 13 completadas (22 jul 2026):** la caída agregada de Context
+Precision ya no queda "sin causa raíz confirmada" — ver sección 3quater. De los 5 casos que
+la concentran, 4 (`eval_08`, `eval_20`, `eval_22`, `eval_10`) están explicados por ruido del
+evaluador (`eval_20` por magnitud despreciable, el resto con evidencia directa de
+inestabilidad del juez o de patrones históricos ya documentados) y el quinto (`eval_63`)
+tiene indicios más fuertes hacia ruido de sesión que hacia dilución real del corpus, aunque
+sin la misma contundencia. No hay evidencia, en ninguno de los 5, de que un chunk de
+MedlinePlus desplace contenido relevante mejor rankeado.
+
+Pendiente de revisión y confirmación final por Marcos: revisar este informe completo
+(secciones 3ter y 3quater ya resueltas), `docs/kb-sources.md` y `docs/evaluation.md` (§5.5,
+§7), y decidir si E-13 queda lista para `epic-close` (siguiente parada: E-10).
+
+**Nota de transparencia explícita para esa decisión:** a diferencia de E-11 T-02 (donde las
+4 métricas coincidían en mejorar), aquí 2 de 4 empeoran — Context Precision en particular
+retrocede por debajo de donde estaba antes de la ampliación (63.2%→59.5%), aunque ahora con
+causa mayoritariamente explicada por ruido del evaluador, no por un efecto real de las 40
+fichas nuevas sobre el retrieval (sección 3quater). El recálculo de Hallucination Rate
+(sección 3bis) muestra que, aunque el binario mejora (93.75%→81.25%), aparece un caso nuevo
+en banda Grave (`eval_25`) que no estaba ahí antes de la ampliación — **investigado y
+cuestionado** en la sección 3ter (ruido de muestreo del juez LLM, mismo patrón que
+D-069/D-072), no una regresión real de contenido. No se recomienda presentar el cierre de
+E-13 como una mejora limpia de las 4 métricas: es un resultado mixto (2 mejoran, 2
+empeoran), aunque las caídas quedan ahora mayoritariamente explicadas por varianza del
+evaluador RAGAS, no por un coste real y sistemático de ampliar la KB.

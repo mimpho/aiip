@@ -110,9 +110,9 @@
    - No tocar `prompts/system_prompt_family.txt` — ninguna tarea de E-13 lo modifica
      (último escenario de código del `.feature`, ya sin acción pendiente).
 
-10. ~~**Confirmación de cierre** (Marcos)~~ — **reactivado**: paso 11 completado
-    (`eval_25` investigado y confirmado como ruido del juez, D-085) — pendiente ahora de la
-    confirmación final de Marcos (paso 12).
+10. ~~**Confirmación de cierre** (Marcos)~~ — **en pausa de nuevo** (22 jul 2026): tras
+    revisar el resultado del paso 11, Marcos pidió investigar también la causa de la caída
+    agregada de Context Precision (−3.7pp) antes de confirmar — ver paso 13.
 
 11. **Investigación dirigida de `eval_25`** (añadido 22 jul 2026, decisión de Marcos —
     mismo patrón que D-069/eval_06 y D-072/eval_08-eval_13):
@@ -158,9 +158,73 @@
     criterio que `eval_06`. Detalle completo en sección 3ter de
     `tests/eval/results/e13_t04_cierre.md`.
 
-12. **Confirmación de cierre** (Marcos): revisar `tests/eval/results/e13_t04_cierre.md`
-    (con la sección nueva del paso 11), `docs/kb-sources.md` y `docs/evaluation.md`, y
-    decidir si E-13 queda lista para `epic-close` (siguiente parada: E-10).
+12. ~~**Confirmación de cierre** (Marcos)~~ — **reactivado**: paso 13 completado, ver paso 14.
+
+13. **Investigación de la causa de la caída de Context Precision** (añadido 22 jul 2026,
+    decisión de Marcos, D-086):
+
+    **Ya resuelto en Cowork, sin necesidad de pipeline (D-086):** de los 32 casos, 26 no
+    cambian, 1 mejora y solo 5 empeoran — la caída agregada está concentrada, no dispersa
+    (refuta dilución generalizada del corpus). `eval_08` (0.5→0.2) reproduce exactamente su
+    patrón histórico bimodal ya cerrado como ruido del juez en D-072 (T-02: 0.5, Ronda 1:
+    0.2) — no requiere nueva investigación. `eval_20` (delta −0.025) es demasiado pequeño
+    para priorizar (un orden de magnitud menor que el ruido ya observado).
+
+    **Pendiente con pipeline real (Antigravity) — los 3 casos sin explicar:**
+
+    ```python
+    from rag.config import load_rag_config
+    from rag.pipeline import RAGPipeline
+
+    pipeline = RAGPipeline(load_rag_config())
+    preguntas = {
+        "eval_22": "¿Tendríamos que informar al inmunólogo de referencia si salimos del país de vacaciones?",
+        "eval_10": "¿Es seguro que mi hijo vaya al colegio con una inmunodeficiencia primaria?",
+        "eval_63": "What is a primary immunodeficiency?",
+    }
+    for case_id, question in preguntas.items():
+        raw_results = pipeline.retrieve(question)
+        print(case_id, [doc.metadata.get("source") for doc, _ in raw_results])
+    ```
+
+    a. **Comprobación de dilución:** para cada uno de los 3 casos, ¿aparece algún chunk de
+       `medlineplus_genetics` en el contexto recuperado post-E-13 que no estuviera antes?
+       Si sí, ¿desplaza a un chunk que antes rankeaba mejor y era más relevante para la
+       pregunta (revisión manual del contenido, no solo el nombre de la fuente)? Nota:
+       `eval_63` es el único caso en inglés (`otro_idioma`) — es el candidato más plausible
+       a dilución real, porque las 40 fichas nuevas SÍ comparten idioma con esta pregunta
+       (a diferencia del resto del dataset, mayoritariamente en español) y podrían competir
+       de verdad por el ranking, no solo estar presentes sin afectar (D-084).
+    b. **Estabilidad del juez** (mismo patrón D-069/D-072/D-085): invocar
+       `ContextPrecision.single_turn_score()` dos veces sobre el mismo `SingleTurnSample`
+       (contexto ya fijado en el paso anterior) para cada uno de los 3 casos.
+    c. Documentar la conclusión de cada caso (dilución real vs. ruido del juez vs. mezcla)
+       en una sección nueva de `tests/eval/results/e13_t04_cierre.md`, y actualizar
+       `docs/evaluation.md` §5.5 con la lectura final de la caída de Context Precision —
+       ya no como "sin causa raíz confirmada" sino con el desglose real.
+    d. **No reabrir el alcance de retrieval/BM25** salvo que la evidencia de dilución sea
+       clara y consistente en los 3 casos — en ese caso, documentar como hallazgo abierto
+       para una épica futura (no tocar `rag/retriever.py` dentro de T-04), mismo criterio
+       que D-084.
+
+    **Completado (22 jul 2026, `scripts/run_e13_t04_context_precision_investigation.py`,
+    `tests/eval/results/e13_t04_context_precision_investigacion.json`):** `eval_22` y
+    `eval_10` no recuperan ningún chunk de `medlineplus_genetics` (la ampliación de KB no
+    puede ser la causa) y muestran inestabilidad directa del juez sobre el mismo
+    `SingleTurnSample` (0.500/0.917 y 0.700/1.000) — ruido del juez confirmado con
+    evidencia limpia. `eval_63` sí recupera un chunk nuevo, pero en la última posición del
+    ranking; el juez es estable en esta sesión (0.804) pero reproduce el valor histórico
+    pre-E-13, no el post-E-13 oficial (0.650) — indicio hacia ruido de sesión, sin la misma
+    contundencia que los otros dos. No se reabre el alcance de retrieval/BM25: no hay
+    evidencia clara y consistente de dilución en los 3 casos. Detalle completo en sección
+    3quater de `tests/eval/results/e13_t04_cierre.md`; `docs/evaluation.md` §5.5/§7
+    actualizados con la lectura final.
+
+14. ~~**Confirmación de cierre** (Marcos)~~ — **confirmado (22 jul 2026):** T-04 cerrada
+    con el resultado completo (ganancias reales en Context Recall/Answer Relevancy/
+    Hallucination Rate binario; las dos regresiones, Context Precision y Faithfulness,
+    explicadas mayoritariamente como ruido del evaluador, no como coste real de las 40
+    fichas nuevas; D-084 documentado sin plan de arreglo). E-13 lista para `epic-close`.
 
 ## Restricciones a respetar
 

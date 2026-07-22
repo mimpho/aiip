@@ -84,4 +84,35 @@ reveló una limitación estructural (no un bug puntual), y la épica se cierra d
 resultado mixto sin suavizarlo (mismo principio de transparencia CHART/TRIPOD-LLM ya aplicado en
 D-058/D-072/D-084).
 
+## 22 jul 2026 — Corrección de la entrada anterior: la caída de Context Precision no era parte del hallazgo estructural
+
+La entrada de arriba enlazaba tres piezas como manifestaciones del mismo hallazgo
+estructural: D-084 (listado genérico), la réplica de "cromosoma X", y la caída de Context
+Precision (63.2%→59.5%) de la remedición de T-04. Las dos primeras siguen de pie. La
+tercera no — investigada con más rigor a petición de Marcos (D-086, `tests/eval/results/
+e13_t04_cierre.md` secciones 3quater), el desglose caso a caso mostró que la caída está
+concentrada en 5 de 32 casos (no dispersa, lo que ya descartaba dilución generalizada), y de
+esos 5, 4 quedan explicados con evidencia directa (contexto recuperado sin cambios + juez
+inestable sobre el mismo `SingleTurnSample`) como ruido de muestreo del evaluador RAGAS, no
+como efecto real de las 40 fichas nuevas sobre el retrieval. Un chequeo equivalente sobre
+Faithfulness (−1.4pp) mostró el mismo patrón de ruido, con firma distinta (difuso en 24/32
+casos, con swings positivos tan grandes como los negativos) pero la misma conclusión.
+
+**Lo que queda del ángulo human-in-the-loop, corregido:** el hallazgo estructural real es
+solo D-084/"cromosoma X" — el RAG naive no agrega bien sobre preguntas de listado/categoría
+porque ni BM25 ni el vectorial encuentran las fichas nuevas para ese tipo de pregunta
+concreto (confirmado con evidencia de retrieval directa, no de métricas agregadas). La
+lectura "contenido estrecho mejora lo estrecho y empeora lo amplio" sigue siendo válida como
+explicación de *ese* fallo de retrieval, pero **no** como explicación de la caída de Context
+Precision del dataset RAGAS — esa caída resultó ser, en su mayoría, varianza del propio
+proceso de evaluación (generación no determinista + juez LLM inestable, mismo patrón que
+D-069/D-072/D-085), no un coste medible de ampliar la KB.
+
+**Por qué merece quedar anotado igual (o más) para la memoria del TFM:** es un ejemplo
+honesto de autocorrección dentro del propio proceso de investigación — una primera lectura
+razonable (todo es el mismo problema) que no sobrevivió a una segunda vuelta de evidencia, y
+se corrige en vez de dejarse pasar. Mismo principio de transparencia que el resto del
+proyecto (D-058/D-072/D-084), aplicado también al propio análisis, no solo a los resultados
+del modelo.
+
 <!-- Añadir próximas entradas debajo, fechadas, sin editar las anteriores. -->

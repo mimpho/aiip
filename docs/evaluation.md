@@ -404,13 +404,26 @@ subconjunto de 32 casos (`informativo` + `otro_idioma`). Detalle completo en
 2 de 4 métricas **empeoran**. Context Recall mejora (+1.6pp, sigue por encima del objetivo
 de >85% desde E-11) y Answer Relevancy mejora ligeramente (+0.5pp), pero **Context
 Precision retrocede (−3.7pp)** pese a ser la métrica que más se esperaba beneficiar de más
-cobertura documental, y **Faithfulness también retrocede (−1.4pp)**. La causa raíz de la
-caída de Context Precision no se ha investigado en esta tarea (fuera de alcance del
-`.feature`/plan de T-04, y las restricciones de la tarea prohíben tocar `RAG_TOP_K`/
-`rag/retriever.py`): queda como hallazgo abierto, con dos hipótesis no confirmadas
-(dilución real de contexto por el corpus ampliado, en línea con lo ya observado en D-084;
-o ruido de muestreo del juez LLM, ya documentado para esta misma métrica en E-11 T-07 sobre
-`eval_08`/`eval_13`, D-072).
+cobertura documental, y **Faithfulness también retrocede (−1.4pp)**.
+
+**Causa de la caída de Context Precision — investigada (D-086, `tests/eval/results/e13_t04_cierre.md`
+sección 3quater):** desglose caso a caso muestra que, de los 32 casos, 26 no cambian y solo
+5 concentran toda la caída agregada (`eval_22` −0.417, `eval_08` −0.300, `eval_10` −0.300,
+`eval_63` −0.154, `eval_20` −0.025) — esto **refuta la dilución generalizada** del corpus
+(26/32 casos completamente inmóviles no es compatible con una degradación difusa). De los 5:
+`eval_08` reproduce su patrón bimodal ya cerrado como ruido del juez (D-072); `eval_20` tiene
+delta despreciable; `eval_22` y `eval_10` **no recuperan ningún chunk de
+`medlineplus_genetics`** (la ampliación de KB no puede ser la causa de su caída) y muestran
+inestabilidad directa del juez sobre el mismo `SingleTurnSample` (0.500/0.917 y 0.700/1.000
+respectivamente, rangos que reproducen casi exactamente sus deltas oficiales); `eval_63`
+(único caso `otro_idioma`, en inglés) sí recupera un chunk de MedlinePlus, pero en la última
+posición del ranking (score más bajo) y el juez, estable en la sesión de investigación
+(0.804), reproduce el valor histórico pre-E-13, no el post-E-13 oficial (0.650) — indicio
+más fuerte hacia varianza de sesión del evaluador que hacia dilución real, aunque sin la
+misma contundencia que `eval_22`/`eval_10`. **Lectura final:** 4 de los 5 casos que
+concentran la caída están explicados por ruido del evaluador RAGAS, no por un efecto real
+de las 40 fichas nuevas sobre el retrieval; no hay evidencia en ningún caso de que un chunk
+de MedlinePlus desplace contenido relevante mejor rankeado.
 
 **Verificación dirigida XIAP/IPEX (D-063, fuera del dataset RAGAS):** "xiap" atribuye
 correctamente la relación XIAP→XLP2 al chunk indexado de MedlinePlus Genetics (primera
@@ -485,10 +498,12 @@ Relevancy, Context Recall), pero **Context Precision y Faithfulness empeoran** f
 cierre de E-11 — un resultado mixto, no la mejora limpia que planteaba la hipótesis inicial
 de la épica. El Hallucination Rate binario mejora, y el caso nuevo en banda Grave
 (`eval_25`) que trajo consigo queda investigado y cuestionado (ruido del juez, no regresión
-real) — pero la caída de Context Precision (−3.7pp, la métrica más relevante para el
-objetivo de la épica) sigue sin causa raíz confirmada. Se documenta así, sin suavizar,
-siguiendo el mismo principio de transparencia de CHART/TRIPOD-LLM (§6) aplicado en
-D-058/D-072.
+real) — y la caída de Context Precision (−3.7pp, la métrica más relevante para el objetivo
+de la épica), investigada caso a caso (D-086), queda mayoritariamente explicada por ruido
+del evaluador RAGAS (4 de los 5 casos que la concentran), sin evidencia de que las 40
+fichas nuevas desplacen contenido más relevante en el retrieval. Se documenta así, sin
+suavizar, siguiendo el mismo principio de transparencia de CHART/TRIPOD-LLM (§6) aplicado
+en D-058/D-072.
 
 ---
 
@@ -524,7 +539,7 @@ CHART (Chatbot Assessment Reporting Tool) — guía de reporte para estudios de 
 |---|---|---|---|---|---|---|---|---|
 | Faithfulness | > 95% | 83.7% (32 casos) | 84.6% (32 casos) | 83.2% (32 casos) | **−1.4pp** | 🔴 Por debajo | RAGAS | Fase 1 + 1.5 + E-11 + E-13 |
 | Answer Relevancy | > 90% | 79.5% (32 casos) | 79.9% (32 casos) | 80.4% (32 casos) | +0.5pp | 🔴 Por debajo | RAGAS | Fase 1 + 1.5 + E-11 + E-13 |
-| Context Precision | > 85% | 52.1% (32 casos) | 63.2% (32 casos) | 59.5% (32 casos) | **−3.7pp** | 🔴 Por debajo | RAGAS | Fase 1.5 + E-11 + E-13 |
+| Context Precision | > 85% | 52.1% (32 casos) | 63.2% (32 casos) | 59.5% (32 casos) — caída investigada caso a caso (D-086), mayoritariamente ruido del evaluador | **−3.7pp** | 🔴 Por debajo | RAGAS | Fase 1.5 + E-11 + E-13 |
 | Context Recall | > 85% | 75.5% (32 casos) | 86.5% (32 casos) | 88.0% (32 casos) | +1.6pp | ✅ Cumple | RAGAS | Fase 1.5 + E-11 + E-13 |
 | Safety Compliance | 100% | 100% (40/40 — 25/25 alarma+límite T-03 + 15/15 diagnóstico/prompt injection T-04) | 100% (sin cambios, sin re-medición completa tras E-11 — ver §5.4 nota de transparencia) | 100% (sin cambios, no remedida en E-13 — fuera de alcance de T-04) | — | ✅ Cumple | Dataset seguridad | Fase 1 + Fase 1.5 |
 | Hallucination Rate | < 2% | 93.75% (30/32 casos con faithfulness < 1.0); desglose por severidad en §5.3 — solo 1/32 en banda Grave, y cuestionado (D-069) | 93.75% (sin cambios — mismo dataset base, §5.3) | **81.25%** (26/32, §5.5) — mejora el binario; `eval_25` entra en banda Grave, investigado y cuestionado (D-085) | −12.5pp (binario) | 🔴 Muy por debajo (binario) | RAGAS (derivado de Faithfulness, D-058) | Fase 1.5 + E-11 T-06 + E-13 T-04 |
@@ -551,8 +566,12 @@ CHART (Chatbot Assessment Reporting Tool) — guía de reporte para estudios de 
 > MedlinePlus Genetics, el resultado es **mixto, no una mejora limpia**: Answer Relevancy y
 > Context Recall mejoran (+0.5pp/+1.6pp, este último ya superaba objetivo desde E-11 y ahora
 > llega a 88.0%), pero **Context Precision retrocede (−3.7pp, sigue por debajo de objetivo)
-> y Faithfulness también retrocede (−1.4pp)** — sin causa raíz confirmada para ninguna de las
-> dos caídas (§5.5). El Hallucination Rate binario mejora sustancialmente (93.75%→81.25%);
+> y Faithfulness también retrocede (−1.4pp)**. La caída de Context Precision se investigó
+> caso a caso (D-086, §5.5): concentrada en 5/32 casos (refuta dilución generalizada), de
+> los cuales 4 quedan explicados por ruido del evaluador RAGAS y el quinto (`eval_63`) con
+> indicios más fuertes hacia ruido de sesión que hacia dilución real. La caída de
+> Faithfulness no tiene relación causal plausible conocida con cambios de retrieval (mismo
+> patrón que E-11 T-02). El Hallucination Rate binario mejora sustancialmente (93.75%→81.25%);
 > el desglose por severidad trae un caso nuevo en banda Grave (`eval_25`, Faithfulness 0.32,
 > reemplaza a `eval_06` en esa posición), investigado y confirmado como ruido del juez, no
 > regresión real (D-085). Verificación dirigida XIAP/IPEX sin regresión de grounding
@@ -564,4 +583,4 @@ CHART (Chatbot Assessment Reporting Tool) — guía de reporte para estudios de 
 
 ---
 
-*evaluation.md v1.3 — junio 2026 (corrección de consistencia del dataset inicial, 7 jul 2026; ampliación de consultas informativas 20→27 y total 65→72, D-049, 15 jul 2026; informe final E-09 T-06 — resultados reales RAGAS/Safety Compliance/Hallucination Rate, ciclo de mejora, checklist CHART/TRIPOD-LLM completado y correcciones numéricas §2.3/§3, 18 jul 2026; desglose de Hallucination Rate por severidad, E-11 T-06, D-069, 20 jul 2026; cierre de E-11 — §5.4 y §7 actualizados con resultados de T-01 a T-06 y verificación de regresión D-070/D-071/D-072, 21 jul 2026; cierre de E-13 — §5.5 y §7 actualizados con remedición post-ampliación de KB (MedlinePlus Genetics), verificación dirigida XIAP/IPEX/eval_06/eval_15, hallazgo nuevo de `eval_25` en banda Grave investigado y cuestionado (D-085), y D-084 documentado como limitación conocida, 22 jul 2026)*
+*evaluation.md v1.3 — junio 2026 (corrección de consistencia del dataset inicial, 7 jul 2026; ampliación de consultas informativas 20→27 y total 65→72, D-049, 15 jul 2026; informe final E-09 T-06 — resultados reales RAGAS/Safety Compliance/Hallucination Rate, ciclo de mejora, checklist CHART/TRIPOD-LLM completado y correcciones numéricas §2.3/§3, 18 jul 2026; desglose de Hallucination Rate por severidad, E-11 T-06, D-069, 20 jul 2026; cierre de E-11 — §5.4 y §7 actualizados con resultados de T-01 a T-06 y verificación de regresión D-070/D-071/D-072, 21 jul 2026; cierre de E-13 — §5.5 y §7 actualizados con remedición post-ampliación de KB (MedlinePlus Genetics), verificación dirigida XIAP/IPEX/eval_06/eval_15, hallazgo nuevo de `eval_25` en banda Grave investigado y cuestionado (D-085), caída de Context Precision investigada caso a caso y mayoritariamente explicada como ruido del evaluador (D-086), y D-084 documentado como limitación conocida, 22 jul 2026)*
