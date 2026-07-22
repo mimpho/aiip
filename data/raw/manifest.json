@@ -266,9 +266,9 @@
       "fecha": "2026-07-21"
     },
     "medlineplus_genetics/vici-syndrome.html": {
-      "checksum": "sha256:da46a41c5a6faed5f6688d100653a9f4d0628ec84a3ad247a0a898e07dc7095e",
+      "checksum": "sha256:72207ee6c859836dcf8d54a573c3f3dd240662831e4886b082803b40a573d93c",
       "url": "https://medlineplus.gov/genetics/condition/vici-syndrome",
-      "fecha": "2026-07-21"
+      "fecha": "2026-07-22"
     },
     "medlineplus_genetics/wiskott-aldrich-syndrome.html": {
       "checksum": "sha256:c49ce85eaa8e467f290ee2e819885a6681bb60811e5a72b63c3188db4a43e44b",
@@ -276,9 +276,9 @@
       "fecha": "2026-07-21"
     },
     "medlineplus_genetics/x-linked-hyper-igm-syndrome.html": {
-      "checksum": "sha256:597dcecfa1e41e6dd994032e67416f499cf385445346762f2d48b5260b48b124",
+      "checksum": "sha256:a15346c97436ec395dacfb13c6695a8b542ac228ade125e0261711d206cfad26",
       "url": "https://medlineplus.gov/genetics/condition/x-linked-hyper-igm-syndrome",
-      "fecha": "2026-07-21"
+      "fecha": "2026-07-22"
     },
     "medlineplus_genetics/x-linked-immunodeficiency-with-magnesium-defect-epstein-barr-virus-infection-and-neoplasia.html": {
       "checksum": "sha256:69f96af6a774f46c2e4ed90c446a4febfab8e8cd560a448c26e803065d7375e1",
@@ -379,6 +379,56 @@
       "checksum": "sha256:d0cb397f51ea87f553d363e3372565560e9f901b9da0db14fd2d93e688f561a5",
       "url": "https://medlineplus.gov/genetics/condition/omenn-syndrome",
       "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/activated-pi3k-delta-syndrome.html": {
+      "checksum": "sha256:afbd300bf2d9094e3b394fc5557d188e3b951e7892537c6547c1ec951bc3513f",
+      "url": "https://medlineplus.gov/genetics/condition/activated-pi3k-delta-syndrome",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/adenosine-deaminase-deficiency.html": {
+      "checksum": "sha256:b0e26e148d1819ddaaad55939d066392b024b208506c9fd4548ccd356f74e4a3",
+      "url": "https://medlineplus.gov/genetics/condition/adenosine-deaminase-deficiency",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/anhidrotic-ectodermal-dysplasia-with-immune-deficiency.html": {
+      "checksum": "sha256:0372b36a82fd94320b967084ece13aeb396b03b65dd5467b757e9a1a7f5f75a1",
+      "url": "https://medlineplus.gov/genetics/condition/anhidrotic-ectodermal-dysplasia-with-immune-deficiency",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/autosomal-dominant-hyper-ige-syndrome.html": {
+      "checksum": "sha256:305e258fb464b4448b214ff807bd787270d92fb9554dfd73516229ee2a739dbc",
+      "url": "https://medlineplus.gov/genetics/condition/autosomal-dominant-hyper-ige-syndrome",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/bare-lymphocyte-syndrome-type-i.html": {
+      "checksum": "sha256:47cbff4eaf734e422b1d5f4160448a4a9483ff6a5217f841dc3533d1538df2ce",
+      "url": "https://medlineplus.gov/genetics/condition/bare-lymphocyte-syndrome-type-i",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/bare-lymphocyte-syndrome-type-ii.html": {
+      "checksum": "sha256:addbce687cbff5ad333b2bd417bf335c00a5d07147418d4f117e56696a17e7dc",
+      "url": "https://medlineplus.gov/genetics/condition/bare-lymphocyte-syndrome-type-ii",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/chediak-higashi-syndrome.html": {
+      "checksum": "sha256:dd463c63167c5385f9c37277d16332b9b8b5e8b0c9198a3452de9bf9a1b38021",
+      "url": "https://medlineplus.gov/genetics/condition/chediak-higashi-syndrome",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/complement-component-2-deficiency.html": {
+      "checksum": "sha256:b34fa6b2d3596169e719673dbcbca141b4763d3f930d8ab3ab5d93f2911a0314",
+      "url": "https://medlineplus.gov/genetics/condition/complement-component-2-deficiency",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/complement-component-8-deficiency.html": {
+      "checksum": "sha256:a1df7c99bb799b70d0113d49d5086eaab3d02b1fd6f8b3df593a283c78097e3a",
+      "url": "https://medlineplus.gov/genetics/condition/complement-component-8-deficiency",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/complement-factor-i-deficiency.html": {
+      "checksum": "sha256:e5c711de81060a826302de4853f84492560920d294a3745b51f8aeff259b3269",
+      "url": "https://medlineplus.gov/genetics/condition/complement-factor-i-deficiency",
+      "fecha": "2026-07-22"
     }
   }
 }
