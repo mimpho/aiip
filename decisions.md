@@ -92,6 +92,7 @@
 - [D-081 — E-13 T-03: bug de encoding en fetch_causes_paragraphs() — mojibake en letras griegas, corrección retroactiva a 4 fichas (mismo patrón que D-077)](#d-081--e-13-t-03-bug-de-encoding-en-fetch_causes_paragraphs--mojibake-en-letras-griegas-corrección-retroactiva-a-4-fichas-mismo-patrón-que-d-077)
 - [D-082 — Revierte thinking_budget=0 (D-025): causaba rechazos autocontradictorios en preguntas reales en inglés](#d-082--revierte-thinking_budget0-d-025-causaba-rechazos-autocontradictorios-en-preguntas-reales-en-inglés)
 - [D-083 — smoke_test_rag.py mostraba chunks de una recuperación distinta a la usada para generar la respuesta](#d-083--smoke_test_ragpy-mostraba-chunks-de-una-recuperación-distinta-a-la-usada-para-generar-la-respuesta)
+- [D-084 — Hallazgo abierto: BM25 no encuentra fichas de MedlinePlus (inglés) en preguntas de listado en español — no confundir con top_k pequeño](#d-084--hallazgo-abierto-bm25-no-encuentra-fichas-de-medlineplus-inglés-en-preguntas-de-listado-en-español--no-confundir-con-top_k-pequeño)
 
 ---
 
@@ -4418,3 +4419,103 @@ pregunta — el retriever híbrido (RRF de BM25 top-5 + vectorial top-5, D-057) 
 de 5 documentos únicos cuando ambas listas no coinciden del todo; antes quedaba oculto porque el
 listado mostraba solo la búsqueda vectorial pura, capada a 5. Marcos revisa y confirma las 5
 entradas del smoke test como correctas.
+
+---
+
+## D-084 — Hallazgo abierto: BM25 no encuentra fichas de MedlinePlus (inglés) en preguntas de listado en español — no confundir con top_k pequeño
+
+**Fecha:** 22 de julio de 2026
+**Fase:** técnica
+**Épica:** E-13 (T-03, tras cierre) — hallazgo de una prueba manual de Marcos sobre la app real
+
+**Contexto**
+Marcos probó en producción "dame un listado de las IDPs con una frase explicativa de cada una
+de ellas" (perfil familia, español). La respuesta lista solo 7 IDPs con explicaciones pobres
+(algunas son literalmente "es una IDP para la que se conocen muchos de los defectos genéticos",
+copiadas de una tabla de clasificación, no una descripción real) y ninguna cita a
+`medlineplus_genetics/` pese a que E-13 añadió 40 fichas nuevas pensadas exactamente para "qué
+es la enfermedad X". "ALX" aparece sin explicar — verificado que no es una alucinación ni un
+bug: es una abreviatura real del propio PDF (`diagnostico-de-las-inmunodeficiencias-
+primarias.pdf`, "ALX = Agammaglobulinemia ligada al X"), cuya expansión vive en un chunk de
+glosario que no entró en el retrieval — el modelo dice honestamente que no tiene la explicación
+en vez de inventarla (grounding correcto, D-059).
+
+Hipótesis inicial descartada con evidencia real, no simplemente rechazada por intuición:
+"`RAG_TOP_K` (5) es demasiado pequeño para una pregunta de listado". Se simuló la parte BM25 del
+retriever híbrido con `rank_bm25.BM25Okapi` (misma librería que usa
+`langchain_community.retrievers.BM25Retriever` en producción, D-057) contra los 1324 chunks
+reales indexados (`data/chroma/chroma.sqlite3`, leído sin red ni Gemini). Resultado: 0 chunks de
+`medlineplus_genetics` en el top-50 BM25 (10x el `top_k` actual) para esta pregunta. Causa: las
+40 fichas nuevas están en inglés (D-063, decisión ya tomada — no se traducen en ingesta, D-022);
+BM25 es matching léxico exacto, y una pregunta en prosa española no comparte vocabulario
+significativo con contenido en inglés. Además, `has_lexical_signal()` (D-061) clasifica esta
+pregunta con señal léxica fuerte (por "IDPs" en mayúscula) — así que BM25 se lleva el peso
+completo de 0.4 en la fusión (no el 0.05 de "sin señal"), y ese 40% del presupuesto de
+recuperación no aporta nada a MedlinePlus para esta pregunta.
+
+**Consecuencia de este análisis:** subir `RAG_TOP_K` da más huecos al lado vectorial (bge-m3,
+multiidioma) para que las fichas de MedlinePlus puedan aparecer, pero no hay evidencia todavía
+de que el ranking vectorial las sitúe lo bastante arriba — no verificable desde Cowork (sin red
+para bge-m3). No es una corrección de una línea con resultado garantizado.
+
+**Decisión**
+No se toca `RAG_TOP_K` ni el retriever en esta tarea (T-03 ya cerrada). Se deja
+`scripts/run_e13_topk_sweep_investigation.py` (solo embeddings, sin Gemini, barato de repetir)
+para que Antigravity mida el efecto real de subir `top_k` (5/10/15/20/30) sobre la pregunta de
+listado y sobre dos preguntas de control de una sola enfermedad (para comprobar que no degrada
+el caso de uso principal de AIIP, que es una consulta a la vez, no una enciclopedia).
+
+**Consecuencias**
+- Candidato explícito para T-04 (remedición RAGAS): el dataset de evaluación (`tests/eval/
+  dataset_partial.json`, 72 casos) no tiene ningún caso de tipo "listado/enumera todas las IDPs"
+  — este modo de fallo nunca se ha medido. No se añade un caso nuevo en esta tarea (T-03 ya
+  cerrada), queda anotado para cuando se revise el dataset.
+- No compromete el objetivo original de E-13 (D-063): el caso XIAP se resolvió porque la
+  consulta literal "xiap" es el mismo token en ambos idiomas (símbolo de gen, no se traduce) —
+  este hallazgo es específico de preguntas en prosa española sin términos técnicos compartidos,
+  un tipo de consulta distinto.
+- Candidato a `docs/e12-retro-notes.md`: ejemplo de una hipótesis inicial razonable
+  ("top_k pequeño") descartada con evidencia real en vez de aceptada por intuición — mismo
+  espíritu que la verificación dirigida que ya motivó E-13 (D-063: intuición de KB limitado,
+  D-057: `rank_bm25`/`langdetect` verificados contra casos reales antes de decidir).
+
+**Alternativas descartadas**
+- Traducir/duplicar las fichas de MedlinePlus al español para que BM25 sí las encuentre:
+  descartada por ahora — esfuerzo significativo (40 fichas) fuera de plazo del TFM (29 jul);
+  candidata a backlog post-TFM si T-04 confirma que el problema es real y no solo de esta
+  pregunta concreta.
+- Bajar el peso de BM25 de forma permanente para que el vectorial domine siempre: descartada —
+  D-061 ya ajustó el peso adaptativo con cuidado (validado contra Context Precision/Recall de
+  E-11 T-02); tocarlo sin remedir sería repetir el error que D-061 ya corrigió (ajustar pesos a
+  ciegas).
+
+**Verificación (22 jul 2026, `scripts/run_e13_topk_sweep_investigation.py` en Antigravity, solo
+embeddings, sin Gemini):** barrido real de `top_k` (5/10/15/20/30) sobre la pregunta de listado y
+dos preguntas de control de una sola enfermedad. Resultado, más claro de lo esperado:
+
+- **Listado amplio:** 0 chunks de `medlineplus_genetics` en las 5 pasadas, incluso en
+  `top_k=30` (56 chunks totales, más del 4% de todo el corpus indexado). No es que el vectorial
+  las rankee bajo — no las encuentra en absoluto para este tipo de pregunta genérica. Subir
+  `top_k` solo trae más contenido genérico en español (`aedip` sube de 9 a 36 chunks), no
+  diversifica hacia fichas de enfermedades concretas. **Conclusión: subir `RAG_TOP_K` no
+  soluciona el caso de listado, a ningún valor razonable.**
+- **Wiskott-Aldrich (control, enfermedad ya cubierta antes de E-13):** el vectorial SÍ encuentra
+  MedlinePlus ya en `top_k=5` (2/10 chunks) — el 60% vectorial compensa bien la falta de
+  vocabulario compartido de BM25 cuando la pregunta nombra una enfermedad concreta.
+  **E-13 cumple su objetivo para el caso de uso principal de AIIP** (una enfermedad a la vez,
+  no una consulta de tipo listado).
+- **Chediak-Higashi (control, enfermedad que solo cubre E-13):** cobertura aún mejor y creciente
+  con `top_k` (3/10 → 13/57) — el vectorial prioriza correctamente la única fuente real
+  disponible para esa enfermedad concreta.
+- **Coste de subir `top_k` de forma global, no solo beneficio nulo en el caso de listado:** para
+  Wiskott-Aldrich, `idf` (KB genérica, no específica) pasa de 4 chunks en `top_k=5` a 29 en
+  `top_k=30` — mucho más ruido de contexto por cada chunk relevante nuevo, con riesgo real de
+  diluir la respuesta para el caso de uso principal, que es justo el que ya funciona bien.
+
+**Decisión final:** no se toca `RAG_TOP_K` — el barrido descarta con evidencia que fuera a
+ayudar al caso que lo motivó, y confirma que tendría coste real (dilución de contexto) sin
+beneficio en las preguntas de una sola enfermedad, que ya recuperan MedlinePlus correctamente
+incluso con el valor actual. El hallazgo de listado queda como limitación documentada, no como
+tarea de código para T-04 — candidata a mencionarse en el informe final (E-09 T-06 style) como
+modo de fallo conocido de RAG para preguntas de enumeración amplia, sin plan de arreglo antes
+del 29 de julio.
