@@ -110,9 +110,57 @@
    - No tocar `prompts/system_prompt_family.txt` — ninguna tarea de E-13 lo modifica
      (último escenario de código del `.feature`, ya sin acción pendiente).
 
-10. **Confirmación de cierre** (Marcos): revisar `tests/eval/results/e13_t04_cierre.md`,
-    `docs/kb-sources.md` y `docs/evaluation.md`, y decidir si E-13 queda lista para
-    `epic-close` (siguiente parada: E-10).
+10. ~~**Confirmación de cierre** (Marcos)~~ — **reactivado**: paso 11 completado
+    (`eval_25` investigado y confirmado como ruido del juez, D-085) — pendiente ahora de la
+    confirmación final de Marcos (paso 12).
+
+11. **Investigación dirigida de `eval_25`** (añadido 22 jul 2026, decisión de Marcos —
+    mismo patrón que D-069/eval_06 y D-072/eval_08-eval_13):
+
+    **Contexto clave ya identificado en Cowork:** Context Precision, Context Recall y
+    Answer Relevancy de `eval_25` son **idénticos** pre/post E-13 (0.0, 1.0, 0.0 sin
+    cambio) — solo Faithfulness cambia (0.857→0.32). Como el retrieval no cambió, la
+    hipótesis de partida es que la caída es variación de generación/juez, no un efecto
+    real de las 40 fichas nuevas — pero hay que confirmarlo, no darlo por hecho.
+
+    ```python
+    from rag.config import load_rag_config
+    from rag.pipeline import RAGPipeline
+
+    pipeline = RAGPipeline(load_rag_config())
+    question = "¿Puede mi hijo marcharse de convivencias varios días?"
+    raw_results = pipeline.retrieve(question)
+    print(pipeline.query(question))
+    print([doc.metadata.get("source") for doc, _ in raw_results])
+    ```
+
+    a. Leer la respuesta completa generada y compararla contra `expected_answer` de
+       `eval_25` en `tests/eval/dataset_partial.json` y contra los chunks recuperados —
+       ¿la respuesta afirma algo no soportado por el contexto? ¿o es matiz/parafraseo
+       (mismo patrón que 29/30 de los casos "alucinados" según D-058)?
+    b. **Estabilidad del juez** (mismo patrón que D-069/D-072): invocar
+       `Faithfulness.single_turn_score()` dos veces sobre el mismo `SingleTurnSample`
+       (respuesta/contexto ya fijos del paso anterior) para ver si el score es estable o
+       varía entre invocaciones — si varía, es ruido del evaluador LLM, no del contenido.
+    c. Documentar la conclusión en una sección nueva de
+       `tests/eval/results/e13_t04_cierre.md` y, si aplica, marcar el caso como
+       "cuestionado" en `docs/evaluation.md` §5.3/§5.5 (mismo criterio que D-069/D-072),
+       o como regresión real si el contenido confirma un problema genuino.
+    d. **No reabrir el alcance de retrieval/BM25** (D-084 sigue fuera de alcance) — esto
+       es investigación puntual de un caso de generación/juez, no motivo para tocar
+       `rag/retriever.py` ni `RAG_TOP_K`. Excepción: si aparece algo que comprometa el
+       principio de Falso Negativo Cero, volver a Cowork antes de tocar producción.
+
+    **Completado (22 jul 2026, `scripts/run_e13_t04_eval25_investigation.py`,
+    `tests/eval/results/e13_t04_eval25_investigacion.json`):** confirmado ruido del juez
+    (0.52/0.32 sobre el mismo `SingleTurnSample`, sin cambio en las otras 3 métricas,
+    contenido bien fundamentado). `eval_25` marcado como cuestionado (D-085), mismo
+    criterio que `eval_06`. Detalle completo en sección 3ter de
+    `tests/eval/results/e13_t04_cierre.md`.
+
+12. **Confirmación de cierre** (Marcos): revisar `tests/eval/results/e13_t04_cierre.md`
+    (con la sección nueva del paso 11), `docs/kb-sources.md` y `docs/evaluation.md`, y
+    decidir si E-13 queda lista para `epic-close` (siguiente parada: E-10).
 
 ## Restricciones a respetar
 

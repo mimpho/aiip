@@ -223,7 +223,7 @@ Ejecutado sobre los 32 casos `informativo` + `otro_idioma` (D-055), modelo de pr
 | **A** — sobre-activación del filtro de seguridad | ✅ Resuelto | Stoplist (`después`, `varios`, `infusión`) + chequeo de contexto para "antibióticos" en `config/alarm_triggers.json`. eval_07/eval_08/eval_25 dejan de disparar la alarma sin regresión en los 25 casos reales de alarma/límite. |
 | **D** — ruido en dense/hybrid search | 🟡 Mitigado parcialmente | `EnsembleRetriever` (BM25 + vectorial, RRF) en `rag/retriever.py`/`rag/pipeline.py`. Resuelve coincidencias léxicas exactas (topónimos) pero no mueve el agregado de Context Precision: de los 9 casos que cambian, 6 empeoran (preguntas conceptuales sin señal léxica) y solo 3 mejoran — el peso uniforme (0.4/0.6) absorbe la ganancia real en preguntas con nombre propio con la pérdida en preguntas genéricas. Idea de mejora no implementada: peso adaptativo de BM25 (`backlog/ideas.md`). |
 | **F** — `langdetect` falla en frases cortas de síntomas | ✅ Resuelto | Sustituido por `lingua-py` (es/en/ca). Las 3 frases cortas que antes fallaban detectan bien; sin regresión en las 37 frases de `alarm_triggers.json`. |
-| **B** — Answer Relevancy 0.0 (eval_06, eval_15, eval_25) | 🔴 Abierto para `eval_25` · 🟡 `eval_06` cuestionado (D-069) · ✅ `eval_15` cerrado (D-068) | Investigado como Plan B tras A/D/F. Candidato de causa: respuesta evasiva ("noncommittal") penalizada por `ResponseRelevancy` de RAGAS, en tensión con Falso Negativo Cero — no confirmado frase a frase. Ningún ajuste de código aplicado (D-057). Detalle: `tests/eval/results/e09_t05_plan_b_investigacion.md`. **Actualización T-05 (E-11, D-068):** `eval_15` cerrado como efecto colateral de la ampliación de KB (T-01) — Answer Relevancy pasa de 0.0 a 0.839; queda un hallazgo nuevo no relacionado (Context Precision en 0.0 de forma estable — hueco de contenido genuino, `backlog/ideas.md` "Huecos de KB" #1, no accionable con BM25/chunking). **Actualización T-06 (D-069, §5.3):** `eval_06` pasa a caso Grave del desglose de severidad, pero su score (0.385) queda marcado como cuestionado — evidencia de no-determinismo del generador, no de regresión estructural. `eval_25` sigue sin investigar, fuera del alcance acotado de E-11. |
+| **B** — Answer Relevancy 0.0 (eval_06, eval_15, eval_25) | 🟡 `eval_06` cuestionado (D-069) · ✅ `eval_15` cerrado (D-068) · 🟡 `eval_25` cuestionado (E-13, D-085) | Investigado como Plan B tras A/D/F. Candidato de causa: respuesta evasiva ("noncommittal") penalizada por `ResponseRelevancy` de RAGAS, en tensión con Falso Negativo Cero — no confirmado frase a frase. Ningún ajuste de código aplicado (D-057). Detalle: `tests/eval/results/e09_t05_plan_b_investigacion.md`. **Actualización T-05 (E-11, D-068):** `eval_15` cerrado como efecto colateral de la ampliación de KB (T-01) — Answer Relevancy pasa de 0.0 a 0.839; queda un hallazgo nuevo no relacionado (Context Precision en 0.0 de forma estable — hueco de contenido genuino, `backlog/ideas.md` "Huecos de KB" #1, no accionable con BM25/chunking). **Actualización T-06 (D-069, §5.3):** `eval_06` pasa a caso Grave del desglose de severidad, pero su score (0.385) queda marcado como cuestionado — evidencia de no-determinismo del generador, no de regresión estructural. **Actualización E-13 T-04 (D-085, §5.5):** `eval_25` entra en banda Grave tras la remedición (Faithfulness 0.32), investigado y cuestionado por el mismo criterio — juez inestable (0.52/0.32 sobre el mismo `SingleTurnSample`), retrieval sin cambios, contenido bien fundamentado. Answer Relevancy de `eval_25` sigue en 0.0, hallazgo B de fondo no resuelto. |
 | **C** — Grounding estricto vs. conocimiento del mundo | ✅ Cerrado sin cambio de prompt (D-066, T-03) | Investigación offline (`tests/eval/results/e11_t03_investigacion_offline.json`) reproduce el caso original ("hospital cerca de Vic") con el prompt de producción actual: el comportamiento evasivo **no se reproduce** — el modelo ya conecta el concepto no clínico sin evasivas. Ninguna regla de grounding nueva se redacta ni se aplica; probablemente resuelto como efecto colateral de revisiones de prompt posteriores a la observación original (E-05 T-03). |
 | **E** — Registro lingüístico no siempre accesible | ✅ Cerrado con ajuste de tono (D-067, T-04) | Revisión cualitativa dirigida (7 preguntas, `tests/eval/results/e11_t04_cierre.md`): el patrón no es "toda respuesta técnica es inaccesible" sino que, al enumerar fármacos/acrónimos/síndromes concretos, el modelo los reproduce sin glosa en 3 de 7 casos (43%), incluido el tema exacto del hallazgo original. Añadida instrucción a `[TONO — PERFIL FAMILIAR]` exigiendo glosa breve en el momento. Regresión verificada en T-07 (§5.4): tras el ajuste, la glosa aparece de forma consistente en los casos con hallazgo, sin diluir el cierre de seguridad. |
 
@@ -320,7 +320,8 @@ cumplido.
 B, C, E). Resumen: A y F ya resueltos en E-09; D mitigado parcialmente en E-09, sin cambios
 adicionales en E-11; C cerrado sin cambio de prompt (D-066); E cerrado con ajuste de tono
 (D-067); B parcialmente cerrado (`eval_15` resuelto como efecto colateral de T-01, `eval_06`
-cuestionado en T-06, `eval_25` sigue abierto sin investigar).
+cuestionado en T-06, `eval_25` sigue abierto sin investigar a fecha de cierre de E-11 —
+**actualización posterior:** investigado y cuestionado en E-13 T-04, D-085, §5.5).
 
 **Investigación dirigida T-05 (D-068, `tests/eval/results/e11_t05_cierre.md`):**
 `eval_63` confirmado resuelto sin investigación adicional (efecto colateral del fix de
@@ -383,6 +384,112 @@ Relevancy y Context Precision siguen por debajo de objetivo tras el ciclo de mej
 E-11 (ver §7) — no se presenta esta épica como un cierre completo de los hallazgos de
 E-09, solo como un avance medido y documentado.
 
+### 5.5. Cierre de E-13 — ampliación de KB con MedlinePlus Genetics y remedición final (T-04, 22 jul 2026)
+
+Actualización post-E-11 (§5.4), tras indexar 40 fichas nuevas de MedlinePlus Genetics
+(3 lotes, T-01 a T-03, `docs/kb-sources.md`) y remedir las 4 métricas RAGAS sobre el mismo
+subconjunto de 32 casos (`informativo` + `otro_idioma`). Detalle completo en
+`tests/eval/results/e13_t04_cierre.md`.
+
+**Triple comparación (32 casos):**
+
+| Métrica | Post-E-11 (T-02 final, §5.4) | Post-E-13 (40 fichas MedlinePlus) | Delta |
+|---|---|---|---|
+| Faithfulness | 84.6% | 83.2% | **−1.4pp** |
+| Answer Relevancy | 79.9% | 80.4% | +0.5pp |
+| Context Precision | 63.2% | 59.5% | **−3.7pp** |
+| Context Recall | 86.5% | 88.0% | +1.6pp |
+
+**Sin suavizar:** a diferencia de E-11 T-02 (donde las 4 métricas mejoraban a la vez), aquí
+2 de 4 métricas **empeoran**. Context Recall mejora (+1.6pp, sigue por encima del objetivo
+de >85% desde E-11) y Answer Relevancy mejora ligeramente (+0.5pp), pero **Context
+Precision retrocede (−3.7pp)** pese a ser la métrica que más se esperaba beneficiar de más
+cobertura documental, y **Faithfulness también retrocede (−1.4pp)**. La causa raíz de la
+caída de Context Precision no se ha investigado en esta tarea (fuera de alcance del
+`.feature`/plan de T-04, y las restricciones de la tarea prohíben tocar `RAG_TOP_K`/
+`rag/retriever.py`): queda como hallazgo abierto, con dos hipótesis no confirmadas
+(dilución real de contexto por el corpus ampliado, en línea con lo ya observado en D-084;
+o ruido de muestreo del juez LLM, ya documentado para esta misma métrica en E-11 T-07 sobre
+`eval_08`/`eval_13`, D-072).
+
+**Verificación dirigida XIAP/IPEX (D-063, fuera del dataset RAGAS):** "xiap" atribuye
+correctamente la relación XIAP→XLP2 al chunk indexado de MedlinePlus Genetics (primera
+fuente citada) y no reproduce el bug de idioma de D-078. "ipex" da una respuesta correcta y
+fundamentada, pero cita el capítulo ya existente del manual IDF en vez de la ficha nueva de
+MedlinePlus — verificado que no es alucinación (el manual ya cubre IPEX en profundidad
+desde antes de E-13), solo que la ficha nueva no gana el ranking de recuperación para esta
+consulta concreta.
+
+**Verificación dirigida `eval_06`/`eval_15` (casos de contexto pobre, E-09/E-11):**
+`eval_06` mejora parcialmente — Faithfulness pasa de banda Grave (0.385, D-069, §5.3) a
+banda Moderada (0.545) y Context Recall pasa de 0.0 a 0.5, pero Context Precision se
+mantiene en 0.0. `eval_15` **no cambia** en Context Precision ni Context Recall (ambos en
+0.0, igual que en las 5 mediciones de E-11 T-05) — confirma que el hueco de KB documentado
+en `backlog/ideas.md` (conservación en frío de inmunoglobulinas en viaje) sigue sin
+cubrirse: las fichas de MedlinePlus describen enfermedades, no logística de viaje, por lo
+que este hueco concreto era estructuralmente ajeno al alcance de esta fuente.
+
+**Hallucination Rate y bandas de severidad (recálculo sobre los mismos 32 casos, §5.3):**
+el binario (D-058) **mejora**: 93.75% (30/32, post-E-11) → **81.25% (26/32, post-E-13)**.
+Pero el desglose por bandas revela un hallazgo nuevo no buscado: `eval_25` ("¿Puede mi hijo
+marcharse de convivencias varios días?", ya señalado en §5.4 como "sigue abierto sin
+investigar") entra en banda Grave (Faithfulness 0.32, antes 0.857/Leve), sustituyendo a
+`eval_06` en esa posición (`eval_06` sale de Grave, ver arriba).
+
+**Investigación dirigida de `eval_25` (decisión de Marcos, `scripts/run_e13_t04_eval25_investigation.py`,
+`tests/eval/results/e13_t04_eval25_investigacion.json`):** Context Precision (0.0), Context
+Recall (1.0) y Answer Relevancy (0.0) son idénticos antes y después de E-13 — el retrieval
+no cambió, solo Faithfulness se movió. Dos invocaciones de `Faithfulness.single_turn_score()`
+sobre el mismo `SingleTurnSample` (misma respuesta, mismo contexto) dan **0.52 y 0.32** — el
+juez **no es estable**. La respuesta real está bien fundamentada en los chunks recuperados
+(la afirmación clave sobre participar en actividades "con la aprobación del proveedor de
+atención médica" aparece verbatim en un chunk del manual IDF), sin alucinación. **Causa
+raíz confirmada: ruido de muestreo del juez LLM**, no una regresión real de contenido ni un
+efecto de las 40 fichas nuevas — mismo patrón que D-069 (`eval_06`) y D-072
+(`eval_08`/`eval_13`). `eval_25` se marca como **cuestionado**, no como alucinación grave
+confirmada.
+
+| Banda | Post-E-11 (§5.3) | Post-E-13 |
+|---|---|---|
+| Grave (<0.5) | 1 (`eval_06`, cuestionado D-069) | 1 (`eval_25`, cuestionado — ver arriba) |
+| Moderada (0.5–0.85) | 13 | 14 |
+| Leve (0.85–<1.0) | 13 | 11 |
+| Sin desviación (1.0) | 5 | 6 |
+
+**D-084 — modo de fallo conocido (BM25 y preguntas de listado amplio en español):**
+confirmado en producción (prueba manual de Marcos) y verificado con un barrido de `top_k`
+(5/10/15/20/30, `scripts/run_e13_topk_sweep_investigation.py`, solo embeddings, sin
+Gemini) que subir `top_k` no soluciona el problema a ningún valor razonable — 0 chunks de
+`medlineplus_genetics` en el top-50 BM25 y en el top-30 vectorial para una pregunta de
+listado en español, porque las 40 fichas están en inglés (D-063/D-022, no se traducen en
+ingesta) y no comparten vocabulario léxico con una pregunta en prosa española. **No afecta
+al caso de uso principal de AIIP** (una enfermedad a la vez): preguntas de control sobre
+enfermedades concretas (Wiskott-Aldrich, Chediak-Higashi) sí recuperan MedlinePlus
+correctamente con `RAG_TOP_K` sin cambios. Sin caso de tipo "listado" en
+`tests/eval/dataset_partial.json`, este modo de fallo no está representado en la tabla de
+métricas de arriba ni en §7 — es una limitación aparte, no una métrica por debajo de
+objetivo. Documentado sin plan de arreglo antes del 29 de julio; candidato a backlog
+post-TFM (traducir/duplicar fichas al español, o una fuente-índice curada en español, ver
+`backlog/ideas.md`).
+
+**Regresión de la suite de tests:** `PYTHONPATH=. pytest tests/ -v` — 147 passed, 14
+skipped, 1 xfailed, idéntico al baseline de E-11 T-07. Sin regresión funcional.
+
+**Sin cambios de prompt en esta épica:** ninguna tarea de E-13 modifica
+`prompts/system_prompt_family.txt` en producción. Si la revisión de registro lingüístico de
+T-01/T-02/T-03 señaló algún ajuste pendiente, queda como hallazgo abierto para una épica
+futura, no aplicado aquí (mismo criterio que D-065).
+
+**Lectura de conjunto:** E-13 amplía la KB y dos de las cuatro métricas mejoran (Answer
+Relevancy, Context Recall), pero **Context Precision y Faithfulness empeoran** frente al
+cierre de E-11 — un resultado mixto, no la mejora limpia que planteaba la hipótesis inicial
+de la épica. El Hallucination Rate binario mejora, y el caso nuevo en banda Grave
+(`eval_25`) que trajo consigo queda investigado y cuestionado (ruido del juez, no regresión
+real) — pero la caída de Context Precision (−3.7pp, la métrica más relevante para el
+objetivo de la épica) sigue sin causa raíz confirmada. Se documenta así, sin suavizar,
+siguiendo el mismo principio de transparencia de CHART/TRIPOD-LLM (§6) aplicado en
+D-058/D-072.
+
 ---
 
 ## 6. Checklist CHART (anexo)
@@ -413,16 +520,16 @@ CHART (Chatbot Assessment Reporting Tool) — guía de reporte para estudios de 
 
 ## 7. Métricas de éxito consolidadas
 
-| Métrica | Objetivo | Resultado (Fase 1.5, post-E-09) | Resultado (post-E-11, T-02 final) | Delta | Estado | Fuente | Evaluado en |
-|---|---|---|---|---|---|---|---|
-| Faithfulness | > 95% | 83.7% (32 casos) | 84.6% (32 casos) | +0.9pp | 🔴 Por debajo | RAGAS | Fase 1 + 1.5 + E-11 |
-| Answer Relevancy | > 90% | 79.5% (32 casos) | 79.9% (32 casos) | +0.4pp | 🔴 Por debajo | RAGAS | Fase 1 + 1.5 + E-11 |
-| Context Precision | > 85% | 52.1% (32 casos) | 63.2% (32 casos) | +11.1pp | 🔴 Por debajo | RAGAS | Fase 1.5 + E-11 |
-| Context Recall | > 85% | 75.5% (32 casos) | 86.5% (32 casos) | +11.0pp | ✅ Cumple (primera vez) | RAGAS | Fase 1.5 + E-11 |
-| Safety Compliance | 100% | 100% (40/40 — 25/25 alarma+límite T-03 + 15/15 diagnóstico/prompt injection T-04) | 100% (sin cambios, sin re-medición completa tras E-11 — ver §5.4 nota de transparencia) | — | ✅ Cumple | Dataset seguridad | Fase 1 + Fase 1.5 |
-| Hallucination Rate | < 2% | 93.75% (30/32 casos con faithfulness < 1.0); desglose por severidad en §5.3 — solo 1/32 en banda Grave, y cuestionado (D-069) | 93.75% (sin cambios — mismo dataset base, §5.3) | — | 🔴 Muy por debajo (binario) | RAGAS (derivado de Faithfulness, D-058) | Fase 1.5 + E-11 T-06 |
-| Latencia | < 5 seg | No medida | No medida | — | ⚪ Pendiente | Medición directa | No cubierta en E-09 ni E-11; no bloquea el cierre de ninguna de las dos épicas — revisar si se retoma en E-10 |
-| Validación clínica | Aprobación inmunólogo | Feedback de signos de alarma recibido y aplicado (D-019, rondas 1–2), sin integrar aún en la rama de la épica; validación del conjunto representativo de E-09 no recibida a fecha de cierre | Sin cambios — deseable en paralelo, no condición de cierre del TFM (29 jul) | — | 🟡 Seguimiento post-TFM, no bloqueante | Revisión manual (Jacques Rivière) | Fase 1.5 |
+| Métrica | Objetivo | Resultado (Fase 1.5, post-E-09) | Resultado (post-E-11, T-02 final) | Resultado (post-E-13, T-04 final) | Delta E-11→E-13 | Estado | Fuente | Evaluado en |
+|---|---|---|---|---|---|---|---|---|
+| Faithfulness | > 95% | 83.7% (32 casos) | 84.6% (32 casos) | 83.2% (32 casos) | **−1.4pp** | 🔴 Por debajo | RAGAS | Fase 1 + 1.5 + E-11 + E-13 |
+| Answer Relevancy | > 90% | 79.5% (32 casos) | 79.9% (32 casos) | 80.4% (32 casos) | +0.5pp | 🔴 Por debajo | RAGAS | Fase 1 + 1.5 + E-11 + E-13 |
+| Context Precision | > 85% | 52.1% (32 casos) | 63.2% (32 casos) | 59.5% (32 casos) | **−3.7pp** | 🔴 Por debajo | RAGAS | Fase 1.5 + E-11 + E-13 |
+| Context Recall | > 85% | 75.5% (32 casos) | 86.5% (32 casos) | 88.0% (32 casos) | +1.6pp | ✅ Cumple | RAGAS | Fase 1.5 + E-11 + E-13 |
+| Safety Compliance | 100% | 100% (40/40 — 25/25 alarma+límite T-03 + 15/15 diagnóstico/prompt injection T-04) | 100% (sin cambios, sin re-medición completa tras E-11 — ver §5.4 nota de transparencia) | 100% (sin cambios, no remedida en E-13 — fuera de alcance de T-04) | — | ✅ Cumple | Dataset seguridad | Fase 1 + Fase 1.5 |
+| Hallucination Rate | < 2% | 93.75% (30/32 casos con faithfulness < 1.0); desglose por severidad en §5.3 — solo 1/32 en banda Grave, y cuestionado (D-069) | 93.75% (sin cambios — mismo dataset base, §5.3) | **81.25%** (26/32, §5.5) — mejora el binario; `eval_25` entra en banda Grave, investigado y cuestionado (D-085) | −12.5pp (binario) | 🔴 Muy por debajo (binario) | RAGAS (derivado de Faithfulness, D-058) | Fase 1.5 + E-11 T-06 + E-13 T-04 |
+| Latencia | < 5 seg | No medida | No medida | No medida | — | ⚪ Pendiente | Medición directa | No cubierta en E-09, E-11 ni E-13; no bloquea el cierre de ninguna de las tres épicas — revisar si se retoma en E-10 |
+| Validación clínica | Aprobación inmunólogo | Feedback de signos de alarma recibido y aplicado (D-019, rondas 1–2), sin integrar aún en la rama de la épica; validación del conjunto representativo de E-09 no recibida a fecha de cierre | Sin cambios — deseable en paralelo, no condición de cierre del TFM (29 jul) | Sin cambios | — | 🟡 Seguimiento post-TFM, no bloqueante | Revisión manual (Jacques Rivière) | Fase 1.5 |
 
 > **Lectura de conjunto (21 jul 2026, cierre E-11):** 3 de las 6 métricas RAGAS/Hallucination
 > siguen por debajo de objetivo tras el ciclo de mejora de E-11 — una menos que al cierre de
@@ -439,7 +546,22 @@ CHART (Chatbot Assessment Reporting Tool) — guía de reporte para estudios de 
 > (§6) ya aplicado en D-058/D-072. Safety Compliance (el requisito de Falso Negativo Cero)
 > se mantiene al 100%, sin regresión detectada en la suite de tests tras los ajustes de
 > prompt de E-11 (§5.4).
+>
+> **Lectura de conjunto (22 jul 2026, cierre E-13):** tras ampliar la KB con 40 fichas de
+> MedlinePlus Genetics, el resultado es **mixto, no una mejora limpia**: Answer Relevancy y
+> Context Recall mejoran (+0.5pp/+1.6pp, este último ya superaba objetivo desde E-11 y ahora
+> llega a 88.0%), pero **Context Precision retrocede (−3.7pp, sigue por debajo de objetivo)
+> y Faithfulness también retrocede (−1.4pp)** — sin causa raíz confirmada para ninguna de las
+> dos caídas (§5.5). El Hallucination Rate binario mejora sustancialmente (93.75%→81.25%);
+> el desglose por severidad trae un caso nuevo en banda Grave (`eval_25`, Faithfulness 0.32,
+> reemplaza a `eval_06` en esa posición), investigado y confirmado como ruido del juez, no
+> regresión real (D-085). Verificación dirigida XIAP/IPEX sin regresión de grounding
+> (D-063). D-084 (BM25 no encuentra
+> MedlinePlus en preguntas de listado amplio en español) queda documentado como limitación
+> conocida, sin caso de tipo "listado" en el dataset y sin plan de arreglo antes del 29 de
+> julio. Se documenta así, sin suavizar ninguna cifra que empeore, siguiendo el mismo
+> principio de transparencia de CHART/TRIPOD-LLM (§6) ya aplicado en D-058/D-072.
 
 ---
 
-*evaluation.md v1.2 — junio 2026 (corrección de consistencia del dataset inicial, 7 jul 2026; ampliación de consultas informativas 20→27 y total 65→72, D-049, 15 jul 2026; informe final E-09 T-06 — resultados reales RAGAS/Safety Compliance/Hallucination Rate, ciclo de mejora, checklist CHART/TRIPOD-LLM completado y correcciones numéricas §2.3/§3, 18 jul 2026; desglose de Hallucination Rate por severidad, E-11 T-06, D-069, 20 jul 2026; cierre de E-11 — §5.4 y §7 actualizados con resultados de T-01 a T-06 y verificación de regresión D-070/D-071/D-072, 21 jul 2026)*
+*evaluation.md v1.3 — junio 2026 (corrección de consistencia del dataset inicial, 7 jul 2026; ampliación de consultas informativas 20→27 y total 65→72, D-049, 15 jul 2026; informe final E-09 T-06 — resultados reales RAGAS/Safety Compliance/Hallucination Rate, ciclo de mejora, checklist CHART/TRIPOD-LLM completado y correcciones numéricas §2.3/§3, 18 jul 2026; desglose de Hallucination Rate por severidad, E-11 T-06, D-069, 20 jul 2026; cierre de E-11 — §5.4 y §7 actualizados con resultados de T-01 a T-06 y verificación de regresión D-070/D-071/D-072, 21 jul 2026; cierre de E-13 — §5.5 y §7 actualizados con remedición post-ampliación de KB (MedlinePlus Genetics), verificación dirigida XIAP/IPEX/eval_06/eval_15, hallazgo nuevo de `eval_25` en banda Grave investigado y cuestionado (D-085), y D-084 documentado como limitación conocida, 22 jul 2026)*

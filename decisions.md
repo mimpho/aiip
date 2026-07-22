@@ -93,6 +93,7 @@
 - [D-082 — Revierte thinking_budget=0 (D-025): causaba rechazos autocontradictorios en preguntas reales en inglés](#d-082--revierte-thinking_budget0-d-025-causaba-rechazos-autocontradictorios-en-preguntas-reales-en-inglés)
 - [D-083 — smoke_test_rag.py mostraba chunks de una recuperación distinta a la usada para generar la respuesta](#d-083--smoke_test_ragpy-mostraba-chunks-de-una-recuperación-distinta-a-la-usada-para-generar-la-respuesta)
 - [D-084 — Hallazgo abierto: BM25 no encuentra fichas de MedlinePlus (inglés) en preguntas de listado en español — no confundir con top_k pequeño](#d-084--hallazgo-abierto-bm25-no-encuentra-fichas-de-medlineplus-inglés-en-preguntas-de-listado-en-español--no-confundir-con-top_k-pequeño)
+- [D-085 — E-13 T-04: `eval_25` (Faithfulness 0.32, banda Grave nueva) confirmado como ruido del juez, no regresión real — mismo patrón que D-069/D-072](#d-085--e-13-t-04-eval_25-faithfulness-032-banda-grave-nueva-confirmado-como-ruido-del-juez-no-regresión-real--mismo-patrón-que-d-069d-072)
 
 ---
 
@@ -4519,3 +4520,64 @@ incluso con el valor actual. El hallazgo de listado queda como limitación docum
 tarea de código para T-04 — candidata a mencionarse en el informe final (E-09 T-06 style) como
 modo de fallo conocido de RAG para preguntas de enumeración amplia, sin plan de arreglo antes
 del 29 de julio.
+
+---
+
+## D-085 — E-13 T-04: `eval_25` (Faithfulness 0.32, banda Grave nueva) confirmado como ruido del juez, no regresión real — mismo patrón que D-069/D-072
+
+**Fecha:** 22 de julio de 2026
+**Fase:** técnica
+**Épica:** E-13 (T-04, remedición de cierre)
+
+**Contexto**
+Al remedir RAGAS tras ampliar la KB con las 40 fichas de MedlinePlus Genetics (T-04),
+`eval_25` ("¿Puede mi hijo marcharse de convivencias varios días?") cae de Faithfulness
+0.857 (banda Leve, pre-E-13) a 0.32 (banda Grave) — sustituyendo a `eval_06` como único caso
+Grave del desglose de severidad (D-069, §5.3). `eval_25` ya figuraba como hallazgo B
+abierto sin investigar desde E-09/E-11 (`docs/evaluation.md` §5.2/§5.4). Marcos, al revisar
+la primera versión de `tests/eval/results/e13_t04_cierre.md`, pidió confirmar la causa antes
+de dar el cierre de la épica por bueno (paso 10 puesto en pausa, paso 11 añadido al plan).
+
+**Investigación (`scripts/run_e13_t04_eval25_investigation.py`,
+`tests/eval/results/e13_t04_eval25_investigacion.json`)**
+- Context Precision (0.0), Context Recall (1.0) y Answer Relevancy (0.0) son **idénticos**
+  antes y después de E-13 — el retrieval no cambió, solo Faithfulness se movió. Esto ya
+  apuntaba a que la causa no podía ser un efecto de las 40 fichas nuevas sobre el ranking de
+  recuperación.
+- **Estabilidad del juez:** dos invocaciones de `Faithfulness.single_turn_score()` sobre el
+  mismo `SingleTurnSample` (misma respuesta, mismo contexto, sin volver a llamar a
+  `retrieve()`/`query()`) dan **0.52 y 0.32** — el juez no es estable para este caso.
+- **Contraste de contenido:** la respuesta real generada hoy es cautelosa y remite al
+  equipo médico, en línea con `expected_answer`. Su afirmación más concreta — "con la
+  aprobación del proveedor de atención médica del niño, el niño debe participar en la
+  escuela u otras actividades siempre que sea posible" — aparece **verbatim** en uno de los
+  chunks recuperados (`idf/manual-para-pacientes-y-familias...pdf`, Capítulo 42). Sin
+  alarma de seguridad inesperada. No hay contenido inventado ni afirmación no soportada por
+  el contexto.
+
+**Decisión**
+Causa raíz confirmada: **ruido de muestreo del juez LLM de Faithfulness**, no una regresión
+real de contenido ni un efecto de la ampliación de KB de E-13. `eval_25` se marca como
+**cuestionado** en `docs/evaluation.md` §5.3/§5.5 (mismo criterio que `eval_06`/D-069 y
+`eval_08`/`eval_13`/D-072): el score oficial (0.32) se mantiene sin modificar en el dataset
+y en el conteo de bandas — no se sustituye por una re-medición más favorable — pero no se
+presenta como una alucinación grave confirmada y estable.
+
+**Consecuencias**
+- El paso 10 del plan de T-04 (confirmación de cierre de Marcos) se reactiva tras esta
+  investigación — ver `tests/eval/results/e13_t04_cierre.md` sección 3ter.
+- No se reabre el alcance de retrieval/BM25 (D-084 sigue fuera de alcance): esta
+  investigación es puntual de generación/juez, no motivo para tocar `rag/retriever.py` ni
+  `RAG_TOP_K`.
+- El hallazgo de fondo de `eval_25` (hallazgo B, Answer Relevancy 0.0 desde E-09) sigue sin
+  resolver — esta investigación solo aclara la caída de Faithfulness de esta tarea, no cierra
+  el hallazgo B completo.
+
+**Alternativas descartadas**
+- Dar el hallazgo por regresión real sin investigar (lo que pedía evitar Marcos): hubiera
+  presentado el cierre de E-13 con una alucinación grave nueva y confirmada, cuando la
+  evidencia (retrieval sin cambios + juez inestable + contenido bien fundamentado) apunta a
+  ruido de muestreo.
+- Re-medir Faithfulness varias veces y quedarse con el valor más favorable: descartado por
+  el mismo criterio de D-058/D-069 — no se suaviza el número oficial del dataset, se marca
+  como cuestionado en el texto en vez de sustituirlo.
