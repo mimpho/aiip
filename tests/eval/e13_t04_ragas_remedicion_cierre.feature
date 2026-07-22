@@ -9,20 +9,26 @@
 Feature: Remedición RAGAS post-ampliación de KB (E-13) y cierre de la épica
 
   Como responsable del proyecto AIIP
-  Quiero medir el impacto de las 39 fichas nuevas de MedlinePlus Genetics sobre las 4
+  Quiero medir el impacto de las 40 fichas nuevas de MedlinePlus Genetics sobre las 4
   métricas RAGAS y cerrar la épica con el informe actualizado
   Para confirmar que la ampliación mejora Context Precision/Recall (u otras métricas) sin
   degradar el resto, antes de dar la KB por ampliada
 
   Scenario: Respaldo del resultado previo antes de la remedición
-    Given el fichero de resultados de E-11 T-02 en
-      "tests/eval/results/e11_t02_ragas_full_scores.json" (o el nombre vigente tras el
-      cierre de E-11)
+    Given el fichero de resultados vigente en
+      "tests/eval/results/e09_t02_ragas_full_scores.json" (el que escribe
+      "scripts/run_ragas_eval.py", con los números finales de cierre de E-11: Faithfulness
+      84.6%, Answer Relevancy 79.9%, Context Precision 63.2%, Context Recall 86.5%)
     When se prepara la ejecución de "scripts/run_ragas_eval.py" de esta tarea
-    Then el fichero se respalda como referencia pre-E-13 y se resetea a vacío
+    Then el fichero se respalda como
+      "tests/eval/results/e09_t02_ragas_full_scores_pre_e13_t04.json" (referencia pre-E-13,
+      mismo patrón que "_pre_e11_t02.json") y el fichero vigente se resetea a vacío
     And se documenta explícitamente que el reset es necesario porque la ejecución es
       incremental (checkpointing) y sin resetear no mediría nada nuevo sobre el corpus
       ampliado con las fichas de MedlinePlus
+    And al terminar la remedición, el resultado final se guarda también como
+      "tests/eval/results/e09_t02_ragas_full_scores_e13_t04_baseline.json" (snapshot de
+      cierre, mismo patrón que "_e11_t02_baseline.json")
 
   Scenario: Remedición de las 4 métricas RAGAS sobre el corpus ampliado
     Given los 3 lotes de MedlinePlus Genetics ya indexados (T-01/T-02/T-03) y el fichero de
@@ -49,8 +55,19 @@ Feature: Remedición RAGAS post-ampliación de KB (E-13) y cierre de la épica
     Given los 3 lotes indexados sin fallos y la remedición ya documentada
     When se actualiza la fila de MedlinePlus Genetics en "docs/kb-sources.md" (perfil
       familiar)
-    Then el estado pasa de "Propuesta" a "Validada", reflejando las 39 fichas (más las
-      solapadas aprobadas en T-01, si las hubiera) ya indexadas
+    Then el estado pasa de "Propuesta" a "Validada", reflejando las 40 fichas nuevas
+      (D-076: 36 de los 3 lotes + 4 revisadas ficha por ficha) ya indexadas
+
+  Scenario: D-084 documentado como limitación conocida en el informe final
+    Given el hallazgo D-084 (BM25 no encuentra fichas de MedlinePlus en preguntas de
+      listado amplio en español, confirmado con el barrido de "top_k" 5/10/15/20/30 sin
+      mejora, y sin caso de tipo "listado" en "tests/eval/dataset_partial.json")
+    When se documenta en "docs/evaluation.md"
+    Then aparece como modo de fallo conocido de RAG para preguntas de enumeración amplia
+      (mismo estilo que el informe final de E-09 T-06), explícito y sin plan de arreglo
+      antes del 29 de julio
+    And se deja claro que no afecta al caso de uso principal de AIIP (una enfermedad a la
+      vez), que sí recupera MedlinePlus correctamente incluso con "RAG_TOP_K" sin cambios
 
   Scenario: docs/evaluation.md actualizado como actualización post-E-13
     Given todos los resultados de esta tarea

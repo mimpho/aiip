@@ -3,7 +3,7 @@
     {
       "id": "eval_01",
       "question": "¿Qué es una inmunodeficiencia primaria?",
-      "faithfulness": 0.8823529411764706,
+      "faithfulness": 0.9791666666666666,
       "answer_relevancy": 0.8541831427230494,
       "context_precision": 0.999999999975,
       "context_recall": 0.5
@@ -11,143 +11,143 @@
     {
       "id": "eval_02",
       "question": "¿Las inmunodeficiencias primarias son hereditarias?",
-      "faithfulness": 0.7777777777777778,
-      "answer_relevancy": 0.9638784468384206,
+      "faithfulness": 0.8,
+      "answer_relevancy": 0.7151465093943671,
       "context_precision": 0.9333333333177777,
       "context_recall": 1.0
     },
     {
       "id": "eval_03",
       "question": "¿Por qué mi hijo necesita infusiones de inmunoglobulinas?",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.7465637318202963,
+      "faithfulness": 0.8648648648648649,
+      "answer_relevancy": 0.7451131062257167,
       "context_precision": 0.9999999999,
       "context_recall": 1.0
     },
     {
       "id": "eval_04",
       "question": "¿Cuál es la diferencia entre las infusiones de inmunoglobulinas intravenosas y subcutáneas?",
-      "faithfulness": 0.9411764705882353,
-      "answer_relevancy": 0.9968280201305775,
+      "faithfulness": 0.9594594594594594,
+      "answer_relevancy": 0.8572861135651207,
       "context_precision": 0.555555555537037,
-      "context_recall": 0.5
+      "context_recall": 1.0
     },
     {
       "id": "eval_05",
       "question": "¿Puede mi hija recibir vacunas de virus vivos si tiene una inmunodeficiencia primaria?",
-      "faithfulness": 0.8666666666666667,
-      "answer_relevancy": 0.738075426003204,
+      "faithfulness": 0.8484848484848485,
+      "answer_relevancy": 0.7621742738521738,
       "context_precision": 0.9379251700546283,
       "context_recall": 1.0
     },
     {
       "id": "eval_06",
       "question": "¿Con qué frecuencia hay que hacer revisiones con el inmunólogo?",
-      "faithfulness": 0.5454545454545454,
+      "faithfulness": 0.38461538461538464,
       "answer_relevancy": 0.0,
       "context_precision": 0.0,
-      "context_recall": 0.5
+      "context_recall": 0.0
     },
     {
       "id": "eval_07",
       "question": "¿Es normal que le duela el brazo después de la infusión subcutánea de inmunoglobulinas?",
-      "faithfulness": 0.9166666666666666,
-      "answer_relevancy": 0.7488507942373092,
+      "faithfulness": 0.7391304347826086,
+      "answer_relevancy": 0.9041226568081453,
       "context_precision": 0.7099999999858,
       "context_recall": 1.0
     },
     {
       "id": "eval_08",
       "question": "¿Qué antibióticos se usan habitualmente como profilaxis en inmunodeficiencias primarias?",
-      "faithfulness": 0.8,
-      "answer_relevancy": 0.807330937714415,
-      "context_precision": 0.19999999998,
+      "faithfulness": 0.8478260869565217,
+      "answer_relevancy": 0.8355993181431941,
+      "context_precision": 0.49999999995,
       "context_recall": 1.0
     },
     {
       "id": "eval_09",
       "question": "¿Puede mi hijo hacer deporte con normalidad teniendo una inmunodeficiencia primaria?",
-      "faithfulness": 0.7083333333333334,
-      "answer_relevancy": 0.7797123054383143,
+      "faithfulness": 0.9545454545454546,
+      "answer_relevancy": 0.8856996189969891,
       "context_precision": 0.9999999999,
       "context_recall": 1.0
     },
     {
       "id": "eval_10",
       "question": "¿Es seguro que mi hijo vaya al colegio con una inmunodeficiencia primaria?",
-      "faithfulness": 0.9666666666666667,
-      "answer_relevancy": 0.8895144266237184,
-      "context_precision": 0.699999999965,
+      "faithfulness": 0.9464285714285714,
+      "answer_relevancy": 0.7546894248954675,
+      "context_precision": 0.9999999999,
       "context_recall": 1.0
     },
     {
       "id": "eval_11",
       "question": "¿Cómo se diagnostica una inmunodeficiencia primaria?",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.9145430140797618,
+      "answer_relevancy": 0.8999562991609951,
       "context_precision": 0.11111111109999999,
       "context_recall": 1.0
     },
     {
       "id": "eval_12",
       "question": "¿Debemos hacer pruebas genéticas al resto de la familia?",
-      "faithfulness": 0.8666666666666667,
-      "answer_relevancy": 0.7515555408679274,
+      "faithfulness": 0.7777777777777778,
+      "answer_relevancy": 0.7981631097067295,
       "context_precision": 0.5833333333041666,
       "context_recall": 1.0
     },
     {
       "id": "eval_13",
       "question": "¿Qué cuidados hay que tener en la zona de la piel donde se pone la inyección subcutánea?",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.9006886470903153,
+      "faithfulness": 0.85,
+      "answer_relevancy": 0.8924444485516797,
       "context_precision": 0.14285714284285714,
-      "context_recall": 1.0
+      "context_recall": 0.5
     },
     {
       "id": "eval_14",
       "question": "¿Es lo mismo una inmunodeficiencia primaria que una alergia?",
-      "faithfulness": 0.8095238095238095,
-      "answer_relevancy": 0.9950069847360283,
+      "faithfulness": 0.8636363636363636,
+      "answer_relevancy": 0.9671335861110834,
       "context_precision": 0.7499999999625,
       "context_recall": 1.0
     },
     {
       "id": "eval_15",
       "question": "¿Podemos viajar en avión llevando la medicación de inmunoglobulinas?",
-      "faithfulness": 0.8148148148148148,
-      "answer_relevancy": 0.9925820140309608,
+      "faithfulness": 0.875,
+      "answer_relevancy": 0.8391206320434669,
       "context_precision": 0.0,
       "context_recall": 0.0
     },
     {
       "id": "eval_16",
       "question": "¿Qué es la inmunodeficiencia variable común (IDVC)?",
-      "faithfulness": 0.8064516129032258,
-      "answer_relevancy": 0.9216280595552354,
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.9123131485890396,
       "context_precision": 0.499999999975,
       "context_recall": 0.5
     },
     {
       "id": "eval_17",
       "question": "¿Existen grupos de apoyo para familias con inmunodeficiencias primarias?",
-      "faithfulness": 0.8928571428571429,
-      "answer_relevancy": 0.7847126312598259,
-      "context_precision": 0.9999999999857143,
+      "faithfulness": 0.8888888888888888,
+      "answer_relevancy": 0.9825126210629859,
+      "context_precision": 0.9749999999878125,
       "context_recall": 1.0
     },
     {
       "id": "eval_18",
       "question": "¿Es necesario informar al colegio sobre la condición de mi hijo?",
-      "faithfulness": 0.6666666666666666,
-      "answer_relevancy": 0.8137835396115523,
+      "faithfulness": 0.9130434782608695,
+      "answer_relevancy": 0.7569020309021873,
       "context_precision": 0.32499999998375,
       "context_recall": 1.0
     },
     {
       "id": "eval_19",
       "question": "¿Qué especialista debe hacer el seguimiento de una inmunodeficiencia primaria?",
-      "faithfulness": 0.6923076923076923,
+      "faithfulness": 0.7777777777777778,
       "answer_relevancy": 0.8638763538299518,
       "context_precision": 0.49999999995,
       "context_recall": 1.0
@@ -155,47 +155,47 @@
     {
       "id": "eval_20",
       "question": "¿Las inmunodeficiencias primarias tienen cura?",
-      "faithfulness": 1.0,
-      "answer_relevancy": 0.9308702272918102,
-      "context_precision": 0.4249999999858333,
+      "faithfulness": 0.76,
+      "answer_relevancy": 0.8786075455648067,
+      "context_precision": 0.4499999999775,
       "context_recall": 0.6666666666666666
     },
     {
       "id": "eval_21",
       "question": "¿Podemos viajar con nuestro hijo si tiene una inmunodeficiencia?",
       "faithfulness": 1.0,
-      "answer_relevancy": 0.8499271899462366,
+      "answer_relevancy": 0.794076945542379,
       "context_precision": 0.8124999999796875,
       "context_recall": 1.0
     },
     {
       "id": "eval_22",
       "question": "¿Tendríamos que informar al inmunólogo de referencia si salimos del país de vacaciones?",
-      "faithfulness": 0.875,
-      "answer_relevancy": 0.7389179990993967,
-      "context_precision": 0.499999999975,
+      "faithfulness": 0.7894736842105263,
+      "answer_relevancy": 0.9343071169630678,
+      "context_precision": 0.9166666666361111,
       "context_recall": 1.0
     },
     {
       "id": "eval_23",
       "question": "¿Deberíamos informar al inmunólogo de referencia del destino de nuestras vacaciones?",
-      "faithfulness": 0.8181818181818182,
-      "answer_relevancy": 0.856133407568045,
+      "faithfulness": 0.8,
+      "answer_relevancy": 0.8400846041364772,
       "context_precision": 0.99999999995,
       "context_recall": 1.0
     },
     {
       "id": "eval_24",
       "question": "¿Podemos viajar a zonas exóticas?",
-      "faithfulness": 0.8695652173913043,
-      "answer_relevancy": 0.7532027937604594,
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.7579703078289416,
       "context_precision": 0.5249999999868751,
       "context_recall": 1.0
     },
     {
       "id": "eval_25",
       "question": "¿Puede mi hijo marcharse de convivencias varios días?",
-      "faithfulness": 0.32,
+      "faithfulness": 0.8571428571428571,
       "answer_relevancy": 0.0,
       "context_precision": 0.0,
       "context_recall": 1.0
@@ -203,39 +203,39 @@
     {
       "id": "eval_26",
       "question": "¿Existen las inmunodeficiencias secundarias?",
-      "faithfulness": 0.7941176470588235,
-      "answer_relevancy": 0.9510179595399549,
+      "faithfulness": 0.8095238095238095,
+      "answer_relevancy": 0.9256453669656292,
       "context_precision": 0.999999999975,
       "context_recall": 1.0
     },
     {
       "id": "eval_27",
       "question": "¿Es contagiosa una inmunodeficiencia?",
-      "faithfulness": 0.8333333333333334,
-      "answer_relevancy": 0.661111297210973,
+      "faithfulness": 0.6666666666666666,
+      "answer_relevancy": 0.8417812820381599,
       "context_precision": 0.19999999998,
       "context_recall": 1.0
     },
     {
       "id": "eval_63",
       "question": "What is a primary immunodeficiency?",
-      "faithfulness": 0.9310344827586207,
-      "answer_relevancy": 0.7948742897673506,
-      "context_precision": 0.64999999998375,
+      "faithfulness": 0.8775510204081632,
+      "answer_relevancy": 0.8199498523079103,
+      "context_precision": 0.8041666666465626,
       "context_recall": 0.5
     },
     {
       "id": "eval_64",
       "question": "Are primary immunodeficiencies hereditary?",
-      "faithfulness": 0.6363636363636364,
-      "answer_relevancy": 0.9124587939007668,
+      "faithfulness": 0.64,
+      "answer_relevancy": 0.864083006303431,
       "context_precision": 0.99999999998,
       "context_recall": 1.0
     },
     {
       "id": "eval_65",
       "question": "Why does my child need immunoglobulin infusions?",
-      "faithfulness": 1.0,
+      "faithfulness": 0.8813559322033898,
       "answer_relevancy": 0.9817797680420445,
       "context_precision": 0.24285714284499998,
       "context_recall": 1.0
@@ -243,25 +243,25 @@
     {
       "id": "eval_66",
       "question": "Què és una immunodeficiència primària?",
-      "faithfulness": 0.9069767441860465,
-      "answer_relevancy": 0.8276711564089719,
+      "faithfulness": 1.0,
+      "answer_relevancy": 0.7596309099967353,
       "context_precision": 0.9999999999666667,
       "context_recall": 1.0
     },
     {
       "id": "eval_67",
       "question": "Per què el meu fill necessita infusions d'immunoglobulines?",
-      "faithfulness": 0.6818181818181818,
-      "answer_relevancy": 0.9999999999991532,
+      "faithfulness": 0.7272727272727273,
+      "answer_relevancy": 0.9301265210490559,
       "context_precision": 0.7499999999625,
       "context_recall": 1.0
     }
   ],
   "aggregate": {
     "n_cases": 32,
-    "faithfulness_mean": 0.831899204223817,
-    "answer_relevancy_mean": 0.8037899655976882,
-    "context_precision_mean": 0.5954522746340483,
-    "context_recall_mean": 0.8802083333333334
+    "faithfulness_mean": 0.8462385236116937,
+    "answer_relevancy_mean": 0.7985774881656558,
+    "context_precision_mean": 0.6320408162972573,
+    "context_recall_mean": 0.8645833333333334
   }
 }
