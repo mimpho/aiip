@@ -706,6 +706,10 @@ números, no solo declarado.
 - Entrada en `prompts.md` con el caso de human-in-the-loop ya identificado (intuición de
   Marcos sobre KB limitado → verificación contra `manifest.json` → tarea priorizada)
 
+**Notas en curso (22 jul 2026):** `docs/e12-retro-notes.md` recoge observaciones sobre el
+workflow (Cowork/Antigravity/human-in-the-loop) a medida que ocurren, antes de llegar al cierre
+real de la fase — scratchpad de entrada para T-01, no el deliverable.
+
 ### Tareas
 
 | ID | Tarea | Estado |
@@ -823,7 +827,7 @@ puntos resueltos sobre la propuesta inicial:
 |---|---|---|
 | T-01 | Preparación de datos (lista definitiva de 36 fichas, D-075) + Lote 1 — 13 fichas (Z→P, incluye XIAP) + 4 fichas de revisión ya resueltas (D-076: 22q11.2/DiGeorge + 3 subtipos de SCID) | ✅ Completada |
 | T-02 | Lote 2 — 13 fichas (posiciones 14-26, O→D), incluye IPEX | ✅ Completada |
-| T-03 | Lote 3 — 10 fichas restantes (posiciones 27-36, C→A) | 🔄 En progreso |
+| T-03 | Lote 3 — 10 fichas restantes (posiciones 27-36, C→A) | ✅ Completada |
 | T-04 | Remedición RAGAS + cierre | ⚪ Pendiente |
 
 **Estado:** 🔵 En curso

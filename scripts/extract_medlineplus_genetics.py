@@ -184,7 +184,13 @@ def fetch_causes_paragraphs(slug: str) -> list[str]:
         print(f"[aviso] {slug}: no se pudo descargar {url} para la sección Causes ({exc})")
         return []
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    # response.content (bytes) en vez de response.text: requests adivina mal el
+    # encoding de esta página para caracteres fuera de ASCII (letras griegas en
+    # nombres de proteínas como "p110δ"/"p85α", o el nbsp de "The\xa0PIK3CD..."),
+    # decodificándolos como Latin-1 y produciendo mojibake ("p110Î´"). Pasar los
+    # bytes crudos deja que BeautifulSoup detecte el encoding real (UTF-8) a
+    # partir del contenido/meta charset, en vez de la cabecera HTTP poco fiable.
+    soup = BeautifulSoup(response.content, "html.parser")
     causes_section = soup.find("div", attrs={"data-bookmark": "causes"})
     if causes_section is None:
         print(f"[aviso] {slug}: sin sección Causes en la página, se omite")

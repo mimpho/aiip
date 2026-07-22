@@ -72,9 +72,75 @@
    es ≥ 0.2. Si algún caso legítimo baja de ese margen, documentarlo como hallazgo abierto
    (no ajustar el umbral en esta tarea — mismo criterio que la actualización de D-078 en T-02).
 
-7. **Confirmación de cierre** (Marcos): revisar los pasos 1-6 y decidir si el lote 3 queda
+7. **Fix de encoding + re-extracción retroactiva (añadido 22 jul 2026, hallazgo de la
+   revisión de registro lingüístico, D-081):** `fetch_causes_paragraphs()` en
+   `scripts/extract_medlineplus_genetics.py` usaba `response.text` (encoding mal adivinado
+   por `requests` para caracteres no-ASCII) en vez de `response.content` — mojibake en letras
+   griegas y nbsp ("p110δ" → "p110Î´"). Ya corregido en el script (misma sesión de Cowork).
+   Re-extraer solo la sección "Causes" de las 4 fichas afectadas y reingestar — mismo patrón
+   retroactivo que D-077 aplicó al Lote 1:
+   ```bash
+   python scripts/extract_medlineplus_genetics.py --extract-one activated-pi3k-delta-syndrome
+   python scripts/extract_medlineplus_genetics.py --extract-one adenosine-deaminase-deficiency
+   python scripts/extract_medlineplus_genetics.py --extract-one vici-syndrome
+   python scripts/extract_medlineplus_genetics.py --extract-one x-linked-hyper-igm-syndrome
+   python scripts/smoke_test_rag.py --force-reingest
+   ```
+   Nota: `vici-syndrome` y `x-linked-hyper-igm-syndrome` son del Lote 1 (T-01, ya cerrada) —
+   se corrigen aquí porque es el mismo root cause y el mismo patrón que D-077, no porque T-03
+   reabra el alcance de T-01. Verificar tras la re-extracción que ninguno de los 4 ficheros
+   contiene ya "Î´", "Î±" ni "Â" sueltos:
+   ```bash
+   python3 -c "
+   import glob
+   for f in ['activated-pi3k-delta-syndrome','adenosine-deaminase-deficiency','vici-syndrome','x-linked-hyper-igm-syndrome']:
+       text = open(f'data/raw/medlineplus_genetics/{f}.html', encoding='utf-8').read()
+       bad = [p for p in ['Î´','Î±','Â'] if p in text]
+       print(f, 'OK' if not bad else f'MOJIBAKE: {bad}')
+   "
+   ```
+
+8. **Fix de `thinking_budget` (añadido 22 jul 2026, hallazgo transversal al revisar el smoke
+   test de E-06 T-07, D-082):** el escenario "Cross-lingual real (inglés)" del smoke test
+   devolvía un rechazo autocontradictorio ante preguntas reales en inglés. Root cause aislado
+   con `tasks/investigacion-cross-lingual-en.py`: `thinking_budget=0` (D-025). Ya corregido en
+   `rag/generator.py` (thinking reactivado) + `rag/config.py`/`.env.example`
+   (`LLM_MAX_TOKENS` 1024→2048). Afecta a *toda* consulta en producción, no solo a E-13 — antes
+   de dar esto por cerrado, repetir el smoke test completo (las 5 preguntas, no solo la rota):
+   ```bash
+   python scripts/smoke_test_rag.py
+   ```
+   Revisar en `tests/results/e06_t07_smoke_test_results.md`:
+   - Las 5 respuestas son coherentes (sin el rechazo autocontradictorio ni truncamiento del
+     tipo que motivó D-025 originalmente).
+   - Repetir 2-3 veces la pregunta cross-lingual en inglés para confirmar que ya no reaparece
+     (Test 1 de `investigacion-cross-lingual-en.py` la reproducía 5/5 antes del fix).
+   - Si reaparece truncamiento (respuesta cortada a media frase) en alguna pregunta, es el
+     problema original de D-025 reabierto — no ajustar `LLM_MAX_TOKENS` sin volver a Cowork a
+     registrarlo.
+   No hay verificación de latencia/coste en esta tarea (nota ya en D-082) — si el thinking
+   reactivado resulta notablemente más lento o caro, es un hallazgo a traer a Cowork, no a
+   resolver aquí.
+
+   **Mismo comando también verifica D-083** (fix aparte, mismo hallazgo de revisión manual):
+   `_run_question()` ahora usa `pipeline.retrieve()` en vez de una búsqueda vectorial pura, para
+   que "Chunks recuperados" muestre lo mismo que realmente alimentó la respuesta. Revisar
+   además en el mismo `tests/results/e06_t07_smoke_test_results.md`:
+   - Para cada pregunta, los ficheros listados en "Fuentes consultadas" están todos contenidos
+     en los ficheros de "Chunks recuperados" de esa misma pregunta (antes del fix podían faltar
+     hasta el 60% — ver D-083).
+   - El score de cada chunk ahora se etiqueta "score posicional" (1/rank), no "similitud" — es
+     esperado que los números sean distintos a smoke tests anteriores a este fix.
+
+9. **Confirmación de cierre** (Marcos): revisar los pasos 1-8 y decidir si el lote 3 queda
    cerrado o si hace falta una ronda adicional antes de pasar a T-04 (remedición RAGAS +
-   cierre de E-13, con las 40 fichas nuevas ya indexadas).
+   cierre de E-13, con las 40 fichas nuevas ya indexadas, sin mojibake y con los fixes de
+   `thinking_budget` (D-082) y de recuperación mostrada en el smoke test (D-083) verificados).
+
+   **Cerrado (22 jul 2026):** Marcos confirma tras revisar el smoke test completo re-lanzado
+   (las 5 preguntas, "Fuentes consultadas" = "Chunks recuperados" en las 5, sin rechazo
+   cross-lingual ni truncamiento). `tests/results/e06_t07_smoke_test_results.md` actualizado con
+   "Revisión manual (Marcos): revisado — correcto" en las 5 entradas. T-03 queda completada.
 
 ## Restricciones a respetar
 

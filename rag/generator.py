@@ -28,13 +28,19 @@ class RAGGenerator:
             model=config.get("LLM_MODEL", "gemini-2.5-flash"),
             temperature=config.get("LLM_TEMPERATURE", 0.1),
             top_p=config.get("LLM_TOP_P", 0.1),
-            max_output_tokens=config.get("LLM_MAX_TOKENS", 1024),
+            max_output_tokens=config.get("LLM_MAX_TOKENS", 2048),
             google_api_key=config["GOOGLE_API_KEY"],
-            # D-025: gemini-2.5-flash consume max_output_tokens en "thinking"
-            # interno antes de generar la respuesta visible, truncándola con
-            # LLM_MAX_TOKENS bajo (hallazgo de E-06 T-07 con datos/API reales).
-            # thinking_budget=0 lo desactiva.
-            thinking_budget=0,
+            # D-082 revierte thinking_budget=0 (D-025): desactivar el thinking
+            # de gemini-2.5-flash producía, de forma reproducible, un rechazo
+            # autocontradictorio ("solo respondo en el idioma en que escribes...
+            # pregúntame en español") ante preguntas reales en inglés — hallazgo
+            # de E-13 T-03 verificando el smoke test de E-06 T-07. Con el
+            # thinking activado (comportamiento por defecto del modelo, sin
+            # pasar thinking_budget) y LLM_MAX_TOKENS=2048 de margen, el
+            # problema no se reprodujo en ninguna repetición. El problema
+            # original de D-025 (respuesta visible truncada por el thinking
+            # consumiendo el presupuesto con LLM_MAX_TOKENS=300) queda cubierto
+            # por el margen de 2048, no por desactivar el thinking.
         )
 
     def _load_system_prompt(self) -> str:
