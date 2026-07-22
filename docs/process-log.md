@@ -271,3 +271,53 @@ desarrollo asistido por IA a lo largo del proyecto.
   Cowork.
 
 ---
+
+## E-13 — Ampliación de KB: fuentes MedlinePlus Genetics
+**Periodo:** 21 jul – 22 jul 2026
+**Tareas:** T-01 a T-04 (4 tareas, todas completadas)
+
+### ¿Qué funcionó bien en el proceso?
+
+- **Cadencia de RAGAS acordada en `epic-start` (remedición completa solo una vez, al
+  cierre).** A diferencia de E-11 T-02 (que sí tocaba código de retriever), aquí cada lote
+  (T-01/T-02/T-03) llevó solo verificación dirigida puntual (repetir XIAP/IPEX, revisión de
+  registro lingüístico), dejando la suite RAGAS completa de 32 casos para T-04. Evitó
+  triplicar llamadas a Gemini por contenido que no tocaba retrieval ni algoritmo.
+- **El smoke test de E-06 T-07, revisado línea a línea, siguió sacando bugs de producción
+  reales que ningún test automatizado habría cogido** — tercera vez que ocurre en el
+  proyecto: `thinking_budget=0` causando rechazos autocontradictorios en inglés (D-082) y
+  `smoke_test_rag.py` mostrando una recuperación distinta a la real (D-083), ambos ajenos al
+  contenido nuevo de MedlinePlus pero expuestos por el reingest de la tarea.
+- **Ante un resultado de cierre mixto (2 métricas RAGAS mejoran, 2 empeoran), no se suavizó
+  ni se cerró rápido.** Marcos pidió investigar `eval_25` y la caída de Context Precision
+  antes de confirmar el cierre, lo que permitió distinguir con evidencia directa (repetir el
+  juez sobre el mismo `SingleTurnSample`) señal real de ruido de muestreo del evaluador
+  (D-085, D-086), en vez de aceptar los números agregados sin más.
+
+### ¿Qué generó fricción o retraso?
+
+- **Una primera lectura de resultados combinó dos hallazgos independientes como una sola
+  causa estructural.** `docs/e12-retro-notes.md` enlazó inicialmente el hallazgo de
+  BM25/idioma (D-084) con la caída de Context Precision de la remedición RAGAS como el mismo
+  efecto de "contenido estrecho compite con preguntas amplias". Investigar más a fondo (a
+  petición de Marcos) mostró que la caída de Context Precision era en su mayoría ruido del
+  evaluador, no relacionada con D-084 — la lectura se corrigió dentro de la misma sesión,
+  documentado como autocorrección explícita en vez de dejarse pasar.
+
+### ¿Qué cambió en las skills o el workflow?
+
+- **`task-start` (Paso 4 ampliado, D-080):** el plan de implementación pasa a aplicar también
+  a tareas de configuración que ejecuta Antigravity en una sesión nueva sin memoria de tareas
+  anteriores de la misma épica, no solo a tareas de código — precedente E-13 T-03. Aplicado en
+  `skills/task-start/SKILL.md`.
+- **`epic-start` (Paso 3 nuevo):** commit y push explícitos de lo generado en `epic-start`
+  antes de arrancar `task-start`, para que la primera tarea nazca de la rama de épica ya
+  actualizada en origin. Aplicado en `skills/epic-start/SKILL.md`.
+- **`epic-close` (Paso 1 ampliado):** `git fetch origin` explícito antes de comparar cualquier
+  rama contra origin — el ref local de la rama de épica puede quedar por detrás si la última
+  tarea se mergeó por PR en GitHub sin que el agente lo supiera. No fue un fallo real en este
+  cierre (se detectó a tiempo), pero se deja como paso explícito en vez de buena práctica
+  implícita. Aplicado en `skills/epic-close/SKILL.md`. Pendiente de sincronizar al plugin de
+  Cowork.
+
+---

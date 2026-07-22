@@ -830,7 +830,39 @@ puntos resueltos sobre la propuesta inicial:
 | T-03 | Lote 3 — 10 fichas restantes (posiciones 27-36, C→A) | ✅ Completada |
 | T-04 | Remedición RAGAS + cierre | ✅ Completada |
 
-**Estado:** 🔵 En curso
+**Nota de cierre — resultado mixto, no una mejora limpia (22 jul 2026):** la remedición RAGAS
+de T-04 (`tests/eval/results/e13_t04_cierre.md`) da 2 métricas mejor (Answer Relevancy +0.5pp,
+Context Recall +1.6pp) y 2 peor (Faithfulness −1.4pp, Context Precision −3.7pp, sigue por
+debajo de objetivo) frente al cierre de E-11. Investigación dirigida (D-085, D-086) atribuye la
+mayor parte de las caídas a ruido de muestreo del juez LLM (evidencia directa de inestabilidad
+del juez sobre el mismo `SingleTurnSample` en `eval_22`/`eval_10`/`eval_25`), no a un efecto real
+de las 40 fichas nuevas sobre el retrieval — con `eval_63` como único caso sin confirmación
+igual de limpia. Marcos confirma el cierre con este resultado documentado sin suavizar. Además
+queda un hallazgo estructural aparte, sin plan de arreglo: BM25 no encuentra las fichas de
+MedlinePlus (inglés) en preguntas de listado amplio en español (D-084), no afecta al caso de uso
+principal (una enfermedad a la vez).
+
+**Entregables**
+- `scripts/extract_medlineplus_genetics.py` — extracción del XML masivo de MedlinePlus Genetics (parseo automático, no copia manual ficha a ficha)
+- `data/raw/manifest.json`, `docs/kb-sources.md` — 40 fichas nuevas indexadas en `data/raw/medlineplus_genetics/`; fuente pasa de "Propuesta" a "Validada"
+- `rag/language.py` — margen mínimo de confianza (0.2) en `detect_language()` contra falsos positivos de catalán en frases cortas sin tilde (D-078)
+- `rag/generator.py`, `rag/config.py`, `.env.example` — revierte `thinking_budget=0` (rechazos autocontradictorios en inglés, D-082) y sube `LLM_MAX_TOKENS` default a 2048
+- `scripts/smoke_test_rag.py` — usa `pipeline.retrieve()` en vez de vectorstore directo, corrige discrepancia entre "chunks recuperados" y "fuentes consultadas" (D-083)
+- `scripts/run_e13_t03_cross_lingual_investigation.py`, `run_e13_topk_sweep_investigation.py`, `run_e13_t04_context_precision_investigation.py`, `run_e13_t04_eval25_investigation.py` — scripts de investigación dirigida
+- `tests/features/e13_t01_lote1_medlineplus.feature`, `e13_t02_lote2_medlineplus.feature`, `e13_t03_lote3_medlineplus.feature` — TDD/checklist de los 3 lotes
+- `tests/eval/e13_t04_ragas_remedicion_cierre.feature` — checklist de remedición RAGAS de cierre
+- `tests/eval/results/e13_t04_cierre.md` — informe de cierre T-04 (comparación pre/post, investigaciones `eval_25`/`eval_63`/caída de Context Precision)
+- `tests/eval/results/e13_t04_context_precision_investigacion.json`, `e13_t04_eval25_investigacion.json` — resultados de investigación dirigida
+- `tests/eval/results/e09_t02_ragas_full_scores_pre_e13_t04.json`, `e09_t02_ragas_full_scores_e13_t04_baseline.json` — snapshots pre/post de la remedición
+- `tests/results/e06_t07_smoke_test_results.md` — smoke test re-ejecutado tras D-082/D-083, 5/5 confirmadas por Marcos
+- `tasks/E13-T03-plan.md`, `E13-T04-plan.md` — planes de implementación
+- `docs/evaluation.md` — actualizado con resultados post-E-13 y el hallazgo BM25/listado (§5.5)
+- `backlog/ideas.md` — hueco de IUIS 2024 (clasificación genotípica) documentado como candidata futura
+- `docs/e12-retro-notes.md` — dos casos human-in-the-loop de esta épica documentados (scratchpad de E-12 T-01)
+- `skills/epic-start/SKILL.md`, `skills/task-start/SKILL.md` — Paso 3 (push antes de task-start) y Paso 4 (plan también para config ejecutada por Antigravity, D-080)
+- `decisions.md` — D-073 a D-086
+
+**Estado:** ✅ Completada — 22 jul 2026
 
 ---
 

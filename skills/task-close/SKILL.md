@@ -49,6 +49,15 @@ relevantes del plan, anótalas — irán en la sección "Notes" del PR.
 Genera la PR description en inglés, en markdown, lista para copiar en GitHub.
 El PR va de `task/E[nn]-T[nn]-nombre` a `epic/E[nn]-nombre`.
 
+**No reutilices el resumen en castellano del Paso 1 tal cual.** Precedente (E-13 T-02/T-03,
+22 jul 2026): el "What"/"Changes" del PR salió pegado casi literal del resumen en castellano
+presentado en el chat, en vez de redactarse directamente en inglés — mientras que T-01/T-04
+de la misma épica sí salieron bien. Redacta cada línea del PR en inglés desde cero (puede
+apoyarse en el mismo contenido/decisiones del Paso 1, pero no copiando la frase). Antes de
+presentar el PR en el chat, relee el bloque completo y confirma que no queda ninguna frase
+en castellano mezclada (los nombres de decisiones tipo `D-078` o rutas de fichero no cuentan
+como mezcla de idioma).
+
 ```markdown
 ## [tipo](E[nn]-T[nn]): [descripción en una línea]
 
