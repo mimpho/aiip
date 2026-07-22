@@ -442,6 +442,17 @@ decisión de diseño sobre derecho al olvido, no implementarla, así que
 aplazar la capa 3 no deja ningún cabo suelto para la entrega. Detalle
 completo del razonamiento en D-063.
 
+**Nota de reversión parcial (23 jul 2026, D-087):** la capa 2 (memoria de
+perfil: onboarding + contextualización + migración de `full_name`) se
+extrae a una épica nueva, **E-14 — Memoria de perfil (onboarding)**, y
+entra en Fase 1.5 en lugar de E-10. Esta sección de E-08 queda intacta
+como registro histórico de D-063 — capas 1 y 3 siguen aplazadas a
+seguimiento post-TFM sin fecha ni épica asignada. La capa 1, en concreto,
+no se desbloquea con el cierre de E-11/E-13: el ciclo de mejora de esas
+épicas dejó Faithfulness y Context Precision por debajo de objetivo
+(D-087), así que sigue condicionada a un futuro ciclo de mejora de RAG,
+no a un simple orden de épicas.
+
 **Criterios de aceptación de alto nivel**
 - Memoria conversacional de corto plazo: el agente mantiene el hilo de la
   conversación dentro de una misma sesión de chat abierta (sin necesidad de
@@ -605,8 +616,9 @@ Ajustes finales para la entrega.
 **Notas**
 - Al cerrar esta épica: ejecutar tests RAGAS end-to-end (E-07/E-09) sobre el sistema completo antes del PR final. Es el único momento en que se valida el pipeline integrado en su totalidad.
 - **Orden de ejecución (18 jul 2026):** E-11 pasa por delante de esta épica — ver nota de reordenamiento al inicio de la fase y D-059.
+- **Aplazada fuera de Fase 1.5 (23 jul 2026, D-087):** deja de ser "candidata a caer si falta tiempo" (D-064) y pasa a estar descartada explícitamente de esta fase, sustituida por **E-14** (memoria de perfil) entre E-13 y E-12. Razón: el pulido de UX/responsive ya se ha ido resolviendo de forma orgánica entre épicas y CORS solo importa si se embebe el asistente en una app externa — no urgente ahora —, mientras que E-14 aporta más utilidad directa al producto. Pasa a seguimiento post-TFM junto con E-08.
 
-**Estado:** ⚪ No iniciada
+**Estado:** ⚪ No iniciada — aplazada a post-TFM (D-087)
 
 ---
 
@@ -796,6 +808,12 @@ importa si se embebe el asistente en una app/widget externo — no urgente ahora
 que quedan, **E-10 es la primera candidata a quedar fuera si falta tiempo antes del 29 de
 julio; E-12 (cierre del TFM) no es negociable en ningún caso.**
 
+**Nota de reemplazo (23 jul 2026, D-087):** con E-13 ya completada, el argumento de D-064
+sobre E-10 (pulido ya resuelto orgánicamente, CORS no urgente) se lleva a su conclusión: en
+vez de quedar como candidata a caer, **sale de Fase 1.5** y es sustituida por **E-14**
+(memoria de perfil, extraída de la capa 2 de E-08). Orden de ejecución actualizado: E-11 →
+E-13 → **E-14** → E-12. E-12 sigue innegociable, sin cambios.
+
 **Criterios de aceptación de alto nivel**
 - Lote 1 (13 fichas, incluye X-linked lymphoproliferative disease/XIAP) ingerido y revisado
   en registro lingüístico; verificación dirigida del caso XIAP (RAGAS completo solo en T-04)
@@ -863,6 +881,39 @@ principal (una enfermedad a la vez).
 - `decisions.md` — D-073 a D-086
 
 **Estado:** ✅ Completada — 22 jul 2026
+
+---
+
+### E-14 — Memoria de perfil (onboarding)
+
+Onboarding y datos estables del paciente, contextualizando las respuestas del agente sin
+tocar el contexto de generación por turno.
+
+**Nota de origen (23 jul 2026, D-087):** extraída de la capa 2 de E-08 (memoria de perfil e
+histórico de conversaciones, D-063), al valorar qué ocupa el hueco entre E-13 y E-12 con 6
+días de margen antes del 29 de julio. Se crea como épica independiente en vez de reabrir los
+criterios de aceptación de E-08 — mismo criterio que motivó crear E-13 en D-063 en vez de
+tareas nuevas dentro de E-11: no comprometer el alcance ya documentado y aplazado de una
+épica existente. E-08 (capas 1 y 3 — memoria conversacional y persistencia entre
+sesiones/derecho al olvido) sigue aplazada a seguimiento post-TFM sin cambios.
+
+**Alcance explícitamente fuera de esta épica:**
+- Memoria conversacional de corto plazo (capa 1 de E-08): sigue bloqueada — mezclar
+  historial de chat con un pipeline de generación cuya calidad no está resuelta (Faithfulness
+  y Context Precision por debajo de objetivo tras el cierre de E-13) dificultaría el
+  diagnóstico de fallos nuevos, mismo principio que D-059. No se desbloquea con el cierre de
+  E-11/E-13/E-14, sino con un futuro ciclo de mejora de RAG sin fecha asignada.
+- Histórico de conversaciones persistente por usuario y derecho al olvido (capa 3 de E-08):
+  fuera de alcance por coste (esquema Supabase nuevo + UI de borrado) y por decisión de
+  priorización de D-063 (calidad de KB/RAG sobre completitud de producto).
+
+**Criterios de aceptación de alto nivel**
+- Onboarding captura datos estables del paciente: tipo de IDP, edad, contexto relevante
+- El agente usa la memoria de perfil para contextualizar respuestas
+- Migrar `user_metadata.full_name` (D-040, solución provisional de E-05 T-06) al esquema de
+  perfil propio que diseñe esta épica, en vez de dejarlo repartido entre Auth y `profiles`
+
+**Estado:** ⚪ No iniciada
 
 ---
 

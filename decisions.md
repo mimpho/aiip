@@ -94,6 +94,8 @@
 - [D-083 — smoke_test_rag.py mostraba chunks de una recuperación distinta a la usada para generar la respuesta](#d-083--smoke_test_ragpy-mostraba-chunks-de-una-recuperación-distinta-a-la-usada-para-generar-la-respuesta)
 - [D-084 — Hallazgo abierto: BM25 no encuentra fichas de MedlinePlus (inglés) en preguntas de listado en español — no confundir con top_k pequeño](#d-084--hallazgo-abierto-bm25-no-encuentra-fichas-de-medlineplus-inglés-en-preguntas-de-listado-en-español--no-confundir-con-top_k-pequeño)
 - [D-085 — E-13 T-04: `eval_25` (Faithfulness 0.32, banda Grave nueva) confirmado como ruido del juez, no regresión real — mismo patrón que D-069/D-072](#d-085--e-13-t-04-eval_25-faithfulness-032-banda-grave-nueva-confirmado-como-ruido-del-juez-no-regresión-real--mismo-patrón-que-d-069d-072)
+- [D-086 — E-13 T-04: desglose caso a caso de la caída de Context Precision (−3.7pp) — concentrada en 5/32 casos, no dilución generalizada; `eval_08` resuelto como ruido ya documentado (D-072)](#d-086--e-13-t-04-desglose-caso-a-caso-de-la-caída-de-context-precision-−37pp--concentrada-en-532-casos-no-dilución-generalizada-eval_08-resuelto-como-ruido-ya-documentado-d-072)
+- [D-087 — Revierte parcialmente D-063: capa 2 de E-08 (memoria de perfil) extraída a nueva épica E-14, sustituye a E-10 en Fase 1.5; capa 1 sigue bloqueada más allá de E-11/E-13](#d-087--revierte-parcialmente-d-063-capa-2-de-e-08-memoria-de-perfil-extraída-a-nueva-épica-e-14-sustituye-a-e-10-en-fase-15-capa-1-sigue-bloqueada-más-allá-de-e-11e-13)
 
 ---
 
@@ -4682,3 +4684,82 @@ reabre el alcance de retrieval/BM25 (sin evidencia clara y consistente de diluci
 casos investigados con pipeline). `tests/eval/results/e13_t04_cierre.md` (sección
 3quater) y `docs/evaluation.md` (§5.5/§7) actualizados con la lectura final. El paso 14 del
 plan (confirmación de cierre de Marcos) queda reactivado.
+
+---
+
+## D-087 — Revierte parcialmente D-063: capa 2 de E-08 (memoria de perfil) extraída a nueva épica E-14, sustituye a E-10 en Fase 1.5; capa 1 sigue bloqueada más allá de E-11/E-13
+
+**Fecha:** 23 de julio de 2026
+**Fase:** producto / planificación
+**Épicas relacionadas:** E-08, E-10, E-12, E-13, E-14 (creación)
+
+**Contexto**
+Con E-13 ya completada (22 jul 2026) y 6 días de margen hasta la entrega (29 jul), tocaba
+decidir qué ocupa el hueco entre E-13 y E-12 (D-064: E-11 → E-13 → E-10 → E-12). Marcos
+planteó si E-08 (memoria/persistencia) no dotaría de más utilidad al asistente que E-10
+(pulido: responsive, CORS, UX), señalando que el responsive ya está resuelto y el UX se ha
+ido puliendo de forma orgánica entre épicas — el mismo argumento que ya llevó a D-064 a
+bajar la prioridad de E-10, ahora llevado a su conclusión.
+
+Se descartó reabrir E-08 completa: D-063 la aplazó entera a post-TFM, y su capa 3
+(persistencia entre sesiones + derecho al olvido) sigue siendo la parte más cara de las
+tres — esquema nuevo en Supabase, UI de borrado — sin descomponer, con solo 6 días por
+delante y E-12 innegociable de por medio. Se acordó activar solo la capa 2 (memoria de
+perfil: onboarding de datos estables del paciente + contextualización), la más barata de
+las dos capas que D-063 confirma que no estaban bloqueadas por la lógica de D-059.
+
+Sobre el "qué": se descartó ampliar los criterios de aceptación de E-08 con la capa 2
+activada, aplicando el mismo criterio que ya usó D-063 para crear E-13 como épica
+independiente en vez de tareas nuevas dentro de E-11 — no comprometer el alcance ya
+documentado y aplazado de una épica (E-08 queda intacta como registro histórico de D-063).
+
+Por último, Marcos señaló que la razón de D-059 para bloquear la capa 1 (mezclar historial
+conversacional con una generación cuya calidad no está resuelta dificulta el diagnóstico de
+fallos nuevos) sigue vigente tras E-11/E-13: el cierre de E-13 (`tests/eval/results/
+e13_t04_cierre.md`) confirma que Faithfulness y Context Precision siguen por debajo de
+objetivo tras el ciclo de mejora (Faithfulness −1.4pp, Context Precision −3.7pp frente al
+cierre de E-11, este último sin causa raíz confirmada del todo — D-085/D-086). La capa 1 no
+queda desbloqueada por el mero cierre de E-11/E-13, como podía leerse implícito en
+D-059/D-063, sino condicionada a un futuro ciclo de mejora de RAG que resuelva esas
+métricas — sin fecha ni épica asignada dentro de Fase 1.5.
+
+**Decisión**
+
+1. **Nueva épica E-14 — Memoria de perfil (onboarding)**, numerada por orden de creación (no
+   de ejecución, mismo criterio que E-07 a E-13). Alcance: onboarding de datos estables del
+   paciente (tipo de IDP, edad, contexto relevante), uso de ese perfil para contextualizar
+   respuestas, y migración de `user_metadata.full_name` (D-040) al esquema de perfil propio.
+   No incluye memoria conversacional (capa 1) ni histórico de conversaciones persistente
+   (capa 3) — esas quedan donde las dejó D-063.
+2. **Orden de ejecución de Fase 1.5 actualizado:** E-11 → E-13 → **E-14** → E-12 (reemplaza
+   el orden E-11 → E-13 → E-10 → E-12 de D-064).
+3. **E-10 sale de Fase 1.5**, aplazada a seguimiento post-TFM junto con E-08 (capas 1 y 3).
+   Deja de ser "candidata a caer si falta tiempo" (D-064) y pasa a estar descartada
+   explícitamente de esta fase, en favor de E-14.
+4. **E-08 se mantiene aplazada tal como quedó en D-063** (capas 1 y 3, registro histórico sin
+   modificar), con una nota que apunta a E-14 como la parte adelantada.
+5. **Se reafirma el bloqueo de la capa 1 de E-08** (memoria conversacional): no se desbloquea
+   con el cierre de E-11/E-13, sino que queda condicionada a un futuro ciclo de mejora de RAG
+   que resuelva Faithfulness/Context Precision — sin fecha ni épica asignada dentro de la
+   Fase 1.5 de este TFM.
+6. **E-12 (cierre del TFM) se mantiene innegociable** (D-064, sin cambios).
+
+**Consecuencias**
+- `backlog/epics.md`: nota en la sección de E-08 apuntando a E-14; nota en la sección de
+  E-10 marcándola aplazada a post-TFM (sustituye a "candidata a caer" de D-064); nueva
+  sección E-14 (alcance, criterios de aceptación, estado); nota de orden de Fase 1.5 en la
+  introducción de la fase actualizada.
+- `README.md`: tabla de épicas, fila de Fase 1.5, Gantt y nota de "Orden de ejecución"
+  actualizados — E-14 entra en Fase 1.5 en lugar de E-10; E-10 pasa a "Features opcionales".
+
+**Alternativas descartadas**
+- Ampliar los criterios de aceptación de E-08 directamente con la capa 2 activada: descartada
+  por el mismo motivo que llevó a crear E-13 en D-063 en vez de tareas nuevas en E-11 —
+  mezclaría un aplazamiento ya cerrado (D-063) con una reactivación parcial, dificultando la
+  trazabilidad para la retrospectiva de E-12.
+- Reabrir E-08 completa (las 3 capas): descartada por scope y riesgo de calendario — la capa
+  3 es la parte más cara y sin descomponer, con solo 6 días hasta la entrega y E-12
+  innegociable de por medio.
+- Mantener E-10 en el orden de Fase 1.5 sin cambios (D-064): descartada — el argumento de
+  D-064 (pulido de UX ya resuelto orgánicamente, CORS no urgente sin integración externa) se
+  lleva ahora a su conclusión: no solo bajar su prioridad, sino sustituirla.
