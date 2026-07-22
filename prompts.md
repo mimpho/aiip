@@ -959,3 +959,75 @@ Probado en memoria sobre 10 preguntas antes de aplicar a producción: 0/10 dupli
 (frente al ~65% previo), sin regresión de seguridad. Confirma un patrón ya visto en
 P-030/P-033/P-034: una instrucción vaga ("no dupliques fuentes") no basta frente a una
 prohibición explícita con contraejemplo concreto.
+
+---
+
+### P-036 — Verificación con evidencia real antes de aceptar una hipótesis de causa raíz (BM25/idioma)
+**Fecha:** 22 julio 2026
+**Fase:** E-13 (T-03/T-04)
+**Tipo:** decisión de arquitectura de IA
+**Herramienta:** Claude Cowork + Antigravity
+
+**Prompt / decisión:**
+Un listado de IDPs en español no citaba ninguna de las 40 fichas nuevas de MedlinePlus
+(en inglés). La hipótesis obvia era "`RAG_TOP_K` demasiado pequeño". En vez de subirlo a
+ciegas, se simuló BM25 real contra los 1324 chunks indexados (`rank_bm25.BM25Okapi`, sin
+red ni Gemini) con un barrido de `top_k` (5/10/15/20/30): 0 chunks de MedlinePlus en
+ninguna pasada, incluso en `top_k=30`. Causa confirmada: fichas en inglés, pregunta en
+español, BM25 es matching léxico exacto sin vocabulario compartido.
+
+**Resultado / aprendizaje:**
+Subir `top_k` solo añadía ruido (más contenido genérico irrelevante), sin acercarse a
+recuperar las fichas buscadas — confirmado antes de tocar configuración de producción.
+Cuando una hipótesis de causa raíz es barata de simular sin infraestructura pesada,
+simularla primero evita un cambio con coste real (dilución de contexto) y beneficio nulo
+(D-084).
+
+---
+
+### P-037 — Distinguir ruido del juez LLM de una regresión real en RAGAS: repetir la misma muestra
+**Fecha:** 22 julio 2026
+**Fase:** E-13 (T-04)
+**Tipo:** decisión técnica / metodología de evaluación
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Tras la remedición de cierre, Context Precision empeoraba (−3.7pp) y `eval_25` entraba en
+banda Grave de Hallucination Rate. La primera lectura (`docs/e12-retro-notes.md`) trató
+ambos como el mismo efecto estructural de las 40 fichas nuevas. Antes de cerrar con esa
+conclusión, se invocó el juez RAGAS (`Faithfulness`/`ContextPrecision`) dos veces sobre
+exactamente el mismo `SingleTurnSample` (misma respuesta, mismo contexto, sin volver a
+llamar al pipeline): los valores variaban entre invocaciones idénticas (p. ej. 0.917 y
+0.500 para el mismo caso).
+
+**Resultado / aprendizaje:**
+Esa inestabilidad, junto con confirmar que el contexto recuperado no había cambiado,
+permitió atribuir la mayoría de la caída a varianza de muestreo del evaluador, no a un
+efecto real del cambio de KB — y corrigió una primera lectura ya escrita que enlazaba
+ambos hallazgos como una sola causa (D-085, D-086). Técnica reutilizable para cualquier
+remedición RAGAS futura: antes de atribuir un delta a un cambio de código/contenido,
+repetir el juez sobre la misma muestra para descartar ruido de evaluación.
+
+---
+
+### P-038 — Aislar una variable de configuración por bisección sobre el historial de commits
+**Fecha:** 22 julio 2026
+**Fase:** E-13 (T-03)
+**Tipo:** decisión técnica
+**Herramienta:** Antigravity
+
+**Prompt / decisión:**
+Un rechazo autocontradictorio en inglés ("solo respondo en español") apareció en el smoke
+test tras el reingest de T-03, sin relación aparente con la propia tarea. Comparando el
+mismo escenario contra las 4 versiones commiteadas del fichero de resultados (E-11 final,
+T-01, T-02, T-03), el fallo era idéntico byte a byte desde T-01 — descarta ruido
+aleatorio y acota la ventana sospechosa a un diff concreto. Aislada la única variable de
+código relevante en ese diff (`thinking_budget=0`, ajena a la tarea), se confirmó por
+reproducibilidad (5/5 roto con la variable activa, 3/3 correcto sin ella).
+
+**Resultado / aprendizaje:**
+El bug no tenía relación con el contenido nuevo de MedlinePlus, sino con una
+configuración de generación que llevaba varias épicas sin revisarse (D-082). Técnica
+reutilizable: cuando un bug aparece "de la nada" en una tarea, comparar contra versiones
+commiteadas anteriores acota la búsqueda a un commit concreto antes de investigar el
+código a ciegas.

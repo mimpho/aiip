@@ -45,7 +45,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada — opcional, si da tiempo | E-05 |
 | E-11 | Ciclo de mejora de calidad (post-E-09) | ✅ Completada — 21 jul 2026 | E-09 |
 | E-12 | Retrospectiva final del roadmap (cierre TFM) — innegociable | ⚪ No iniciada | E-10, E-11, E-13 |
-| E-13 | Ampliación de KB — fuentes MedlinePlus Genetics | ⚪ No iniciada | E-11 |
+| E-13 | Ampliación de KB — fuentes MedlinePlus Genetics | ✅ Completada — 22 jul 2026 | E-11 |
 
 ---
 
@@ -86,7 +86,7 @@ gantt
     E-07 RAGAS parcial                :done,    e07, 2026-07-15, 2026-07-16
     E-09 RAGAS completo                :done,    e09, 2026-07-17, 2026-07-18
     E-11 Ciclo de mejora de calidad   :done,    e11, 2026-07-18, 2026-07-21
-    E-13 Ampliación KB (MedlinePlus)  :         e13, 2026-07-21, 2026-07-27
+    E-13 Ampliación KB (MedlinePlus)  :done,    e13, 2026-07-21, 2026-07-22
     E-10 Pulido final                 :         e10, 2026-07-27, 2026-07-28
     E-12 Retro final del roadmap      :crit,    e12, 2026-07-28, 2026-07-29
 

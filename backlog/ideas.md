@@ -51,6 +51,31 @@
 - **Cuándo revisarlo:** si el volumen de la KB crece y el riesgo de enlaces rotos deja de ser
   marginal, o si se detectan varios 404 reales en producción.
 
+### IUIS 2024 — clasificación genotípica (tablas, distinta de la fenotípica ya descartada)
+- **Criticidad:** 🟢 Baja — no resuelve el problema de fondo, solo amplitud estructurada
+- **Qué es:** paper hermano de "The 2024 update of IUIS phenotypic classification" (ya
+  descartado en D-063 por vivir en 21 figuras de árbol de decisión, imágenes no
+  extraíbles): "Human inborn errors of immunity: 2024 update on the classification from
+  the International Union of Immunological Societies Expert Committee" — la clasificación
+  **genotípica**, acceso abierto (`Journal of Human Immunity`, Rockefeller University
+  Press). A diferencia de la fenotípica, son tablas HTML/texto reales, no imágenes:
+  ~525 entradas (508 genes + 17 fenocopias) en 10 categorías (inmunodeficiencias
+  combinadas, deficiencias de anticuerpos, desregulación inmune, defectos de fagocitos,
+  etc.), con columnas de gen, herencia, OMIM y "características asociadas".
+- **Por qué no ahora:** el texto por entrada es telegráfico (lista de síntomas separada
+  por comas, ej. "recurrent bacterial infections, autoimmunity, gastroenteritis,
+  granulomas"), no narrativa explicada para familias — necesitaría reescritura para sonar
+  bien en una respuesta. Sigue en inglés (mismo problema léxico para BM25 en preguntas en
+  español que las 40 fichas de MedlinePlus, D-084). Es una fuente de **amplitud**
+  (taxonomía/índice completo), no de profundidad — no sustituye a MedlinePlus para
+  explicar una enfermedad concreta.
+- **Relevancia:** candidata a explorar junto con el hallazgo de D-084 (preguntas de
+  listado amplio en español no encuentran MedlinePlus) — podría servir para construir un
+  índice/resumen categórico en español, curado a mano, en vez de depender de que el RAG
+  sintetice sobre 40 fichas individuales en inglés con poca señal de recuperación cada una.
+- **Cuándo revisarlo:** post-TFM, o si se decide abordar el hallazgo de D-084 con una
+  fuente nueva en vez de dejarlo como limitación documentada.
+
 ### Model Context Protocol (MCP)
 - **Criticidad:** 🟢 Baja
 - **Qué es:** estándar abierto de Anthropic (nov 2024), adoptado por OpenAI y Google, para conectar LLMs con herramientas y fuentes de datos externas vía JSON-RPC.

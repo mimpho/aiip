@@ -706,6 +706,10 @@ números, no solo declarado.
 - Entrada en `prompts.md` con el caso de human-in-the-loop ya identificado (intuición de
   Marcos sobre KB limitado → verificación contra `manifest.json` → tarea priorizada)
 
+**Notas en curso (22 jul 2026):** `docs/e12-retro-notes.md` recoge observaciones sobre el
+workflow (Cowork/Antigravity/human-in-the-loop) a medida que ocurren, antes de llegar al cierre
+real de la fase — scratchpad de entrada para T-01, no el deliverable.
+
 ### Tareas
 
 | ID | Tarea | Estado |
@@ -734,9 +738,44 @@ extraíble. MedlinePlus Genetics sí cumple las tres condiciones (gratis, sin tr
 redactado para pacientes): dominio público, descarga masiva en un XML, y su página curada
 "Immune System and Disorders" (`Title.Alternate: Primary Immunodeficiency Diseases`) acota el
 universo relevante a 43 fichas — no las 559 de IUIS 2024 ni las 1.300+ del índice completo.
-Contrastadas contra `data/raw/upiip/`, 4 ya están cubiertas (Bruton's/XLA, enfermedad
-granulomatosa crónica, SCID genérico, inmunodeficiencia variable común) — quedan **39 fichas
-genuinamente nuevas**, incluyendo XIAP (X-linked lymphoproliferative disease) e IPEX.
+Contrastadas contra `data/raw/upiip/`, 3 ya están cubiertas de forma exacta (Bruton's/XLA,
+enfermedad granulomatosa crónica, inmunodeficiencia variable común) — quedan **39 fichas
+genuinamente nuevas** de base, incluyendo XIAP (X-linked lymphoproliferative disease) e IPEX.
+**Corrección (21 jul 2026, D-074, task-start T-01):** el cuarto solapamiento asumido
+("SCID genérico") no es 1:1 — las 43 fichas no incluyen ninguna SCID genérica, sino tres
+subtipos específicos (JAK3-deficient, X-linked, ZAP70-related) frente al único documento
+genérico ya indexado. Se revisan los tres ficha por ficha (mismo criterio que los demás
+solapamientos).
+**Corrección (21 jul 2026, D-075, ejecución T-01):** apareció un cuarto candidato de revisión
+no detectado antes ("22q11.2 deletion syndrome" = síndrome de DiGeorge, ya indexado como
+`upiip/09_Sindrome_DiGeorge_ES.pdf`) — mismo criterio de revisión ficha por ficha que los 3
+subtipos de SCID. Con la lista real construida por el script de extracción (43 totales, 3
+descartadas por solapamiento exacto, 4 apartadas para revisión), la base de los 3 lotes es
+**36 fichas, no 39** — el "39" de D-063 nunca se recalculó tras estas dos correcciones. Lote 1
+se mantiene en 13 (Z→P, XIAP en posición 2); Lote 2 pasa a 13 (posiciones 14-26, rango real
+O→D, IPEX en posición 20); Lote 3 queda en 10 (posiciones 27-36, C→A), no 13.
+**Resolución (21 jul 2026, D-076):** las 4 candidatas de revisión (22q11.2/DiGeorge + 3
+subtipos de SCID) se incluyen — comparado el contenido real, ninguna es duplicado exacto de
+los documentos genéricos/antiguos de `upiip/`, que no nombran ningún gen causante. **Total
+final de fichas nuevas de E-13: 40** (36 en los 3 lotes + estas 4, extraídas dentro de T-01
+fuera de la numeración de lotes).
+**Corrección de grounding (21 jul 2026, D-077):** verificando "xiap" en producción se detectó
+que el texto indexado (solo "Description" + genes relacionados) no incluye la relación causal
+gen→subtipo — esa explicación solo vive en la sección "Causes" de la página individual, ausente
+del XML/JSON masivo. El script amplía su alcance con una petición por ficha para extraer
+"Causes". Las 17 fichas del Lote 1 quedan re-extraídas y re-reingestadas; verificado que la
+respuesta a "xiap" ahora atribuye XIAP→XLP2 al chunk indexado, no a conocimiento del LLM.
+**Bug de idioma encontrado y corregido (21 jul 2026, D-078):** al reiniciar el servicio tras
+D-077, "que es el xiap" (sin tilde en "qué") devolvía un volcado del prompt cortado a media
+frase — no era D-077 ni contenido duplicado (descartado por aislamiento de variable), sino que
+`detect_language()` clasificaba esa frase como catalán con un margen de confianza de solo
+0.035-0.05 (empate técnico), forzando al modelo a traducir el contexto en vez de responder y
+agotando `max_output_tokens`. Bug preexistente a E-13, expuesto por casualidad al escribir
+justo la palabra que originó la épica (D-063). Corregido con un margen mínimo de confianza en
+`rag/language.py` (0.2, sin afectar a ningún caso ya validado). **Hallazgo de proceso:** T-02
+(IPEX)/T-03 deben añadir a su verificación dirigida una comprobación directa de
+`detect_language()` sobre la frase disparadora tal cual la escribiría un usuario real, no solo
+la verificación de retrieval.
 
 **Nota de alcance (19 jul 2026):** Marcos decide fases por lotes priorizados en **orden
 alfabético inverso** (criterio neutral — no favorece a propósito XIAP/IPEX, aunque por el
@@ -758,23 +797,72 @@ que quedan, **E-10 es la primera candidata a quedar fuera si falta tiempo antes 
 julio; E-12 (cierre del TFM) no es negociable en ningún caso.**
 
 **Criterios de aceptación de alto nivel**
-- Lote 1 (13 fichas, incluye X-linked lymphoproliferative disease/XIAP) ingerido, revisado en
-  registro lingüístico y remedido contra RAGAS
-- Lote 2 (13 fichas, incluye IPEX) — ídem
-- Lote 3 (13 fichas) — ídem
-- Fuente añadida a `docs/kb-sources.md` (perfil familiar)
+- Lote 1 (13 fichas, incluye X-linked lymphoproliferative disease/XIAP) ingerido y revisado
+  en registro lingüístico; verificación dirigida del caso XIAP (RAGAS completo solo en T-04)
+- Lote 2 (13 fichas, incluye IPEX) — ídem, verificación dirigida del caso IPEX
+- Lote 3 (10 fichas, corregido en D-075) — ídem, sin caso de verificación dirigida propio
+- Fuente añadida a `docs/kb-sources.md` (perfil familiar), de "Propuesta" a "Validada" en T-04
 - Caso XIAP/IPEX original re-verificado tras el lote correspondiente
+
+**Descomposición y decisiones de `epic-start` (21 jul 2026):** aprobada por Marcos con tres
+puntos resueltos sobre la propuesta inicial:
+- **Cadencia de RAGAS:** remedición completa (32 casos) solo una vez en T-04, al cierre de
+  los 3 lotes — cada lote (T-01/T-02/T-03) lleva solo verificación dirigida puntual (repetir
+  la consulta original XIAP/IPEX, revisión de registro lingüístico), no la suite RAGAS
+  completa. Evita triplicar llamadas a Gemini por contenido que no toca retrieval/algoritmo,
+  a diferencia de E-11 T-02 (que sí cambiaba código).
+- **Extracción de fichas:** T-01 incluye un script que parsea el XML masivo de MedlinePlus
+  Genetics (no copia manual página a página como en E-11 T-01) — la ventaja explícita de
+  esta fuente señalada en D-063.
+- **Solapamiento con `data/raw/upiip/` (Bruton's/XLA, CGD, CVID exactos; 3 subtipos de SCID +
+  DiGeorge/22q11.2 en revisión — D-074, D-075):** los exactos se descartan automáticamente,
+  los de revisión no. T-01 añade una revisión rápida ficha por ficha — Marcos decide si la
+  ficha de MedlinePlus aporta valor genuino (más completa/mejor redactada) y se añade
+  igualmente, o si es redundante y se descarta, sin duplicar contenido sin criterio (mismo
+  cuidado que E-11 T-01).
 
 ### Tareas
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-01 | Lote 1 — 13 fichas, orden alfabético inverso (Z→P), incluye XIAP | ⚪ Pendiente |
-| T-02 | Lote 2 — 13 fichas (P→F), incluye IPEX | ⚪ Pendiente |
-| T-03 | Lote 3 — 13 fichas (F→2) | ⚪ Pendiente |
-| T-04 | Remedición RAGAS + cierre | ⚪ Pendiente |
+| T-01 | Preparación de datos (lista definitiva de 36 fichas, D-075) + Lote 1 — 13 fichas (Z→P, incluye XIAP) + 4 fichas de revisión ya resueltas (D-076: 22q11.2/DiGeorge + 3 subtipos de SCID) | ✅ Completada |
+| T-02 | Lote 2 — 13 fichas (posiciones 14-26, O→D), incluye IPEX | ✅ Completada |
+| T-03 | Lote 3 — 10 fichas restantes (posiciones 27-36, C→A) | ✅ Completada |
+| T-04 | Remedición RAGAS + cierre | ✅ Completada |
 
-**Estado:** ⚪ No iniciada
+**Nota de cierre — resultado mixto, no una mejora limpia (22 jul 2026):** la remedición RAGAS
+de T-04 (`tests/eval/results/e13_t04_cierre.md`) da 2 métricas mejor (Answer Relevancy +0.5pp,
+Context Recall +1.6pp) y 2 peor (Faithfulness −1.4pp, Context Precision −3.7pp, sigue por
+debajo de objetivo) frente al cierre de E-11. Investigación dirigida (D-085, D-086) atribuye la
+mayor parte de las caídas a ruido de muestreo del juez LLM (evidencia directa de inestabilidad
+del juez sobre el mismo `SingleTurnSample` en `eval_22`/`eval_10`/`eval_25`), no a un efecto real
+de las 40 fichas nuevas sobre el retrieval — con `eval_63` como único caso sin confirmación
+igual de limpia. Marcos confirma el cierre con este resultado documentado sin suavizar. Además
+queda un hallazgo estructural aparte, sin plan de arreglo: BM25 no encuentra las fichas de
+MedlinePlus (inglés) en preguntas de listado amplio en español (D-084), no afecta al caso de uso
+principal (una enfermedad a la vez).
+
+**Entregables**
+- `scripts/extract_medlineplus_genetics.py` — extracción del XML masivo de MedlinePlus Genetics (parseo automático, no copia manual ficha a ficha)
+- `data/raw/manifest.json`, `docs/kb-sources.md` — 40 fichas nuevas indexadas en `data/raw/medlineplus_genetics/`; fuente pasa de "Propuesta" a "Validada"
+- `rag/language.py` — margen mínimo de confianza (0.2) en `detect_language()` contra falsos positivos de catalán en frases cortas sin tilde (D-078)
+- `rag/generator.py`, `rag/config.py`, `.env.example` — revierte `thinking_budget=0` (rechazos autocontradictorios en inglés, D-082) y sube `LLM_MAX_TOKENS` default a 2048
+- `scripts/smoke_test_rag.py` — usa `pipeline.retrieve()` en vez de vectorstore directo, corrige discrepancia entre "chunks recuperados" y "fuentes consultadas" (D-083)
+- `scripts/run_e13_t03_cross_lingual_investigation.py`, `run_e13_topk_sweep_investigation.py`, `run_e13_t04_context_precision_investigation.py`, `run_e13_t04_eval25_investigation.py` — scripts de investigación dirigida
+- `tests/features/e13_t01_lote1_medlineplus.feature`, `e13_t02_lote2_medlineplus.feature`, `e13_t03_lote3_medlineplus.feature` — TDD/checklist de los 3 lotes
+- `tests/eval/e13_t04_ragas_remedicion_cierre.feature` — checklist de remedición RAGAS de cierre
+- `tests/eval/results/e13_t04_cierre.md` — informe de cierre T-04 (comparación pre/post, investigaciones `eval_25`/`eval_63`/caída de Context Precision)
+- `tests/eval/results/e13_t04_context_precision_investigacion.json`, `e13_t04_eval25_investigacion.json` — resultados de investigación dirigida
+- `tests/eval/results/e09_t02_ragas_full_scores_pre_e13_t04.json`, `e09_t02_ragas_full_scores_e13_t04_baseline.json` — snapshots pre/post de la remedición
+- `tests/results/e06_t07_smoke_test_results.md` — smoke test re-ejecutado tras D-082/D-083, 5/5 confirmadas por Marcos
+- `tasks/E13-T03-plan.md`, `E13-T04-plan.md` — planes de implementación
+- `docs/evaluation.md` — actualizado con resultados post-E-13 y el hallazgo BM25/listado (§5.5)
+- `backlog/ideas.md` — hueco de IUIS 2024 (clasificación genotípica) documentado como candidata futura
+- `docs/e12-retro-notes.md` — dos casos human-in-the-loop de esta épica documentados (scratchpad de E-12 T-01)
+- `skills/epic-start/SKILL.md`, `skills/task-start/SKILL.md` — Paso 3 (push antes de task-start) y Paso 4 (plan también para config ejecutada por Antigravity, D-080)
+- `decisions.md` — D-073 a D-086
+
+**Estado:** ✅ Completada — 22 jul 2026
 
 ---
 

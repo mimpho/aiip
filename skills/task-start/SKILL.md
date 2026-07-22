@@ -229,13 +229,30 @@ Este es el gate clave: el .feature define exactamente qué se va a testear
 
 ---
 
-## Paso 4 — Plan de implementación [solo tareas de código]
+## Paso 4 — Plan de implementación [tareas de código; también config si las ejecuta Antigravity]
 
-Para tareas de configuración, este paso no aplica.
+Para tareas de configuración que Marcos ejecuta él mismo dentro de la propia
+sesión de Cowork, este paso no aplica — el `.feature` (Paso 3) ya es
+suficiente checklist.
+
+**Excepción (precedente E-13 T-03, 22 jul 2026):** si una tarea de
+configuración se va a ejecutar en una sesión nueva de Antigravity (sin
+memoria de las sesiones de Cowork donde se decidieron los comandos exactos,
+los scripts a reutilizar o los hallazgos de tareas anteriores de la misma
+épica), sí hace falta un plan — aunque no haya TDD. El motivo es el mismo que
+para tareas de código: el `.feature` documenta *qué* se verifica, pero no
+necesariamente la secuencia exacta de comandos ni el contexto disperso en
+`decisions.md` que Antigravity tendría que reconstruir desde cero. En ese
+caso, crea igualmente `tasks/E[nn]-T[nn]-plan.md`, adaptando el formato de
+abajo: sustituye "Orden de implementación TDD" por una "Secuencia de
+comandos" con el orden exacto a ejecutar (comandos de shell o snippets
+concretos, no pasos de diseño), y omite "Ficheros a crear/modificar" si no
+aplica. Ver `tasks/E13-T03-plan.md` como ejemplo.
 
 Este paso cierra el trabajo en Cowork y genera el contexto que Antigravity
-necesita para empezar a codificar sin ambigüedad. El objetivo es que el agente
-del IDE no tome ninguna decisión de diseño — solo ejecute el plan.
+necesita para empezar a codificar (o ejecutar el checklist) sin ambigüedad.
+El objetivo es que el agente del IDE no tome ninguna decisión de diseño —
+solo ejecute el plan.
 
 ### Research previo (si aplica)
 
@@ -302,7 +319,7 @@ al arrancar la sesión de desarrollo.
 | 1 | Definición revisada de la tarea | Cierra puntos abiertos antes de comprometer diseño |
 | 2 | Decisiones de arquitectura (si aplica) | Registra antes de implementar |
 | 3 | Fichero .feature | Define exactamente qué se valida |
-| 4 | Plan de implementación | El IDE ejecuta, no diseña |
+| 4 | Plan de implementación (código; también config si la ejecuta Antigravity) | El IDE ejecuta, no diseña ni reconstruye contexto |
 
 ---
 

@@ -229,6 +229,206 @@
       "checksum": "sha256:a96338c0f694735aac2fba3b68030a839d208937f91255acccb0e17b769693d3",
       "url": "https://ipopi.org/pids/pids-faqs/#toggle-id-25",
       "fecha": "2026-07-19"
+    },
+    "medlineplus_genetics/pgm3-congenital-disorder-of-glycosylation.html": {
+      "checksum": "sha256:643f3aa11822a1b12971b750666c698604dcfbe9ded94d2816e26cc47bbe8850",
+      "url": "https://medlineplus.gov/genetics/condition/pgm3-congenital-disorder-of-glycosylation",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/poikiloderma-with-neutropenia.html": {
+      "checksum": "sha256:b4c9138a04aa9eccf11c62a796d4b9a0809f70703d6ec2958822992aee070fc1",
+      "url": "https://medlineplus.gov/genetics/condition/poikiloderma-with-neutropenia",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/purine-nucleoside-phosphorylase-deficiency.html": {
+      "checksum": "sha256:3745409cb6c6342da180134a8d855f681b056a003bc72e1bdaba1a087fdcecd0",
+      "url": "https://medlineplus.gov/genetics/condition/purine-nucleoside-phosphorylase-deficiency",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/spondyloenchondrodysplasia-with-immune-dysregulation.html": {
+      "checksum": "sha256:db7fa703ba7c3ec557255a13be7f2225003b7c2efc818115826490433c99ea1d",
+      "url": "https://medlineplus.gov/genetics/condition/spondyloenchondrodysplasia-with-immune-dysregulation",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/systemic-mastocytosis.html": {
+      "checksum": "sha256:9a8a7b42634c0e66bfaa463ed4deee731d0353d4bcc6b8a2183883741e5bcfe4",
+      "url": "https://medlineplus.gov/genetics/condition/systemic-mastocytosis",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/t-cell-immunodeficiency-congenital-alopecia-and-nail-dystrophy.html": {
+      "checksum": "sha256:b56801dcd197d509c8e786d36426b1cb155086b1468bbb2ae613b75e587de005",
+      "url": "https://medlineplus.gov/genetics/condition/t-cell-immunodeficiency-congenital-alopecia-and-nail-dystrophy",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/trnt1-deficiency.html": {
+      "checksum": "sha256:dc4ba2fc96a109e08f9f8706e70883ecf9d8c56d488971ae387f4ce6d3220fe9",
+      "url": "https://medlineplus.gov/genetics/condition/trnt1-deficiency",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/vici-syndrome.html": {
+      "checksum": "sha256:72207ee6c859836dcf8d54a573c3f3dd240662831e4886b082803b40a573d93c",
+      "url": "https://medlineplus.gov/genetics/condition/vici-syndrome",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/wiskott-aldrich-syndrome.html": {
+      "checksum": "sha256:c49ce85eaa8e467f290ee2e819885a6681bb60811e5a72b63c3188db4a43e44b",
+      "url": "https://medlineplus.gov/genetics/condition/wiskott-aldrich-syndrome",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/x-linked-hyper-igm-syndrome.html": {
+      "checksum": "sha256:a15346c97436ec395dacfb13c6695a8b542ac228ade125e0261711d206cfad26",
+      "url": "https://medlineplus.gov/genetics/condition/x-linked-hyper-igm-syndrome",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/x-linked-immunodeficiency-with-magnesium-defect-epstein-barr-virus-infection-and-neoplasia.html": {
+      "checksum": "sha256:69f96af6a774f46c2e4ed90c446a4febfab8e8cd560a448c26e803065d7375e1",
+      "url": "https://medlineplus.gov/genetics/condition/x-linked-immunodeficiency-with-magnesium-defect-epstein-barr-virus-infection-and-neoplasia",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/x-linked-lymphoproliferative-disease.html": {
+      "checksum": "sha256:bb08303ba06e8286f1ae1932b968f7c1f62e8c31c7378ce310eeef434b229f2a",
+      "url": "https://medlineplus.gov/genetics/condition/x-linked-lymphoproliferative-disease",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/yao-syndrome.html": {
+      "checksum": "sha256:0061d16acb48b97eddf78be8d82d74ab5b5b9de61cc60f15f75b3dfa97185a2c",
+      "url": "https://medlineplus.gov/genetics/condition/yao-syndrome",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/22q112-deletion-syndrome.html": {
+      "checksum": "sha256:b47b28f1625ea14b03b6cb3bd9d0472eb48a912994a99ec1d0ef38cf8590800f",
+      "url": "https://medlineplus.gov/genetics/condition/22q112-deletion-syndrome",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/jak3-deficient-severe-combined-immunodeficiency.html": {
+      "checksum": "sha256:7285c634221efb903712e8803e125d4c622c961ce4a713757cd1c188f05fd0bd",
+      "url": "https://medlineplus.gov/genetics/condition/jak3-deficient-severe-combined-immunodeficiency",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/x-linked-severe-combined-immunodeficiency.html": {
+      "checksum": "sha256:218d2c028ff2bcd38d181a94c7f1001fc7eac956e58714dff01b87feaea84187",
+      "url": "https://medlineplus.gov/genetics/condition/x-linked-severe-combined-immunodeficiency",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/zap70-related-severe-combined-immunodeficiency.html": {
+      "checksum": "sha256:35ce6138c89fe3a5355f637463f43df4964e16e5aed15c996c50a62165aff576",
+      "url": "https://medlineplus.gov/genetics/condition/zap70-related-severe-combined-immunodeficiency",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/dock8-immunodeficiency-syndrome.html": {
+      "checksum": "sha256:2fb678590e100ca3bceabcdaac0fc822dacd332b814335872976f63d6a7e6fd9",
+      "url": "https://medlineplus.gov/genetics/condition/dock8-immunodeficiency-syndrome",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/erdheim-chester-disease.html": {
+      "checksum": "sha256:429959b32ce83893d685505359600d51bd01dd9c432327de3b2ccf1f6b0f09c5",
+      "url": "https://medlineplus.gov/genetics/condition/erdheim-chester-disease",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/familial-candidiasis.html": {
+      "checksum": "sha256:53d38d2e04238d061cedb89386b5b714ad33931c42b7dbca78e689fba05390b3",
+      "url": "https://medlineplus.gov/genetics/condition/familial-candidiasis",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/familial-hemophagocytic-lymphohistiocytosis.html": {
+      "checksum": "sha256:b0a9ac087f88d9ea1081daa8adf49b42e5db3c1081b0317e8536f19f01d01dbd",
+      "url": "https://medlineplus.gov/genetics/condition/familial-hemophagocytic-lymphohistiocytosis",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/griscelli-syndrome.html": {
+      "checksum": "sha256:709d77df8382d4673a9f778843f214ff7c4b55f6ac62b2361fe9d6dfaa7225f0",
+      "url": "https://medlineplus.gov/genetics/condition/griscelli-syndrome",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/hepatic-veno-occlusive-disease-with-immunodeficiency.html": {
+      "checksum": "sha256:7947ac96637175e83ddcb4f1fb7a13fb04f8046cb7d4b860f0d11270e469234d",
+      "url": "https://medlineplus.gov/genetics/condition/hepatic-veno-occlusive-disease-with-immunodeficiency",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/immune-dysregulation-polyendocrinopathy-enteropathy-x-linked-syndrome.html": {
+      "checksum": "sha256:2ca38d801c16b770ec50c37b20979ee655590385a63c5e8ff93c0482d695881e",
+      "url": "https://medlineplus.gov/genetics/condition/immune-dysregulation-polyendocrinopathy-enteropathy-x-linked-syndrome",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/irak-4-deficiency.html": {
+      "checksum": "sha256:d3766c666c92ae146033445f0ff25c94de7a4f2324f1a5fcd535f663a3d6e784",
+      "url": "https://medlineplus.gov/genetics/condition/irak-4-deficiency",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/langerhans-cell-histiocytosis.html": {
+      "checksum": "sha256:35eff0bbaaac51ef7067b8108be4dcebe04d4ca145bc4d63ece43495916b7791",
+      "url": "https://medlineplus.gov/genetics/condition/langerhans-cell-histiocytosis",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/leukocyte-adhesion-deficiency-type-1.html": {
+      "checksum": "sha256:bb5255993f9c4ee220b1a80dd35bf30e46e69083285a1e9704ef9300c0955fad",
+      "url": "https://medlineplus.gov/genetics/condition/leukocyte-adhesion-deficiency-type-1",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/mannose-binding-lectin-deficiency.html": {
+      "checksum": "sha256:4fe204375258b2c013464851ea6e79e5dc5824751fa0f24c735758acd3a8ed8e",
+      "url": "https://medlineplus.gov/genetics/condition/mannose-binding-lectin-deficiency",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/mda5-deficiency.html": {
+      "checksum": "sha256:c110a6e7444060b6c3a4744ff78e75ff21dd021d232ac8ae8747a59d4926db78",
+      "url": "https://medlineplus.gov/genetics/condition/mda5-deficiency",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/omenn-syndrome.html": {
+      "checksum": "sha256:d0cb397f51ea87f553d363e3372565560e9f901b9da0db14fd2d93e688f561a5",
+      "url": "https://medlineplus.gov/genetics/condition/omenn-syndrome",
+      "fecha": "2026-07-21"
+    },
+    "medlineplus_genetics/activated-pi3k-delta-syndrome.html": {
+      "checksum": "sha256:afbd300bf2d9094e3b394fc5557d188e3b951e7892537c6547c1ec951bc3513f",
+      "url": "https://medlineplus.gov/genetics/condition/activated-pi3k-delta-syndrome",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/adenosine-deaminase-deficiency.html": {
+      "checksum": "sha256:b0e26e148d1819ddaaad55939d066392b024b208506c9fd4548ccd356f74e4a3",
+      "url": "https://medlineplus.gov/genetics/condition/adenosine-deaminase-deficiency",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/anhidrotic-ectodermal-dysplasia-with-immune-deficiency.html": {
+      "checksum": "sha256:0372b36a82fd94320b967084ece13aeb396b03b65dd5467b757e9a1a7f5f75a1",
+      "url": "https://medlineplus.gov/genetics/condition/anhidrotic-ectodermal-dysplasia-with-immune-deficiency",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/autosomal-dominant-hyper-ige-syndrome.html": {
+      "checksum": "sha256:305e258fb464b4448b214ff807bd787270d92fb9554dfd73516229ee2a739dbc",
+      "url": "https://medlineplus.gov/genetics/condition/autosomal-dominant-hyper-ige-syndrome",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/bare-lymphocyte-syndrome-type-i.html": {
+      "checksum": "sha256:47cbff4eaf734e422b1d5f4160448a4a9483ff6a5217f841dc3533d1538df2ce",
+      "url": "https://medlineplus.gov/genetics/condition/bare-lymphocyte-syndrome-type-i",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/bare-lymphocyte-syndrome-type-ii.html": {
+      "checksum": "sha256:addbce687cbff5ad333b2bd417bf335c00a5d07147418d4f117e56696a17e7dc",
+      "url": "https://medlineplus.gov/genetics/condition/bare-lymphocyte-syndrome-type-ii",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/chediak-higashi-syndrome.html": {
+      "checksum": "sha256:dd463c63167c5385f9c37277d16332b9b8b5e8b0c9198a3452de9bf9a1b38021",
+      "url": "https://medlineplus.gov/genetics/condition/chediak-higashi-syndrome",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/complement-component-2-deficiency.html": {
+      "checksum": "sha256:b34fa6b2d3596169e719673dbcbca141b4763d3f930d8ab3ab5d93f2911a0314",
+      "url": "https://medlineplus.gov/genetics/condition/complement-component-2-deficiency",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/complement-component-8-deficiency.html": {
+      "checksum": "sha256:a1df7c99bb799b70d0113d49d5086eaab3d02b1fd6f8b3df593a283c78097e3a",
+      "url": "https://medlineplus.gov/genetics/condition/complement-component-8-deficiency",
+      "fecha": "2026-07-22"
+    },
+    "medlineplus_genetics/complement-factor-i-deficiency.html": {
+      "checksum": "sha256:e5c711de81060a826302de4853f84492560920d294a3745b51f8aeff259b3269",
+      "url": "https://medlineplus.gov/genetics/condition/complement-factor-i-deficiency",
+      "fecha": "2026-07-22"
     }
   }
 }

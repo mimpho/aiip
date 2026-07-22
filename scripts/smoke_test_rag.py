@@ -32,7 +32,7 @@ from rag.config import load_rag_config
 from rag.embeddings import get_embeddings
 from rag.language import detect_language
 from rag.pipeline import RAGPipeline
-from rag.retriever import distance_to_similarity, get_retriever
+from rag.retriever import get_retriever
 from rag.safety import check_alarm_signals
 
 _COLLECTION_NAME = "family"
@@ -117,20 +117,35 @@ def _run_question(pipeline: RAGPipeline, question: str) -> dict:
     expone chunks/idioma/alarma por contrato (rag/pipeline.py, E-04 T-06),
     así que aquí se recalculan con las mismas funciones públicas
     (`detect_language`, `check_alarm_signals`) para poder documentarlas.
+
+    Hallazgo de E-13 T-03 (revisión del smoke test, 22 jul 2026): esta función
+    usaba `pipeline._vectorstore.similarity_search_with_score()` (búsqueda
+    vectorial pura) solo para el listado de "Chunks recuperados", mientras que
+    `pipeline.query()` (más abajo) usa el retriever híbrido real (BM25 +
+    vectorial + peso adaptativo, D-057/D-061) para generar la respuesta — dos
+    recuperaciones distintas, por lo que el listado mostrado no reflejaba lo
+    que realmente alimentó al LLM (se notaba en que "Fuentes consultadas" al
+    final, construido a partir de la recuperación real dentro de query(),
+    citaba documentos que no aparecían en "Chunks recuperados"). Se usa ahora
+    `pipeline.retrieve()` (método público de D-035, ya usado por
+    `run_ragas_eval.py`/`main_family.py`/los scripts de investigación de
+    E-11) para que el listado sea el mismo retrieval que ve el generador. El
+    "score" pasa a ser posicional (1/rank), no similitud coseno — mismo
+    formato que ya devuelve `RAGPipeline._retrieve_with_scores()` (comentario
+    de D-057 en `rag/pipeline.py`), no es comparable con las cifras de
+    "similitud" de smoke tests anteriores a este fix.
     """
     language = detect_language(question)
     has_alarm = check_alarm_signals(question)
-    raw_results = pipeline._vectorstore.similarity_search_with_score(
-        question, k=pipeline._top_k
-    )
+    raw_results = pipeline.retrieve(question)
     chunks = [
         {
             "source": doc.metadata.get("source", "?"),
             "filename": doc.metadata.get("filename", "?"),
-            "similarity": round(distance_to_similarity(distance), 4),
+            "rank_score": round(score, 4),
             "preview": doc.page_content[:200].replace("\n", " "),
         }
-        for doc, distance in raw_results
+        for doc, score in raw_results
     ]
     response = pipeline.query(question)
 
@@ -181,7 +196,7 @@ def _format_result_md(question_label: str, question_text: str, result: dict) -> 
         for i, chunk in enumerate(result["chunks"], start=1):
             lines.append(
                 f"{i}. `{chunk['source']}/{chunk['filename']}` "
-                f"(similitud: {chunk['similarity']}) — {chunk['preview']}..."
+                f"(score posicional: {chunk['rank_score']}) — {chunk['preview']}..."
             )
     else:
         lines.append("_Sin chunks recuperados (retrieval vacío)._")

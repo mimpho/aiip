@@ -42,12 +42,19 @@ git pull origin epic/E[nn]-nombre
 ```
 
 Con la rama ya actualizada, comprueba el estado (esto sí lo puede hacer el agente
-— `status`/`log`/`diff`/`branch` son de lectura):
+— `status`/`log`/`diff`/`branch`/`fetch` son de lectura):
 
 ```bash
+git fetch origin --prune                    # antes de comparar nada — el ref local puede ir por detrás
 git branch --show-current
 git log --oneline main..epic/E[nn]-nombre   # commits de la épica, sin moverte de rama
 ```
+
+**Haz siempre `git fetch origin` antes de comparar ramas**, incluso si el ref local
+parece al día — la última tarea puede haberse mergeado por PR en GitHub sin que el
+agente lo sepa todavía. Si tras el fetch `origin/epic/E[nn]-nombre` tiene commits que
+el ref local no tiene, compara contra `origin/epic/E[nn]-nombre` en los pasos
+siguientes en vez de asumir que el local ya refleja el estado real.
 
 Si Marcos no ha hecho el `checkout`/`pull` todavía, sigue trabajando con
 `<rama-A>..<rama-B>` en los comandos de git (o contra `origin/epic/E[nn]-nombre`)
