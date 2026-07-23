@@ -31,8 +31,7 @@ Feature: Gate de consentimiento de datos de salud antes del onboarding
   Scenario: Primer chat sin consentimiento registrado muestra el gate antes del saludo
     Given un usuario con "health_data_consent_at" en NULL
     When se dispara on_chat_start
-    Then se muestra el texto de consentimiento de tratamiento de datos de salud antes de
-      cualquier saludo o mensaje de bienvenida
+    Then se muestra el texto de consentimiento de tratamiento de datos de salud antes de cualquier saludo o mensaje de bienvenida
     And se requiere una acción afirmativa real (no basta con seguir escribiendo)
 
   Scenario: Aceptar el consentimiento lo registra una sola vez
@@ -51,15 +50,13 @@ Feature: Gate de consentimiento de datos de salud antes del onboarding
     Given el gate de consentimiento visible
     When el usuario lo rechaza o lo cierra sin confirmar
     Then "health_data_consent_at" permanece en NULL
-    And el chat sigue funcionando con el comportamiento de hoy, sin pedir diagnóstico, edad
-      ni contexto del paciente
+    And el chat sigue funcionando con el comportamiento de hoy, sin pedir diagnóstico, edad ni contexto del paciente
     And en chats posteriores se le vuelve a mostrar el gate (no se asume rechazo permanente)
 
   # Documentación, sin step def dedicado (mismo precedente que los escenarios "checklist
   # manual" de test_e05_t06.py): el gate solo depende de user_id, no de la vía de
   # autenticación, y eso ya queda cubierto por los step defs de los escenarios anteriores.
   Scenario: El gate aplica igual sin importar la vía de autenticación
-    Given un usuario que llegó por login con contraseña, por el signup mergeado, o por Google
-      OAuth, sin "health_data_consent_at" informado
+    Given un usuario que llegó por login con contraseña, por el signup mergeado, o por Google OAuth, sin "health_data_consent_at" informado
     When se dispara on_chat_start
     Then el comportamiento del gate es idéntico en los tres casos
