@@ -46,6 +46,26 @@ _HEALTH_CONSENT_MESSAGE = (
 
 _HEALTH_CONSENT_TIMEOUT = 300
 
+_PATIENT_PROFILE_TIMEOUT = 120
+
+_PATIENT_WHO_MESSAGE = (
+    "¿Los datos de salud que vas a compartir son sobre ti o sobre otra "
+    "persona, como un hijo o una hija?"
+)
+
+_PATIENT_OTHER_NAME_MESSAGE = "¿Cómo se llama esa persona?"
+
+_PATIENT_DIAGNOSIS_MESSAGE = "¿Qué diagnóstico tiene {patient_name}?"
+
+_PATIENT_AGE_MESSAGE = "¿Qué edad tiene {patient_name}?"
+
+_PATIENT_AGE_INVALID_MESSAGE = "No he entendido esa edad. Debe ser un número entre 0 y 120."
+
+_PATIENT_CONTEXT_MESSAGE = (
+    "¿Hay algo más del contexto de {patient_name} que te gustaría que tenga "
+    "en cuenta (tratamiento actual, otras condiciones, rutina diaria...)?"
+)
+
 _pipeline: RAGPipeline | None = None
 
 _ERROR_MESSAGE = (
@@ -379,6 +399,131 @@ async def _ensure_full_name() -> None:
         user.metadata["full_name"] = full_name
 
 
+def _parse_patient_age(raw: str) -> int | None:
+    """Convierte `raw` a edad válida (entero entre 0 y 120) o None (D-088)."""
+    try:
+        age = int(raw.strip())
+    except ValueError:
+        return None
+    if 0 <= age <= 120:
+        return age
+    return None
+
+
+async def _ask_patient_age(patient_name: str) -> int | None:
+    """Pregunta la edad de `patient_name`, con una única repregunta si la respuesta no es válida (D-088).
+
+    Si la segunda respuesta tampoco es válida (o no hay respuesta en
+    ninguna de las dos vueltas), devuelve None sin insistir más — se
+    repreguntará en el próximo `on_chat_start`, no en este mismo chat.
+    """
+    prompt = _PATIENT_AGE_MESSAGE.format(patient_name=patient_name)
+    for attempt in range(2):
+        res = await cl.AskUserMessage(content=prompt, timeout=_PATIENT_PROFILE_TIMEOUT).send()
+        if not res:
+            return None
+        age = _parse_patient_age(res.get("output", ""))
+        if age is not None:
+            return age
+        if attempt == 0:
+            await cl.Message(content=_PATIENT_AGE_INVALID_MESSAGE).send()
+    return None
+
+
+async def _ensure_patient_profile() -> None:
+    """Pide por chat los datos del paciente que falten en el perfil (T-03, D-089).
+
+    Solo se alcanza con consentimiento de datos de salud ya registrado
+    (_ensure_health_consent() se ejecuta antes en on_chat_start, D-009) —
+    no se duplica esa comprobación aquí.
+
+    Distingue "quién chatea" (user.metadata["full_name"], D-040) de "de
+    quién son los datos clínicos" (patient_name): si el usuario indica que
+    los datos son sobre sí mismo, patient_name se copia de full_name
+    (D-089) en vez de preguntarse aparte; si son sobre otra persona, se
+    pregunta su nombre. Las preguntas de diagnóstico/edad/contexto usan
+    siempre el nombre real del paciente, nunca la palabra "paciente"
+    (decisión de tono de epic-start).
+
+    Cada pregunta solo se hace si el campo correspondiente está vacío en
+    `profile` (get_profile) — un perfil ya completo no dispara ninguna
+    llamada a cl.AskActionMessage/cl.AskUserMessage. Si no hay respuesta a
+    una pregunta (timeout/None), la función retorna sin preguntar el resto
+    — se repite en el próximo on_chat_start, mismo criterio que
+    _ensure_full_name/_ensure_health_consent.
+    """
+    user = cl.context.session.user
+    if not user:
+        return
+    user_id = user.metadata.get("user_id")
+    if not user_id:
+        return
+
+    profile = get_profile(user_id)
+    patient_name = profile.get("patient_name")
+
+    if not patient_name:
+        res = await cl.AskActionMessage(
+            content=_PATIENT_WHO_MESSAGE,
+            actions=[
+                cl.Action(name="patient_self", payload={}, label="Sobre mí"),
+                cl.Action(name="patient_other", payload={}, label="Sobre otra persona"),
+            ],
+            timeout=_PATIENT_PROFILE_TIMEOUT,
+        ).send()
+        if not res:
+            return
+
+        if res.get("name") == "patient_self":
+            patient_name = user.metadata.get("full_name")
+            if not patient_name:
+                return
+        elif res.get("name") == "patient_other":
+            name_res = await cl.AskUserMessage(
+                content=_PATIENT_OTHER_NAME_MESSAGE, timeout=_PATIENT_PROFILE_TIMEOUT
+            ).send()
+            if not name_res or not name_res.get("output", "").strip():
+                return
+            patient_name = name_res["output"].strip()
+        else:
+            return
+
+        try:
+            update_profile(user_id, {"patient_name": patient_name})
+        except Exception:
+            logger.exception("Error al registrar patient_name para user_id=%s", user_id)
+
+    if not profile.get("patient_diagnosis"):
+        diagnosis_res = await cl.AskUserMessage(
+            content=_PATIENT_DIAGNOSIS_MESSAGE.format(patient_name=patient_name),
+            timeout=_PATIENT_PROFILE_TIMEOUT,
+        ).send()
+        if diagnosis_res and diagnosis_res.get("output", "").strip():
+            try:
+                update_profile(user_id, {"patient_diagnosis": diagnosis_res["output"].strip()})
+            except Exception:
+                logger.exception("Error al registrar patient_diagnosis para user_id=%s", user_id)
+
+    if not profile.get("patient_age"):
+        age = await _ask_patient_age(patient_name)
+        if age is not None:
+            try:
+                update_profile(user_id, {"patient_age": age})
+            except Exception:
+                logger.exception("Error al registrar patient_age para user_id=%s", user_id)
+
+    if not profile.get("patient_context"):
+        context_res = await cl.AskUserMessage(
+            content=_PATIENT_CONTEXT_MESSAGE.format(patient_name=patient_name),
+            timeout=_PATIENT_PROFILE_TIMEOUT,
+        ).send()
+        if context_res and context_res.get("output", "").strip():
+            try:
+                update_profile(user_id, {"patient_context": context_res["output"].strip()})
+            except Exception:
+                logger.exception("Error al registrar patient_context para user_id=%s", user_id)
+
+
 @cl.on_chat_start
 async def on_chat_start():
     """Envía el mensaje de bienvenida y el recordatorio de seguridad (D-036).
@@ -402,10 +547,14 @@ async def on_chat_start():
     el nombre de cuenta no es un dato de salud, así que ese gate va primero.
     Después, _ensure_full_name() pide el nombre por chat si el usuario
     autenticado no lo tiene guardado todavía (D-040) — el formulario fijo de
-    Chainlit no admite un campo de nombre propio.
+    Chainlit no admite un campo de nombre propio. Por último,
+    _ensure_patient_profile() completa por chat los datos del paciente que
+    falten (T-03) — depende de que _ensure_full_name() ya haya resuelto
+    full_name en esta misma llamada para el caso "sobre mí" (D-089).
     """
     await _ensure_health_consent()
     await _ensure_full_name()
+    await _ensure_patient_profile()
     await cl.Message(content=_greeting()).send()
 
     actions = [
