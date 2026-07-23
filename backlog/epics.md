@@ -907,13 +907,58 @@ sesiones/derecho al olvido) sigue aplazada a seguimiento post-TFM sin cambios.
   fuera de alcance por coste (esquema Supabase nuevo + UI de borrado) y por decisión de
   priorización de D-063 (calidad de KB/RAG sobre completitud de producto).
 
-**Criterios de aceptación de alto nivel**
-- Onboarding captura datos estables del paciente: tipo de IDP, edad, contexto relevante
-- El agente usa la memoria de perfil para contextualizar respuestas
-- Migrar `user_metadata.full_name` (D-040, solución provisional de E-05 T-06) al esquema de
-  perfil propio que diseñe esta épica, en vez de dejarlo repartido entre Auth y `profiles`
+**Descomposición y decisiones de `epic-start` (23 jul 2026):** aprobada por Marcos con varios
+puntos resueltos sobre la propuesta inicial:
+- **Consentimiento de datos de salud (D-009):** al pedir diagnóstico/edad (categoría especial,
+  RGPD Art. 9), se implementa el gate que D-009 dejó diseñado y sin implementar (T-02). Si el
+  usuario rechaza, el chat sigue funcionando igual que hoy, sin onboarding — no bloquea el
+  acceso a información de seguridad (mismo espíritu que Falso Negativo Cero, D-002).
+- **Taxonomía de "tipo de IDP" descartada:** se evaluó una lista cerrada basada en los 10
+  grupos de la clasificación IUIS 2024 (`docs/kb-sources.md`), pero Marcos señaló que ni él
+  mismo sabría clasificar un diagnóstico conocido (ej. XIAP) en su grupo IUIS. Se sustituye por
+  texto libre (`patient_diagnosis`) — más realista para la familia y reutiliza la misma señal
+  léxica que ya usa el retriever adaptativo (D-057, hallazgo D) en vez de requerir un catálogo
+  nuevo sin mantener.
+- **Distinción usuario/paciente:** `system_prompt_family.txt` (líneas 41-46) ya advierte no
+  asumir que quien escribe es el paciente. El onboarding lo recoge explícitamente en vez de
+  dejarlo solo en el prompt: nombre de quien chatea (`user_name`) vs. nombre de quien tienen los
+  datos clínicos (`patient_name`, puede ser la misma persona u otra — ej. un hijo/a). Evita
+  referirse al paciente como "el paciente" en el onboarding/prompt (frío dado el momento
+  delicado en que puede estar la familia) — se usa su nombre real.
+- **Edición de perfil:** panel `cl.ChatSettings` (T-05), no el desplegable nativo de usuario —
+  investigado y descartado por ser un portal de Radix sin id fijo que se remonta en cada
+  apertura/cierre (requeriría un `MutationObserver` fragile ante cualquier cambio de Chainlit).
+  Se reposiciona el icono de ajustes con `custom_css` (mecanismo oficial de Chainlit, sin hacks)
+  para que quede más visible junto al avatar. Queda como investigación no bloqueante intentar
+  igualmente reinsertarlo dentro del desplegable nativo, acotada en tiempo.
+- **Nombre completo en el desplegable de usuario:** hoy muestra el email porque `cl.User(...)`
+  nunca rellena `display_name` en los callbacks de login (`main_family.py`). Se corrige en T-04
+  junto con la migración de `full_name`/`user_name`.
 
-**Estado:** ⚪ No iniciada
+**Criterios de aceptación de alto nivel**
+- Onboarding captura, tras consentimiento explícito de datos de salud (D-009): nombre de quien
+  chatea (`user_name`), nombre del paciente si es distinto (`patient_name`), diagnóstico en
+  texto libre (`patient_diagnosis`), edad (`patient_age`) y contexto relevante
+  (`patient_context`)
+- El agente usa la memoria de perfil para contextualizar respuestas, sin tocar la consulta de
+  retrieval (solo inyección en el prompt de generación)
+- El usuario puede editar sus datos guardados desde un panel de ajustes (`cl.ChatSettings`)
+- Migrar `user_metadata.full_name` (D-040, solución provisional de E-05 T-06) a `profiles`
+  (`user_name`), en vez de dejarlo repartido entre Auth y `profiles`
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Esquema de perfil en Supabase (`user_name`, `patient_name`, `patient_diagnosis`, `patient_age`, `patient_context`, `health_data_consent_at`) | ⚪ Pendiente |
+| T-02 | Gate de consentimiento de datos de salud (D-009) | ⚪ Pendiente |
+| T-03 | Flujo de onboarding por chat (nombre de quien escribe → ¿sobre quién son los datos? → diagnóstico/edad/contexto por nombre) | ⚪ Pendiente |
+| T-04 | Migración de `full_name`/`user_name` a `profiles` + `display_name` en `cl.User` (desplegable muestra el nombre, no el email) | ⚪ Pendiente |
+| T-05 | Edición de perfil desde ajustes (`cl.ChatSettings` + reposicionar icono con `custom_css`; investigación no bloqueante de integrarlo en el desplegable nativo) | ⚪ Pendiente |
+| T-06 | Memoria de perfil en el pipeline de generación (inyección en prompt, sin tocar retrieval) | ⚪ Pendiente |
+| T-07 | Cierre: regresión + smoke test end-to-end, `docs/security.md` actualizado | ⚪ Pendiente |
+
+**Estado:** 🔵 En curso
 
 ---
 

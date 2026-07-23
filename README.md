@@ -46,7 +46,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-11 | Ciclo de mejora de calidad (post-E-09) | ✅ Completada — 21 jul 2026 | E-09 |
 | E-12 | Retrospectiva final del roadmap (cierre TFM) — innegociable | ⚪ No iniciada | E-11, E-13, E-14 |
 | E-13 | Ampliación de KB — fuentes MedlinePlus Genetics | ✅ Completada — 22 jul 2026 | E-11 |
-| E-14 | Memoria de perfil (onboarding) | ⚪ No iniciada | E-03, E-04, E-06, E-13 |
+| E-14 | Memoria de perfil (onboarding) | 🔵 En curso | E-03, E-04, E-06, E-13 |
 
 ---
 
