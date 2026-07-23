@@ -155,7 +155,19 @@ def usuario_ya_autenticado():
 def usuario_sin_consentimiento(monkeypatch):
     user = _FakeUser(identifier="sinconsentir@example.com", metadata={"user_id": "user-sin-consentir"})
     _fake_context.session.user = user
-    monkeypatch.setattr(main_family, "get_profile", lambda user_id: {"health_data_consent_at": None})
+    # patient_name/etc ya informados: aísla este test al gate de consentimiento
+    # (T-02) sin que la nueva pregunta de onboarding de perfil (T-03) interfiera.
+    monkeypatch.setattr(
+        main_family,
+        "get_profile",
+        lambda user_id: {
+            "health_data_consent_at": None,
+            "patient_name": "Ya Informado",
+            "patient_diagnosis": "ya",
+            "patient_age": 10,
+            "patient_context": "ya",
+        },
+    )
     update_mock = MagicMock()
     monkeypatch.setattr(main_family, "update_profile", update_mock)
     ask_action_factory = _make_ask_action_message_factory(None)
@@ -235,8 +247,18 @@ def flujo_continua_hacia_el_saludo():
 def usuario_con_consentimiento_informado(monkeypatch):
     user = _FakeUser(identifier="yaconsintio@example.com", metadata={"user_id": "user-ya-consintio"})
     _fake_context.session.user = user
+    # patient_name/etc ya informados: aísla este test al gate de consentimiento
+    # (T-02) sin que la nueva pregunta de onboarding de perfil (T-03) interfiera.
     monkeypatch.setattr(
-        main_family, "get_profile", lambda user_id: {"health_data_consent_at": "2026-07-01T10:00:00+00:00"}
+        main_family,
+        "get_profile",
+        lambda user_id: {
+            "health_data_consent_at": "2026-07-01T10:00:00+00:00",
+            "patient_name": "Ya Informado",
+            "patient_diagnosis": "ya",
+            "patient_age": 10,
+            "patient_context": "ya",
+        },
     )
     monkeypatch.setattr(main_family, "get_user_metadata", lambda user_id: {"full_name": "Ya Tengo Nombre"})
     ask_action_factory = _make_ask_action_message_factory(None)

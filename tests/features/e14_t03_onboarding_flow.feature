@@ -33,14 +33,12 @@ Feature: Onboarding de datos del paciente por chat
   Scenario: Se pregunta primero si los datos son sobre el propio usuario o sobre otra persona
     Given un usuario con "patient_name" en NULL
     When se dispara on_chat_start
-    Then se pregunta con cl.AskActionMessage, con botones "Sobre mí" y "Sobre otra persona",
-      si los datos son sobre sí mismo o sobre otra persona (ej. su hijo/a)
+    Then se pregunta con cl.AskActionMessage, con botones "Sobre mí" y "Sobre otra persona", si los datos son sobre sí mismo o sobre otra persona (ej. su hijo/a)
 
   Scenario: Si los datos son sobre el propio usuario, no se pregunta un nombre aparte
     Given el usuario pulsa el botón "Sobre mí"
     When se guarda la respuesta
-    Then "patient_name" se rellena con el valor de "full_name" en la sesión en curso
-      (cl.context.session.user.metadata, D-089), sin preguntar de nuevo
+    Then "patient_name" se rellena con el valor de "full_name" en la sesión en curso (cl.context.session.user.metadata, D-089), sin preguntar de nuevo
 
   Scenario: Si los datos son sobre otra persona, se pregunta su nombre
     Given el usuario pulsa el botón "Sobre otra persona"
@@ -51,28 +49,23 @@ Feature: Onboarding de datos del paciente por chat
   Scenario: Diagnóstico, edad y contexto se piden por el nombre del paciente, no como "el paciente"
     Given "patient_name" ya resuelto (propio usuario u otra persona)
     When se preguntan diagnóstico, edad y contexto pendientes
-    Then las preguntas usan el nombre real (ej. "¿qué diagnóstico tiene Lucía?"), nunca la
-      palabra "paciente"
-    And las respuestas se guardan en "patient_diagnosis" (texto libre, sin validar contra
-      ninguna lista cerrada), "patient_age" y "patient_context"
+    Then las preguntas usan el nombre real (ej. "¿qué diagnóstico tiene Lucía?"), nunca la palabra "paciente"
+    And las respuestas se guardan en "patient_diagnosis" (texto libre, sin validar contra ninguna lista cerrada), "patient_age" y "patient_context"
 
   Scenario: Edad no numérica o fuera de rango se repregunta una vez (D-088, D-089)
     Given "patient_name" ya resuelto
     When se pregunta "patient_age" y la primera respuesta no es un entero válido entre 0 y 120
     Then se informa del error y se repregunta una única vez
-    And si la segunda respuesta tampoco es válida, se sigue sin guardar "patient_age"
-      (no bloquea el resto del onboarding ni se repregunta hasta el próximo chat)
+    And si la segunda respuesta tampoco es válida, se sigue sin guardar "patient_age" (no bloquea el resto del onboarding ni se repregunta hasta el próximo chat)
 
   Scenario: Solo se pregunta lo que falte
-    Given un usuario con "patient_name" y "patient_diagnosis" ya guardados, pero
-      "patient_age" y "patient_context" en NULL
+    Given un usuario con "patient_name" y "patient_diagnosis" ya guardados, pero "patient_age" y "patient_context" en NULL
     When se dispara on_chat_start
     Then solo se preguntan "patient_age" y "patient_context"
     And no se repiten las preguntas ya respondidas
 
   Scenario: Perfil completo no vuelve a preguntarse
-    Given un usuario con "patient_name", "patient_diagnosis", "patient_age" y
-      "patient_context" ya informados
+    Given un usuario con "patient_name", "patient_diagnosis", "patient_age" y "patient_context" ya informados
     When se dispara on_chat_start
     Then no se pregunta nada de onboarding
     And se pasa directamente al saludo y la bienvenida
