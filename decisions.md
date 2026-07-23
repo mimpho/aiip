@@ -97,6 +97,8 @@
 - [D-086 — E-13 T-04: desglose caso a caso de la caída de Context Precision (−3.7pp) — concentrada en 5/32 casos, no dilución generalizada; `eval_08` resuelto como ruido ya documentado (D-072)](#d-086--e-13-t-04-desglose-caso-a-caso-de-la-caída-de-context-precision-−37pp--concentrada-en-532-casos-no-dilución-generalizada-eval_08-resuelto-como-ruido-ya-documentado-d-072)
 - [D-087 — Revierte parcialmente D-063: capa 2 de E-08 (memoria de perfil) extraída a nueva épica E-14, sustituye a E-10 en Fase 1.5; capa 1 sigue bloqueada más allá de E-11/E-13](#d-087--revierte-parcialmente-d-063-capa-2-de-e-08-memoria-de-perfil-extraída-a-nueva-épica-e-14-sustituye-a-e-10-en-fase-15-capa-1-sigue-bloqueada-más-allá-de-e-11e-13)
 - [D-088 — T-01 (E-14): sin restricción de columna sobre `health_data_consent_at` y sin CHECK de rango en `patient_age`](#d-088--t-01-e-14-sin-restricción-de-columna-sobre-health_data_consent_at-y-sin-check-de-rango-en-patient_age)
+- [D-089 — E-14 T-03: `patient_name` ("sobre mí") lee de `user_metadata.full_name`, no de `profiles.user_name` (todavía sin poblar)](#d-089--e-14-t-03-patient_name-sobre-mí-lee-de-user_metadatafull_name-no-de-profilesuser_name-todavía-sin-poblar)
+- [D-090 — E-14: nueva T-08 (pulido UI del onboarding) se adelanta a T-04/T-05/T-06/T-07](#d-090--e-14-nueva-t-08-pulido-ui-del-onboarding-se-adelanta-a-t-04t-05t-06t-07)
 
 ---
 
@@ -4808,3 +4810,103 @@ dos puntos abiertos no cubiertos por el draft:
   por Marcos por ser complejidad sin señal real de riesgo en el alcance del TFM.
 - `CHECK (patient_age BETWEEN 0 AND 120)`: descartada, se prefiere mantener la validación de
   datos en la capa de aplicación.
+
+---
+
+## D-089 — E-14 T-03: `patient_name` ("sobre mí") lee de `user_metadata.full_name`, no de `profiles.user_name` (todavía sin poblar)
+
+**Fecha:** 24 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-03)
+
+**Contexto**
+Al revisar en `task-start` el draft de `epic-start` (`tests/features/e14_t03_onboarding_flow.feature`),
+el escenario "sobre mí" asume un valor `user_name` ya disponible para copiar a `patient_name`. La
+columna `profiles.user_name` se añadió en T-01 (migración `20260723002559_e14_t01_add_profile_onboarding_columns.sql`,
+D-088) pero ningún flujo la escribe todavía — poblarla es precisamente el alcance de T-04
+("Migración de `full_name`/`user_name` a `profiles`"). Hoy el nombre de quien chatea vive en
+`user_metadata.full_name`, escrito por `_ensure_full_name()` (D-040) — decisión que además
+descartó explícitamente crear una columna `profiles.full_name` por el coste de sincronización.
+Leer de `profiles.user_name` en T-03 dejaría el caso "sobre mí" roto para todos los usuarios hasta
+que T-04 se cierre, sin que esa dependencia esté declarada en `backlog/epics.md` (el orden actual
+es T-03 antes que T-04).
+
+**Decisión**
+La función nueva de onboarding de perfil (`_ensure_patient_profile()`) lee el nombre de quien
+escribe de `cl.context.session.user.metadata.get("full_name")` para el caso "sobre mí" — no de
+`profiles.user_name`. Ese valor ya lo deja resuelto `_ensure_full_name()`, que se ejecuta justo
+antes en el mismo `on_chat_start` y escribe tanto en Supabase como en `user.metadata` de la sesión
+en curso: evita una segunda llamada a Supabase. Si `full_name` no está disponible (p. ej. el
+usuario no respondió a tiempo a `_ensure_full_name`), `patient_name` simplemente no se autorrellena
+en el caso "sobre mí" — mismo criterio de degradación sin bloqueo que el resto del onboarding.
+
+**Alternativas descartadas**
+- Leer de `profiles.user_name`: roto en la práctica hasta que T-04 se cierre.
+- Invertir el orden de tareas (bloquear T-03 hasta que T-04 complete la migración): innecesario —
+  ambas quedan independientes si T-03 usa la fuente ya vigente hoy.
+
+**Consecuencias**
+- `tests/features/e14_t03_onboarding_flow.feature`, escenario "Si los datos son sobre el propio
+  usuario...": `patient_name` se rellena con `cl.context.session.user.metadata["full_name"]`.
+- Cuando T-04 migre y sincronice `profiles.user_name`, esta lectura no necesita cambiar (mismo
+  valor, columna adicional poblada en paralelo).
+
+---
+
+## D-090 — E-14: nueva T-08 (pulido UI del onboarding) se adelanta a T-04/T-05/T-06/T-07
+
+**Fecha:** 24 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-14
+
+**Contexto**
+Al hacer Marcos QA manual en vivo del flujo de T-03 (primera prueba real contra Chainlit y
+Supabase corriendo en local, no solo los tests con mocks de `test_e14_t03.py`), surgieron varios
+hallazgos de UI:
+
+1. El texto de consentimiento (T-02) y, tras refrescar, la propia pregunta de diagnóstico (T-03)
+   se renderizaban como un título gigante con gradiente. Causa raíz: `design/public/style.css`
+   tiene una regla (`[data-step-type="assistant_message"]:first-child`, D-036/T-05) que asume
+   que el saludo (`_greeting()`) es siempre el primer mensaje del hilo — asunción rota desde que
+   T-02 empezó a enviar el gate de consentimiento antes del saludo, y agravada por T-03. El bug
+   es en realidad retroactivo a T-02, solo visible ahora con más pasos delante del saludo.
+2. `AskActionMessage` de Chainlit reescribe su propio contenido a `"**Selected:** <label>"` al
+   responder (hardcodeado en `chainlit/message.py:556`, no en nuestro código) — combinado con el
+   bug anterior, esa reescritura también heredaba el título gigante si era el primer mensaje del
+   hilo.
+3. Falta una cabecera genérica antes del párrafo de consentimiento, indicando que vienen unas
+   preguntas antes de empezar.
+4. Los botones de Acepto/Ahora no y Sobre mí/Sobre otra persona no están centrados.
+5. `_parse_patient_age()` usa `int(raw.strip())` a pelo — una respuesta como "12 años" no se
+   reconoce como edad válida.
+
+**Decisión**
+Se crea **T-08** (nueva) para agrupar estos cinco hallazgos, con el fix del punto 1 aplicado vía
+etiquetado por contenido en `design/public/custom.js` (mismo patrón ya usado para "Fuentes
+consultadas:", `tagSourcesSections`) en vez de seguir dependiendo de la posición en el DOM, y el
+punto 4 con el mismo mecanismo (etiquetar la fila de botones por sus labels conocidas). T-03 se
+cierra tal cual — lógica de datos correcta, tests en verde — sin bloquearse por estos hallazgos
+de UI.
+
+Marcos pide ejecutar T-08 a continuación de T-03, **antes** de T-04/T-05/T-06/T-07: T-04
+(migración de nombre/display_name) y T-05 (edición de perfil vía `cl.ChatSettings`) siguen
+tocando la misma superficie de UI del perfil, y no conviene construir encima de un bug de CSS
+todavía sin arreglar. Los IDs no se renumeran (nota de numeración de `backlog/epics.md`: los IDs
+son correlativos al orden de ejecución, pero un reordenamiento documentado en prosa ya tiene
+precedente — D-056, E-09) — T-08 se documenta como próxima a ejecutar en la tabla de tareas de
+E-14.
+
+**Alternativas descartadas**
+- Bloquear el cierre de T-03 hasta arreglar también estos hallazgos: descartado — la lógica de
+  datos de T-03 es correcta y está probada; mezclar un bug de CSS heredado de T-02 con el cierre
+  de T-03 dificultaría la trazabilidad.
+- Dejar T-08 al final de la cola (tras T-07) respetando el orden numérico: descartado por
+  Marcos — prefiere no acumular más UI (T-04/T-05) sobre un bug ya identificado.
+
+**Consecuencias**
+- `backlog/epics.md`: nueva fila T-08 en la tabla de tareas de E-14, con nota de orden de
+  ejecución.
+- Queda abierto (no resuelto por esta decisión): por qué `patient_diagnosis` volvió a
+  preguntarse tras un refresco de página en la sesión de QA de Marcos — pendiente de que
+  compruebe la consola del servidor o la fila de `profiles` en Supabase antes de decidir si es
+  un bug de persistencia real o un efecto de sesión/usuario distinto.
