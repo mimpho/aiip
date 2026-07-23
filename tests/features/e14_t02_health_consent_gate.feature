@@ -10,6 +10,13 @@
 # Falso Negativo Cero, D-002). El gate vive en on_chat_start, después de la autenticación y
 # antes del saludo — igual que _ensure_full_name (D-040), pero antes que ella en el flujo,
 # porque el nombre de cuenta no es un dato de salud y no necesita este gate.
+#
+# Decisiones de task-start (23 jul 2026): mecanismo `cl.AskActionMessage` (bloquea el chat
+# hasta click o timeout), botones "Acepto" / "Ahora no", timeout 300s (más peso que los 120s
+# de _ensure_full_name). Lectura/escritura de `health_data_consent_at` vía `get_profile`/
+# `update_profile` nuevas en `auth/supabase_client.py` (service key, D-088). Los `Then` que en
+# el draft de epic-start apuntaban al onboarding de T-03 se reescriben para apuntar al saludo
+# actual — T-03 no existe todavía y no es alcance de esta tarea.
 
 Feature: Gate de consentimiento de datos de salud antes del onboarding
 
@@ -32,13 +39,13 @@ Feature: Gate de consentimiento de datos de salud antes del onboarding
     Given el gate de consentimiento visible
     When el usuario confirma con la acción afirmativa
     Then "health_data_consent_at" se actualiza con la marca de tiempo actual
-    And el flujo continúa hacia el onboarding de T-03
+    And el flujo continúa hacia el saludo (T-03 se enganchará aquí más adelante)
 
   Scenario: Chat posterior con consentimiento ya registrado no repite el gate
     Given un usuario con "health_data_consent_at" ya informado
     When se dispara on_chat_start
     Then no se muestra el gate de consentimiento
-    And se pasa directamente a comprobar si falta algún dato de onboarding (T-03)
+    And se pasa directamente al saludo (T-03 se enganchará aquí más adelante)
 
   Scenario: Rechazar el consentimiento no bloquea el chat
     Given el gate de consentimiento visible
@@ -48,6 +55,9 @@ Feature: Gate de consentimiento de datos de salud antes del onboarding
       ni contexto del paciente
     And en chats posteriores se le vuelve a mostrar el gate (no se asume rechazo permanente)
 
+  # Documentación, sin step def dedicado (mismo precedente que los escenarios "checklist
+  # manual" de test_e05_t06.py): el gate solo depende de user_id, no de la vía de
+  # autenticación, y eso ya queda cubierto por los step defs de los escenarios anteriores.
   Scenario: El gate aplica igual sin importar la vía de autenticación
     Given un usuario que llegó por login con contraseña, por el signup mergeado, o por Google
       OAuth, sin "health_data_consent_at" informado
