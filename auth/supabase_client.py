@@ -41,7 +41,7 @@ def get_or_create_profile(user_id: str, role: str) -> dict:
     return created.data[0]
 
 
-def _get_profile(user_id: str) -> dict:
+def get_profile(user_id: str) -> dict:
     """Devuelve el perfil de user_id. Eleva LookupError si no existe.
 
     A diferencia de get_or_create_profile, no crea el perfil: un usuario
@@ -53,6 +53,18 @@ def _get_profile(user_id: str) -> dict:
     if not existing.data:
         raise LookupError(f"No existe perfil para user_id={user_id}")
     return existing.data[0]
+
+
+def update_profile(user_id: str, data: dict) -> dict:
+    """Actualiza las columnas de `data` en el perfil de user_id.
+
+    A diferencia de update_user_metadata, .update() sobre una tabla normal
+    de Supabase solo toca las columnas pasadas — no hace falta mergear a
+    mano con el resto del perfil.
+    """
+    client = get_supabase_client(use_service_key=True)
+    updated = client.table("profiles").update(data).eq("id", user_id).execute()
+    return updated.data[0]
 
 
 def sign_in_with_oauth(provider: str, redirect_to: str | None = None) -> str:
@@ -105,7 +117,7 @@ def login(email: str, password: str) -> dict:
     response = client.auth.sign_in_with_password(
         {"email": email, "password": password}
     )
-    profile = _get_profile(response.session.user.id)
+    profile = get_profile(response.session.user.id)
     return {"session": response.session, "role": profile["role"]}
 
 

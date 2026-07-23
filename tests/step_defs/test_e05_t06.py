@@ -680,6 +680,9 @@ def on_chat_start_no_pide_nombre(monkeypatch, oauth_result):
 def usuario_sin_full_name(monkeypatch):
     user = _FakeUser(identifier="sinnombre@example.com", metadata={"user_id": "user-sin-nombre"})
     _fake_context.session.user = user
+    monkeypatch.setattr(
+        main_family, "get_profile", lambda user_id: {"health_data_consent_at": "2026-07-01T10:00:00+00:00"}
+    )
     monkeypatch.setattr(main_family, "get_user_metadata", lambda user_id: {})
     update_mock = MagicMock()
     monkeypatch.setattr(main_family, "update_user_metadata", update_mock)
@@ -713,6 +716,9 @@ def respuesta_se_guarda_en_metadata(chat_ctx):
 def usuario_con_full_name(monkeypatch):
     user = _FakeUser(identifier="connombre@example.com", metadata={"user_id": "user-con-nombre"})
     _fake_context.session.user = user
+    monkeypatch.setattr(
+        main_family, "get_profile", lambda user_id: {"health_data_consent_at": "2026-07-01T10:00:00+00:00"}
+    )
     monkeypatch.setattr(main_family, "get_user_metadata", lambda user_id: {"full_name": "María"})
     ask_factory = _make_ask_user_message_factory(None)
     monkeypatch.setattr(main_family.cl, "AskUserMessage", ask_factory)

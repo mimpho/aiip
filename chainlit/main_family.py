@@ -1,17 +1,19 @@
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
 import chainlit as cl
 from auth.supabase_client import (
     get_or_create_google_user,
+    get_profile,
     get_user_metadata,
     login,
     request_password_reset,
     set_new_password,
     signup,
+    update_profile,
     update_user_metadata,
     verify_token,
 )
@@ -30,6 +32,19 @@ APP_ROLE = os.environ.get("APP_ROLE", "family")
 _templates = Jinja2Templates(directory=str(Path(__file__).parent / "family" / "templates"))
 
 _ASK_NAME_MESSAGE = "¿Cómo te llamas? Así puedo dirigirme a ti por tu nombre."
+
+_HEALTH_CONSENT_MESSAGE = (
+    "Antes de continuar, necesito tu consentimiento para tratar datos de "
+    "salud —por ejemplo, diagnóstico, edad o contexto del paciente— si "
+    "decides compartirlos conmigo. Es una categoría especial de datos "
+    "protegida por el RGPD (Art. 9) y solo se usará para adaptar mis "
+    "respuestas a esa persona, nunca para otro fin.\n\n"
+    "Puedes usar el chat sin darlo: seguirá funcionando igual que hasta "
+    "ahora, solo que no podré personalizar las respuestas con esa "
+    "información."
+)
+
+_HEALTH_CONSENT_TIMEOUT = 300
 
 _pipeline: RAGPipeline | None = None
 
@@ -292,6 +307,50 @@ async def _answer(question: str) -> None:
     await thinking_message.update()
 
 
+async def _ensure_health_consent() -> None:
+    """Muestra el gate de consentimiento de datos de salud si no está registrado (D-009).
+
+    user_id viaja en cl.User.metadata desde auth_callback/oauth_callback.
+    cl.AskActionMessage bloquea el chat hasta que el usuario pulsa un botón
+    o expira el timeout (raise_on_timeout=False por defecto, devuelve None).
+    Rechazar o dejar que expire no registra nada y no bloquea el resto del
+    chat (Falso Negativo Cero, D-002): en chats posteriores se vuelve a
+    mostrar el gate, no se asume rechazo permanente.
+
+    Si update_profile falla (p.ej. error de red), se loguea y el flujo sigue
+    igualmente — a diferencia de _ensure_full_name, aquí hay una escritura
+    nueva a Supabase que antes no existía en on_chat_start.
+    """
+    user = cl.context.session.user
+    if not user:
+        return
+    user_id = user.metadata.get("user_id")
+    if not user_id:
+        return
+
+    profile = get_profile(user_id)
+    if profile.get("health_data_consent_at"):
+        return
+
+    res = await cl.AskActionMessage(
+        content=_HEALTH_CONSENT_MESSAGE,
+        actions=[
+            cl.Action(name="consent_accept", payload={}, label="Acepto"),
+            cl.Action(name="consent_decline", payload={}, label="Ahora no"),
+        ],
+        timeout=_HEALTH_CONSENT_TIMEOUT,
+    ).send()
+
+    if res and res.get("name") == "consent_accept":
+        try:
+            update_profile(
+                user_id,
+                {"health_data_consent_at": datetime.now(timezone.utc).isoformat()},
+            )
+        except Exception:
+            logger.exception("Error al registrar health_data_consent_at para user_id=%s", user_id)
+
+
 async def _ensure_full_name() -> None:
     """Pide el nombre por chat si el usuario autenticado no lo tiene guardado (D-040).
 
@@ -338,10 +397,14 @@ async def on_chat_start():
     bienvenida — style.css lo detecta por ser el primer assistant_message
     del hilo y lo pinta como título, no como burbuja.
 
-    Antes del saludo, _ensure_full_name() pide el nombre por chat si el
-    usuario autenticado no lo tiene guardado todavía (D-040) — el
-    formulario fijo de Chainlit no admite un campo de nombre propio.
+    Antes de todo eso, _ensure_health_consent() muestra el gate de
+    consentimiento de datos de salud si no está registrado todavía (D-009):
+    el nombre de cuenta no es un dato de salud, así que ese gate va primero.
+    Después, _ensure_full_name() pide el nombre por chat si el usuario
+    autenticado no lo tiene guardado todavía (D-040) — el formulario fijo de
+    Chainlit no admite un campo de nombre propio.
     """
+    await _ensure_health_consent()
     await _ensure_full_name()
     await cl.Message(content=_greeting()).send()
 
