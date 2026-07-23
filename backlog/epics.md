@@ -950,7 +950,7 @@ puntos resueltos sobre la propuesta inicial:
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-01 | Esquema de perfil en Supabase (`user_name`, `patient_name`, `patient_diagnosis`, `patient_age`, `patient_context`, `health_data_consent_at`) | 🔄 En progreso |
+| T-01 | Esquema de perfil en Supabase (`user_name`, `patient_name`, `patient_diagnosis`, `patient_age`, `patient_context`, `health_data_consent_at`) | ✅ Completada |
 | T-02 | Gate de consentimiento de datos de salud (D-009) | ⚪ Pendiente |
 | T-03 | Flujo de onboarding por chat (nombre de quien escribe → ¿sobre quién son los datos? → diagnóstico/edad/contexto por nombre) | ⚪ Pendiente |
 | T-04 | Migración de `full_name`/`user_name` a `profiles` + `display_name` en `cl.User` (desplegable muestra el nombre, no el email) | ⚪ Pendiente |

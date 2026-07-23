@@ -4758,6 +4758,12 @@ métricas — sin fecha ni épica asignada dentro de Fase 1.5.
   por el mismo motivo que llevó a crear E-13 en D-063 en vez de tareas nuevas en E-11 —
   mezclaría un aplazamiento ya cerrado (D-063) con una reactivación parcial, dificultando la
   trazabilidad para la retrospectiva de E-12.
+- Reabrir E-08 completa (las 3 capas): descartada por scope y riesgo de calendario — la capa
+  3 es la parte más cara y sin descomponer, con solo 6 días hasta la entrega y E-12
+  innegociable de por medio.
+- Mantener E-10 en el orden de Fase 1.5 sin cambios (D-064): descartada — el argumento de
+  D-064 (pulido de UX ya resuelto orgánicamente, CORS no urgente sin integración externa) se
+  lleva ahora a su conclusión: no solo bajar su prioridad, sino sustituirla.
 
 ---
 
@@ -4802,9 +4808,3 @@ dos puntos abiertos no cubiertos por el draft:
   por Marcos por ser complejidad sin señal real de riesgo en el alcance del TFM.
 - `CHECK (patient_age BETWEEN 0 AND 120)`: descartada, se prefiere mantener la validación de
   datos en la capa de aplicación.
-- Reabrir E-08 completa (las 3 capas): descartada por scope y riesgo de calendario — la capa
-  3 es la parte más cara y sin descomponer, con solo 6 días hasta la entrega y E-12
-  innegociable de por medio.
-- Mantener E-10 en el orden de Fase 1.5 sin cambios (D-064): descartada — el argumento de
-  D-064 (pulido de UX ya resuelto orgánicamente, CORS no urgente sin integración externa) se
-  lleva ahora a su conclusión: no solo bajar su prioridad, sino sustituirla.
