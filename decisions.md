@@ -97,6 +97,7 @@
 - [D-086 — E-13 T-04: desglose caso a caso de la caída de Context Precision (−3.7pp) — concentrada en 5/32 casos, no dilución generalizada; `eval_08` resuelto como ruido ya documentado (D-072)](#d-086--e-13-t-04-desglose-caso-a-caso-de-la-caída-de-context-precision-−37pp--concentrada-en-532-casos-no-dilución-generalizada-eval_08-resuelto-como-ruido-ya-documentado-d-072)
 - [D-087 — Revierte parcialmente D-063: capa 2 de E-08 (memoria de perfil) extraída a nueva épica E-14, sustituye a E-10 en Fase 1.5; capa 1 sigue bloqueada más allá de E-11/E-13](#d-087--revierte-parcialmente-d-063-capa-2-de-e-08-memoria-de-perfil-extraída-a-nueva-épica-e-14-sustituye-a-e-10-en-fase-15-capa-1-sigue-bloqueada-más-allá-de-e-11e-13)
 - [D-088 — T-01 (E-14): sin restricción de columna sobre `health_data_consent_at` y sin CHECK de rango en `patient_age`](#d-088--t-01-e-14-sin-restricción-de-columna-sobre-health_data_consent_at-y-sin-check-de-rango-en-patient_age)
+- [D-089 — E-14 T-03: `patient_name` ("sobre mí") lee de `user_metadata.full_name`, no de `profiles.user_name` (todavía sin poblar)](#d-089--e-14-t-03-patient_name-sobre-mí-lee-de-user_metadatafull_name-no-de-profilesuser_name-todavía-sin-poblar)
 
 ---
 
@@ -4808,3 +4809,43 @@ dos puntos abiertos no cubiertos por el draft:
   por Marcos por ser complejidad sin señal real de riesgo en el alcance del TFM.
 - `CHECK (patient_age BETWEEN 0 AND 120)`: descartada, se prefiere mantener la validación de
   datos en la capa de aplicación.
+
+---
+
+## D-089 — E-14 T-03: `patient_name` ("sobre mí") lee de `user_metadata.full_name`, no de `profiles.user_name` (todavía sin poblar)
+
+**Fecha:** 24 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-03)
+
+**Contexto**
+Al revisar en `task-start` el draft de `epic-start` (`tests/features/e14_t03_onboarding_flow.feature`),
+el escenario "sobre mí" asume un valor `user_name` ya disponible para copiar a `patient_name`. La
+columna `profiles.user_name` se añadió en T-01 (migración `20260723002559_e14_t01_add_profile_onboarding_columns.sql`,
+D-088) pero ningún flujo la escribe todavía — poblarla es precisamente el alcance de T-04
+("Migración de `full_name`/`user_name` a `profiles`"). Hoy el nombre de quien chatea vive en
+`user_metadata.full_name`, escrito por `_ensure_full_name()` (D-040) — decisión que además
+descartó explícitamente crear una columna `profiles.full_name` por el coste de sincronización.
+Leer de `profiles.user_name` en T-03 dejaría el caso "sobre mí" roto para todos los usuarios hasta
+que T-04 se cierre, sin que esa dependencia esté declarada en `backlog/epics.md` (el orden actual
+es T-03 antes que T-04).
+
+**Decisión**
+La función nueva de onboarding de perfil (`_ensure_patient_profile()`) lee el nombre de quien
+escribe de `cl.context.session.user.metadata.get("full_name")` para el caso "sobre mí" — no de
+`profiles.user_name`. Ese valor ya lo deja resuelto `_ensure_full_name()`, que se ejecuta justo
+antes en el mismo `on_chat_start` y escribe tanto en Supabase como en `user.metadata` de la sesión
+en curso: evita una segunda llamada a Supabase. Si `full_name` no está disponible (p. ej. el
+usuario no respondió a tiempo a `_ensure_full_name`), `patient_name` simplemente no se autorrellena
+en el caso "sobre mí" — mismo criterio de degradación sin bloqueo que el resto del onboarding.
+
+**Alternativas descartadas**
+- Leer de `profiles.user_name`: roto en la práctica hasta que T-04 se cierre.
+- Invertir el orden de tareas (bloquear T-03 hasta que T-04 complete la migración): innecesario —
+  ambas quedan independientes si T-03 usa la fuente ya vigente hoy.
+
+**Consecuencias**
+- `tests/features/e14_t03_onboarding_flow.feature`, escenario "Si los datos son sobre el propio
+  usuario...": `patient_name` se rellena con `cl.context.session.user.metadata["full_name"]`.
+- Cuando T-04 migre y sincronice `profiles.user_name`, esta lectura no necesita cambiar (mismo
+  valor, columna adicional poblada en paralelo).

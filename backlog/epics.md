@@ -952,7 +952,7 @@ puntos resueltos sobre la propuesta inicial:
 |---|---|---|
 | T-01 | Esquema de perfil en Supabase (`user_name`, `patient_name`, `patient_diagnosis`, `patient_age`, `patient_context`, `health_data_consent_at`) | ✅ Completada |
 | T-02 | Gate de consentimiento de datos de salud (D-009) | ✅ Completada |
-| T-03 | Flujo de onboarding por chat (nombre de quien escribe → ¿sobre quién son los datos? → diagnóstico/edad/contexto por nombre) | ⚪ Pendiente |
+| T-03 | Flujo de onboarding por chat (nombre de quien escribe → ¿sobre quién son los datos? → diagnóstico/edad/contexto por nombre) | 🔄 En progreso |
 | T-04 | Migración de `full_name`/`user_name` a `profiles` + `display_name` en `cl.User` (desplegable muestra el nombre, no el email) | ⚪ Pendiente |
 | T-05 | Edición de perfil desde ajustes (`cl.ChatSettings` + reposicionar icono con `custom_css`; investigación no bloqueante de integrarlo en el desplegable nativo) | ⚪ Pendiente |
 | T-06 | Memoria de perfil en el pipeline de generación (inyección en prompt, sin tocar retrieval) | ⚪ Pendiente |
