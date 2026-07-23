@@ -96,6 +96,7 @@
 - [D-085 — E-13 T-04: `eval_25` (Faithfulness 0.32, banda Grave nueva) confirmado como ruido del juez, no regresión real — mismo patrón que D-069/D-072](#d-085--e-13-t-04-eval_25-faithfulness-032-banda-grave-nueva-confirmado-como-ruido-del-juez-no-regresión-real--mismo-patrón-que-d-069d-072)
 - [D-086 — E-13 T-04: desglose caso a caso de la caída de Context Precision (−3.7pp) — concentrada en 5/32 casos, no dilución generalizada; `eval_08` resuelto como ruido ya documentado (D-072)](#d-086--e-13-t-04-desglose-caso-a-caso-de-la-caída-de-context-precision-−37pp--concentrada-en-532-casos-no-dilución-generalizada-eval_08-resuelto-como-ruido-ya-documentado-d-072)
 - [D-087 — Revierte parcialmente D-063: capa 2 de E-08 (memoria de perfil) extraída a nueva épica E-14, sustituye a E-10 en Fase 1.5; capa 1 sigue bloqueada más allá de E-11/E-13](#d-087--revierte-parcialmente-d-063-capa-2-de-e-08-memoria-de-perfil-extraída-a-nueva-épica-e-14-sustituye-a-e-10-en-fase-15-capa-1-sigue-bloqueada-más-allá-de-e-11e-13)
+- [D-088 — T-01 (E-14): sin restricción de columna sobre `health_data_consent_at` y sin CHECK de rango en `patient_age`](#d-088--t-01-e-14-sin-restricción-de-columna-sobre-health_data_consent_at-y-sin-check-de-rango-en-patient_age)
 
 ---
 
@@ -4757,6 +4758,50 @@ métricas — sin fecha ni épica asignada dentro de Fase 1.5.
   por el mismo motivo que llevó a crear E-13 en D-063 en vez de tareas nuevas en E-11 —
   mezclaría un aplazamiento ya cerrado (D-063) con una reactivación parcial, dificultando la
   trazabilidad para la retrospectiva de E-12.
+
+---
+
+## D-088 — T-01 (E-14): sin restricción de columna sobre `health_data_consent_at` y sin CHECK de rango en `patient_age`
+
+**Fecha:** 23 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-01)
+
+**Contexto**
+Al revisar en `task-start` el draft de `epic-start` (`tests/features/e14_t01_profile_schema.feature`)
+contra el esquema real de `profiles` (migración `20260628021829_create_profiles.sql`), surgieron
+dos puntos abiertos no cubiertos por el draft:
+
+1. `profiles` concede `GRANT UPDATE` a nivel de tabla completa al rol `authenticated` (sin
+   restricción por columna). Tras esta migración esa concesión cubre también
+   `health_data_consent_at` — el timestamp de consentimiento de datos de salud que gatea T-02
+   (D-009). En la práctica no hay ruta de cliente que lo explote hoy: Chainlit es backend
+   Python, el navegador nunca habla directo con Supabase, y todas las escrituras a `profiles`
+   pasan hoy por `auth/supabase_client.py` con la service key (`get_or_create_profile`).
+2. `patient_age` se define `integer` sin `CHECK` de rango.
+
+**Decisión**
+1. **Sin restricción de columna.** El `GRANT UPDATE` de `profiles` queda como está (uniforme,
+   sin `REVOKE` por columna). T-02 escribirá `health_data_consent_at` siempre con service key,
+   mismo patrón que `role`/`user_metadata` hoy — la restricción a nivel de columna sería defensa
+   en profundidad sin ruta de explotación real dado que no hay cliente que use la anon key
+   directamente contra Supabase.
+2. **Sin `CHECK` en `patient_age`.** La validación de rango (si se necesita) se deja para la capa
+   de aplicación en T-03 (flujo de onboarding por chat), no en el esquema.
+
+**Consecuencias**
+- El `.feature` de `epic-start` (`tests/features/e14_t01_profile_schema.feature`) se acepta sin
+  cambios — no añade escenarios nuevos.
+- La migración de T-01 no incluye `REVOKE`/`GRANT` por columna ni `CHECK` sobre `patient_age`.
+- Si en el futuro se expone un cliente que use la anon key de Supabase directamente (fuera de
+  Chainlit), esta decisión debe revisarse — la premisa de "no hay ruta de cliente" ya no
+  aplicaría.
+
+**Alternativas descartadas**
+- Restringir `health_data_consent_at` a service_role vía `REVOKE UPDATE (columna)`: descartada
+  por Marcos por ser complejidad sin señal real de riesgo en el alcance del TFM.
+- `CHECK (patient_age BETWEEN 0 AND 120)`: descartada, se prefiere mantener la validación de
+  datos en la capa de aplicación.
 - Reabrir E-08 completa (las 3 capas): descartada por scope y riesgo de calendario — la capa
   3 es la parte más cara y sin descomponer, con solo 6 días hasta la entrega y E-12
   innegociable de por medio.
