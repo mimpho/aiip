@@ -99,6 +99,7 @@
 - [D-088 — T-01 (E-14): sin restricción de columna sobre `health_data_consent_at` y sin CHECK de rango en `patient_age`](#d-088--t-01-e-14-sin-restricción-de-columna-sobre-health_data_consent_at-y-sin-check-de-rango-en-patient_age)
 - [D-089 — E-14 T-03: `patient_name` ("sobre mí") lee de `user_metadata.full_name`, no de `profiles.user_name` (todavía sin poblar)](#d-089--e-14-t-03-patient_name-sobre-mí-lee-de-user_metadatafull_name-no-de-profilesuser_name-todavía-sin-poblar)
 - [D-090 — E-14: nueva T-08 (pulido UI del onboarding) se adelanta a T-04/T-05/T-06/T-07](#d-090--e-14-nueva-t-08-pulido-ui-del-onboarding-se-adelanta-a-t-04t-05t-06t-07)
+- [D-091 — E-14 T-04: alta de cuenta Google escribe `profiles.user_name` en la creación; login con fallback de lectura a `user_metadata.full_name` cuando `profiles.user_name` está vacío](#d-091--e-14-t-04-alta-de-cuenta-google-escribe-profilesuser_name-en-la-creación-login-con-fallback-de-lectura-a-user_metadatafull_name-cuando-profilesuser_name-está-vacío)
 
 ---
 
@@ -4910,3 +4911,78 @@ E-14.
   preguntarse tras un refresco de página en la sesión de QA de Marcos — pendiente de que
   compruebe la consola del servidor o la fila de `profiles` en Supabase antes de decidir si es
   un bug de persistencia real o un efecto de sesión/usuario distinto.
+
+---
+
+## D-091 — E-14 T-04: alta de cuenta Google escribe `profiles.user_name` en la creación; login con fallback de lectura a `user_metadata.full_name` cuando `profiles.user_name` está vacío
+
+**Fecha:** 24 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-04)
+
+**Contexto**
+Al revisar en `task-start` el draft de `epic-start` (`tests/features/e14_t04_username_migration.feature`),
+quedaron dos comportamientos de borde sin definir sobre cómo se propaga `profiles.user_name` (columna
+añadida en T-01, D-088) como fuente canónica del nombre, sustituyendo a `user_metadata.full_name`
+(D-040) sin romper la primera impresión de `display_name` en el desplegable de usuario:
+
+1. **Alta de cuenta Google nueva.** Hoy `get_or_create_google_user()` (`auth/supabase_client.py`)
+   escribe el nombre de Google solo en `user_metadata.full_name` en la creación (D-040 punto 7). El
+   `.feature` de epic-start solo cubre el backfill genérico hacia `profiles.user_name` disparado en
+   `on_chat_start` (Scenario 1) — que en teoría también resolvería este caso, pero dejaría el
+   desplegable mostrando el email en el primerísimo login de cada cuenta Google nueva, hasta que se
+   abra un chat.
+2. **Usuarios ya existentes (migración).** Un usuario con `full_name` ya guardado en `user_metadata`
+   antes de este despliegue tiene `profiles.user_name` en NULL hasta que abre un chat — el backfill
+   vive en `on_chat_start`, posterior al login. Sin más cambios, el desplegable mostraría el email en
+   ese primer login post-despliegue y ya el nombre a partir del segundo.
+
+**Decisión**
+1. `get_or_create_google_user()` escribe el nombre directamente en `profiles.user_name` en el
+   momento de creación de la cuenta (además de en `user_metadata.full_name`, sin retirar esa
+   escritura — mismo criterio de no perder el dato de D-089), usando el nombre real que ya trae
+   `raw_user_data` de Google. `display_name` sale correcto desde el primerísimo login, sin depender
+   de que se abra un chat antes.
+2. `auth_callback` (password) y `oauth_callback` (Google) hacen una lectura de fallback a
+   `user_metadata.full_name` cuando `get_profile(user_id).get("user_name")` está vacío, solo para
+   fijar `cl.User(display_name=...)` en esa construcción — sin escribir nada en `profiles` desde el
+   login. El backfill real (persistir en `profiles.user_name`) lo sigue haciendo `_ensure_full_name()`
+   en `on_chat_start`, sin duplicar esa escritura en los callbacks de login.
+
+**Alternativas descartadas**
+- Confiar solo en el backfill genérico de `on_chat_start` para ambos casos (Opción B de Q1 y Opción A
+  de Q2 en la revisión de `task-start`): más simple, menos superficie tocada, pero deja una regresión
+  visual transitoria (email en vez de nombre) en el primer login de cada cuenta Google nueva y en el
+  primer login de cualquier usuario ya activo tras el despliegue de T-04 — Marcos entre ellos.
+  Descartada por Marcos: prefiere pagar la lectura extra en los callbacks de login antes que aceptar
+  esa regresión, aunque sea temporal.
+- Que los callbacks de login también escriban `profiles.user_name` (no solo lean) al detectar el
+  fallback: descartado — duplicaría la responsabilidad de persistencia con `_ensure_full_name()`, que
+  ya es la única función que escribe `profiles.user_name` desde D-089/T-03. Mantener la escritura en
+  un solo sitio evita condiciones de carrera entre el callback de login y el primer `on_chat_start` de
+  esa misma sesión.
+
+**Justificación**
+Separar "qué se persiste y dónde" (una sola función escribe `profiles.user_name`) de "qué se lee para
+construir `display_name` en el momento del login" (lectura con fallback, sin escritura) evita
+duplicar lógica de persistencia en tres sitios (password login, password signup, oauth) mientras
+resuelve la regresión visual que preocupaba a Marcos. El caso Google es el único que puede resolverse
+por completo en la creación porque `raw_user_data` ya trae el nombre real en ese momento — a
+diferencia del signup por password, donde el formulario de Chainlit no admite un campo de nombre
+(límite duro, D-040) y `display_name` no puede fijarse hasta que el usuario responde en el chat.
+
+**Consecuencias**
+- `auth/supabase_client.py::get_or_create_google_user()`: además de `user_metadata.full_name`, escribe
+  `profiles.user_name` en la creación (vía `update_profile`, tras `get_or_create_profile`). En el
+  camino de usuario ya existente (`_find_user_by_email`), aplica el mismo criterio que ya tenía para
+  `user_metadata`: solo rellena `profiles.user_name` si viene vacío.
+- `chainlit/main_family.py::auth_callback()` y `oauth_callback()`: antes de construir `cl.User(...)`,
+  leen `get_profile(user_id).get("user_name")`; si viene vacío, caen a
+  `get_user_metadata(user_id).get("full_name")` solo para poblar `display_name` — ninguna escritura
+  nueva en estos callbacks.
+- `tests/features/e14_t04_username_migration.feature`: gana dos escenarios (alta de cuenta Google
+  escribe `profiles.user_name` directamente; login con `profiles.user_name` vacío cae a
+  `user_metadata.full_name` para `display_name`, sin persistir el fallback).
+- No afecta a `_ensure_full_name()` (D-089): sigue siendo la única función que escribe
+  `profiles.user_name` de forma duradera; el nombre de la clave de sesión `user.metadata["full_name"]`
+  tampoco cambia (D-089 ya fijaba que esa lectura no necesita cambiar).

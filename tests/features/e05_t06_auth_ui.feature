@@ -125,7 +125,7 @@ Feature: Autenticación en Chainlit — login, signup, recuperación de contrase
     Given un usuario recién autenticado (login, signup confirmado, u OAuth) sin full_name en user_metadata
     When se dispara on_chat_start
     Then se pide el nombre con cl.AskUserMessage antes del saludo y la bienvenida
-    And la respuesta se guarda en user_metadata.full_name vía update_user_by_id()
+    And la respuesta se guarda en profiles.user_name (E-14 T-04, D-091), no en user_metadata
 
   Scenario: Login posterior con nombre ya guardado no vuelve a preguntar
     Given un usuario con full_name ya presente en user_metadata

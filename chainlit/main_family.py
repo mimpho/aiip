@@ -15,7 +15,6 @@ from auth.supabase_client import (
     set_new_password,
     signup,
     update_profile,
-    update_user_metadata,
     verify_token,
 )
 from chainlit.server import app
@@ -145,6 +144,26 @@ def _get_pipeline() -> RAGPipeline:
     return _pipeline
 
 
+def _resolve_display_name(user_id: str) -> str | None:
+    """Resuelve el nombre a mostrar en cl.User(display_name=...) para user_id (D-091, Q2).
+
+    Pura lectura, sin escribir nada en profiles ni en user_metadata: el
+    backfill duradero es responsabilidad única de _ensure_full_name() en
+    on_chat_start (D-089), para no duplicar esa escritura entre el callback
+    de login y el primer on_chat_start de la misma sesión. Mismo orden de
+    lectura que ese backfill (profiles.user_name → user_metadata.full_name),
+    para que el nombre mostrado en el desplegable sea consistente con el que
+    acabará persistiéndose. Devuelve None si ninguna de las dos fuentes
+    tiene valor todavía — display_name queda sin informar y Chainlit cae a
+    su fallback nativo (identifier, el email), en vez de forzar un valor
+    incorrecto.
+    """
+    full_name = get_profile(user_id).get("user_name")
+    if not full_name:
+        full_name = get_user_metadata(user_id).get("full_name")
+    return full_name or None
+
+
 @cl.password_auth_callback
 def auth_callback(username: str, password: str) -> cl.User | None:
     """Login y signup mergeados en el único formulario fijo de Chainlit (D-040).
@@ -157,12 +176,14 @@ def auth_callback(username: str, password: str) -> cl.User | None:
     """
     try:
         result = login(username, password)
+        user_id = result["session"].user.id
         return cl.User(
             identifier=username,
+            display_name=_resolve_display_name(user_id),
             metadata={
                 "role": result["role"],
                 "provider": "credentials",
-                "user_id": result["session"].user.id,
+                "user_id": user_id,
             },
         )
     except AuthApiError:
@@ -178,6 +199,7 @@ def auth_callback(username: str, password: str) -> cl.User | None:
 
     return cl.User(
         identifier=username,
+        display_name=_resolve_display_name(result["user_id"]),
         metadata={
             "role": result["role"],
             "provider": "credentials",
@@ -220,6 +242,7 @@ if os.environ.get("OAUTH_GOOGLE_CLIENT_ID") and os.environ.get("OAUTH_GOOGLE_CLI
         result = get_or_create_google_user(email, raw_user_data.get("name"), APP_ROLE)
         return cl.User(
             identifier=email,
+            display_name=_resolve_display_name(result["user_id"]),
             metadata={
                 "role": APP_ROLE,
                 "provider": "google",
@@ -396,13 +419,23 @@ async def _ensure_health_consent() -> None:
 
 
 async def _ensure_full_name() -> None:
-    """Pide el nombre por chat si el usuario autenticado no lo tiene guardado (D-040).
+    """Pide el nombre por chat si el usuario autenticado no lo tiene guardado (D-040, E-14 T-04).
+
+    Única función que escribe el nombre de forma duradera en
+    `profiles.user_name` (D-091) — los callbacks de login solo leen, con
+    fallback, para fijar `display_name` (`_resolve_display_name`). Orden de
+    lectura: `profiles.user_name` primero; si está vacío, backfill desde
+    `user_metadata.full_name` (D-040, usuarios ya existentes antes de esta
+    migración) escribiendo ya en `profiles` para no repetir el backfill en
+    cada chat; si ambos están vacíos, se pregunta por chat y la respuesta se
+    guarda directamente en `profiles.user_name`, no en `user_metadata`.
 
     user_id viaja en cl.User.metadata desde auth_callback/oauth_callback.
-    El resultado se guarda también en cl.context.session.user.metadata para
-    que _greeting() lo use sin una segunda consulta a Supabase. Si el
-    usuario no responde a tiempo (timeout de cl.AskUserMessage), se sigue
-    sin nombre — no se repregunta hasta el próximo on_chat_start.
+    El resultado se guarda también en cl.context.session.user.metadata (la
+    clave sigue siendo "full_name", D-089) para que _greeting() lo use sin
+    una segunda consulta a Supabase. Si el usuario no responde a tiempo
+    (timeout de cl.AskUserMessage), se sigue sin nombre — no se repregunta
+    hasta el próximo on_chat_start.
 
     No devuelve `bool` (D-090, corrección Ronda 3) — mismo motivo que
     _ensure_health_consent.
@@ -414,7 +447,12 @@ async def _ensure_full_name() -> None:
     if not user_id:
         return
 
-    full_name = get_user_metadata(user_id).get("full_name")
+    full_name = get_profile(user_id).get("user_name")
+    if not full_name:
+        full_name = get_user_metadata(user_id).get("full_name")
+        if full_name:
+            update_profile(user_id, {"user_name": full_name})
+
     if full_name:
         user.metadata["full_name"] = full_name
         return
@@ -422,7 +460,7 @@ async def _ensure_full_name() -> None:
     res = await cl.AskUserMessage(content=_ASK_NAME_MESSAGE, timeout=120).send()
     if res and res.get("output", "").strip():
         full_name = res["output"].strip()
-        update_user_metadata(user_id, {"full_name": full_name})
+        update_profile(user_id, {"user_name": full_name})
         user.metadata["full_name"] = full_name
 
 
@@ -665,17 +703,20 @@ async def on_chat_start():
     full_name en cl.context.session.user.metadata (D-040) para un usuario
     recurrente — sin este prefetch, el saludo perdería el nombre en todo
     chat que no sea el primero (regresión real detectada al correr los
-    tests de T-05 tras el reordenamiento). Lectura no interactiva
-    (get_user_metadata, sin preguntar nada): _ensure_full_name() hace
-    exactamente esta misma comprobación como primer paso, así que repetirla
-    aquí es barata y su propio chequeo pasa a ser un no-op cuando ya está
-    cacheada.
+    tests de T-05 tras el reordenamiento). Lectura no interactiva, sin
+    escribir nada (el backfill a `profiles.user_name` sigue siendo cosa
+    exclusiva de _ensure_full_name, D-091): mismo orden de lectura que su
+    primer paso (`profiles.user_name` → `user_metadata.full_name`), así que
+    repetirla aquí es barata y su propio chequeo pasa a ser un no-op cuando
+    ya está cacheada.
     """
     user = cl.context.session.user
     if user and "full_name" not in user.metadata:
         user_id = user.metadata.get("user_id")
         if user_id:
-            full_name = get_user_metadata(user_id).get("full_name")
+            full_name = get_profile(user_id).get("user_name")
+            if not full_name:
+                full_name = get_user_metadata(user_id).get("full_name")
             if full_name:
                 user.metadata["full_name"] = full_name
 

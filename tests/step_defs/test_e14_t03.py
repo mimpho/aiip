@@ -154,6 +154,10 @@ def _run(coro):
 
 def _base_profile(**overrides) -> dict:
     profile = {
+        # Ya con user_name propio (E-14 T-04): aísla estos tests de
+        # onboarding de paciente del backfill de _ensure_full_name (D-091),
+        # que no es lo que estos escenarios ejercitan.
+        "user_name": "Marcos",
         "patient_name": None,
         "patient_diagnosis": None,
         "patient_age": None,

@@ -277,6 +277,7 @@ def usuario_con_consentimiento_informado(monkeypatch):
         main_family,
         "get_profile",
         lambda user_id: {
+            "user_name": "Ya Tengo Nombre",
             "health_data_consent_at": "2026-07-01T10:00:00+00:00",
             "patient_name": "Ya Informado",
             "patient_diagnosis": "ya",
