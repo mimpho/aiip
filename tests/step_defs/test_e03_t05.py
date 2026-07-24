@@ -13,8 +13,9 @@ from supabase_auth.errors import AuthApiError
 
 
 class _FakeUser:
-    def __init__(self, identifier: str, metadata: dict | None = None):
+    def __init__(self, identifier: str, display_name: str | None = None, metadata: dict | None = None):
         self.identifier = identifier
+        self.display_name = display_name
         self.metadata = metadata or {}
 
 
@@ -56,6 +57,13 @@ scenarios("../features/e03_t05_chainlit_auth.feature")
 @given(parsers.parse('la variable APP_ROLE es "{role}"'))
 def app_role_env(monkeypatch, role):
     monkeypatch.setenv("APP_ROLE", role)
+    # E-14 T-04 (D-091): auth_callback ahora resuelve display_name leyendo
+    # profiles/user_metadata en cada construcción de cl.User — mock por
+    # defecto para que estos tests (centrados en el wiring login/signup, no
+    # en el nombre) no golpeen Supabase real con los user_id ficticios que
+    # usan sus mocks de login()/signup().
+    monkeypatch.setattr(main_family, "get_profile", lambda user_id: {})
+    monkeypatch.setattr(main_family, "get_user_metadata", lambda user_id: {})
 
 
 # ── Scenario 1: Login con credenciales válidas ────────────────────────────────

@@ -26,8 +26,9 @@ from supabase_auth.errors import AuthApiError
 
 
 class _FakeUser:
-    def __init__(self, identifier: str, metadata: dict | None = None):
+    def __init__(self, identifier: str, display_name: str | None = None, metadata: dict | None = None):
         self.identifier = identifier
+        self.display_name = display_name
         self.metadata = metadata or {}
 
 
@@ -210,8 +211,18 @@ def _run(coro):
 
 
 @given("la app Chainlit del perfil familiar está inicializada")
-def app_inicializada():
+def app_inicializada(monkeypatch):
     assert main_family is not None
+    # E-14 T-04 (D-091): auth_callback/oauth_callback ahora resuelven
+    # display_name leyendo profiles/user_metadata en cada construcción de
+    # cl.User, y _ensure_full_name() puede disparar un backfill de escritura
+    # a profiles.user_name — mocks por defecto para que ningún escenario de
+    # este fichero golpee Supabase real solo por eso; los que necesitan un
+    # valor concreto (o comprobar la propia escritura) lo sobrescriben en su
+    # Given.
+    monkeypatch.setattr(main_family, "get_profile", lambda user_id: {})
+    monkeypatch.setattr(main_family, "get_user_metadata", lambda user_id: {})
+    monkeypatch.setattr(main_family, "update_profile", MagicMock())
 
 
 # ── Escenarios 1-4: password_auth_callback (login/signup mergeados) ─────────
@@ -695,7 +706,7 @@ def usuario_sin_full_name(monkeypatch):
     )
     monkeypatch.setattr(main_family, "get_user_metadata", lambda user_id: {})
     update_mock = MagicMock()
-    monkeypatch.setattr(main_family, "update_user_metadata", update_mock)
+    monkeypatch.setattr(main_family, "update_profile", update_mock)
     ask_factory = _make_ask_user_message_factory({"output": "María"})
     monkeypatch.setattr(main_family.cl, "AskUserMessage", ask_factory)
     message_mock = _make_message_factory()
@@ -716,9 +727,9 @@ def se_pide_nombre_antes_del_saludo(chat_ctx):
     assert chat_ctx["message_mock"].call_count >= 2
 
 
-@then("la respuesta se guarda en user_metadata.full_name vía update_user_by_id()")
-def respuesta_se_guarda_en_metadata(chat_ctx):
-    chat_ctx["update_mock"].assert_called_once_with("user-sin-nombre", {"full_name": "María"})
+@then("la respuesta se guarda en profiles.user_name (E-14 T-04, D-091), no en user_metadata")
+def respuesta_se_guarda_en_profiles_user_name(chat_ctx):
+    chat_ctx["update_mock"].assert_called_once_with("user-sin-nombre", {"user_name": "María"})
     assert chat_ctx["user"].metadata["full_name"] == "María"
 
 
