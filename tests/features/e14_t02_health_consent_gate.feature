@@ -17,6 +17,12 @@
 # `update_profile` nuevas en `auth/supabase_client.py` (service key, D-088). Los `Then` que en
 # el draft de epic-start apuntaban al onboarding de T-03 se reescriben para apuntar al saludo
 # actual — T-03 no existe todavía y no es alcance de esta tarea.
+#
+# Enmienda (E-14 T-08, D-090 Ronda 2, 24 jul 2026): el orden "gate antes del saludo" de más
+# arriba se invierte — el saludo y la bienvenida pasan a enviarse siempre primero en
+# on_chat_start, antes de este gate (mejora de UI: la primera impresión del chat ya no
+# depende de si hay onboarding pendiente). El orden relativo respecto al resto de datos de
+# salud (T-03) no cambia: este gate sigue yendo antes que cualquier pregunta de perfil.
 
 Feature: Gate de consentimiento de datos de salud antes del onboarding
 
@@ -28,10 +34,10 @@ Feature: Gate de consentimiento de datos de salud antes del onboarding
     Given la app Chainlit del perfil familiar está inicializada
     And un usuario ya autenticado (login, signup confirmado, u OAuth)
 
-  Scenario: Primer chat sin consentimiento registrado muestra el gate antes del saludo
+  Scenario: Primer chat sin consentimiento registrado muestra el gate tras el saludo y la bienvenida
     Given un usuario con "health_data_consent_at" en NULL
     When se dispara on_chat_start
-    Then se muestra el texto de consentimiento de tratamiento de datos de salud antes de cualquier saludo o mensaje de bienvenida
+    Then el saludo y la bienvenida se muestran primero, y el texto de consentimiento de tratamiento de datos de salud se muestra a continuación (D-090 Ronda 2)
     And se requiere una acción afirmativa real (no basta con seguir escribiendo)
 
   Scenario: Aceptar el consentimiento lo registra una sola vez

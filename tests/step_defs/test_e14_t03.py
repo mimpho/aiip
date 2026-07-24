@@ -223,7 +223,14 @@ def se_dispara_on_chat_start(ctx):
 def se_pregunta_sobre_quien_son_los_datos(ctx):
     ctx["ask_action_factory"].assert_called_once()
     call = ctx["ask_action_factory"].call_args
-    assert call.kwargs["content"] == main_family._PATIENT_WHO_MESSAGE
+    # D-090 punto 2: la pregunta completa se envía como su propio cl.Message
+    # ANTES del AskActionMessage, que lleva solo el texto corto de llamada
+    # a la acción — mismo motivo que en _ensure_health_consent (T-02).
+    who_message_calls = [
+        c for c in ctx["message_mock"].call_args_list if c.kwargs.get("content") == main_family._PATIENT_WHO_MESSAGE
+    ]
+    assert len(who_message_calls) == 1
+    assert call.kwargs["content"] == main_family._PATIENT_WHO_PROMPT
     actions = call.kwargs["actions"]
     assert {a.label for a in actions} == {"Sobre mí", "Sobre otra persona"}
     assert {a.name for a in actions} == {"patient_self", "patient_other"}

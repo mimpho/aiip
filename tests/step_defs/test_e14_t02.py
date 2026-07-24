@@ -111,8 +111,8 @@ import main_family  # noqa: E402
 _FEATURE = "../features/e14_t02_health_consent_gate.feature"
 
 
-@scenario(_FEATURE, "Primer chat sin consentimiento registrado muestra el gate antes del saludo")
-def test_gate_antes_del_saludo():
+@scenario(_FEATURE, "Primer chat sin consentimiento registrado muestra el gate tras el saludo y la bienvenida")
+def test_gate_tras_saludo_y_bienvenida():
     pass
 
 
@@ -190,13 +190,37 @@ def se_dispara_on_chat_start(gate_ctx):
     _run(main_family.on_chat_start())
 
 
-@then("se muestra el texto de consentimiento de tratamiento de datos de salud antes de cualquier saludo o mensaje de bienvenida")
-def se_muestra_texto_consentimiento_antes_del_saludo(gate_ctx):
+@then("el saludo y la bienvenida se muestran primero, y el texto de consentimiento de tratamiento de datos de salud se muestra a continuación (D-090 Ronda 2)")
+def se_muestra_saludo_bienvenida_y_luego_consentimiento(gate_ctx):
     gate_ctx["ask_action_factory"].assert_called_once()
-    assert gate_ctx["ask_action_factory"].call_args.kwargs["content"] == main_family._HEALTH_CONSENT_MESSAGE
-    # cl.Message se llama después (saludo + bienvenida) — al menos 2 veces,
-    # y ninguna antes de la llamada a AskActionMessage.
-    assert gate_ctx["message_mock"].call_count >= 2
+    # D-090 Ronda 2: on_chat_start envía saludo y bienvenida primero, siempre
+    # — los dos primeros cl.Message del hilo, antes de cualquier gate.
+    calls = gate_ctx["message_mock"].call_args_list
+    greeting_sent = calls[0].kwargs.get("content")
+    assert any(
+        greeting_sent.startswith(prefix) for prefix in ("Buenos días", "Buenas tardes", "Buenas noches")
+    )
+    # El saludo se envía antes de _ensure_full_name() (va después en el
+    # nuevo orden), pero on_chat_start hace un prefetch no interactivo de
+    # full_name (mismo lookup que el primer paso de _ensure_full_name())
+    # antes de construir el saludo, precisamente para no perder la
+    # personalización en usuarios recurrentes (T-05/D-036) solo por este
+    # reordenamiento.
+    assert "Ya Tengo Nombre" in greeting_sent
+    assert calls[1].kwargs.get("content") == main_family._WELCOME_MESSAGE
+    # D-090 Ronda 1: el texto completo del consentimiento se envía como su
+    # propio cl.Message, ANTES del AskActionMessage — Chainlit reescribe el
+    # contenido de este último a "**Selected:** <label>" al responder, así
+    # que dejarlo ahí perdería la pregunta al pulsar un botón.
+    consent_message_calls = [
+        call for call in calls if call.kwargs.get("content") == main_family._HEALTH_CONSENT_MESSAGE
+    ]
+    assert len(consent_message_calls) == 1
+    # El AskActionMessage que sigue lleva solo el texto corto de llamada a
+    # la acción, no la pregunta completa.
+    assert gate_ctx["ask_action_factory"].call_args.kwargs["content"] == main_family._HEALTH_CONSENT_PROMPT
+    # cl.Message se llama varias veces más (saludo, bienvenida, consentimiento...).
+    assert gate_ctx["message_mock"].call_count >= 3
 
 
 @then("se requiere una acción afirmativa real (no basta con seguir escribiendo)")

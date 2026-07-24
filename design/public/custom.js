@@ -552,3 +552,215 @@
   });
   tagSourcesSections();
 })();
+
+/* AIIP — pulido de UI del onboarding (E-14 T-08, D-090)
+ *
+ * Título por contenido, no por posición: el saludo (main_family.py::
+ * _greeting) dejó de ser garantizadamente el primer mensaje del hilo en
+ * cuanto T-01/T-02/T-03 empezaron a anteponerle el gate de consentimiento
+ * y las preguntas de perfil — style.css usaba
+ * `[data-step-type="assistant_message"]:first-child` para darle su
+ * tratamiento de título (gradiente, sin avatar), un selector puramente
+ * posicional que dejó de ser fiable. Mismo mecanismo que
+ * tagSourcesSections arriba: etiquetar por contenido. Lista de matchers
+ * (HEADING_PREFIXES, todos por prefijo — ambos textos son dinámicos, con
+ * o sin ", {nombre}"): el saludo ("Buenos días"/"Buenas tardes"/"Buenas
+ * noches") y, desde D-090 Ronda 2, el título de cierre de onboarding
+ * ("Todo listo") que main_family.py::_onboarding_complete_title envía al
+ * terminar de preguntar o reproducir algún dato pendiente. La ronda 1 de
+ * este fix incluía también una cabecera fija "Antes de empezar..." antes
+ * del gate de consentimiento — descartada en la Ronda 2 a favor de
+ * reordenar el propio saludo/bienvenida al principio de on_chat_start, así
+ * que ya no hay un matcher de texto exacto para ella.
+ *
+ * Riesgo aceptado (mismo perfil que SOURCES_HEADINGS arriba): si una
+ * respuesta del pipeline RAG empezara literalmente por uno de esos
+ * prefijos, se etiquetaría como título por error. Baja probabilidad, no
+ * se mitiga aquí.
+ *
+ * "**Selected:**..." (D-090 Ronda 1, ampliado en Ronda 2): al responder un
+ * AskActionMessage, Chainlit reescribe el contenido de ese mismo paso a
+ * "**Selected:** <label>" en vez de añadir un paso nuevo (a diferencia de
+ * AskUserMessage, donde la pregunta se queda fija y la respuesta es un
+ * paso aparte), así que la pregunta original desaparecía del hilo al
+ * responder. Fix en dos partes: main_family.py ahora envía la pregunta
+ * completa como su propio cl.Message ANTES del AskActionMessage (que pasa
+ * a llevar solo un texto corto de llamada a la acción); y
+ * tagSelectedAsUserBubble (abajo) detecta el paso reescrito, le quita el
+ * prefijo "Selected:" y lo etiqueta para que se vea como una burbuja de
+ * usuario normal — así la respuesta de botón queda indistinguible de una
+ * respuesta escrita a mano. Nunca coincide con los matchers de heading, así
+ * que tampoco hereda ese tratamiento.
+ * Ronda 2 reutiliza el mismo mecanismo para las burbujas de "replay":
+ * cuando `_ensure_patient_profile()` retoma un onboarding a medias en una
+ * sesión nueva, reproduce cada dato ya guardado con el mismo prefijo
+ * "**Selected:**" (mismo cl.Message normal, no un AskActionMessage real),
+ * así que este mismo tagger las detecta y restyla sin código nuevo.
+ *
+ * Botones centrados: los wrappers de botones del gate de consentimiento
+ * (Acepto/Ahora no) y de "sobre quién" (Sobre mí/Sobre otra persona)
+ * comparten la misma clase estructural que los starter chips (T-05) y
+ * los iconos de copiar/editar mensaje — no hay un selector propio para
+ * "esta fila de botones es de onboarding". Igual que arriba, se
+ * etiqueta por contenido: se lee la `label` de cada `<button>` hijo del
+ * wrapper y, si el conjunto coincide exactamente con uno de los dos
+ * pares esperados, se añade `aiip-centered-actions` solo a ese wrapper
+ * — los starter chips y los iconos de mensaje nunca coinciden con esos
+ * conjuntos, así que no se ven afectados.
+ */
+(function () {
+  var HEADING_PREFIXES = ["Buenos días", "Buenas tardes", "Buenas noches", "Todo listo"];
+  var BUTTON_ROW_LABEL_SETS = [
+    ["Acepto", "Ahora no"],
+    ["Sobre mí", "Sobre otra persona"],
+  ];
+  // Matches the rendered textContent of the step Chainlit rewrites after a
+  // button press — markdown's "**Selected:**" bold syntax is stripped by
+  // the time it reaches the DOM (the article renders <strong>Selected:</strong>),
+  // so this tolerates both the rendered form and the raw markdown form,
+  // rather than assuming which one actually reaches textContent.
+  var SELECTED_PREFIX_RE = /^\*{0,2}Selected:\*{0,2}\s*/;
+
+  function matchesHeadingText(text) {
+    return HEADING_PREFIXES.some(function (prefix) {
+      return text.indexOf(prefix) === 0;
+    });
+  }
+
+  function tagHeadingTitles() {
+    document.querySelectorAll('[data-step-type="assistant_message"]').forEach(function (step) {
+      if (step.classList.contains("aiip-heading-title")) {
+        return;
+      }
+      var article = step.querySelector(".message-content [role=\"article\"]");
+      if (!article) {
+        return;
+      }
+      if (matchesHeadingText(article.textContent.trim())) {
+        step.classList.add("aiip-heading-title");
+      }
+    });
+  }
+
+  function labelSetMatches(labels, expected) {
+    if (labels.length !== expected.length) {
+      return false;
+    }
+    var sortedLabels = labels.slice().sort();
+    var sortedExpected = expected.slice().sort();
+    return sortedLabels.every(function (label, index) {
+      return label === sortedExpected[index];
+    });
+  }
+
+  function tagCenteredActionRows() {
+    document.querySelectorAll(".-ml-1\\.5.flex.items-center.flex-wrap").forEach(function (wrapper) {
+      if (wrapper.classList.contains("aiip-centered-actions")) {
+        return;
+      }
+      var labels = Array.prototype.map.call(wrapper.querySelectorAll("button"), function (btn) {
+        return btn.textContent.trim();
+      });
+      var matches = BUTTON_ROW_LABEL_SETS.some(function (expected) {
+        return labelSetMatches(labels, expected);
+      });
+      if (matches) {
+        wrapper.classList.add("aiip-centered-actions");
+      }
+    });
+  }
+
+  function tagSelectedAsUserBubble() {
+    document.querySelectorAll('[data-step-type="assistant_message"]').forEach(function (step) {
+      if (step.classList.contains("aiip-selected-as-user-bubble")) {
+        return;
+      }
+      var article = step.querySelector(".message-content [role=\"article\"]");
+      if (!article) {
+        return;
+      }
+      var text = article.textContent.trim();
+      if (!SELECTED_PREFIX_RE.test(text)) {
+        return;
+      }
+      article.textContent = text.replace(SELECTED_PREFIX_RE, "");
+      step.classList.add("aiip-selected-as-user-bubble");
+    });
+  }
+
+  function tagOnboardingUi() {
+    tagHeadingTitles();
+    tagCenteredActionRows();
+    tagSelectedAsUserBubble();
+  }
+
+  new MutationObserver(tagOnboardingUi).observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  });
+  tagOnboardingUi();
+})();
+
+/* AIIP — foco automático de la caja de texto al terminar de escribir el
+ * agente (E-14 T-08, D-090 Ronda 3, quinta pieza de QA en vivo, 24 jul
+ * 2026).
+ *
+ * Comportamiento general del chat, no específico de onboarding (se aborda
+ * aquí por conveniencia, ya que este fichero se estaba tocando de todos
+ * modos): al terminar de escribir el agente cualquier respuesta (RAG
+ * normal u onboarding), el usuario debería poder ponerse a escribir sin
+ * tener que hacer clic primero en la caja de texto.
+ *
+ * No basta con reutilizar isThinking()/stopThinking() (arriba en este
+ * mismo fichero) tal cual: esas detectan el INICIO del streaming
+ * (.message-content pasa de 0 hijos a tener contenido), no el final. La
+ * señal de fin usada aquí es la desaparición del propio cursor de
+ * streaming de Chainlit — `<span class="inline-block loading-cursor">`,
+ * la misma clase real y verificada que restyla `.inline-block.loading-
+ * cursor` en style.css (permanece en el DOM mientras llegan tokens,
+ * Chainlit la retira al terminar) — en vez de inventar un debounce sobre
+ * mutaciones de texto, que sería una heurística de tiempo en vez de un
+ * hecho real del DOM.
+ *
+ * Selector del `<textarea>` (`#message-composer textarea`, `#message-
+ * composer` ya confirmado en otras reglas de style.css como el wrapper
+ * real del input) asumido a partir de que es un `<textarea>` estándar de
+ * shadcn/Tailwind (mismo stack que el resto de la UI) — no verificado
+ * contra el DOM real en vivo como el resto de selectores "verified in the
+ * live DOM" de este fichero; a confirmar en QA.
+ */
+(function () {
+  var wasStreaming = false;
+
+  function isCurrentlyStreaming() {
+    var messages = document.querySelectorAll(".ai-message");
+    if (!messages.length) {
+      return false;
+    }
+    var last = messages[messages.length - 1];
+    return !!last.querySelector(".inline-block.loading-cursor");
+  }
+
+  function focusComposer() {
+    var textarea = document.querySelector("#message-composer textarea");
+    if (textarea) {
+      textarea.focus();
+    }
+  }
+
+  function syncComposerFocus() {
+    var streaming = isCurrentlyStreaming();
+    if (wasStreaming && !streaming) {
+      focusComposer();
+    }
+    wasStreaming = streaming;
+  }
+
+  new MutationObserver(syncComposerFocus).observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+  });
+  syncComposerFocus();
+})();

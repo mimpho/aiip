@@ -965,7 +965,7 @@ conviene no construir encima de un bug de CSS todavía sin arreglar.
 | T-05 | Edición de perfil desde ajustes (`cl.ChatSettings` + reposicionar icono con `custom_css`; investigación no bloqueante de integrarlo en el desplegable nativo) | ⚪ Pendiente |
 | T-06 | Memoria de perfil en el pipeline de generación (inyección en prompt, sin tocar retrieval) | ⚪ Pendiente |
 | T-07 | Cierre: regresión + smoke test end-to-end, `docs/security.md` actualizado | ⚪ Pendiente |
-| T-08 | Pulido UI del onboarding: título del saludo por bug de CSS (retroactivo a T-02), cabecera de consentimiento, botones centrados, parseo de `patient_age` (D-090). Se ejecuta a continuación de T-03, antes de T-04 | ⚪ Pendiente |
+| T-08 | Pulido UI del onboarding: título del saludo por bug de CSS (retroactivo a T-02), cabecera de consentimiento, botones centrados, parseo de `patient_age` (D-090). Se ejecuta a continuación de T-03, antes de T-04 | ✅ Completada |
 
 **Estado:** 🔵 En curso
 
