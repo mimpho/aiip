@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -44,6 +45,8 @@ _HEALTH_CONSENT_MESSAGE = (
     "información."
 )
 
+_HEALTH_CONSENT_PROMPT = "¿Aceptas el tratamiento de estos datos?"
+
 _HEALTH_CONSENT_TIMEOUT = 300
 
 _PATIENT_PROFILE_TIMEOUT = 120
@@ -52,6 +55,8 @@ _PATIENT_WHO_MESSAGE = (
     "¿Los datos de salud que vas a compartir son sobre ti o sobre otra "
     "persona, como un hijo o una hija?"
 )
+
+_PATIENT_WHO_PROMPT = "Elige una opción:"
 
 _PATIENT_OTHER_NAME_MESSAGE = "¿Cómo se llama esa persona?"
 
@@ -80,9 +85,10 @@ _WELCOME_MESSAGE = (
     "de confianza.\n\n"
     "Recuerda: **AIIP acompaña e informa, nunca diagnostica**. Ante cualquier "
     "duda sobre síntomas o decisiones médicas, consulta siempre con tu "
-    "equipo sanitario.\n\n"
-    "¿En qué puedo ayudarte hoy?"
+    "equipo sanitario."
 )
+
+_WELCOME_PROMPT = "¿En qué puedo ayudarte hoy?"
 
 _STARTER_QUESTIONS = (
     "¿Qué es una Inmunodeficiencia Primaria?",
@@ -117,6 +123,18 @@ def _greeting() -> str:
     if full_name:
         greeting = f"{greeting}, {full_name}"
     return greeting
+
+
+def _onboarding_complete_title(full_name: str | None) -> str:
+    """Título de cierre al completar el perfil EN VIVO en esta sesión (D-090, Ronda 2/4).
+
+    Mismo patrón que _greeting(): con coma si hay full_name ("Todo listo,
+    Marcos"), a secas si no ("Todo listo") — se prioriza la consistencia
+    visual con el saludo sobre la redacción original de la captura de D-090.
+    """
+    if full_name:
+        return f"Todo listo, {full_name}"
+    return "Todo listo"
 
 
 def _get_pipeline() -> RAGPipeline:
@@ -340,6 +358,10 @@ async def _ensure_health_consent() -> None:
     Si update_profile falla (p.ej. error de red), se loguea y el flujo sigue
     igualmente — a diferencia de _ensure_full_name, aquí hay una escritura
     nueva a Supabase que antes no existía en on_chat_start.
+
+    No devuelve `bool` (D-090, corrección Ronda 3): el título de cierre
+    "Todo listo" depende solo de si _ensure_patient_profile() completó el
+    perfil en vivo, no de si este gate se mostró.
     """
     user = cl.context.session.user
     if not user:
@@ -352,8 +374,10 @@ async def _ensure_health_consent() -> None:
     if profile.get("health_data_consent_at"):
         return
 
+    await cl.Message(content=_HEALTH_CONSENT_MESSAGE).send()
+
     res = await cl.AskActionMessage(
-        content=_HEALTH_CONSENT_MESSAGE,
+        content=_HEALTH_CONSENT_PROMPT,
         actions=[
             cl.Action(name="consent_accept", payload={}, label="Acepto"),
             cl.Action(name="consent_decline", payload={}, label="Ahora no"),
@@ -379,6 +403,9 @@ async def _ensure_full_name() -> None:
     que _greeting() lo use sin una segunda consulta a Supabase. Si el
     usuario no responde a tiempo (timeout de cl.AskUserMessage), se sigue
     sin nombre — no se repregunta hasta el próximo on_chat_start.
+
+    No devuelve `bool` (D-090, corrección Ronda 3) — mismo motivo que
+    _ensure_health_consent.
     """
     user = cl.context.session.user
     if not user:
@@ -400,11 +427,16 @@ async def _ensure_full_name() -> None:
 
 
 def _parse_patient_age(raw: str) -> int | None:
-    """Convierte `raw` a edad válida (entero entre 0 y 120) o None (D-088)."""
-    try:
-        age = int(raw.strip())
-    except ValueError:
+    """Convierte `raw` a edad válida (entero entre 0 y 120) o None (D-088, D-090).
+
+    Extrae el primer número de `raw` en vez de exigir que sea puramente
+    numérico — cubre respuestas como "12 años" o "tiene 12 años", no solo
+    "12". Números en palabras ("doce") quedan fuera de alcance.
+    """
+    match = re.search(r"\d+", raw)
+    if not match:
         return None
+    age = int(match.group())
     if 0 <= age <= 120:
         return age
     return None
@@ -430,7 +462,23 @@ async def _ask_patient_age(patient_name: str) -> int | None:
     return None
 
 
-async def _ensure_patient_profile() -> None:
+async def _replay_field(question: str, answer: str) -> None:
+    """Reproduce tal cual una pregunta ya respondida en una sesión anterior (D-090, Ronda 2/4).
+
+    La respuesta se envía con el mismo prefijo "**Selected:**" que Chainlit
+    usa al reescribir un AskActionMessage tras pulsar un botón (D-090, Ronda
+    1) — design/public/custom.js ya detecta ese marcador, le quita el
+    prefijo y lo restyla como burbuja de usuario alineada a la derecha, así
+    que no hace falta un segundo marcador de contenido para este caso.
+    Riesgo aceptado si `answer` empezara a coincidir con ese prefijo por sí
+    mismo: mismo perfil bajo que SOURCES_HEADINGS/D-026, son datos
+    controlados por nuestro propio backend, no por el usuario o el LLM.
+    """
+    await cl.Message(content=question).send()
+    await cl.Message(content=f"**Selected:** {answer}").send()
+
+
+async def _ensure_patient_profile() -> bool:
     """Pide por chat los datos del paciente que falten en el perfil (T-03, D-089).
 
     Solo se alcanza con consentimiento de datos de salud ya registrado
@@ -445,26 +493,60 @@ async def _ensure_patient_profile() -> None:
     siempre el nombre real del paciente, nunca la palabra "paciente"
     (decisión de tono de epic-start).
 
-    Cada pregunta solo se hace si el campo correspondiente está vacío en
-    `profile` (get_profile) — un perfil ya completo no dispara ninguna
-    llamada a cl.AskActionMessage/cl.AskUserMessage. Si no hay respuesta a
-    una pregunta (timeout/None), la función retorna sin preguntar el resto
-    — se repite en el próximo on_chat_start, mismo criterio que
-    _ensure_full_name/_ensure_health_consent.
+    Diseño final tras cuatro rondas de QA en vivo (D-090): el perfil
+    inicial (`profile = get_profile(user_id)`) puede estar completo, vacío
+    o incompleto.
+    - Completo (los cuatro campos con valor): no se envía ningún mensaje —
+      ni resumen, ni replay, ni pregunta — y se devuelve False de
+      inmediato. Ver esos datos guardados se delega enteramente a T-05
+      (edición de perfil desde `cl.ChatSettings`), no al chat.
+    - Vacío o incompleto: cada campo se trata individualmente, en el mismo
+      orden de siempre (sobre quién/nombre → diagnóstico → edad →
+      contexto). Si ya estaba en el `profile` inicial, se reproduce tal
+      cual con _replay_field (pregunta original + respuesta guardada, como
+      burbuja de usuario) para no perder el contexto entre sesiones; si
+      falta, se pregunta en vivo, igual que siempre. Si no hay respuesta a
+      una pregunta en vivo del bloque "sobre quién" (timeout/None), la
+      función retorna sin preguntar el resto — se repite en el próximo
+      on_chat_start, mismo criterio que _ensure_full_name/
+      _ensure_health_consent. Los campos diagnóstico/edad/contexto son
+      independientes entre sí: no responder a uno no corta los siguientes.
+
+    Devuelve True solo si se completó el perfil EN VIVO en esta sesión: se
+    preguntó y respondió al menos un campo en esta llamada (answered_live)
+    Y el perfil queda completo al terminar — on_chat_start usa este valor,
+    exclusivamente, para decidir si mostrar el título de cierre "Todo
+    listo". Un perfil ya completo de antes, o uno que sigue incompleto tras
+    esta llamada, devuelve False.
     """
     user = cl.context.session.user
     if not user:
-        return
+        return False
     user_id = user.metadata.get("user_id")
     if not user_id:
-        return
+        return False
 
     profile = get_profile(user_id)
+    if all(
+        profile.get(field)
+        for field in ("patient_name", "patient_diagnosis", "patient_age", "patient_context")
+    ):
+        return False
+
+    answered_live = False
     patient_name = profile.get("patient_name")
 
-    if not patient_name:
+    if patient_name:
+        full_name = user.metadata.get("full_name")
+        if full_name and patient_name == full_name:
+            await _replay_field(_PATIENT_WHO_MESSAGE, "Sobre mí")
+        else:
+            await _replay_field(_PATIENT_WHO_MESSAGE, "Sobre otra persona")
+            await _replay_field(_PATIENT_OTHER_NAME_MESSAGE, patient_name)
+    else:
+        await cl.Message(content=_PATIENT_WHO_MESSAGE).send()
         res = await cl.AskActionMessage(
-            content=_PATIENT_WHO_MESSAGE,
+            content=_PATIENT_WHO_PROMPT,
             actions=[
                 cl.Action(name="patient_self", payload={}, label="Sobre mí"),
                 cl.Action(name="patient_other", payload={}, label="Sobre otra persona"),
@@ -472,96 +554,148 @@ async def _ensure_patient_profile() -> None:
             timeout=_PATIENT_PROFILE_TIMEOUT,
         ).send()
         if not res:
-            return
+            return False
 
         if res.get("name") == "patient_self":
             patient_name = user.metadata.get("full_name")
             if not patient_name:
-                return
+                return False
         elif res.get("name") == "patient_other":
             name_res = await cl.AskUserMessage(
                 content=_PATIENT_OTHER_NAME_MESSAGE, timeout=_PATIENT_PROFILE_TIMEOUT
             ).send()
             if not name_res or not name_res.get("output", "").strip():
-                return
+                return False
             patient_name = name_res["output"].strip()
         else:
-            return
+            return False
 
         try:
             update_profile(user_id, {"patient_name": patient_name})
         except Exception:
             logger.exception("Error al registrar patient_name para user_id=%s", user_id)
+        answered_live = True
 
-    if not profile.get("patient_diagnosis"):
+    if profile.get("patient_diagnosis"):
+        await _replay_field(
+            _PATIENT_DIAGNOSIS_MESSAGE.format(patient_name=patient_name),
+            profile["patient_diagnosis"],
+        )
+    else:
         diagnosis_res = await cl.AskUserMessage(
             content=_PATIENT_DIAGNOSIS_MESSAGE.format(patient_name=patient_name),
             timeout=_PATIENT_PROFILE_TIMEOUT,
         ).send()
         if diagnosis_res and diagnosis_res.get("output", "").strip():
+            profile["patient_diagnosis"] = diagnosis_res["output"].strip()
+            answered_live = True
             try:
-                update_profile(user_id, {"patient_diagnosis": diagnosis_res["output"].strip()})
+                update_profile(user_id, {"patient_diagnosis": profile["patient_diagnosis"]})
             except Exception:
                 logger.exception("Error al registrar patient_diagnosis para user_id=%s", user_id)
 
-    if not profile.get("patient_age"):
+    if profile.get("patient_age"):
+        await _replay_field(
+            _PATIENT_AGE_MESSAGE.format(patient_name=patient_name),
+            str(profile["patient_age"]),
+        )
+    else:
         age = await _ask_patient_age(patient_name)
         if age is not None:
+            profile["patient_age"] = age
+            answered_live = True
             try:
                 update_profile(user_id, {"patient_age": age})
             except Exception:
                 logger.exception("Error al registrar patient_age para user_id=%s", user_id)
 
-    if not profile.get("patient_context"):
+    if profile.get("patient_context"):
+        await _replay_field(
+            _PATIENT_CONTEXT_MESSAGE.format(patient_name=patient_name),
+            profile["patient_context"],
+        )
+    else:
         context_res = await cl.AskUserMessage(
             content=_PATIENT_CONTEXT_MESSAGE.format(patient_name=patient_name),
             timeout=_PATIENT_PROFILE_TIMEOUT,
         ).send()
         if context_res and context_res.get("output", "").strip():
+            profile["patient_context"] = context_res["output"].strip()
+            answered_live = True
             try:
-                update_profile(user_id, {"patient_context": context_res["output"].strip()})
+                update_profile(user_id, {"patient_context": profile["patient_context"]})
             except Exception:
                 logger.exception("Error al registrar patient_context para user_id=%s", user_id)
+
+    profile_complete = bool(patient_name) and all(
+        profile.get(field) for field in ("patient_diagnosis", "patient_age", "patient_context")
+    )
+    return answered_live and profile_complete
 
 
 @cl.on_chat_start
 async def on_chat_start():
-    """Envía el mensaje de bienvenida y el recordatorio de seguridad (D-036).
+    """Envía el saludo, la bienvenida y resuelve el onboarding pendiente (D-036, D-090 Ronda 2/3).
 
     Se repite en cada apertura de chat, no solo la primera vez: no hay
     estado persistido que distinga un primer login real de sesiones
     posteriores (D-036).
 
-    Las preguntas sugeridas se adjuntan como `cl.Action` sobre este mismo
-    mensaje, no vía `cl.set_starters`: los starters nativos de Chainlit solo
-    se muestran en un hilo sin mensajes, y este mensaje de bienvenida ya
-    cuenta como el primer mensaje del hilo (D-036 exige enviarlo desde
-    `on_chat_start`, no desde `chainlit.md`).
+    El saludo (T-05) y la bienvenida (_WELCOME_MESSAGE, sin la pregunta
+    final) van siempre primero, antes de cualquier gate o pregunta de
+    onboarding — a diferencia del orden anterior a D-090 Ronda 2, en el que
+    el gate de consentimiento podía anteponerse al saludo y dejaba la
+    primera impresión del chat sin contexto. style.css detecta el saludo
+    por contenido (design/public/custom.js, `aiip-heading-title`), no por
+    ser el primer mensaje del hilo, así que reordenarlo aquí no rompe ese
+    tratamiento visual.
 
-    El saludo (T-05) se envía como mensaje aparte, antes del de
-    bienvenida — style.css lo detecta por ser el primer assistant_message
-    del hilo y lo pinta como título, no como burbuja.
+    _ensure_health_consent()/_ensure_full_name()/_ensure_patient_profile()
+    mantienen su orden relativo de siempre (D-009: el gate de consentimiento
+    va antes que cualquier dato de salud). Solo la última devuelve `bool`
+    (D-090, corrección Ronda 3): el título de cierre "Todo listo"
+    (_onboarding_complete_title) depende únicamente de si el perfil del
+    paciente se completó EN VIVO en esta sesión — no de si el gate de
+    consentimiento o la pregunta del nombre se mostraron, ni de si
+    _ensure_patient_profile() solo envió el resumen de un perfil ya
+    completo de antes.
 
-    Antes de todo eso, _ensure_health_consent() muestra el gate de
-    consentimiento de datos de salud si no está registrado todavía (D-009):
-    el nombre de cuenta no es un dato de salud, así que ese gate va primero.
-    Después, _ensure_full_name() pide el nombre por chat si el usuario
-    autenticado no lo tiene guardado todavía (D-040) — el formulario fijo de
-    Chainlit no admite un campo de nombre propio. Por último,
-    _ensure_patient_profile() completa por chat los datos del paciente que
-    falten (T-03) — depende de que _ensure_full_name() ya haya resuelto
-    full_name en esta misma llamada para el caso "sobre mí" (D-089).
+    _greeting() ahora se llama antes que _ensure_full_name() (D-090 Ronda
+    2), así que ya no puede apoyarse en que esta última haya resuelto
+    full_name en cl.context.session.user.metadata (D-040) para un usuario
+    recurrente — sin este prefetch, el saludo perdería el nombre en todo
+    chat que no sea el primero (regresión real detectada al correr los
+    tests de T-05 tras el reordenamiento). Lectura no interactiva
+    (get_user_metadata, sin preguntar nada): _ensure_full_name() hace
+    exactamente esta misma comprobación como primer paso, así que repetirla
+    aquí es barata y su propio chequeo pasa a ser un no-op cuando ya está
+    cacheada.
     """
+    user = cl.context.session.user
+    if user and "full_name" not in user.metadata:
+        user_id = user.metadata.get("user_id")
+        if user_id:
+            full_name = get_user_metadata(user_id).get("full_name")
+            if full_name:
+                user.metadata["full_name"] = full_name
+
+    await cl.Message(content=_greeting()).send()
+    await cl.Message(content=_WELCOME_MESSAGE).send()
+
     await _ensure_health_consent()
     await _ensure_full_name()
-    await _ensure_patient_profile()
-    await cl.Message(content=_greeting()).send()
+    onboarding_completed_now = await _ensure_patient_profile()
+
+    if onboarding_completed_now:
+        user = cl.context.session.user
+        full_name = user.metadata.get("full_name") if user else None
+        await cl.Message(content=_onboarding_complete_title(full_name)).send()
 
     actions = [
         cl.Action(name="starter_question", payload={"question": q}, label=q)
         for q in _STARTER_QUESTIONS
     ]
-    await cl.Message(content=_WELCOME_MESSAGE, actions=actions).send()
+    await cl.Message(content=_WELCOME_PROMPT, actions=actions).send()
 
 
 @cl.action_callback("starter_question")
