@@ -203,25 +203,30 @@ body::after {
 }
 
 /* ── Greeting title ───────────────────────────────────────── */
-/* main_family.py sends the time-of-day greeting (D-036/T-05) as its
-   own cl.Message, before the welcome card — always the very first
-   message of the thread. [data-step-type="assistant_message"]:first-child
-   is a reliable hook for exactly that message (not :first-of-type,
-   which would match on tag name across unrelated siblings). Strip the
+/* main_family.py sends the time-of-day greeting (D-036/T-05) as its own
+   cl.Message. Used to always be the thread's very first message, so
+   [data-step-type="assistant_message"]:first-child was a reliable hook
+   — until T-01/T-02/T-03 started prepending the consent gate and
+   profile questions ahead of it (D-090, punto 1). Replaced with
+   `.aiip-heading-title`, a class design/public/custom.js
+   (tagOnboardingUi/tagHeadingTitles) adds by matching message content
+   against the greeting's known prefixes and the new "Antes de
+   empezar..." heading (punto 3) — content-based, not position-based,
+   same rationale as `.aiip-sources-heading` below. Strip the
    card/avatar treatment and render as a plain display heading instead.
    Text uses a family→professional gradient (both accent tokens, not
    just the active profile's) rather than flat --foreground, per Marcos
    — the greeting is the one place the brand's two profile colors
    appear together. */
-[data-step-type="assistant_message"]:first-child .ai-message {
+.aiip-heading-title .ai-message {
   gap: 0;
 }
 
-[data-step-type="assistant_message"]:first-child span:has(> img[alt^="Avatar for"]) {
+.aiip-heading-title span:has(> img[alt^="Avatar for"]) {
   display: none;
 }
 
-[data-step-type="assistant_message"]:first-child .message-content {
+.aiip-heading-title .message-content {
   background: linear-gradient(155deg, var(--color-accent-family), var(--color-accent-professional));
   -webkit-background-clip: text;
   background-clip: text;
@@ -292,7 +297,7 @@ body::after {
    within that box's height, so the top of the 46px glyphs fell in the
    unpainted area above it and looked clipped. Override line-height on
    the actual element instead of relying on cascade from the ancestor. */
-[data-step-type="assistant_message"]:first-child .message-content [role="article"] {
+.aiip-heading-title .message-content [role="article"] {
   line-height: 1.2;
 }
 
@@ -312,6 +317,44 @@ body::after {
   font-size: var(--text-base);
   font-family: var(--font-display);
   font-weight: var(--font-weight-medium);
+}
+
+/* ── "Selected: <option>" response bubble (E-14 T-08, D-090 punto 2) ──
+   Chainlit rewrites the AskActionMessage step's own content to
+   "**Selected:** <label>" once a button is pressed (chainlit/message.py,
+   not our code) instead of adding a new step the way AskUserMessage
+   does — that step is still `[data-step-type="assistant_message"]`, not
+   `user_message`, so it never picks up the real user bubble above. Once
+   design/public/custom.js (tagOnboardingUi/tagSelectedAsUserBubble)
+   strips the "Selected:" prefix and tags the step, this reproduces that
+   same bubble by hand (same background/radius/padding/typography as
+   `[data-step-type="user_message"] .bg-accent` above) plus the avatar
+   hide and right alignment a real user_message row gets natively.
+   `.ai-message.flex` / `span:has(> img[alt^="Avatar for"])` reuse the
+   exact same compound selectors as the rest of this file for the same
+   specificity-over-Tailwind reason (see the `.ai-message.flex` note
+   near the top) — TODO: verify the flex-end alignment against the live
+   DOM once this ships (mecanismo exacto a confirmar en vivo, mismo
+   criterio que el resto de selectores verificados de este fichero). */
+.aiip-selected-as-user-bubble .ai-message.flex {
+  justify-content: flex-end;
+}
+
+.aiip-selected-as-user-bubble span:has(> img[alt^="Avatar for"]) {
+  display: none;
+}
+
+.aiip-selected-as-user-bubble .message-content {
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--secondary-foreground));
+  border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
+  padding: 11px 16px;
+  font-size: var(--text-base);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-medium);
+  margin-left: auto;
+  width: fit-content;
+  max-width: 80%;
 }
 
 /* While the answer has no tokens yet (main_family.py sends an empty
@@ -512,6 +555,20 @@ body::after {
 .-ml-1\.5.flex.items-center.flex-wrap>button:not([class~="w-9"]):hover {
   background: hsl(var(--primary) / 0.1);
   color: hsl(var(--primary));
+}
+
+/* ── Onboarding action rows (E-14 T-08, D-090 punto 4) ──────
+   The consent gate (Acepto/Ahora no) and the "sobre quién" question
+   (Sobre mí/Sobre otra persona) render their cl.AskActionMessage
+   buttons in this same shared wrapper — no dedicated selector exists
+   for "this is an onboarding action row" any more than for "this is a
+   starter chip" above, so it can't be centered here directly without
+   also centering the starter chips and the message copy/edit icons.
+   design/public/custom.js (tagOnboardingUi/tagCenteredActionRows) adds
+   `.aiip-centered-actions` only to wrappers whose button labels match
+   exactly one of those two known pairs. */
+.aiip-centered-actions {
+  justify-content: center;
 }
 
 /* Hide the click-loading spinner — the avatar pulse above is now the
