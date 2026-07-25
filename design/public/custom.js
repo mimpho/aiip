@@ -764,3 +764,133 @@
   });
   syncComposerFocus();
 })();
+
+/* AIIP — nombre (serifa) + email a la vez en el desplegable de usuario
+ * (E-14 T-05, D-092, 25 jul 2026).
+ *
+ * El componente nativo del desplegable (función `eWn` en el bundle
+ * compilado, chainlit/frontend/dist/assets/index-*.js) solo pinta UNA
+ * línea: `user?.display_name || user?.identifier`, dentro de
+ * `<div class="flex flex-col space-y-1"><p class="text-sm font-medium
+ * leading-none">{n}</p></div>` — nunca nombre y email a la vez. Ese
+ * `DropdownMenuContent` se monta con `forceMount`, así que el nodo puede
+ * existir en el DOM (oculto) antes incluso de que el usuario haga clic en
+ * el avatar — por eso este bloque corre una vez al cargar el script,
+ * además de re-evaluar en cada mutación, en vez de esperar a detectar una
+ * "apertura" real.
+ *
+ * A diferencia de tagSourcesSections/tagOnboardingUi (arriba en este
+ * fichero), que reescriben texto ya renderizado por Chainlit, aquí se lee
+ * el dato de origen — `GET /user`, el mismo endpoint nativo que el
+ * frontend ya consume internamente vía SWR para pintar esa única línea —
+ * en vez de intentar separar "nombre" de "email" a partir de una cadena
+ * ya mezclada por Chainlit. Riesgo aceptado (mismo perfil que
+ * SOURCES_HEADINGS/BUTTON_ROW_LABEL_SETS): el selector
+ * `div.flex.flex-col.space-y-1 > p.text-sm.font-medium.leading-none` es
+ * por estructura/clases, no por un id propio — si Chainlit reutilizara
+ * exactamente esa combinación en otro `DropdownMenuLabel` de la app, se
+ * etiquetaría por error; no ocurre hoy en esta app.
+ *
+ * Degradación (D-092): sin `display_name` resuelto, el bloque se marca
+ * como ya procesado pero no se toca su contenido — el email nativo
+ * (fallback de `eWn` a `identifier`) se queda tal cual, sin una segunda
+ * línea vacía o rota.
+ */
+(function () {
+  var IDENTITY_CLASS = "aiip-user-menu-identity";
+  var USER_FETCH_TTL_MS = 5 * 60 * 1000;
+
+  var cachedUser = null;
+  var cachedAt = 0;
+
+  function fetchUser() {
+    var now = Date.now();
+    if (cachedUser && now - cachedAt < USER_FETCH_TTL_MS) {
+      return Promise.resolve(cachedUser);
+    }
+    return fetch("/user")
+      .then(function (res) {
+        return res.ok ? res.json() : null;
+      })
+      .then(function (data) {
+        cachedUser = data;
+        cachedAt = Date.now();
+        return data;
+      })
+      .catch(function () {
+        return null;
+      });
+  }
+
+  // Localiza el wrapper nativo de nombre/email dentro del portal Radix
+  // (document.body, sin ancestro fijo hasta el trigger user-nav-button —
+  // mismo problema estructural que el resto de este fichero).
+  function findNativeIdentityWrapper() {
+    var wrappers = document.querySelectorAll("div.flex.flex-col.space-y-1");
+    for (var i = 0; i < wrappers.length; i++) {
+      var wrapper = wrappers[i];
+      if (wrapper.classList.contains(IDENTITY_CLASS)) {
+        continue;
+      }
+      var nameEl = wrapper.querySelector(":scope > p.text-sm.font-medium.leading-none");
+      if (nameEl && wrapper.children.length === 1) {
+        return wrapper;
+      }
+    }
+    return null;
+  }
+
+  function renderIdentity(wrapper, user) {
+    if (!user || !user.display_name) {
+      return;
+    }
+    wrapper.innerHTML = "";
+
+    var name = document.createElement("p");
+    name.className = "text-sm leading-none";
+    // --font-display/--font-weight-medium (tokens.css), no la clase
+    // Tailwind font-medium del original — mismo criterio que
+    // positionThemeToggle arriba: la variable CSS por especificidad, no
+    // un nombre de fuente hardcodeado aquí.
+    name.style.fontFamily = "var(--font-display)";
+    name.style.fontWeight = "var(--font-weight-medium)";
+    // 4px de aire respecto al email de debajo (Marcos, QA manual 25 jul
+    // 2026): el wrapper original solo preveía una línea (leading-none +
+    // space-y-1 del padre, pensado para separar filas del menú, no las dos
+    // líneas de esta identidad), por eso quedaban pegadas sin este margen.
+    name.style.marginBottom = "4px";
+    name.textContent = user.display_name;
+
+    var email = document.createElement("p");
+    // Mismas clases que llevaba el `<p>` nativo de una sola línea — el
+    // email hereda el estilo ya existente, solo se añade la línea de
+    // nombre encima.
+    email.className = "text-sm font-medium leading-none";
+    email.textContent = user.identifier || "";
+
+    wrapper.appendChild(name);
+    wrapper.appendChild(email);
+  }
+
+  function injectUserMenuNameEmail() {
+    var wrapper = findNativeIdentityWrapper();
+    if (!wrapper) {
+      return;
+    }
+    // Se marca ANTES de que resuelva el fetch (no dentro de
+    // renderIdentity): las mutaciones del DOM durante la animación de
+    // apertura disparan este observer varias veces seguidas, y sin este
+    // marcado síncrono el mismo wrapper dispararía varios fetch/render en
+    // paralelo antes de que el primero termine.
+    wrapper.classList.add(IDENTITY_CLASS);
+    fetchUser().then(function (user) {
+      renderIdentity(wrapper, user);
+    });
+  }
+
+  new MutationObserver(injectUserMenuNameEmail).observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+  injectUserMenuNameEmail();
+})();

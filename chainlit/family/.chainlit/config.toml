@@ -18,6 +18,12 @@ custom_js = "/public/custom.js"
 # Chain of Thought (CoT) display mode — necesario para que cl.Step
 # ("Documentos consultados", D-035/T-03) se muestre en la UI.
 cot = "full"
+# Mueve el icono de cl.ChatSettings (E-14 T-05, D-092) junto al avatar de
+# usuario: con "sidebar" renderiza con id propio "chat-settings-header-button"
+# en la misma fila de header que "user-nav-button", en vez del id
+# "chat-settings-open-modal" de la ubicación por defecto (junto al
+# composer). Sin tocar custom_css/custom_js para esto — opción nativa.
+chat_settings_location = "sidebar"
 
 [features]
 # Deshabilitar telemetría de Chainlit
