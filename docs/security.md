@@ -198,7 +198,7 @@ Agravante adicional: el paciente puede ser un **menor de edad**, lo que añade u
 | Principio RGPD | Implementación en AIIP |
 |---|---|
 | Minimización de datos | Solo se almacena lo estrictamente necesario. Tipo de IDP en lugar de diagnóstico exacto cuando es suficiente |
-| Consentimiento explícito | Formulario de registro con consentimiento informado específico para datos de salud — no un checkbox genérico |
+| Consentimiento explícito | Gate explícito en `on_chat_start`, antes de cualquier mensaje del chat y desacoplado del formulario de autenticación — acción afirmativa real, registrada una vez en `profiles.health_data_consent_at` y no repetida en logins posteriores (D-009, actualización 9 jul 2026; implementado en E-14 T-02) |
 | Derecho al olvido | `ON DELETE CASCADE` en el esquema de BD — borrar el usuario elimina todos sus datos en cascada |
 | Localización de datos | Supabase región EU (Frankfurt) — los datos no salen de la UE |
 | Transparencia | Política de privacidad visible y comprensible antes del registro, redactada en lenguaje no técnico |
