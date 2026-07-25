@@ -102,6 +102,8 @@
 - [D-091 — E-14 T-04: alta de cuenta Google escribe `profiles.user_name` en la creación; login con fallback de lectura a `user_metadata.full_name` cuando `profiles.user_name` está vacío](#d-091--e-14-t-04-alta-de-cuenta-google-escribe-profilesuser_name-en-la-creación-login-con-fallback-de-lectura-a-user_metadatafull_name-cuando-profilesuser_name-está-vacío)
 - [D-092 — E-14 T-05: icono de ajustes vía `chat_settings_location` (no CSS); desplegable de usuario amplía su alcance con nombre (serifa) + email vía `/user`](#d-092--e-14-t-05-icono-de-ajustes-vía-chat_settings_location-no-css-desplegable-de-usuario-amplía-su-alcance-con-nombre-serifa--email-vía-user)
 - [D-093 — E-14 T-06: perfil cacheado en `cl.user_session` (no releído por mensaje); bloque `[PERFIL DEL PACIENTE]` se omite entero si no hay perfil](#d-093--e-14-t-06-perfil-cacheado-en-cluser_session-no-releído-por-mensaje-bloque-perfil-del-paciente-se-omite-entero-si-no-hay-perfil)
+- [D-094 — E-14 T-07: Scenario 2 de regresión separado en 2a (RAGAS mecánico, path sin perfil) y 2b (revisión manual dirigida, path con perfil)](#d-094--e-14-t-07-scenario-2-de-regresión-separado-en-2a-ragas-mecánico-path-sin-perfil-y-2b-revisión-manual-dirigida-path-con-perfil)
+- [D-095 — E-14 T-07: hallazgo de 2b (truncamiento de tone_05, falta CIERRE OBLIGATORIO) — sube LLM_MAX_TOKENS de 2048 a 3072](#d-095--e-14-t-07-hallazgo-de-2b-truncamiento-de-tone_05-falta-cierre-obligatorio--sube-llm_max_tokens-de-2048-a-3072)
 
 ---
 
@@ -5146,3 +5148,110 @@ frente a aceptar que el reflejo del nombre espera al siguiente login.
 **Ajuste visual adicional:** el bloque de nombre inyectado quedaba pegado al email (el wrapper nativo
 usa `leading-none` pensado para una sola línea) — se añade `margin-bottom: 4px` al `<p>` del nombre en
 `injectUserMenuNameEmail`/`renderIdentity` (`design/public/custom.js`).
+
+---
+
+## D-094 — E-14 T-07: Scenario 2 de regresión separado en 2a (RAGAS mecánico, path sin perfil) y 2b (revisión manual dirigida, path con perfil)
+
+**Fecha:** 25 de julio de 2026
+**Fase:** proceso / técnica
+**Épica:** E-14 (T-07)
+
+**Contexto**
+El borrador de `epic-start` para el Scenario 2 de cierre planteaba "re-ejecutar los casos de
+evaluación relevantes (los que tocan tono/tuteo/registro familiar)" comparando Faithfulness/
+Answer Relevancy contra el baseline de cierre de E-13. Al revisar en `task-start`, dos problemas
+lo hacían no verificable tal cual:
+
+1. `scripts/run_ragas_eval.py` nunca pasa el parámetro `profile` a `pipeline.query()`/
+   `RAGPipeline.query()` — siempre es `None`. Re-ejecutar el dataset RAGAS existente no ejercita
+   en absoluto el bloque `[PERFIL DEL PACIENTE]` añadido en T-06 (D-093): no hay ninguna
+   diferencia de comportamiento posible que ese re-run pudiera detectar.
+2. Faithfulness y Answer Relevancy no miden tono, tuteo ni registro — miden fidelidad al
+   contexto recuperado y relevancia de la respuesta a la pregunta. No son la métrica adecuada
+   para verificar si el LLM adapta el registro a la edad del paciente o usa su nombre real en
+   vez de "el paciente".
+
+**Decisión**
+Se separa el Scenario 2 en dos bloques independientes, mismo patrón que E-11 T-07 (D-070:
+regresión mecánica + revisión manual dirigida con script propio, sin usar RAGAS para lo que
+RAGAS no mide):
+
+- **2a — Regresión mecánica del path sin perfil:** se re-ejecuta el dataset RAGAS completo (32
+  casos) tal como lo invoca hoy `scripts/run_ragas_eval.py` (`profile=None` siempre), y se
+  compara Faithfulness/Answer Relevancy contra el baseline de cierre de E-13
+  (`e09_t02_ragas_full_scores_e13_t04_baseline.json`). Esto cubre el riesgo real: que el cambio
+  de prompt de T-06 haya corrompido por accidente el path mayoritario (usuarios sin perfil).
+- **2b — Revisión manual dirigida del path con perfil:** script nuevo con 5-8 preguntas
+  reproducibles, cada una ejecutada con un `profile` distinto (paciente niño con diagnóstico,
+  paciente adulto con contexto parcial, etc.), inspeccionadas a mano para confirmar que la
+  respuesta usa el nombre real del paciente, no reintroduce el diagnóstico como información
+  nueva, y simplifica el registro cuando la edad es baja. Resultado: pass/fail cualitativo por
+  caso, no una métrica RAGAS.
+
+**Alternativas descartadas**
+- Mantener el Scenario 2 tal como estaba en el borrador de `epic-start`: descartado — no
+  detectaría ninguna regresión real, daría una falsa sensación de cobertura.
+- Ampliar el dataset RAGAS con casos que sí pasen `profile`: descartado por sobrecoste frente al
+  beneficio — RAGAS sigue sin medir tono/registro aunque se le pase perfil; el problema no es de
+  cobertura del dataset sino de qué mide la métrica.
+
+**Consecuencias**
+- `tests/features/e14_t07_closure_regression.feature`: Scenario 2 original sustituido por 2a y
+  2b.
+- Nuevo script de verificación manual para 2b (nombre y ubicación a definir en
+  `tasks/E14-T07-plan.md`), siguiendo el patrón de `scripts/run_e11_t04_linguistic_review.py`.
+
+---
+
+## D-095 — E-14 T-07: hallazgo de 2b (truncamiento de tone_05, falta CIERRE OBLIGATORIO) — sube LLM_MAX_TOKENS de 2048 a 3072
+
+**Fecha:** 25 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-07)
+
+**Contexto**
+Ejecutando 2b (D-094), `tone_05` (perfil con `patient_age=8`, sin diagnóstico, pregunta "¿Qué
+es una inmunodeficiencia primaria?") devolvió una respuesta cortada a media palabra
+("...causando, por ejemplo, inflamación en las articul") sin el bloque `[CIERRE OBLIGATORIO]`
+(recordatorio del rol informativo + derivación a consulta médica) que sí aparece en `tone_06`
+(misma pregunta, sin perfil, respuesta completa). `rag/generator.py` no lee `finish_reason` —
+el truncamiento es silencioso, sin ninguna señal de que la respuesta quedó incompleta.
+
+Mismo mecanismo que D-082: `gemini-2.5-flash` con thinking activado por defecto comparte
+`max_output_tokens` entre el razonamiento interno y la respuesta visible. D-082 ya fijó
+`LLM_MAX_TOKENS=2048` como margen para este problema general, pero no contaba con el coste de
+tokens añadido por el bloque `[PERFIL DEL PACIENTE]` (D-093, T-06) — prompt más complejo, más
+thinking, menos margen para la respuesta visible en casos ya cerca del límite.
+
+En este caso concreto el contenido cortado no era de seguridad (D-093 no afecta a
+`apply_safety_filter()`), pero el mecanismo que garantiza el cierre obligatorio en *todas* las
+respuestas puede fallar silenciosamente — toca el corolario de Falso Negativo Cero aunque esta
+vez no lo haya comprometido.
+
+**Decisión**
+1. `LLM_MAX_TOKENS` sube de 2048 a 3072 en `rag/config.py` (default) y `.env.example` — mismo
+   tipo de ajuste que D-082, sin desactivar el thinking ni tocar el prompt.
+2. Verificación acotada tras el cambio (Ronda 2 de `tasks/E14-T07-plan.md`): re-ejecutar los 6
+   casos de `scripts/run_e14_t07_profile_tone_review.py` (confirmar que `tone_05` ya no se
+   corta) + 2 preguntas de alarma nuevas con perfil (no cubiertas en la Ronda 1 — es el
+   escenario real donde un corte silencioso comprometería Falso Negativo Cero, y hasta ahora no
+   se había probado con perfil).
+3. **Pendiente para Marcos:** actualizar `LLM_MAX_TOKENS` en su `.env` personal si ya lo tenía
+   fijado a `2048` (gitignored, no se sincroniza solo — mismo aviso que D-082/D-025).
+
+**Alternativas descartadas**
+- Investigación completa antes de decidir (cuantificar cuántos de los 32 casos de 2a se
+  truncarían con perfil real): descartada por Marcos — el mecanismo ya es conocido (D-082), y
+  el coste de subir el margen es mínimo (céntimos/hora, D-043) frente al de una investigación
+  completa a 4 días del cierre del TFM.
+- Documentar como limitación conocida sin fix: descartada — el fix es barato y el riesgo toca
+  Falso Negativo Cero, no solo calidad.
+
+**Consecuencias**
+- `rag/config.py`, `.env.example`: `LLM_MAX_TOKENS` default `2048` → `3072`.
+- `tasks/E14-T07-plan.md`: nueva sección "Ronda 2".
+- No se reejecuta 2a (RAGAS) tras este cambio — subir el margen de salida no debería alterar
+  Faithfulness/Answer Relevancy/Context Precision/Recall (no cambia qué se recupera ni el
+  contenido generado dentro del límite anterior), y no es el foco de este fix. Si Marcos quiere
+  esa confirmación igualmente, es una ampliación a decidir aparte.

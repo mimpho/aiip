@@ -8,6 +8,14 @@
 #
 # D-009 queda parcialmente implementada tras esta épica (gate de consentimiento, T-02) — el
 # cierre actualiza docs/security.md para que deje de describirse como "sin implementar".
+#
+# Scenario 2 revisado en task-start (D-0XX, ver decisions.md): el borrador de epic-start
+# planteaba re-ejecutar "los casos de evaluación relevantes de tono/tuteo/registro" comparando
+# Faithfulness/Answer Relevancy contra el baseline de E-13 — no es verificable así.
+# scripts/run_ragas_eval.py nunca pasa `profile` a pipeline.query() (siempre None), así que
+# reejecutar el dataset no ejercita en absoluto el bloque [PERFIL DEL PACIENTE] de T-06, y esas
+# dos métricas no miden tono/registro. Se separa en dos bloques (mismo patrón que E-11 T-07,
+# D-070: regresión mecánica + revisión manual dirigida con script propio).
 
 Feature: Cierre de E-14 — regresión y smoke test end-to-end
 
@@ -24,15 +32,23 @@ Feature: Cierre de E-14 — regresión y smoke test end-to-end
     Then cada paso se comporta según lo descrito en su tarea
     And la respuesta final refleja el contexto de perfil (T-06) sin errores
 
-  Scenario: Regresión acotada a los casos afectados por el cambio de prompt
+  Scenario: 2a — Regresión mecánica del path sin perfil (dataset RAGAS completo)
     Given el placeholder profile_context añadido a _PROMPT_TEMPLATE (T-06) y el cambio en
       prompts/system_prompt_family.txt
-    When se re-ejecutan los casos de evaluación relevantes (los que tocan tono/tuteo/registro
-      familiar, no la suite RAGAS completa)
-    Then no hay regresión frente a los resultados de cierre de E-13 en Faithfulness/Answer
-      Relevancy para esos casos
+    When se re-ejecuta el dataset RAGAS completo (32 casos) sin perfil, tal como lo invoca hoy
+      scripts/run_ragas_eval.py (profile=None siempre)
+    Then Faithfulness y Answer Relevancy están dentro de ruido frente al baseline de cierre de
+      E-13 (e09_t02_ragas_full_scores_e13_t04_baseline.json)
     And cualquier cambio se documenta sin suavizar (mismo criterio de transparencia que E-09
       T-05/E-11 T-07)
+
+  Scenario: 2b — Revisión manual dirigida del path con perfil (tono/registro)
+    Given un script propio con 5-8 preguntas reproducibles, cada una ejecutada con un `profile`
+      distinto (p. ej. paciente niño con diagnóstico, paciente adulto con contexto parcial)
+    When se inspecciona a mano cada respuesta generada
+    Then usa el nombre real del paciente en vez de "el paciente", no reintroduce el diagnóstico
+      como si fuera nueva información, y simplifica el registro cuando la edad es baja
+    And el resultado es un pass/fail cualitativo por caso, no una métrica RAGAS (no la miden)
 
   Scenario: Usuario sin perfil sigue funcionando igual que antes de E-14
     Given un usuario que rechazó el consentimiento de datos de salud (T-02)
