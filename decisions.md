@@ -100,6 +100,7 @@
 - [D-089 — E-14 T-03: `patient_name` ("sobre mí") lee de `user_metadata.full_name`, no de `profiles.user_name` (todavía sin poblar)](#d-089--e-14-t-03-patient_name-sobre-mí-lee-de-user_metadatafull_name-no-de-profilesuser_name-todavía-sin-poblar)
 - [D-090 — E-14: nueva T-08 (pulido UI del onboarding) se adelanta a T-04/T-05/T-06/T-07](#d-090--e-14-nueva-t-08-pulido-ui-del-onboarding-se-adelanta-a-t-04t-05t-06t-07)
 - [D-091 — E-14 T-04: alta de cuenta Google escribe `profiles.user_name` en la creación; login con fallback de lectura a `user_metadata.full_name` cuando `profiles.user_name` está vacío](#d-091--e-14-t-04-alta-de-cuenta-google-escribe-profilesuser_name-en-la-creación-login-con-fallback-de-lectura-a-user_metadatafull_name-cuando-profilesuser_name-está-vacío)
+- [D-092 — E-14 T-05: icono de ajustes vía `chat_settings_location` (no CSS); desplegable de usuario amplía su alcance con nombre (serifa) + email vía `/user`](#d-092--e-14-t-05-icono-de-ajustes-vía-chat_settings_location-no-css-desplegable-de-usuario-amplía-su-alcance-con-nombre-serifa--email-vía-user)
 
 ---
 
@@ -4986,3 +4987,103 @@ diferencia del signup por password, donde el formulario de Chainlit no admite un
 - No afecta a `_ensure_full_name()` (D-089): sigue siendo la única función que escribe
   `profiles.user_name` de forma duradera; el nombre de la clave de sesión `user.metadata["full_name"]`
   tampoco cambia (D-089 ya fijaba que esa lectura no necesita cambiar).
+
+---
+
+## D-092 — E-14 T-05: icono de ajustes vía `chat_settings_location` (no CSS); desplegable de usuario amplía su alcance con nombre (serifa) + email vía `/user`
+
+**Fecha:** 25 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-05)
+
+**Contexto**
+Al revisar en `task-start` el draft de `epic-start` (`tests/features/e14_t05_profile_settings_panel.feature`),
+aparecieron dos puntos que cambian el enfoque técnico decidido en `epic-start` (23 jul 2026, recogido en
+`backlog/epics.md`):
+
+1. El draft proponía reposicionar el icono de `cl.ChatSettings` (id `chat-settings-open-modal`) con
+   `custom_css`, asumiendo que ya vive cerca del header. Descompilando el bundle de `chainlit==2.11.1`
+   (`chainlit/frontend/dist/assets/index-*.js`) se confirma que ese id solo existe en la ubicación por
+   defecto (`message_composer`, junto al input de chat) — moverlo al header exigiría un hack DOM tipo
+   `MutationObserver` (mismo patrón ya usado para el theme-toggle, con su propio historial de bugs —
+   icono duplicado, documentado en `custom.js`).
+2. Al enseñar Marcos una captura del desplegable de usuario (solo muestra el email, pese a T-04), pidió
+   ir más allá de lo que `epic-start` había descartado ("no el desplegable nativo, portal de Radix sin
+   id fijo"): quiere el nombre (tipografía serifa de títulos, `--font-display`/Merriweather peso 500) arriba
+   y el email debajo, ambos visibles a la vez. El componente nativo (función `eWn` en el bundle) solo pinta
+   una única línea (`display_name` si existe, si no `identifier`) — nunca los dos. `epic-start` había
+   descartado tocar ese desplegable por la fragilidad del portal (sin id fijo, se remonta en cada apertura);
+   esta decisión lo revierte parcialmente al encontrarse una fuente de datos independiente del DOM
+   renderizado.
+
+**Decisión**
+1. **Icono de ajustes.** En vez de `custom_css`, se activa la opción nativa
+   `chat_settings_location = "sidebar"` en `chainlit/family/.chainlit/config.toml`. Verificado en el
+   bundle: con ese valor el icono se renderiza con un id distinto y estable
+   (`chat-settings-header-button`) dentro de la misma fila de header que el avatar, inmediatamente antes
+   de `user-nav-button` — sin CSS ni JS propios.
+2. **Desplegable de usuario.** Se amplía el alcance de T-05 (antes solo "investigación no bloqueante" en
+   el draft de `epic-start`) a un criterio real. La app hace `fetch('/user')` (endpoint nativo de
+   Chainlit, `chainlit/server.py`, ya usado internamente por el frontend vía SWR) para obtener
+   `identifier` y `display_name` de forma independiente de lo que el DOM nativo decida pintar, e inyecta
+   un bloque de dos líneas (nombre en `--font-display` peso 500 + email en el estilo ya existente) dentro
+   del portal, sustituyendo la línea nativa única. Misma técnica de `MutationObserver` que el
+   theme-toggle para detectar la apertura del portal — pero ahora anclada a un dato propio (fetch), no a
+   scraping del texto ya renderizado.
+3. **Validación de `patient_age` desde el panel.** `NumberInput` no tiene `min`/`max` nativos (a
+   diferencia de `Slider`, verificado en `chainlit/input_widget.py`). Si el valor guardado está fuera de
+   0-120, ese campo concreto no se persiste y se avisa con un mensaje de error — el resto de campos
+   válidos sí se guardan (mismo criterio de no bloquear que ya sigue el resto de la app).
+4. **Confirmación de guardado.** `@cl.on_settings_update` envía un mensaje visible de éxito o error tras
+   intentar persistir — a diferencia de las escrituras de fondo del onboarding (T-03), aquí es una acción
+   explícita de "Guardar" que sí espera feedback.
+
+**Alternativas descartadas**
+- Reposicionar el icono con `custom_css`/DOM: descartado — ya existe una opción de config nativa que
+  hace lo mismo sin superficie de hack nueva.
+- Mantener el desplegable nativo intacto (criterio original de `epic-start`): descartado por Marcos al
+  ver la captura — quiere nombre y email visibles a la vez, algo que el componente nativo no soporta con
+  una sola cadena.
+- Guardar `patient_age` fuera de rango silenciosamente sin avisar: descartado — deja al usuario sin saber
+  por qué su cambio no se aplicó.
+
+**Consecuencias**
+- `backlog/epics.md`: fila T-05 actualizada (tabla de tareas de E-14).
+- `chainlit/family/.chainlit/config.toml`: nueva línea `chat_settings_location = "sidebar"`.
+- `design/public/custom.js`: nueva función de inyección del bloque nombre+email en el desplegable
+  (`fetch('/user')` + `MutationObserver`), sin tocar el bundle de Chainlit.
+- `tests/features/e14_t05_profile_settings_panel.feature`: escenario del icono actualizado (ya no habla
+  de `custom_css`); nuevo escenario para el desplegable de usuario (nombre+email); nuevos escenarios de
+  validación de `patient_age` y confirmación de guardado. El escenario de "investigación no bloqueante
+  del desplegable nativo" se retira — deja de ser investigación, pasa a ser criterio adoptado.
+- Diagnóstico pendiente, no bloqueante: por qué el desplegable de Marcos mostraba solo el email pese a
+  T-04 — hipótesis más probable es sesión anterior al fix o cuenta sin `_ensure_full_name()` completado,
+  no un bug de T-04. A confirmar con un logout/login antes de dar por buena la hipótesis.
+
+**Actualización (25 jul 2026, QA manual tras implementación)**
+Confirmado: `display_name` viaja embebido en el JWT de sesión (`chainlit/auth/jwt.py::create_jwt`),
+emitido una única vez en el login (`server.py`, ruta `/login`, función privada `_authenticate_user` —
+sin equivalente público). `GET /user` solo decodifica ese mismo JWT en cada petición; no vuelve a leer
+`profiles.user_name`. Por eso avatar y desplegable no reflejan un cambio de nombre (ni el capturado por
+primera vez en el onboarding, que ocurre *después* del login) hasta el siguiente login real — a
+diferencia del saludo (`_greeting()`), que sí se actualiza porque lee `user.metadata["full_name"]`, un
+dict en memoria de sesión que `_ensure_full_name()` reescribe en cada `on_chat_start`.
+
+Se evaluó construir una ruta propia de refresco de sesión (nueva entrada en `_auth_router`,
+reconstruyendo y reemitiendo el JWT con `create_jwt`/`set_auth_cookie` — ambas funciones públicas de
+`chainlit.auth.*`, aunque no de la API estable `cl.*`) para reflejar el cambio sin logout/login. Marcos
+la descarta por ahora: **se acepta la limitación** — avatar/desplegable de un usuario solo muestran su
+nombre actualizado a partir de su siguiente login (la sesión dura 15 días,
+`user_session_timeout` en `.chainlit/config.toml`), no de forma inmediata tras guardar en el panel de
+T-05 ni tras completar el onboarding por primera vez. Verificado en vivo por Marcos: tras cerrar sesión
+y volver a entrar, el desplegable ya muestra nombre + email correctamente.
+
+**Alternativa descartada (añadido):** construir `/auth/refresh-session` reutilizando
+`chainlit.auth.jwt.create_jwt`/`chainlit.auth.cookie.set_auth_cookie` — descartada por Marcos: el
+esfuerzo (ruta nueva + test HTTP a nivel FastAPI, fuera del patrón pytest-bdd del resto de T-05) y el
+acoplamiento a funciones internas de Chainlit no forman parte de la API estable `cl.*` no compensan
+frente a aceptar que el reflejo del nombre espera al siguiente login.
+
+**Ajuste visual adicional:** el bloque de nombre inyectado quedaba pegado al email (el wrapper nativo
+usa `leading-none` pensado para una sola línea) — se añade `margin-bottom: 4px` al `<p>` del nombre en
+`injectUserMenuNameEmail`/`renderIdentity` (`design/public/custom.js`).

@@ -48,17 +48,46 @@ class _FakeUser:
         self.metadata = metadata or {}
 
 
+def _make_chat_settings_factory():
+    """MagicMock que imita `cl.ChatSettings(inputs).send()` (coroutine, E-14 T-05)."""
+
+    def _build(inputs):
+        instance = MagicMock()
+        instance.inputs = inputs
+        instance.send = MagicMock()
+        return instance
+
+    return MagicMock(side_effect=_build)
+
+
+class _FakeTextInput:
+    def __init__(self, id, label, initial=None, multiline=False, **kwargs):
+        self.id = id
+        self.label = label
+        self.initial = initial
+        self.multiline = multiline
+
+
+class _FakeNumberInput:
+    def __init__(self, id, label, initial=None, **kwargs):
+        self.id = id
+        self.label = label
+        self.initial = initial
+
+
 _fake_cl = types.ModuleType("chainlit")
 _fake_cl.password_auth_callback = lambda f: f
 _fake_cl.oauth_callback = lambda f: f
 _fake_cl.on_chat_start = lambda f: f
 _fake_cl.on_message = lambda f: f
+_fake_cl.on_settings_update = lambda f: f
 _fake_cl.action_callback = lambda name: (lambda f: f)
 _fake_cl.User = _FakeUser
 _fake_cl.user_session = MagicMock()
 _fake_cl.Message = _FakeMessage
 _fake_cl.Step = _FakeStep
 _fake_cl.Action = MagicMock()
+_fake_cl.ChatSettings = _make_chat_settings_factory()
 
 # Overwrite (not setdefault) and drop any cached main_family: other test
 # modules register their own fake "chainlit", and main_family must be
@@ -72,6 +101,14 @@ sys.modules["chainlit"] = _fake_cl
 _fake_server = types.ModuleType("chainlit.server")
 _fake_server.app = FastAPI()
 sys.modules["chainlit.server"] = _fake_server
+
+# E-14 T-05 (D-092): main_family.py importa TextInput/NumberInput de
+# chainlit.input_widget a nivel de módulo — sin este fake, importar
+# main_family aquí fallaría con ModuleNotFoundError.
+_fake_input_widget = types.ModuleType("chainlit.input_widget")
+_fake_input_widget.TextInput = _FakeTextInput
+_fake_input_widget.NumberInput = _FakeNumberInput
+sys.modules["chainlit.input_widget"] = _fake_input_widget
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "chainlit"))
 sys.modules.pop("main_family", None)
