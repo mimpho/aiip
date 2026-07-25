@@ -77,14 +77,20 @@ class RAGPipeline:
         docs = self._retriever.invoke(question)
         return [(doc, 1.0 / (i + 1)) for i, doc in enumerate(docs)]
 
-    def query(self, question: str) -> str:
-        """Recibe una pregunta y devuelve la respuesta generada."""
+    def query(self, question: str, profile: dict | None = None) -> str:
+        """Recibe una pregunta y devuelve la respuesta generada.
+
+        `profile` (E-14 T-06, D-093) se reenvía tal cual a
+        `RAGGenerator.generate()` para inyectarse en el prompt — no participa
+        en `_retrieve_with_scores()`, la consulta al retriever sigue siendo
+        `question` sin modificar (D-059).
+        """
         language = detect_language(question)
         raw = self._retrieve_with_scores(question)
         context = "\n\n".join(doc.page_content for doc, _ in raw)
         has_alarm = check_alarm_signals(question)
         response = self._generator.generate(
-            question=question, context=context, language=language
+            question=question, context=context, language=language, profile=profile
         )
         response = apply_safety_filter(response, has_alarm)
 
@@ -107,7 +113,9 @@ class RAGPipeline:
         """
         return self._retrieve_with_scores(question)
 
-    async def aquery_stream(self, question: str, raw_results=None) -> AsyncIterator[str]:
+    async def aquery_stream(
+        self, question: str, raw_results=None, profile: dict | None = None
+    ) -> AsyncIterator[str]:
         """Recibe una pregunta y emite la respuesta generada en streaming.
 
         D-035: acepta `raw_results` opcional (list[tuple[Document, float]]).
@@ -118,6 +126,9 @@ class RAGPipeline:
 
         Si `raw_results` es None (default), se comporta exactamente como antes
         (retrocompatible con todos los tests de T-01 y T-02).
+
+        `profile` (E-14 T-06, D-093) se reenvía tal cual a
+        `RAGGenerator.agenerate_stream()` — no participa en el retrieval.
 
         El filtro de seguridad y el listado de fuentes se aplican sobre el
         texto completo ya ensamblado (D-030): se yield-ean como fragmentos
@@ -132,7 +143,7 @@ class RAGPipeline:
 
         chunks = []
         async for token in self._generator.agenerate_stream(
-            question=question, context=context, language=language
+            question=question, context=context, language=language, profile=profile
         ):
             chunks.append(token)
             yield token

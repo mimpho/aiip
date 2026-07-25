@@ -118,6 +118,21 @@ class _FakeUser:
         self.metadata = metadata or {}
 
 
+class _FakeUserSession:
+    """Respaldado por un dict real (E-14 T-06, D-093) — `MagicMock().get(...)`
+    devolvería otro `MagicMock` en vez de `None`, lo que rompería `_answer()`
+    al leer `cl.user_session.get("profile")`."""
+
+    def __init__(self):
+        self._data: dict = {}
+
+    def get(self, key, default=None):
+        return self._data.get(key, default)
+
+    def set(self, key, value):
+        self._data[key] = value
+
+
 def _make_chat_settings_factory():
     """MagicMock que imita `cl.ChatSettings(inputs).send()` (coroutine, E-14 T-05)."""
 
@@ -153,7 +168,7 @@ _fake_cl.on_message = lambda f: f
 _fake_cl.on_settings_update = lambda f: f
 _fake_cl.action_callback = lambda name: (lambda f: f)
 _fake_cl.User = _FakeUser
-_fake_cl.user_session = MagicMock()
+_fake_cl.user_session = _FakeUserSession()
 _fake_cl.Message = _FakeMessage
 _fake_cl.Step = _FakeStep
 _fake_cl.Action = MagicMock()
@@ -346,7 +361,7 @@ def no_se_anade_recordatorio(stream_result):
     target_fixture="chat_result",
 )
 def streaming_lanza_excepcion(ctx, monkeypatch):
-    async def _gen(question, raw_results=None):
+    async def _gen(question, raw_results=None, profile=None):
         yield "Fragmento parcial "
         raise Exception("LLM no disponible")
 
@@ -367,7 +382,7 @@ def chat_muestra_error_legible(chat_result):
 
 @then("la sesión de chat sigue activa para la siguiente pregunta")
 def sesion_activa_para_siguiente(chat_result):
-    async def _gen_ok(question, raw_results=None):
+    async def _gen_ok(question, raw_results=None, profile=None):
         yield "segunda "
         yield "respuesta"
 

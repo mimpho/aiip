@@ -963,7 +963,7 @@ conviene no construir encima de un bug de CSS todavía sin arreglar.
 | T-03 | Flujo de onboarding por chat (nombre de quien escribe → ¿sobre quién son los datos? → diagnóstico/edad/contexto por nombre) | ✅ Completada |
 | T-04 | Migración de `full_name`/`user_name` a `profiles` + `display_name` en `cl.User` (desplegable muestra el nombre, no el email) | ✅ Completada |
 | T-05 | Edición de perfil desde ajustes (`cl.ChatSettings` + icono junto al avatar vía `chat_settings_location`; desplegable de usuario muestra nombre en serifa + email vía `/user`) | ✅ Completada |
-| T-06 | Memoria de perfil en el pipeline de generación (inyección en prompt, sin tocar retrieval) | ⚪ Pendiente |
+| T-06 | Memoria de perfil en el pipeline de generación (inyección en prompt, sin tocar retrieval) | ✅ Completada |
 | T-07 | Cierre: regresión + smoke test end-to-end, `docs/security.md` actualizado | ⚪ Pendiente |
 | T-08 | Pulido UI del onboarding: título del saludo por bug de CSS (retroactivo a T-02), cabecera de consentimiento, botones centrados, parseo de `patient_age` (D-090). Se ejecuta a continuación de T-03, antes de T-04 | ✅ Completada |
 
