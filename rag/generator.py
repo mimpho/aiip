@@ -7,7 +7,7 @@ _SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "syst
 
 _PROMPT_TEMPLATE = """{system_prompt}
 
-[CONTEXTO]
+{profile_context}[CONTEXTO]
 {context}
 
 [PREGUNTA]
@@ -15,6 +15,34 @@ _PROMPT_TEMPLATE = """{system_prompt}
 
 [INSTRUCCIÓN DE IDIOMA]
 {language_instruction}"""
+
+
+def _format_profile_context(profile: dict | None) -> str:
+    """Formatea el bloque [PERFIL DEL PACIENTE] a partir de `profile` (E-14 T-06, D-093).
+
+    Devuelve "" (bloque omitido por completo, ni cabecera) si no hay `profile`
+    o `patient_name` está vacío — mismo criterio de "hay onboarding" que usa
+    `_ensure_patient_profile()` en chainlit/main_family.py: `patient_name` es
+    el único campo que se pide siempre primero, los demás son opcionales.
+    Con `patient_name` presente, cada campo restante se añade solo si tiene
+    valor — nunca se inventa ni se menciona como "no disponible" (perfil
+    parcial).
+    """
+    if not profile or not profile.get("patient_name"):
+        return ""
+
+    lines = [f"Nombre: {profile['patient_name']}"]
+    diagnosis = profile.get("patient_diagnosis")
+    if diagnosis:
+        lines.append(f"Diagnóstico: {diagnosis}")
+    age = profile.get("patient_age")
+    if age:
+        lines.append(f"Edad: {age} años")
+    context = profile.get("patient_context")
+    if context:
+        lines.append(f"Contexto: {context}")
+
+    return "[PERFIL DEL PACIENTE]\n" + "\n".join(lines) + "\n\n"
 
 
 class RAGGenerator:
@@ -46,11 +74,14 @@ class RAGGenerator:
     def _load_system_prompt(self) -> str:
         return _SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
 
-    def generate(self, question: str, context: str, language: str) -> str:
+    def generate(
+        self, question: str, context: str, language: str, profile: dict | None = None
+    ) -> str:
         from rag.language import build_language_instruction
 
         prompt = _PROMPT_TEMPLATE.format(
             system_prompt=self._system_prompt,
+            profile_context=_format_profile_context(profile),
             context=context,
             question=question,
             language_instruction=build_language_instruction(language),
@@ -59,12 +90,13 @@ class RAGGenerator:
         return response.content
 
     async def agenerate_stream(
-        self, question: str, context: str, language: str
+        self, question: str, context: str, language: str, profile: dict | None = None
     ) -> AsyncIterator[str]:
         from rag.language import build_language_instruction
 
         prompt = _PROMPT_TEMPLATE.format(
             system_prompt=self._system_prompt,
+            profile_context=_format_profile_context(profile),
             context=context,
             question=question,
             language_instruction=build_language_instruction(language),
