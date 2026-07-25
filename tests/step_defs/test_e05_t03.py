@@ -56,6 +56,21 @@ class _FakeUser:
         self.metadata = metadata or {}
 
 
+class _FakeUserSession:
+    """Respaldado por un dict real (E-14 T-06, D-093) — `MagicMock().get(...)`
+    devolvería otro `MagicMock` en vez de `None`, lo que rompería `_answer()`
+    al leer `cl.user_session.get("profile")`."""
+
+    def __init__(self):
+        self._data: dict = {}
+
+    def get(self, key, default=None):
+        return self._data.get(key, default)
+
+    def set(self, key, value):
+        self._data[key] = value
+
+
 def _make_chat_settings_factory():
     """MagicMock que imita `cl.ChatSettings(inputs).send()` (coroutine, E-14 T-05)."""
 
@@ -91,7 +106,7 @@ _fake_cl.on_message = lambda f: f
 _fake_cl.on_settings_update = lambda f: f
 _fake_cl.action_callback = lambda name: (lambda f: f)
 _fake_cl.User = _FakeUser
-_fake_cl.user_session = MagicMock()
+_fake_cl.user_session = _FakeUserSession()
 _fake_cl.Message = _FakeMessage
 _fake_cl.Step = _FakeStep
 _fake_cl.Action = MagicMock()
@@ -342,8 +357,8 @@ def se_procesa_mensaje_on_message(ctx, monkeypatch):
     mock_pipeline = MagicMock()
     mock_pipeline.retrieve.return_value = raw_results
 
-    # aquery_stream acepta keyword raw_results (D-035)
-    async def _gen(question, raw_results=None):
+    # aquery_stream acepta keyword raw_results (D-035) y profile (E-14 T-06)
+    async def _gen(question, raw_results=None, profile=None):
         yield "respuesta "
         yield "streaming"
 
@@ -377,5 +392,5 @@ def paso_usa_mismos_resultados_sin_segunda_consulta(ctx):
     # aquery_stream debe haber recibido raw_results= con el mismo objeto
     # que devolvió retrieve().
     ctx["pipeline"].aquery_stream.assert_called_once_with(
-        ctx["question"], raw_results=ctx["raw_results"]
+        ctx["question"], raw_results=ctx["raw_results"], profile=None
     )

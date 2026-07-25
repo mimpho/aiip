@@ -347,6 +347,10 @@ async def _answer(question: str) -> None:
 
     Compartido por `on_message` y por el callback de las preguntas sugeridas
     (D-036): ambos caminos deben comportarse igual ante la misma pregunta.
+
+    El perfil (E-14 T-06, D-093) se lee de `cl.user_session` — cacheado ahí
+    por `on_chat_start`/`on_settings_update` — sin una segunda consulta a
+    Supabase por mensaje.
     """
     thinking_message = cl.Message(content="")
     await thinking_message.send()
@@ -369,7 +373,10 @@ async def _answer(question: str) -> None:
                 for doc, score in raw_results
             ],
         )
-        async for token in pipeline.aquery_stream(question, raw_results=raw_results):
+        profile = cl.user_session.get("profile")
+        async for token in pipeline.aquery_stream(
+            question, raw_results=raw_results, profile=profile
+        ):
             await thinking_message.stream_token(token)
     except Exception:
         logger.exception("Error al generar la respuesta del pipeline RAG")
@@ -754,6 +761,11 @@ async def on_settings_update(settings: dict):
     antes de llamar a `update_profile()` — el resto de campos modificados
     se guardan igual, no se bloquea todo el panel por un único campo
     inválido.
+
+    E-14 T-06 (D-093): tras persistir, sincroniza la copia de `profile`
+    cacheada en `cl.user_session` (leída por `_answer()`) con los mismos
+    campos que sí se guardaron — así el siguiente mensaje de este chat ya
+    usa los datos nuevos sin esperar a un nuevo `on_chat_start`.
     """
     user = cl.context.session.user
     if not user:
@@ -778,6 +790,13 @@ async def on_settings_update(settings: dict):
         )
         await cl.Message(content=_PROFILE_UPDATE_ERROR_MESSAGE).send()
         return
+
+    # E-14 T-06 (D-093): sincroniza la copia cacheada en cl.user_session con los
+    # mismos campos que sí se persistieron, para que el siguiente mensaje de
+    # este chat ya vea los cambios sin esperar a un nuevo on_chat_start.
+    cached_profile = cl.user_session.get("profile") or {}
+    cached_profile.update(data)
+    cl.user_session.set("profile", cached_profile)
 
     if age_out_of_range:
         await cl.Message(content=_PATIENT_AGE_OUT_OF_RANGE_MESSAGE).send()
@@ -827,6 +846,9 @@ async def on_chat_start():
     del `profile` que devuelve `_ensure_patient_profile()` — el mismo dict
     ya leído (y, si hubo respuestas en vivo, actualizado) por esa función,
     sin una segunda lectura a Supabase.
+
+    Ese mismo `profile` (E-14 T-06, D-093) se cachea en `cl.user_session`
+    para que `_answer()` lo use en cada mensaje sin releer Supabase.
     """
     user = cl.context.session.user
     if user and "full_name" not in user.metadata:
@@ -844,6 +866,7 @@ async def on_chat_start():
     await _ensure_health_consent()
     await _ensure_full_name()
     onboarding_completed_now, profile = await _ensure_patient_profile()
+    cl.user_session.set("profile", profile)
 
     if onboarding_completed_now:
         user = cl.context.session.user

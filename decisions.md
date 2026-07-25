@@ -101,6 +101,7 @@
 - [D-090 — E-14: nueva T-08 (pulido UI del onboarding) se adelanta a T-04/T-05/T-06/T-07](#d-090--e-14-nueva-t-08-pulido-ui-del-onboarding-se-adelanta-a-t-04t-05t-06t-07)
 - [D-091 — E-14 T-04: alta de cuenta Google escribe `profiles.user_name` en la creación; login con fallback de lectura a `user_metadata.full_name` cuando `profiles.user_name` está vacío](#d-091--e-14-t-04-alta-de-cuenta-google-escribe-profilesuser_name-en-la-creación-login-con-fallback-de-lectura-a-user_metadatafull_name-cuando-profilesuser_name-está-vacío)
 - [D-092 — E-14 T-05: icono de ajustes vía `chat_settings_location` (no CSS); desplegable de usuario amplía su alcance con nombre (serifa) + email vía `/user`](#d-092--e-14-t-05-icono-de-ajustes-vía-chat_settings_location-no-css-desplegable-de-usuario-amplía-su-alcance-con-nombre-serifa--email-vía-user)
+- [D-093 — E-14 T-06: perfil cacheado en `cl.user_session` (no releído por mensaje); bloque `[PERFIL DEL PACIENTE]` se omite entero si no hay perfil](#d-093--e-14-t-06-perfil-cacheado-en-cluser_session-no-releído-por-mensaje-bloque-perfil-del-paciente-se-omite-entero-si-no-hay-perfil)
 
 ---
 
@@ -5059,6 +5060,64 @@ aparecieron dos puntos que cambian el enfoque técnico decidido en `epic-start` 
 - Diagnóstico pendiente, no bloqueante: por qué el desplegable de Marcos mostraba solo el email pese a
   T-04 — hipótesis más probable es sesión anterior al fix o cuenta sin `_ensure_full_name()` completado,
   no un bug de T-04. A confirmar con un logout/login antes de dar por buena la hipótesis.
+
+---
+
+## D-093 — E-14 T-06: perfil cacheado en `cl.user_session` (no releído por mensaje); bloque `[PERFIL DEL PACIENTE]` se omite entero si no hay perfil
+
+**Fecha:** 25 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-06)
+
+**Contexto**
+Al revisar en `task-start` el draft de `epic-start` (`tests/features/e14_t06_profile_memory_in_prompt.feature`),
+los 5 escenarios cubrían `rag/generator.py`/`rag/pipeline.py` (cómo se formatea e inyecta `profile_context`
+en `_PROMPT_TEMPLATE`) pero no decían nada de `chainlit/main_family.py` — quien tiene que conseguir el
+perfil y pasarlo a `pipeline.query()`/`aquery_stream()`. Sin ese wiring, el criterio de alto nivel de E-14
+("el agente usa la memoria de perfil para contextualizar respuestas") no queda cubierto end-to-end. Surgieron
+dos puntos abiertos:
+
+1. **De dónde lee `_answer()` el perfil en cada mensaje.** `on_chat_start` ya lee `profile` una vez vía
+   `_ensure_patient_profile()` (T-03/D-090), pero esa variable es local a esa función — `_answer()` (llamada
+   desde `on_message` y desde el callback de preguntas sugeridas) no tiene acceso a ella hoy. Dos opciones:
+   releer `get_profile(user_id)` en cada mensaje (siempre fresco, pero una consulta a Supabase extra por
+   mensaje — hoy `_answer()` no toca Supabase en absoluto), o cachear el `profile` ya leído en
+   `cl.user_session` y mantenerlo sincronizado en `on_settings_update` (T-05) cuando el usuario edita sus
+   datos desde el panel de ajustes.
+2. **Formato de `profile_context` cuando no hay ningún dato de perfil** (usuario sin onboarding completado,
+   `patient_name` NULL — Scenario "Usuario sin perfil..." del `.feature`). El draft dice "profile_context
+   queda vacío o ausente del prompt", una redacción ambigua entre dos formatos distintos de cara al LLM:
+   dejar el placeholder como string vacío bajo una cabecera `[PERFIL DEL PACIENTE]` fija, u omitir el
+   bloque entero.
+
+**Decisión**
+1. **Perfil cacheado en sesión.** El `profile` que devuelve `_ensure_patient_profile()` en `on_chat_start`
+   se guarda en `cl.user_session` (p.ej. `cl.user_session.set("profile", profile)`). `_answer()` lo lee de
+   ahí, sin una segunda consulta a Supabase por mensaje — mismo criterio de evitar round-trips ya seguido en
+   `_resolve_display_name`/`_ensure_full_name` (D-089, D-091). `on_settings_update` (T-05) actualiza esa
+   misma copia en `cl.user_session` tras persistir en Supabase, para que el siguiente mensaje ya vea los
+   cambios sin esperar a un nuevo `on_chat_start`.
+2. **Bloque de perfil omitido por completo si no hay ningún dato.** Cuando `patient_name` es NULL (sin
+   onboarding), `_PROMPT_TEMPLATE` no incluye la sección `[PERFIL DEL PACIENTE]` en absoluto — ni cabecera
+   ni contenido — en vez de dejar un placeholder vacío bajo una cabecera fija. Con perfil parcial (algunos
+   campos sí, otros no — ya resuelto sin ambigüedad en el `.feature`), el bloque sí aparece, pero solo con
+   los campos disponibles.
+
+**Alternativas descartadas**
+- Releer `get_profile(user_id)` en cada mensaje: descartado por Marcos — prefiere evitar el round-trip a
+  Supabase por mensaje que no existe hoy en `_answer()`.
+- Dejar `[PERFIL DEL PACIENTE]` con cabecera vacía cuando no hay datos: descartado — una sección vacía sin
+  contenido es ruido innecesario en el prompt de cara al LLM, sin ningún beneficio sobre omitirla.
+
+**Consecuencias**
+- `tests/features/e14_t06_profile_memory_in_prompt.feature`: se añaden dos escenarios nuevos (cacheo en
+  `cl.user_session` + sincronización en `on_settings_update`) y se reformula el escenario de perfil vacío
+  para eliminar la ambigüedad ("se omite el bloque entero", no "vacío o ausente").
+- `chainlit/main_family.py`: `on_chat_start` cachea `profile` en `cl.user_session`; `_answer()` lo lee de
+  ahí; `on_settings_update` sincroniza la copia cacheada tras persistir.
+- `rag/pipeline.py`/`rag/generator.py`: `query()`/`aquery_stream()`/`generate()`/`agenerate_stream()` reciben
+  un parámetro de perfil opcional (default `None`), para no romper las llamadas posicionales existentes
+  (`tests/step_defs/test_e04_t06.py`, `scripts/smoke_test_rag.py`).
 
 **Actualización (25 jul 2026, QA manual tras implementación)**
 Confirmado: `display_name` viaja embebido en el JWT de sesión (`chainlit/auth/jwt.py::create_jwt`),
