@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Optional
 
 import chainlit as cl
+from chainlit.input_widget import NumberInput, TextInput
+
 from auth.supabase_client import (
     get_or_create_google_user,
     get_profile,
@@ -68,6 +70,16 @@ _PATIENT_AGE_INVALID_MESSAGE = "No he entendido esa edad. Debe ser un número en
 _PATIENT_CONTEXT_MESSAGE = (
     "¿Hay algo más del contexto de {patient_name} que te gustaría que tenga "
     "en cuenta (tratamiento actual, otras condiciones, rutina diaria...)?"
+)
+
+_PROFILE_UPDATED_MESSAGE = "Perfil actualizado."
+
+_PROFILE_UPDATE_ERROR_MESSAGE = (
+    "No se ha podido actualizar el perfil. Inténtalo de nuevo en unos instantes."
+)
+
+_PATIENT_AGE_OUT_OF_RANGE_MESSAGE = (
+    "La edad debe ser un número entre 0 y 120 — no se ha guardado ese campo."
 )
 
 _pipeline: RAGPipeline | None = None
@@ -516,7 +528,7 @@ async def _replay_field(question: str, answer: str) -> None:
     await cl.Message(content=f"**Selected:** {answer}").send()
 
 
-async def _ensure_patient_profile() -> bool:
+async def _ensure_patient_profile() -> tuple[bool, dict | None]:
     """Pide por chat los datos del paciente que falten en el perfil (T-03, D-089).
 
     Solo se alcanza con consentimiento de datos de salud ya registrado
@@ -550,26 +562,33 @@ async def _ensure_patient_profile() -> bool:
       _ensure_health_consent. Los campos diagnóstico/edad/contexto son
       independientes entre sí: no responder a uno no corta los siguientes.
 
-    Devuelve True solo si se completó el perfil EN VIVO en esta sesión: se
-    preguntó y respondió al menos un campo en esta llamada (answered_live)
-    Y el perfil queda completo al terminar — on_chat_start usa este valor,
-    exclusivamente, para decidir si mostrar el título de cierre "Todo
-    listo". Un perfil ya completo de antes, o uno que sigue incompleto tras
-    esta llamada, devuelve False.
+    Devuelve `(completed, profile)`. `completed` es True solo si se
+    completó el perfil EN VIVO en esta sesión: se preguntó y respondió al
+    menos un campo en esta llamada (answered_live) Y el perfil queda
+    completo al terminar — on_chat_start usa este valor, exclusivamente,
+    para decidir si mostrar el título de cierre "Todo listo". Un perfil ya
+    completo de antes, o uno que sigue incompleto tras esta llamada,
+    devuelve False.
+
+    `profile` es el mismo dict leído (y, si hubo respuestas en vivo,
+    mutado) durante esta llamada — on_chat_start lo reutiliza para
+    construir el panel de ajustes de T-05 sin una segunda lectura a
+    Supabase. Es None únicamente si no hay sesión de usuario válida (no
+    llegó a leerse ningún perfil).
     """
     user = cl.context.session.user
     if not user:
-        return False
+        return False, None
     user_id = user.metadata.get("user_id")
     if not user_id:
-        return False
+        return False, None
 
     profile = get_profile(user_id)
     if all(
         profile.get(field)
         for field in ("patient_name", "patient_diagnosis", "patient_age", "patient_context")
     ):
-        return False
+        return False, profile
 
     answered_live = False
     patient_name = profile.get("patient_name")
@@ -592,22 +611,23 @@ async def _ensure_patient_profile() -> bool:
             timeout=_PATIENT_PROFILE_TIMEOUT,
         ).send()
         if not res:
-            return False
+            return False, profile
 
         if res.get("name") == "patient_self":
             patient_name = user.metadata.get("full_name")
             if not patient_name:
-                return False
+                return False, profile
         elif res.get("name") == "patient_other":
             name_res = await cl.AskUserMessage(
                 content=_PATIENT_OTHER_NAME_MESSAGE, timeout=_PATIENT_PROFILE_TIMEOUT
             ).send()
             if not name_res or not name_res.get("output", "").strip():
-                return False
+                return False, profile
             patient_name = name_res["output"].strip()
         else:
-            return False
+            return False, profile
 
+        profile["patient_name"] = patient_name
         try:
             update_profile(user_id, {"patient_name": patient_name})
         except Exception:
@@ -668,7 +688,100 @@ async def _ensure_patient_profile() -> bool:
     profile_complete = bool(patient_name) and all(
         profile.get(field) for field in ("patient_diagnosis", "patient_age", "patient_context")
     )
-    return answered_live and profile_complete
+    return answered_live and profile_complete, profile
+
+
+def _build_chat_settings(profile: dict) -> cl.ChatSettings:
+    """Construye el panel de ajustes de perfil a partir de `profile` (E-14 T-05, D-092).
+
+    `id` de cada input = nombre de columna de `profiles`, así el dict que
+    llega a `on_settings_update` mapea 1:1 con `update_profile()`, sin
+    traducción de claves.
+
+    Los cuatro campos clínicos (patient_name/patient_diagnosis/
+    patient_age/patient_context) solo se añaden si el usuario ya dio su
+    consentimiento de datos de salud (`health_data_consent_at`
+    informado) — el panel no debe forzar ese consentimiento, sigue siendo
+    responsabilidad exclusiva de `_ensure_health_consent()` en
+    `on_chat_start` (T-02). Sin consentimiento, solo se ve `user_name`.
+    """
+    inputs: list = [
+        TextInput(id="user_name", label="Tu nombre", initial=profile.get("user_name")),
+    ]
+
+    if profile.get("health_data_consent_at"):
+        inputs.extend(
+            [
+                TextInput(
+                    id="patient_name",
+                    label="Nombre del paciente",
+                    initial=profile.get("patient_name"),
+                ),
+                TextInput(
+                    id="patient_diagnosis",
+                    label="Diagnóstico",
+                    initial=profile.get("patient_diagnosis"),
+                ),
+                NumberInput(
+                    id="patient_age",
+                    label="Edad",
+                    initial=profile.get("patient_age"),
+                ),
+                TextInput(
+                    id="patient_context",
+                    label="Contexto adicional",
+                    initial=profile.get("patient_context"),
+                    multiline=True,
+                ),
+            ]
+        )
+
+    return cl.ChatSettings(inputs)
+
+
+@cl.on_settings_update
+async def on_settings_update(settings: dict):
+    """Persiste los cambios del panel de ajustes de perfil (E-14 T-05, D-092).
+
+    `NumberInput` no tiene `min`/`max` nativos (a diferencia de `Slider`,
+    verificado en `chainlit/input_widget.py`) — la validación de
+    `patient_age` vive aquí, contra el mismo rango 0-120 que
+    `_parse_patient_age` documenta para el flujo de chat (D-088). No se
+    reutiliza esa función: aquí el valor ya llega como número desde
+    `NumberInput`, no como texto libre a parsear.
+
+    Si `patient_age` está fuera de rango, se excluye esa clave del dict
+    antes de llamar a `update_profile()` — el resto de campos modificados
+    se guardan igual, no se bloquea todo el panel por un único campo
+    inválido.
+    """
+    user = cl.context.session.user
+    if not user:
+        return
+    user_id = user.metadata.get("user_id")
+    if not user_id:
+        return
+
+    data = dict(settings)
+    age_out_of_range = False
+    if "patient_age" in data:
+        age = data["patient_age"]
+        if age is None or not (0 <= age <= 120):
+            del data["patient_age"]
+            age_out_of_range = True
+
+    try:
+        update_profile(user_id, data)
+    except Exception:
+        logger.exception(
+            "Error al actualizar el perfil desde el panel de ajustes para user_id=%s", user_id
+        )
+        await cl.Message(content=_PROFILE_UPDATE_ERROR_MESSAGE).send()
+        return
+
+    if age_out_of_range:
+        await cl.Message(content=_PATIENT_AGE_OUT_OF_RANGE_MESSAGE).send()
+    await cl.Message(content=_PROFILE_UPDATED_MESSAGE).send()
 
 
 @cl.on_chat_start
@@ -709,6 +822,11 @@ async def on_chat_start():
     primer paso (`profiles.user_name` → `user_metadata.full_name`), así que
     repetirla aquí es barata y su propio chequeo pasa a ser un no-op cuando
     ya está cacheada.
+
+    Al final, envía `cl.ChatSettings` (T-05, D-092) construido a partir
+    del `profile` que devuelve `_ensure_patient_profile()` — el mismo dict
+    ya leído (y, si hubo respuestas en vivo, actualizado) por esa función,
+    sin una segunda lectura a Supabase.
     """
     user = cl.context.session.user
     if user and "full_name" not in user.metadata:
@@ -725,12 +843,15 @@ async def on_chat_start():
 
     await _ensure_health_consent()
     await _ensure_full_name()
-    onboarding_completed_now = await _ensure_patient_profile()
+    onboarding_completed_now, profile = await _ensure_patient_profile()
 
     if onboarding_completed_now:
         user = cl.context.session.user
         full_name = user.metadata.get("full_name") if user else None
         await cl.Message(content=_onboarding_complete_title(full_name)).send()
+
+    if profile is not None:
+        await _build_chat_settings(profile).send()
 
     actions = [
         cl.Action(name="starter_question", payload={"question": q}, label=q)
