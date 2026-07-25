@@ -967,7 +967,23 @@ conviene no construir encima de un bug de CSS todavía sin arreglar.
 | T-07 | Cierre: regresión + smoke test end-to-end, `docs/security.md` actualizado | ✅ Completada |
 | T-08 | Pulido UI del onboarding: título del saludo por bug de CSS (retroactivo a T-02), cabecera de consentimiento, botones centrados, parseo de `patient_age` (D-090). Se ejecuta a continuación de T-03, antes de T-04 | ✅ Completada |
 
-**Estado:** 🔵 En curso
+**Entregables**
+- `supabase/migrations/20260723002559_e14_t01_add_profile_onboarding_columns.sql` — columnas `user_name`, `patient_name`, `patient_diagnosis`, `patient_age`, `patient_context`, `health_data_consent_at` en `profiles` (D-088)
+- `chainlit/main_family.py` — gate de consentimiento de datos de salud (D-009/D-088), flujo de onboarding por chat (`_ensure_patient_profile()`), migración de `full_name`/`user_name` (D-089, D-091), panel de edición `cl.ChatSettings` (D-092), inyección de perfil cacheado en `cl.user_session` (D-093)
+- `auth/supabase_client.py` — alta de cuenta Google escribe `profiles.user_name` en la creación (D-091)
+- `rag/generator.py`, `rag/pipeline.py` — bloque `[PERFIL DEL PACIENTE]` inyectado en el prompt de generación sin tocar la consulta de retrieval (D-093)
+- `prompts/system_prompt_family.txt` — instrucciones de uso del bloque `[PERFIL DEL PACIENTE]` (no repetir diagnóstico como información nueva, adaptar registro por edad, no asumir que quien escribe es el paciente)
+- `rag/config.py`, `.env.example` — `LLM_MAX_TOKENS` sube de 2048 a 3072 (D-095, truncamiento silencioso con perfil activo)
+- `design/public/custom.js`, `design/public/style.css`, `chainlit/family/.chainlit/config.toml` — pulido UI de onboarding (T-08, D-090), icono de ajustes vía `chat_settings_location`, desplegable de usuario con nombre + email (D-092)
+- `docs/security.md` — tabla RGPD actualizada: consentimiento explícito ahora referencia el gate real de T-02
+- `docs/e12-retro-notes.md` — reflexión sobre límites de personalización de Chainlit (T-05)
+- `scripts/run_e14_t07_profile_tone_review.py`, `run_e14_t07_ragas_regression_check.py` — verificación dirigida de tono/registro con perfil (2b) y regresión RAGAS del path sin perfil (2a), D-094
+- `tests/features/e14_t01_*.feature` a `e14_t08_*.feature`, `tests/step_defs/test_e14_t02.py` a `test_e14_t08.py` — TDD de las 8 tareas
+- `tests/results/e14_t07_smoke_test_results.md`, `tests/eval/results/e14_t07_*.json` — resultados de cierre T-07
+- `tasks/E14-T02-plan.md` a `E14-T08-plan.md` — planes de implementación
+- `decisions.md` — D-087 a D-095
+
+**Estado:** ✅ Completada — 26 jul 2026
 
 ---
 

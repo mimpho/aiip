@@ -1031,3 +1031,93 @@ configuración de generación que llevaba varias épicas sin revisarse (D-082). 
 reutilizable: cuando un bug aparece "de la nada" en una tarea, comparar contra versiones
 commiteadas anteriores acota la búsqueda a un commit concreto antes de investigar el
 código a ciegas.
+
+### P-039 — System prompt: bloque [PERFIL DEL PACIENTE] inyectado condicionalmente sin tocar retrieval
+**Fecha:** 25 julio 2026
+**Fase:** E-14 (T-06)
+**Tipo:** system prompt
+**Herramienta:** Antigravity
+
+**Prompt / decisión:**
+```
+[PERFIL DEL PACIENTE]
+Si el contexto incluye un bloque "[PERFIL DEL PACIENTE]" con nombre y, cuando
+estén disponibles, diagnóstico/edad/contexto adicional, úsalo para ajustar la
+respuesta sin repetirlo como si fuera nueva información: no reintroduzcas el
+diagnóstico como si el usuario no lo supiera ya, y adapta el registro cuando
+la edad sea relevante (p. ej. explicaciones más sencillas si es un niño
+pequeño). Ese bloque identifica solo de quién son los datos clínicos, nunca
+quién te escribe: sigue sin asumir que quien escribe es el paciente (ver
+[TONO — PERFIL FAMILIAR]) y usa el nombre real del paciente en vez de la
+palabra "paciente" al referirte a él. Si el bloque no aparece en el
+contexto, responde exactamente igual que si no existiera esta sección.
+```
+Añadido a `prompts/system_prompt_family.txt`. El bloque de contexto (`_format_profile_context()`
+en `rag/generator.py`) se omite por completo — ni cabecera — cuando no hay `patient_name`, y
+cada campo restante (diagnóstico/edad/contexto) se añade solo si tiene valor: nunca se inventa
+ni se menciona como "no disponible" (D-093). El perfil no participa en la consulta al
+retriever — se reenvía tal cual desde `RAGPipeline.query()`/`aquery_stream()` hasta el prompt de
+generación, sin tocar `_retrieve_with_scores()` (D-059).
+
+**Resultado / aprendizaje:**
+Patrón reutilizable para inyectar contexto opcional en un prompt ya en producción: instrucción
+explícita de "si no aparece el bloque, compórtate exactamente igual que antes" evita que el LLM
+alucine el campo nuevo cuando falta, y separar el criterio de "hay onboarding" (un único campo
+obligatorio, `patient_name`) del resto de campos opcionales evita mencionar datos como "no
+disponibles" cuando simplemente no se pidieron.
+
+### P-040 — Diseño de evaluación de regresión: separar chequeo mecánico de revisión cualitativa dirigida
+**Fecha:** 25 julio 2026
+**Fase:** E-14 (T-07)
+**Tipo:** decisión técnica / evaluación
+**Herramienta:** Antigravity
+
+**Prompt / decisión:**
+El Scenario 2 de regresión de cierre (`tests/features/e14_t07_closure_regression.feature`) se
+diseñó originalmente como un único chequeo. Al revisarlo antes de ejecutarlo, no detectaría
+ninguna regresión real del cambio de T-06 (bloque `[PERFIL DEL PACIENTE]` en el prompt): RAGAS
+mide Faithfulness/Answer Relevancy/Context Precision/Recall, no tono ni registro, así que pasar
+casos con `profile` no habría dado ninguna cobertura real sobre lo que cambió (D-094). Se separó
+en dos:
+- **2a — Regresión mecánica:** re-ejecutar el dataset RAGAS completo (32 casos, `profile=None`
+  siempre, como lo invoca hoy `scripts/run_ragas_eval.py`) contra el baseline de cierre de E-13,
+  para cubrir el riesgo real de que el prompt nuevo haya roto el path mayoritario (sin perfil).
+- **2b — Revisión manual dirigida:** script nuevo (`scripts/run_e14_t07_profile_tone_review.py`)
+  con 5-8 preguntas reproducibles, cada una con un `profile` distinto, inspeccionadas a mano para
+  confirmar que la respuesta usa el nombre real del paciente, no reintroduce el diagnóstico como
+  información nueva, y adapta el registro por edad — pass/fail cualitativo, no una métrica RAGAS.
+
+Ampliar el dataset RAGAS con casos que sí pasen `profile` se descartó por sobrecoste frente al
+beneficio: RAGAS seguiría sin medir tono/registro aunque se le pasara perfil — el problema no era
+de cobertura del dataset sino de qué mide la métrica.
+
+**Resultado / aprendizaje:**
+2b fue la que encontró el bug real de esta tarea (truncamiento silencioso, P-041/D-095) — RAGAS
+sobre 2a no lo habría detectado. Patrón reutilizable: cuando un cambio de prompt toca algo que la
+métrica automática existente no mide (tono, registro, formato), no forzar el caso nuevo dentro de
+esa métrica — añadir una verificación manual dirigida y reproducible en paralelo, con casos
+explícitos elegidos para ejercitar la variación nueva.
+
+### P-041 — Un bloque de prompt nuevo puede agotar el margen de thinking budget de Gemini en silencio
+**Fecha:** 25 julio 2026
+**Fase:** E-14 (T-07)
+**Tipo:** decisión técnica
+**Herramienta:** Antigravity
+
+**Prompt / decisión:**
+En la revisión cualitativa dirigida de T-07 (D-094, escenario 2b), `tone_05` (perfil con
+`patient_age=8`, sin diagnóstico) devolvió una respuesta cortada a media palabra, sin el bloque
+`[CIERRE OBLIGATORIO]`. `rag/generator.py` no lee `finish_reason` — el truncamiento no genera
+ninguna señal de error. Mismo mecanismo que P-020/D-082 (`gemini-2.5-flash` con thinking activado
+comparte `max_output_tokens` entre razonamiento interno y respuesta visible), pero esta vez el
+margen ya fijado en D-082 (2048) no contaba con el coste de tokens añadido por el bloque
+`[PERFIL DEL PACIENTE]` (P-039/D-093) — prompt más complejo, menos margen para la respuesta
+visible en casos ya cerca del límite. Se sube `LLM_MAX_TOKENS` de 2048 a 3072 (D-095).
+
+**Resultado / aprendizaje:**
+Cada vez que se añade contenido nuevo al prompt de generación —aunque sea opcional o
+condicional, como el bloque de perfil— hay que revisar el margen de `LLM_MAX_TOKENS` con
+Gemini thinking activado, no asumir que el ajuste anterior (D-082) sigue siendo suficiente. El
+truncamiento es silencioso mientras no se lea `finish_reason`, así que el riesgo no se detecta
+solo con RAGAS (no mide si la respuesta quedó cortada) — hace falta revisión manual dirigida
+(P-040/D-094) para exponerlo.
