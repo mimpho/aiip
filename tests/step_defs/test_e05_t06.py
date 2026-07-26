@@ -26,8 +26,9 @@ from supabase_auth.errors import AuthApiError
 
 
 class _FakeUser:
-    def __init__(self, identifier: str, metadata: dict | None = None):
+    def __init__(self, identifier: str, display_name: str | None = None, metadata: dict | None = None):
         self.identifier = identifier
+        self.display_name = display_name
         self.metadata = metadata or {}
 
 
@@ -63,11 +64,39 @@ def _make_message_factory():
     return MagicMock(side_effect=_build)
 
 
+def _make_chat_settings_factory():
+    """MagicMock que imita `cl.ChatSettings(inputs).send()` (coroutine, E-14 T-05)."""
+
+    def _build(inputs):
+        instance = MagicMock()
+        instance.inputs = inputs
+        instance.send = AsyncMock(return_value=None)
+        return instance
+
+    return MagicMock(side_effect=_build)
+
+
+class _FakeTextInput:
+    def __init__(self, id, label, initial=None, multiline=False, **kwargs):
+        self.id = id
+        self.label = label
+        self.initial = initial
+        self.multiline = multiline
+
+
+class _FakeNumberInput:
+    def __init__(self, id, label, initial=None, **kwargs):
+        self.id = id
+        self.label = label
+        self.initial = initial
+
+
 _fake_cl = types.ModuleType("chainlit")
 _fake_cl.password_auth_callback = lambda f: f
 _fake_cl.oauth_callback = lambda f: f
 _fake_cl.on_chat_start = lambda f: f
 _fake_cl.on_message = lambda f: f
+_fake_cl.on_settings_update = lambda f: f
 _fake_cl.action_callback = lambda name: (lambda f: f)
 _fake_cl.User = _FakeUser
 _fake_cl.user_session = MagicMock()
@@ -77,6 +106,7 @@ _fake_cl.Step = MagicMock()
 _fake_cl.make_async = lambda f: f
 _fake_cl.context = _fake_context
 _fake_cl.AskUserMessage = _make_ask_user_message_factory(None)
+_fake_cl.ChatSettings = _make_chat_settings_factory()
 
 # Overwrite (not setdefault) and drop any cached main_family: other test
 # modules register their own fake "chainlit", and main_family must be
@@ -88,6 +118,14 @@ from fastapi import FastAPI  # noqa: E402
 _fake_server = types.ModuleType("chainlit.server")
 _fake_server.app = FastAPI()
 sys.modules["chainlit.server"] = _fake_server
+
+# E-14 T-05 (D-092): main_family.py importa TextInput/NumberInput de
+# chainlit.input_widget a nivel de módulo — sin este fake, importar
+# main_family aquí fallaría con ModuleNotFoundError.
+_fake_input_widget = types.ModuleType("chainlit.input_widget")
+_fake_input_widget.TextInput = _FakeTextInput
+_fake_input_widget.NumberInput = _FakeNumberInput
+sys.modules["chainlit.input_widget"] = _fake_input_widget
 
 # oauth_callback solo se registra en main_family.py si estas variables
 # están presentes en el momento del import (mismo guard que en prod para no
@@ -210,8 +248,18 @@ def _run(coro):
 
 
 @given("la app Chainlit del perfil familiar está inicializada")
-def app_inicializada():
+def app_inicializada(monkeypatch):
     assert main_family is not None
+    # E-14 T-04 (D-091): auth_callback/oauth_callback ahora resuelven
+    # display_name leyendo profiles/user_metadata en cada construcción de
+    # cl.User, y _ensure_full_name() puede disparar un backfill de escritura
+    # a profiles.user_name — mocks por defecto para que ningún escenario de
+    # este fichero golpee Supabase real solo por eso; los que necesitan un
+    # valor concreto (o comprobar la propia escritura) lo sobrescriben en su
+    # Given.
+    monkeypatch.setattr(main_family, "get_profile", lambda user_id: {})
+    monkeypatch.setattr(main_family, "get_user_metadata", lambda user_id: {})
+    monkeypatch.setattr(main_family, "update_profile", MagicMock())
 
 
 # ── Escenarios 1-4: password_auth_callback (login/signup mergeados) ─────────
@@ -680,9 +728,22 @@ def on_chat_start_no_pide_nombre(monkeypatch, oauth_result):
 def usuario_sin_full_name(monkeypatch):
     user = _FakeUser(identifier="sinnombre@example.com", metadata={"user_id": "user-sin-nombre"})
     _fake_context.session.user = user
+    # patient_name/etc ya informados: aísla este test a _ensure_full_name sin
+    # que la pregunta de onboarding de perfil de paciente (T-03) interfiera.
+    monkeypatch.setattr(
+        main_family,
+        "get_profile",
+        lambda user_id: {
+            "health_data_consent_at": "2026-07-01T10:00:00+00:00",
+            "patient_name": "Ya Informado",
+            "patient_diagnosis": "ya",
+            "patient_age": 10,
+            "patient_context": "ya",
+        },
+    )
     monkeypatch.setattr(main_family, "get_user_metadata", lambda user_id: {})
     update_mock = MagicMock()
-    monkeypatch.setattr(main_family, "update_user_metadata", update_mock)
+    monkeypatch.setattr(main_family, "update_profile", update_mock)
     ask_factory = _make_ask_user_message_factory({"output": "María"})
     monkeypatch.setattr(main_family.cl, "AskUserMessage", ask_factory)
     message_mock = _make_message_factory()
@@ -703,9 +764,9 @@ def se_pide_nombre_antes_del_saludo(chat_ctx):
     assert chat_ctx["message_mock"].call_count >= 2
 
 
-@then("la respuesta se guarda en user_metadata.full_name vía update_user_by_id()")
-def respuesta_se_guarda_en_metadata(chat_ctx):
-    chat_ctx["update_mock"].assert_called_once_with("user-sin-nombre", {"full_name": "María"})
+@then("la respuesta se guarda en profiles.user_name (E-14 T-04, D-091), no en user_metadata")
+def respuesta_se_guarda_en_profiles_user_name(chat_ctx):
+    chat_ctx["update_mock"].assert_called_once_with("user-sin-nombre", {"user_name": "María"})
     assert chat_ctx["user"].metadata["full_name"] == "María"
 
 
@@ -713,6 +774,19 @@ def respuesta_se_guarda_en_metadata(chat_ctx):
 def usuario_con_full_name(monkeypatch):
     user = _FakeUser(identifier="connombre@example.com", metadata={"user_id": "user-con-nombre"})
     _fake_context.session.user = user
+    # patient_name/etc ya informados: aísla este test a _ensure_full_name sin
+    # que la pregunta de onboarding de perfil de paciente (T-03) interfiera.
+    monkeypatch.setattr(
+        main_family,
+        "get_profile",
+        lambda user_id: {
+            "health_data_consent_at": "2026-07-01T10:00:00+00:00",
+            "patient_name": "Ya Informado",
+            "patient_diagnosis": "ya",
+            "patient_age": 10,
+            "patient_context": "ya",
+        },
+    )
     monkeypatch.setattr(main_family, "get_user_metadata", lambda user_id: {"full_name": "María"})
     ask_factory = _make_ask_user_message_factory(None)
     monkeypatch.setattr(main_family.cl, "AskUserMessage", ask_factory)

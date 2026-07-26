@@ -442,6 +442,32 @@ decisión de diseño sobre derecho al olvido, no implementarla, así que
 aplazar la capa 3 no deja ningún cabo suelto para la entrega. Detalle
 completo del razonamiento en D-063.
 
+**Blocker explícito de la capa 1 (26 jul 2026, D-096):** al cerrar E-14 y valorar si adelantar
+E-08 con el tiempo restante antes del 29 de julio, se formaliza como condición de gate, no como
+simple orden de ejecución: **la capa 1 (memoria conversacional) permanece bloqueada mientras
+Faithfulness no supere el 95% y Context Precision no supere el 85%** en la medición RAGAS de 32
+casos (`docs/evaluation.md` §7). A fecha de cierre de E-14: Faithfulness 83.2%/79.5% y Context
+Precision 59.5%/61.6% (post-E-13 / regresión E-14 T-07) — ambas muy por debajo de objetivo. El
+cierre de épicas de producto (E-11, E-13, E-14, o futuras) no desbloquea la capa 1 por sí mismo;
+solo lo hace alcanzar ambos umbrales. Las capas 2 (ya resuelta en E-14) y 3 no están sujetas a
+este gate.
+
+**Épica candidata (26 jul 2026):** el ciclo de mejora que resolvería este gate se formaliza como
+**E-15** (ciclo de mejora de calidad, ronda 2 — post-TFM, sin fecha asignada). Importante: cerrar
+E-15 no equivale a desbloquear la capa 1 si no alcanza los umbrales — mismo criterio que dejó
+E-11 cerrada sin resolver este mismo gate (ver nota de alcance de E-15).
+
+**Nota de reversión parcial (23 jul 2026, D-087):** la capa 2 (memoria de
+perfil: onboarding + contextualización + migración de `full_name`) se
+extrae a una épica nueva, **E-14 — Memoria de perfil (onboarding)**, y
+entra en Fase 1.5 en lugar de E-10. Esta sección de E-08 queda intacta
+como registro histórico de D-063 — capas 1 y 3 siguen aplazadas a
+seguimiento post-TFM sin fecha ni épica asignada. La capa 1, en concreto,
+no se desbloquea con el cierre de E-11/E-13: el ciclo de mejora de esas
+épicas dejó Faithfulness y Context Precision por debajo de objetivo
+(D-087), así que sigue condicionada a un futuro ciclo de mejora de RAG,
+no a un simple orden de épicas.
+
 **Criterios de aceptación de alto nivel**
 - Memoria conversacional de corto plazo: el agente mantiene el hilo de la
   conversación dentro de una misma sesión de chat abierta (sin necesidad de
@@ -605,8 +631,9 @@ Ajustes finales para la entrega.
 **Notas**
 - Al cerrar esta épica: ejecutar tests RAGAS end-to-end (E-07/E-09) sobre el sistema completo antes del PR final. Es el único momento en que se valida el pipeline integrado en su totalidad.
 - **Orden de ejecución (18 jul 2026):** E-11 pasa por delante de esta épica — ver nota de reordenamiento al inicio de la fase y D-059.
+- **Aplazada fuera de Fase 1.5 (23 jul 2026, D-087):** deja de ser "candidata a caer si falta tiempo" (D-064) y pasa a estar descartada explícitamente de esta fase, sustituida por **E-14** (memoria de perfil) entre E-13 y E-12. Razón: el pulido de UX/responsive ya se ha ido resolviendo de forma orgánica entre épicas y CORS solo importa si se embebe el asistente en una app externa — no urgente ahora —, mientras que E-14 aporta más utilidad directa al producto. Pasa a seguimiento post-TFM junto con E-08.
 
-**Estado:** ⚪ No iniciada
+**Estado:** ⚪ No iniciada — aplazada a post-TFM (D-087)
 
 ---
 
@@ -796,6 +823,12 @@ importa si se embebe el asistente en una app/widget externo — no urgente ahora
 que quedan, **E-10 es la primera candidata a quedar fuera si falta tiempo antes del 29 de
 julio; E-12 (cierre del TFM) no es negociable en ningún caso.**
 
+**Nota de reemplazo (23 jul 2026, D-087):** con E-13 ya completada, el argumento de D-064
+sobre E-10 (pulido ya resuelto orgánicamente, CORS no urgente) se lleva a su conclusión: en
+vez de quedar como candidata a caer, **sale de Fase 1.5** y es sustituida por **E-14**
+(memoria de perfil, extraída de la capa 2 de E-08). Orden de ejecución actualizado: E-11 →
+E-13 → **E-14** → E-12. E-12 sigue innegociable, sin cambios.
+
 **Criterios de aceptación de alto nivel**
 - Lote 1 (13 fichas, incluye X-linked lymphoproliferative disease/XIAP) ingerido y revisado
   en registro lingüístico; verificación dirigida del caso XIAP (RAGAS completo solo en T-04)
@@ -863,6 +896,162 @@ principal (una enfermedad a la vez).
 - `decisions.md` — D-073 a D-086
 
 **Estado:** ✅ Completada — 22 jul 2026
+
+---
+
+### E-14 — Memoria de perfil (onboarding)
+
+Onboarding y datos estables del paciente, contextualizando las respuestas del agente sin
+tocar el contexto de generación por turno.
+
+**Nota de origen (23 jul 2026, D-087):** extraída de la capa 2 de E-08 (memoria de perfil e
+histórico de conversaciones, D-063), al valorar qué ocupa el hueco entre E-13 y E-12 con 6
+días de margen antes del 29 de julio. Se crea como épica independiente en vez de reabrir los
+criterios de aceptación de E-08 — mismo criterio que motivó crear E-13 en D-063 en vez de
+tareas nuevas dentro de E-11: no comprometer el alcance ya documentado y aplazado de una
+épica existente. E-08 (capas 1 y 3 — memoria conversacional y persistencia entre
+sesiones/derecho al olvido) sigue aplazada a seguimiento post-TFM sin cambios.
+
+**Alcance explícitamente fuera de esta épica:**
+- Memoria conversacional de corto plazo (capa 1 de E-08): sigue bloqueada — mezclar
+  historial de chat con un pipeline de generación cuya calidad no está resuelta (Faithfulness
+  y Context Precision por debajo de objetivo tras el cierre de E-13) dificultaría el
+  diagnóstico de fallos nuevos, mismo principio que D-059. No se desbloquea con el cierre de
+  E-11/E-13/E-14, sino con un futuro ciclo de mejora de RAG sin fecha asignada.
+- Histórico de conversaciones persistente por usuario y derecho al olvido (capa 3 de E-08):
+  fuera de alcance por coste (esquema Supabase nuevo + UI de borrado) y por decisión de
+  priorización de D-063 (calidad de KB/RAG sobre completitud de producto).
+
+**Descomposición y decisiones de `epic-start` (23 jul 2026):** aprobada por Marcos con varios
+puntos resueltos sobre la propuesta inicial:
+- **Consentimiento de datos de salud (D-009):** al pedir diagnóstico/edad (categoría especial,
+  RGPD Art. 9), se implementa el gate que D-009 dejó diseñado y sin implementar (T-02). Si el
+  usuario rechaza, el chat sigue funcionando igual que hoy, sin onboarding — no bloquea el
+  acceso a información de seguridad (mismo espíritu que Falso Negativo Cero, D-002).
+- **Taxonomía de "tipo de IDP" descartada:** se evaluó una lista cerrada basada en los 10
+  grupos de la clasificación IUIS 2024 (`docs/kb-sources.md`), pero Marcos señaló que ni él
+  mismo sabría clasificar un diagnóstico conocido (ej. XIAP) en su grupo IUIS. Se sustituye por
+  texto libre (`patient_diagnosis`) — más realista para la familia y reutiliza la misma señal
+  léxica que ya usa el retriever adaptativo (D-057, hallazgo D) en vez de requerir un catálogo
+  nuevo sin mantener.
+- **Distinción usuario/paciente:** `system_prompt_family.txt` (líneas 41-46) ya advierte no
+  asumir que quien escribe es el paciente. El onboarding lo recoge explícitamente en vez de
+  dejarlo solo en el prompt: nombre de quien chatea (`user_name`) vs. nombre de quien tienen los
+  datos clínicos (`patient_name`, puede ser la misma persona u otra — ej. un hijo/a). Evita
+  referirse al paciente como "el paciente" en el onboarding/prompt (frío dado el momento
+  delicado en que puede estar la familia) — se usa su nombre real.
+- **Edición de perfil:** panel `cl.ChatSettings` (T-05), no el desplegable nativo de usuario —
+  investigado y descartado por ser un portal de Radix sin id fijo que se remonta en cada
+  apertura/cierre (requeriría un `MutationObserver` fragile ante cualquier cambio de Chainlit).
+  Se reposiciona el icono de ajustes con `custom_css` (mecanismo oficial de Chainlit, sin hacks)
+  para que quede más visible junto al avatar. Queda como investigación no bloqueante intentar
+  igualmente reinsertarlo dentro del desplegable nativo, acotada en tiempo.
+- **Nombre completo en el desplegable de usuario:** hoy muestra el email porque `cl.User(...)`
+  nunca rellena `display_name` en los callbacks de login (`main_family.py`). Se corrige en T-04
+  junto con la migración de `full_name`/`user_name`.
+
+**Criterios de aceptación de alto nivel**
+- Onboarding captura, tras consentimiento explícito de datos de salud (D-009): nombre de quien
+  chatea (`user_name`), nombre del paciente si es distinto (`patient_name`), diagnóstico en
+  texto libre (`patient_diagnosis`), edad (`patient_age`) y contexto relevante
+  (`patient_context`)
+- El agente usa la memoria de perfil para contextualizar respuestas, sin tocar la consulta de
+  retrieval (solo inyección en el prompt de generación)
+- El usuario puede editar sus datos guardados desde un panel de ajustes (`cl.ChatSettings`)
+- Migrar `user_metadata.full_name` (D-040, solución provisional de E-05 T-06) a `profiles`
+  (`user_name`), en vez de dejarlo repartido entre Auth y `profiles`
+
+**Reordenamiento (24 jul 2026, D-090):** al hacer QA manual en vivo de T-03 (primera prueba
+real contra Chainlit/Supabase, no solo tests con mocks), aparecieron varios hallazgos de UI
+sobre el propio flujo de onboarding — título gigante por un bug de CSS preexistente desde T-02,
+cabecera de consentimiento sin contexto, botones sin centrar, parseo de edad demasiado
+estricto. T-08 (nueva) recoge ese pulido. Marcos pide ejecutarla a continuación, antes de
+T-04/T-05/T-06/T-07: T-04 y T-05 siguen tocando la misma superficie de UI (perfil/ajustes) y
+conviene no construir encima de un bug de CSS todavía sin arreglar.
+
+### Tareas
+
+| ID | Tarea | Estado |
+|---|---|---|
+| T-01 | Esquema de perfil en Supabase (`user_name`, `patient_name`, `patient_diagnosis`, `patient_age`, `patient_context`, `health_data_consent_at`) | ✅ Completada |
+| T-02 | Gate de consentimiento de datos de salud (D-009) | ✅ Completada |
+| T-03 | Flujo de onboarding por chat (nombre de quien escribe → ¿sobre quién son los datos? → diagnóstico/edad/contexto por nombre) | ✅ Completada |
+| T-04 | Migración de `full_name`/`user_name` a `profiles` + `display_name` en `cl.User` (desplegable muestra el nombre, no el email) | ✅ Completada |
+| T-05 | Edición de perfil desde ajustes (`cl.ChatSettings` + icono junto al avatar vía `chat_settings_location`; desplegable de usuario muestra nombre en serifa + email vía `/user`) | ✅ Completada |
+| T-06 | Memoria de perfil en el pipeline de generación (inyección en prompt, sin tocar retrieval) | ✅ Completada |
+| T-07 | Cierre: regresión + smoke test end-to-end, `docs/security.md` actualizado | ✅ Completada |
+| T-08 | Pulido UI del onboarding: título del saludo por bug de CSS (retroactivo a T-02), cabecera de consentimiento, botones centrados, parseo de `patient_age` (D-090). Se ejecuta a continuación de T-03, antes de T-04 | ✅ Completada |
+
+**Entregables**
+- `supabase/migrations/20260723002559_e14_t01_add_profile_onboarding_columns.sql` — columnas `user_name`, `patient_name`, `patient_diagnosis`, `patient_age`, `patient_context`, `health_data_consent_at` en `profiles` (D-088)
+- `chainlit/main_family.py` — gate de consentimiento de datos de salud (D-009/D-088), flujo de onboarding por chat (`_ensure_patient_profile()`), migración de `full_name`/`user_name` (D-089, D-091), panel de edición `cl.ChatSettings` (D-092), inyección de perfil cacheado en `cl.user_session` (D-093)
+- `auth/supabase_client.py` — alta de cuenta Google escribe `profiles.user_name` en la creación (D-091)
+- `rag/generator.py`, `rag/pipeline.py` — bloque `[PERFIL DEL PACIENTE]` inyectado en el prompt de generación sin tocar la consulta de retrieval (D-093)
+- `prompts/system_prompt_family.txt` — instrucciones de uso del bloque `[PERFIL DEL PACIENTE]` (no repetir diagnóstico como información nueva, adaptar registro por edad, no asumir que quien escribe es el paciente)
+- `rag/config.py`, `.env.example` — `LLM_MAX_TOKENS` sube de 2048 a 3072 (D-095, truncamiento silencioso con perfil activo)
+- `design/public/custom.js`, `design/public/style.css`, `chainlit/family/.chainlit/config.toml` — pulido UI de onboarding (T-08, D-090), icono de ajustes vía `chat_settings_location`, desplegable de usuario con nombre + email (D-092)
+- `docs/security.md` — tabla RGPD actualizada: consentimiento explícito ahora referencia el gate real de T-02
+- `docs/e12-retro-notes.md` — reflexión sobre límites de personalización de Chainlit (T-05)
+- `scripts/run_e14_t07_profile_tone_review.py`, `run_e14_t07_ragas_regression_check.py` — verificación dirigida de tono/registro con perfil (2b) y regresión RAGAS del path sin perfil (2a), D-094
+- `tests/features/e14_t01_*.feature` a `e14_t08_*.feature`, `tests/step_defs/test_e14_t02.py` a `test_e14_t08.py` — TDD de las 8 tareas
+- `tests/results/e14_t07_smoke_test_results.md`, `tests/eval/results/e14_t07_*.json` — resultados de cierre T-07
+- `tasks/E14-T02-plan.md` a `E14-T08-plan.md` — planes de implementación
+- `decisions.md` — D-087 a D-095
+
+**Estado:** ✅ Completada — 26 jul 2026
+
+---
+
+### E-15 — Ciclo de mejora de calidad, ronda 2
+
+Segunda ronda de mejora de RAG tras E-11, dirigida a cerrar el gate de métricas que bloquea la
+capa 1 de E-08 (D-096). No forma parte de Fase 1.5 ni tiene fecha asignada — épica candidata
+post-TFM.
+
+**Nota de origen (26 jul 2026):** al cerrar E-14 y valorar qué hacer con el tiempo restante antes
+del 29 de julio, se descarta adelantar E-08 (D-096: bloqueada por métricas, no por orden de
+épicas), pero se decide dar nombre y alcance al "futuro ciclo de mejora de RAG" que
+D-059/D-063/D-087/D-096 dejaban sin fecha ni épica asignada — mismo criterio que E-08/E-10:
+convertir trabajo futuro ya conocido en algo con alcance propio, no dejarlo como prosa dispersa
+entre varias decisiones.
+
+**Nota de alcance — a diferencia de E-11:** E-11 cerró con Faithfulness/Context Precision
+todavía por debajo de objetivo (83.2%/59.5% tras E-13; 79.5%/61.6% en la regresión de E-14 T-07)
+— cerrar sus tareas no fue lo mismo que alcanzar el umbral. **E-15 no se da por completada solo
+con cerrar sus tareas**: su criterio de cierre real es alcanzar Faithfulness >95% y Context
+Precision >85% (mismo umbral de D-096), o una decisión explícita de Marcos de aceptar el estado
+actual como límite práctico y documentarlo como tal (mismo patrón que D-085/D-086 al aceptar
+ruido del evaluador en vez de perseguirlo indefinidamente). Si se cierra sin alcanzar el umbral,
+**el blocker de la capa 1 de E-08 permanece activo** — cerrar E-15 no lo levanta
+automáticamente.
+
+**Candidatos a investigar (a validar/ampliar en `epic-start` cuando se arranque):**
+- D-084 (abierto): BM25 no encuentra fichas de MedlinePlus (inglés) en preguntas de listado
+  amplio en español — posible mejora de retrieval cross-lingual.
+- Patrón de ruido del evaluador LLM-as-judge (D-069, D-085, D-086) — explorar si repetir la
+  medición (varias pasadas, promediar) separa mejor señal real de ruido, en vez de investigar
+  caso a caso cada vez que un número baja.
+- Faithfulness estancado (~83-85%) pese a dos ciclos de mejora centrados sobre todo en Context
+  Precision (E-11 T-02) — investigar si la causa es de generación (prompt/grounding) más que de
+  retrieval, ángulo no explorado a fondo en E-11.
+- Candidatos técnicos aún no probados: reranking sobre los resultados del retriever híbrido,
+  ajuste de tamaño/solape de chunk, o revisión del modelo de embeddings (`BAAI/bge-m3`) contra
+  alternativas.
+
+**Criterios de aceptación de alto nivel**
+- Faithfulness > 95% y Context Precision > 85% en la medición RAGAS de 32 casos
+  (`docs/evaluation.md` §7), o decisión explícita documentada de aceptar el estado actual como
+  límite práctico
+- Resultados documentados en `docs/evaluation.md` con el mismo criterio de transparencia que
+  E-09/E-11/E-13 (antes/después, investigación dirigida de cualquier caída)
+- Estado del blocker de la capa 1 de E-08 (D-096) actualizado en `backlog/epics.md`/`README.md`
+  según el resultado
+
+### Tareas
+
+Pendiente de descomposición en `epic-start` cuando se decida arrancar.
+
+**Estado:** ⚪ No iniciada — candidata post-TFM, sin fecha asignada (D-096)
 
 ---
 

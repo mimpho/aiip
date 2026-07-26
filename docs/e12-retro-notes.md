@@ -115,4 +115,42 @@ se corrige en vez de dejarse pasar. Mismo principio de transparencia que el rest
 proyecto (D-058/D-072/D-084), aplicado también al propio análisis, no solo a los resultados
 del modelo.
 
+## 25 jul 2026 — Límites de personalización de Chainlit: pensado para montar y tirar, no para producción seria
+
+Reflexión de Marcos justo tras cerrar E-14 T-05 (edición de perfil vía `cl.ChatSettings` +
+redibujado del desplegable de usuario). Cita textual: "Ahora veo las limitaciones de
+customización de Chainlit. Entiendo que está pensado para montar y tirar con lo que viene.
+Muchas de las customizaciones que hemos hecho son apaños, parches, y desde luego nada serio."
+
+**Evidencia acumulada a lo largo del proyecto, no solo de T-05:**
+
+- Casi toda personalización visual/de comportamiento que va más allá de `theme.json`/tokens
+  vive en `design/public/custom.js` como inyección de DOM vía `MutationObserver` sobre
+  `document.body` — no hay gancho oficial de Chainlit para la mayoría de esto. Ejemplos:
+  reposicionar el theme-toggle (con su propio bug de icono duplicado, ya corregido), el enlace
+  de "¿olvidaste tu contraseña?", el etiquetado de "Fuentes consultadas" y de la UI de
+  onboarding (D-090), y ahora la inyección de nombre+email en el desplegable de usuario
+  (D-092, T-05).
+- Varias de estas inyecciones dependen de selectores estructurales (clases Tailwind, jerarquía
+  del DOM) en vez de ids estables, porque Chainlit no los expone — riesgo aceptado y
+  documentado caso a caso, no ignorado, pero riesgo real ante cualquier cambio de versión.
+- Para T-05 hizo falta descompilar el bundle del frontend (`chainlit/frontend/dist/assets/
+  index-*.js`) para verificar cosas tan básicas como qué id tiene un botón o si una opción de
+  config existe de verdad — no está documentado, hay que ir al código compilado.
+- Límite estructural encontrado en T-05 (D-092): el nombre de usuario va embebido en el JWT de
+  sesión, fijado en el login, sin mecanismo de refresco — un cambio de perfil en caliente no se
+  refleja en la UI nativa (avatar, desplegable) hasta el siguiente login. Se aceptó la
+  limitación en vez de construir un endpoint propio de refresco de sesión, precisamente para no
+  seguir acumulando superficie de acoplamiento a internals de Chainlit no cubiertos por su API
+  pública (`cl.*`).
+
+**Por qué es un buen ángulo para la memoria del TFM:** es una reflexión honesta sobre el coste
+de la elección de stack, no solo sobre el resultado del RAG. Chainlit permite montar rápido un
+asistente conversacional completo (auth + streaming + UI) con muy poco código propio — encaja
+bien con el alcance y el plazo de un TFM — pero cualquier personalización que se salga de lo que
+trae de fábrica se paga en parches frágiles, acoplamiento a internals no documentados, y
+limitaciones que hay que aceptar en vez de resolver (como el refresco de JWT). Mismo principio
+de transparencia que el resto del proyecto (D-058/D-072/D-084), aplicado aquí a la elección de
+herramienta en sí, no solo a los resultados del modelo.
+
 <!-- Añadir próximas entradas debajo, fechadas, sin editar las anteriores. -->

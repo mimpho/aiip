@@ -321,3 +321,51 @@ desarrollo asistido por IA a lo largo del proyecto.
   Cowork.
 
 ---
+
+## E-14 — Memoria de perfil (onboarding)
+**Periodo:** 23 jul – 26 jul 2026
+**Tareas:** T-01 a T-08 (8 tareas, todas completadas)
+
+### ¿Qué funcionó bien en el proceso?
+
+- **La descomposición de `epic-start` aguantó un reordenamiento mid-épica sin romper
+  trazabilidad.** La QA manual de Marcos sobre T-03 corriendo contra Chainlit/Supabase reales
+  (no solo tests con mocks) sacó a la luz varios bugs de UI heredados de T-02 (D-090). Se creó
+  T-08 y se ejecutó antes de T-04/T-05 sin renumerar IDs — mismo precedente que D-056 (E-09) —,
+  documentando el reordenamiento en prosa en `backlog/epics.md` en vez de forzar el orden
+  numérico original.
+- **Separar el chequeo mecánico de la revisión manual dirigida en el cierre (T-07, D-094).**
+  RAGAS no mide tono ni registro, así que el Scenario 2 de regresión se dividió en 2a (RAGAS
+  sobre el path sin perfil) y 2b (revisión cualitativa con perfiles distintos, casos
+  reproducibles). 2b fue la que encontró el bug real de la tarea — RAGAS sobre 2a no lo habría
+  detectado.
+
+### ¿Qué generó fricción o retraso?
+
+- **La personalización de Chainlit sigue exigiendo apoyarse en internals no documentados.**
+  Para T-05 (edición de perfil vía `cl.ChatSettings`) hizo falta descompilar el bundle del
+  frontend para verificar si una opción de configuración existía de verdad. Reflexión más
+  amplia documentada en `docs/e12-retro-notes.md` (25 jul 2026): buena parte de la
+  personalización del proyecto vive como inyección de DOM sobre selectores estructurales, no
+  como API pública de Chainlit — riesgo aceptado caso a caso, no ignorado, pero real ante
+  cualquier cambio de versión.
+- **Un ajuste de margen de tokens de una épica anterior no se revisó al tocar el prompt de
+  generación.** `LLM_MAX_TOKENS=2048` (fijado en D-082, E-13) no contaba con el coste añadido
+  del bloque `[PERFIL DEL PACIENTE]` (T-06), lo que produjo un truncamiento silencioso
+  (`tone_05`, sin `[CIERRE OBLIGATORIO]`) que solo la revisión manual dirigida detectó, no
+  RAGAS (D-095).
+
+### ¿Qué cambió en las skills o el workflow?
+
+- Los dos patrones con valor reutilizable (chequeo mecánico + revisión manual dirigida cuando la
+  métrica automática no mide lo que cambió; revisar el margen de tokens al añadir contenido al
+  prompt) quedan registrados en `prompts.md` (P-039, P-040, P-041) en vez de convertirse en
+  pasos de skill — son decisiones de diseño de evaluación/prompting, no huecos de proceso.
+- **`epic-start` (Paso 0 ampliado, D-097):** nueva verificación de lectura tras crear la rama de
+  época, comprobando que realmente parte de `main` actualizado. Se añadió al revisar, ya con la
+  épica cerrada, por qué el PR `epic/E14-profile-memory → main` generó conflictos de merge
+  extensos: `epic/E14-profile-memory` había partido de la rama de época de E-13 en vez de `main`
+  ya actualizado con el squash-merge del cierre de E-13, cuatro días antes — no detectado hasta
+  el cierre. Aplicado en `skills/epic-start/SKILL.md`.
+
+---

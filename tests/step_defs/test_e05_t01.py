@@ -48,17 +48,61 @@ class _FakeUser:
         self.metadata = metadata or {}
 
 
+class _FakeUserSession:
+    """Respaldado por un dict real (E-14 T-06, D-093) — `MagicMock().get(...)`
+    devolvería otro `MagicMock` en vez de `None`, lo que rompería `_answer()`
+    al leer `cl.user_session.get("profile")`."""
+
+    def __init__(self):
+        self._data: dict = {}
+
+    def get(self, key, default=None):
+        return self._data.get(key, default)
+
+    def set(self, key, value):
+        self._data[key] = value
+
+
+def _make_chat_settings_factory():
+    """MagicMock que imita `cl.ChatSettings(inputs).send()` (coroutine, E-14 T-05)."""
+
+    def _build(inputs):
+        instance = MagicMock()
+        instance.inputs = inputs
+        instance.send = MagicMock()
+        return instance
+
+    return MagicMock(side_effect=_build)
+
+
+class _FakeTextInput:
+    def __init__(self, id, label, initial=None, multiline=False, **kwargs):
+        self.id = id
+        self.label = label
+        self.initial = initial
+        self.multiline = multiline
+
+
+class _FakeNumberInput:
+    def __init__(self, id, label, initial=None, **kwargs):
+        self.id = id
+        self.label = label
+        self.initial = initial
+
+
 _fake_cl = types.ModuleType("chainlit")
 _fake_cl.password_auth_callback = lambda f: f
 _fake_cl.oauth_callback = lambda f: f
 _fake_cl.on_chat_start = lambda f: f
 _fake_cl.on_message = lambda f: f
+_fake_cl.on_settings_update = lambda f: f
 _fake_cl.action_callback = lambda name: (lambda f: f)
 _fake_cl.User = _FakeUser
-_fake_cl.user_session = MagicMock()
+_fake_cl.user_session = _FakeUserSession()
 _fake_cl.Message = _FakeMessage
 _fake_cl.Step = _FakeStep
 _fake_cl.Action = MagicMock()
+_fake_cl.ChatSettings = _make_chat_settings_factory()
 
 # Overwrite (not setdefault) and drop any cached main_family: other test
 # modules register their own fake "chainlit", and main_family must be
@@ -72,6 +116,14 @@ sys.modules["chainlit"] = _fake_cl
 _fake_server = types.ModuleType("chainlit.server")
 _fake_server.app = FastAPI()
 sys.modules["chainlit.server"] = _fake_server
+
+# E-14 T-05 (D-092): main_family.py importa TextInput/NumberInput de
+# chainlit.input_widget a nivel de módulo — sin este fake, importar
+# main_family aquí fallaría con ModuleNotFoundError.
+_fake_input_widget = types.ModuleType("chainlit.input_widget")
+_fake_input_widget.TextInput = _FakeTextInput
+_fake_input_widget.NumberInput = _FakeNumberInput
+sys.modules["chainlit.input_widget"] = _fake_input_widget
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "chainlit"))
 sys.modules.pop("main_family", None)
@@ -103,7 +155,7 @@ def app_initialized():
 def _make_stream_mock(text: str) -> MagicMock:
     """Fake de aquery_stream(): emite `text` como único fragmento."""
 
-    async def _gen(question, raw_results=None):
+    async def _gen(question, raw_results=None, profile=None):
         yield text
 
     return MagicMock(side_effect=_gen)
@@ -136,7 +188,7 @@ def usuario_envia_mensaje(ctx, message):
 @then("se invoca la generación en streaming del pipeline con esa pregunta")
 def se_invoca_query_con_pregunta(ctx):
     ctx["pipeline"].aquery_stream.assert_called_once_with(
-        ctx["question"], raw_results=[]
+        ctx["question"], raw_results=[], profile=None
     )
 
 
@@ -158,7 +210,7 @@ def usuario_autenticado_envia_pregunta(ctx):
 def pipeline_no_ha_respondido(ctx):
     indicator_seen_before_query = {"value": False}
 
-    async def _gen(question, raw_results=None):
+    async def _gen(question, raw_results=None, profile=None):
         # El cuerpo del generador async solo se ejecuta al consumir el primer
         # token (lazy), es decir, después de que on_message haya enviado el
         # indicador de "escribiendo".
@@ -186,7 +238,7 @@ def chat_muestra_indicador(ctx):
     "RAGPipeline.query() lanza una excepción, por ejemplo porque el LLM no está disponible"
 )
 def pipeline_lanza_excepcion(ctx):
-    async def _gen(question, raw_results=None):
+    async def _gen(question, raw_results=None, profile=None):
         raise Exception("LLM no disponible")
         yield  # pragma: no cover — inalcanzable, necesario para que sea un generador async
 

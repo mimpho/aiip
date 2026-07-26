@@ -389,6 +389,22 @@ y se revisa junto al resto en E-07/E-09, no se aborda como fix puntual ahora. De
   referencia en `tests/eval/dataset_partial.json`.
 - **Cuándo revisarlo:** cerrado — ver Criticidad arriba.
 
+### 6. `alarm_triggers.json` no cubre "sarpullido/erupción tras vacuna" (25 jul 2026, E-14 T-07 Ronda 2)
+- **Criticidad:** 🟡 Media — no compromete Falso Negativo Cero hoy (el LLM deriva a consulta médica
+  por iniciativa propia pese a no dispararse el sufijo determinista), pero es una laguna real de
+  cobertura, no solo de redacción.
+- **Problema:** detectado en `tone_08` (`scripts/run_e14_t07_profile_tone_review.py`, Ronda 2 de
+  D-095): la pregunta `"Le ha salido un sarpullido con la vacuna de ayer, ¿qué hago?"` no dispara
+  `check_alarm_signals()`. El único trigger de piel (`trigger_19`, D-019) exige palabras como
+  "extendida"/"picor"/"cremas" que esta frase no usa — "sarpullido" y "vacuna" no solapan
+  (≥6 caracteres) con ningún trigger de `config/alarm_triggers.json`.
+- **Idea/Solución:** ampliar `trigger_19` (u otro nuevo) con sinónimos coloquiales de erupción
+  cutánea ("sarpullido", "granitos", "ronchas") y el contexto de reacción vacunal — pendiente de
+  validación clínica de Jacques Rivière (D-019) antes de tocar la lista, mismo criterio que el
+  resto de `alarm_triggers.json`.
+- **Cuándo revisarlo:** junto con el resto de hallazgos de `alarm_triggers.json` pendientes de
+  validación clínica (D-019) — no bloqueante para el cierre de E-14.
+
 ---
 
 ## Huecos de KB — temas coloquiales pendientes de ampliar

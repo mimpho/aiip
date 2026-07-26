@@ -41,7 +41,7 @@ def get_or_create_profile(user_id: str, role: str) -> dict:
     return created.data[0]
 
 
-def _get_profile(user_id: str) -> dict:
+def get_profile(user_id: str) -> dict:
     """Devuelve el perfil de user_id. Eleva LookupError si no existe.
 
     A diferencia de get_or_create_profile, no crea el perfil: un usuario
@@ -53,6 +53,18 @@ def _get_profile(user_id: str) -> dict:
     if not existing.data:
         raise LookupError(f"No existe perfil para user_id={user_id}")
     return existing.data[0]
+
+
+def update_profile(user_id: str, data: dict) -> dict:
+    """Actualiza las columnas de `data` en el perfil de user_id.
+
+    A diferencia de update_user_metadata, .update() sobre una tabla normal
+    de Supabase solo toca las columnas pasadas — no hace falta mergear a
+    mano con el resto del perfil.
+    """
+    client = get_supabase_client(use_service_key=True)
+    updated = client.table("profiles").update(data).eq("id", user_id).execute()
+    return updated.data[0]
 
 
 def sign_in_with_oauth(provider: str, redirect_to: str | None = None) -> str:
@@ -105,7 +117,7 @@ def login(email: str, password: str) -> dict:
     response = client.auth.sign_in_with_password(
         {"email": email, "password": password}
     )
-    profile = _get_profile(response.session.user.id)
+    profile = get_profile(response.session.user.id)
     return {"session": response.session, "role": profile["role"]}
 
 
@@ -183,6 +195,17 @@ def get_or_create_google_user(email: str, full_name: str | None, role: str) -> d
     _find_user_by_email(). El nombre de Google se guarda en
     user_metadata.full_name solo en el primer login, y solo si no está ya
     presente — nunca se pregunta por chat para cuentas de Google (D-040).
+
+    Además, escribe profiles.user_name directamente en este mismo momento
+    (D-091, Q1) si viene un full_name y el perfil todavía no lo tiene — a
+    diferencia del resto de vías de login, que solo leen con fallback
+    (_resolve_display_name en main_family.py) y dejan la escritura duradera
+    a _ensure_full_name() en on_chat_start (D-089). Aquí sí se justifica
+    escribir ya: raw_user_data trae el nombre real de Google en el momento
+    de creación de la cuenta, así que display_name sale correcto desde el
+    primer login sin depender de que se abra un chat antes. La misma rama
+    cubre tanto la creación nueva (profile.user_name siempre None ahí) como
+    el camino de usuario ya existente vía _find_user_by_email.
     """
     client = get_supabase_client(use_service_key=True)
     try:
@@ -199,5 +222,8 @@ def get_or_create_google_user(email: str, full_name: str | None, role: str) -> d
         if full_name and not (user.user_metadata or {}).get("full_name"):
             update_user_metadata(user.id, {"full_name": full_name})
 
-    get_or_create_profile(user.id, role)
+    profile = get_or_create_profile(user.id, role)
+    if full_name and not profile.get("user_name"):
+        update_profile(user.id, {"user_name": full_name})
+
     return {"user_id": user.id}

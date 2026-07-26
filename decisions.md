@@ -94,6 +94,16 @@
 - [D-083 — smoke_test_rag.py mostraba chunks de una recuperación distinta a la usada para generar la respuesta](#d-083--smoke_test_ragpy-mostraba-chunks-de-una-recuperación-distinta-a-la-usada-para-generar-la-respuesta)
 - [D-084 — Hallazgo abierto: BM25 no encuentra fichas de MedlinePlus (inglés) en preguntas de listado en español — no confundir con top_k pequeño](#d-084--hallazgo-abierto-bm25-no-encuentra-fichas-de-medlineplus-inglés-en-preguntas-de-listado-en-español--no-confundir-con-top_k-pequeño)
 - [D-085 — E-13 T-04: `eval_25` (Faithfulness 0.32, banda Grave nueva) confirmado como ruido del juez, no regresión real — mismo patrón que D-069/D-072](#d-085--e-13-t-04-eval_25-faithfulness-032-banda-grave-nueva-confirmado-como-ruido-del-juez-no-regresión-real--mismo-patrón-que-d-069d-072)
+- [D-086 — E-13 T-04: desglose caso a caso de la caída de Context Precision (−3.7pp) — concentrada en 5/32 casos, no dilución generalizada; `eval_08` resuelto como ruido ya documentado (D-072)](#d-086--e-13-t-04-desglose-caso-a-caso-de-la-caída-de-context-precision-−37pp--concentrada-en-532-casos-no-dilución-generalizada-eval_08-resuelto-como-ruido-ya-documentado-d-072)
+- [D-087 — Revierte parcialmente D-063: capa 2 de E-08 (memoria de perfil) extraída a nueva épica E-14, sustituye a E-10 en Fase 1.5; capa 1 sigue bloqueada más allá de E-11/E-13](#d-087--revierte-parcialmente-d-063-capa-2-de-e-08-memoria-de-perfil-extraída-a-nueva-épica-e-14-sustituye-a-e-10-en-fase-15-capa-1-sigue-bloqueada-más-allá-de-e-11e-13)
+- [D-088 — T-01 (E-14): sin restricción de columna sobre `health_data_consent_at` y sin CHECK de rango en `patient_age`](#d-088--t-01-e-14-sin-restricción-de-columna-sobre-health_data_consent_at-y-sin-check-de-rango-en-patient_age)
+- [D-089 — E-14 T-03: `patient_name` ("sobre mí") lee de `user_metadata.full_name`, no de `profiles.user_name` (todavía sin poblar)](#d-089--e-14-t-03-patient_name-sobre-mí-lee-de-user_metadatafull_name-no-de-profilesuser_name-todavía-sin-poblar)
+- [D-090 — E-14: nueva T-08 (pulido UI del onboarding) se adelanta a T-04/T-05/T-06/T-07](#d-090--e-14-nueva-t-08-pulido-ui-del-onboarding-se-adelanta-a-t-04t-05t-06t-07)
+- [D-091 — E-14 T-04: alta de cuenta Google escribe `profiles.user_name` en la creación; login con fallback de lectura a `user_metadata.full_name` cuando `profiles.user_name` está vacío](#d-091--e-14-t-04-alta-de-cuenta-google-escribe-profilesuser_name-en-la-creación-login-con-fallback-de-lectura-a-user_metadatafull_name-cuando-profilesuser_name-está-vacío)
+- [D-092 — E-14 T-05: icono de ajustes vía `chat_settings_location` (no CSS); desplegable de usuario amplía su alcance con nombre (serifa) + email vía `/user`](#d-092--e-14-t-05-icono-de-ajustes-vía-chat_settings_location-no-css-desplegable-de-usuario-amplía-su-alcance-con-nombre-serifa--email-vía-user)
+- [D-093 — E-14 T-06: perfil cacheado en `cl.user_session` (no releído por mensaje); bloque `[PERFIL DEL PACIENTE]` se omite entero si no hay perfil](#d-093--e-14-t-06-perfil-cacheado-en-cluser_session-no-releído-por-mensaje-bloque-perfil-del-paciente-se-omite-entero-si-no-hay-perfil)
+- [D-094 — E-14 T-07: Scenario 2 de regresión separado en 2a (RAGAS mecánico, path sin perfil) y 2b (revisión manual dirigida, path con perfil)](#d-094--e-14-t-07-scenario-2-de-regresión-separado-en-2a-ragas-mecánico-path-sin-perfil-y-2b-revisión-manual-dirigida-path-con-perfil)
+- [D-095 — E-14 T-07: hallazgo de 2b (truncamiento de tone_05, falta CIERRE OBLIGATORIO) — sube LLM_MAX_TOKENS de 2048 a 3072](#d-095--e-14-t-07-hallazgo-de-2b-truncamiento-de-tone_05-falta-cierre-obligatorio--sube-llm_max_tokens-de-2048-a-3072)
 
 ---
 
@@ -4682,3 +4692,666 @@ reabre el alcance de retrieval/BM25 (sin evidencia clara y consistente de diluci
 casos investigados con pipeline). `tests/eval/results/e13_t04_cierre.md` (sección
 3quater) y `docs/evaluation.md` (§5.5/§7) actualizados con la lectura final. El paso 14 del
 plan (confirmación de cierre de Marcos) queda reactivado.
+
+---
+
+## D-087 — Revierte parcialmente D-063: capa 2 de E-08 (memoria de perfil) extraída a nueva épica E-14, sustituye a E-10 en Fase 1.5; capa 1 sigue bloqueada más allá de E-11/E-13
+
+**Fecha:** 23 de julio de 2026
+**Fase:** producto / planificación
+**Épicas relacionadas:** E-08, E-10, E-12, E-13, E-14 (creación)
+
+**Contexto**
+Con E-13 ya completada (22 jul 2026) y 6 días de margen hasta la entrega (29 jul), tocaba
+decidir qué ocupa el hueco entre E-13 y E-12 (D-064: E-11 → E-13 → E-10 → E-12). Marcos
+planteó si E-08 (memoria/persistencia) no dotaría de más utilidad al asistente que E-10
+(pulido: responsive, CORS, UX), señalando que el responsive ya está resuelto y el UX se ha
+ido puliendo de forma orgánica entre épicas — el mismo argumento que ya llevó a D-064 a
+bajar la prioridad de E-10, ahora llevado a su conclusión.
+
+Se descartó reabrir E-08 completa: D-063 la aplazó entera a post-TFM, y su capa 3
+(persistencia entre sesiones + derecho al olvido) sigue siendo la parte más cara de las
+tres — esquema nuevo en Supabase, UI de borrado — sin descomponer, con solo 6 días por
+delante y E-12 innegociable de por medio. Se acordó activar solo la capa 2 (memoria de
+perfil: onboarding de datos estables del paciente + contextualización), la más barata de
+las dos capas que D-063 confirma que no estaban bloqueadas por la lógica de D-059.
+
+Sobre el "qué": se descartó ampliar los criterios de aceptación de E-08 con la capa 2
+activada, aplicando el mismo criterio que ya usó D-063 para crear E-13 como épica
+independiente en vez de tareas nuevas dentro de E-11 — no comprometer el alcance ya
+documentado y aplazado de una épica (E-08 queda intacta como registro histórico de D-063).
+
+Por último, Marcos señaló que la razón de D-059 para bloquear la capa 1 (mezclar historial
+conversacional con una generación cuya calidad no está resuelta dificulta el diagnóstico de
+fallos nuevos) sigue vigente tras E-11/E-13: el cierre de E-13 (`tests/eval/results/
+e13_t04_cierre.md`) confirma que Faithfulness y Context Precision siguen por debajo de
+objetivo tras el ciclo de mejora (Faithfulness −1.4pp, Context Precision −3.7pp frente al
+cierre de E-11, este último sin causa raíz confirmada del todo — D-085/D-086). La capa 1 no
+queda desbloqueada por el mero cierre de E-11/E-13, como podía leerse implícito en
+D-059/D-063, sino condicionada a un futuro ciclo de mejora de RAG que resuelva esas
+métricas — sin fecha ni épica asignada dentro de Fase 1.5.
+
+**Decisión**
+
+1. **Nueva épica E-14 — Memoria de perfil (onboarding)**, numerada por orden de creación (no
+   de ejecución, mismo criterio que E-07 a E-13). Alcance: onboarding de datos estables del
+   paciente (tipo de IDP, edad, contexto relevante), uso de ese perfil para contextualizar
+   respuestas, y migración de `user_metadata.full_name` (D-040) al esquema de perfil propio.
+   No incluye memoria conversacional (capa 1) ni histórico de conversaciones persistente
+   (capa 3) — esas quedan donde las dejó D-063.
+2. **Orden de ejecución de Fase 1.5 actualizado:** E-11 → E-13 → **E-14** → E-12 (reemplaza
+   el orden E-11 → E-13 → E-10 → E-12 de D-064).
+3. **E-10 sale de Fase 1.5**, aplazada a seguimiento post-TFM junto con E-08 (capas 1 y 3).
+   Deja de ser "candidata a caer si falta tiempo" (D-064) y pasa a estar descartada
+   explícitamente de esta fase, en favor de E-14.
+4. **E-08 se mantiene aplazada tal como quedó en D-063** (capas 1 y 3, registro histórico sin
+   modificar), con una nota que apunta a E-14 como la parte adelantada.
+5. **Se reafirma el bloqueo de la capa 1 de E-08** (memoria conversacional): no se desbloquea
+   con el cierre de E-11/E-13, sino que queda condicionada a un futuro ciclo de mejora de RAG
+   que resuelva Faithfulness/Context Precision — sin fecha ni épica asignada dentro de la
+   Fase 1.5 de este TFM.
+6. **E-12 (cierre del TFM) se mantiene innegociable** (D-064, sin cambios).
+
+**Consecuencias**
+- `backlog/epics.md`: nota en la sección de E-08 apuntando a E-14; nota en la sección de
+  E-10 marcándola aplazada a post-TFM (sustituye a "candidata a caer" de D-064); nueva
+  sección E-14 (alcance, criterios de aceptación, estado); nota de orden de Fase 1.5 en la
+  introducción de la fase actualizada.
+- `README.md`: tabla de épicas, fila de Fase 1.5, Gantt y nota de "Orden de ejecución"
+  actualizados — E-14 entra en Fase 1.5 en lugar de E-10; E-10 pasa a "Features opcionales".
+
+**Alternativas descartadas**
+- Ampliar los criterios de aceptación de E-08 directamente con la capa 2 activada: descartada
+  por el mismo motivo que llevó a crear E-13 en D-063 en vez de tareas nuevas en E-11 —
+  mezclaría un aplazamiento ya cerrado (D-063) con una reactivación parcial, dificultando la
+  trazabilidad para la retrospectiva de E-12.
+- Reabrir E-08 completa (las 3 capas): descartada por scope y riesgo de calendario — la capa
+  3 es la parte más cara y sin descomponer, con solo 6 días hasta la entrega y E-12
+  innegociable de por medio.
+- Mantener E-10 en el orden de Fase 1.5 sin cambios (D-064): descartada — el argumento de
+  D-064 (pulido de UX ya resuelto orgánicamente, CORS no urgente sin integración externa) se
+  lleva ahora a su conclusión: no solo bajar su prioridad, sino sustituirla.
+
+---
+
+## D-088 — T-01 (E-14): sin restricción de columna sobre `health_data_consent_at` y sin CHECK de rango en `patient_age`
+
+**Fecha:** 23 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-01)
+
+**Contexto**
+Al revisar en `task-start` el draft de `epic-start` (`tests/features/e14_t01_profile_schema.feature`)
+contra el esquema real de `profiles` (migración `20260628021829_create_profiles.sql`), surgieron
+dos puntos abiertos no cubiertos por el draft:
+
+1. `profiles` concede `GRANT UPDATE` a nivel de tabla completa al rol `authenticated` (sin
+   restricción por columna). Tras esta migración esa concesión cubre también
+   `health_data_consent_at` — el timestamp de consentimiento de datos de salud que gatea T-02
+   (D-009). En la práctica no hay ruta de cliente que lo explote hoy: Chainlit es backend
+   Python, el navegador nunca habla directo con Supabase, y todas las escrituras a `profiles`
+   pasan hoy por `auth/supabase_client.py` con la service key (`get_or_create_profile`).
+2. `patient_age` se define `integer` sin `CHECK` de rango.
+
+**Decisión**
+1. **Sin restricción de columna.** El `GRANT UPDATE` de `profiles` queda como está (uniforme,
+   sin `REVOKE` por columna). T-02 escribirá `health_data_consent_at` siempre con service key,
+   mismo patrón que `role`/`user_metadata` hoy — la restricción a nivel de columna sería defensa
+   en profundidad sin ruta de explotación real dado que no hay cliente que use la anon key
+   directamente contra Supabase.
+2. **Sin `CHECK` en `patient_age`.** La validación de rango (si se necesita) se deja para la capa
+   de aplicación en T-03 (flujo de onboarding por chat), no en el esquema.
+
+**Consecuencias**
+- El `.feature` de `epic-start` (`tests/features/e14_t01_profile_schema.feature`) se acepta sin
+  cambios — no añade escenarios nuevos.
+- La migración de T-01 no incluye `REVOKE`/`GRANT` por columna ni `CHECK` sobre `patient_age`.
+- Si en el futuro se expone un cliente que use la anon key de Supabase directamente (fuera de
+  Chainlit), esta decisión debe revisarse — la premisa de "no hay ruta de cliente" ya no
+  aplicaría.
+
+**Alternativas descartadas**
+- Restringir `health_data_consent_at` a service_role vía `REVOKE UPDATE (columna)`: descartada
+  por Marcos por ser complejidad sin señal real de riesgo en el alcance del TFM.
+- `CHECK (patient_age BETWEEN 0 AND 120)`: descartada, se prefiere mantener la validación de
+  datos en la capa de aplicación.
+
+---
+
+## D-089 — E-14 T-03: `patient_name` ("sobre mí") lee de `user_metadata.full_name`, no de `profiles.user_name` (todavía sin poblar)
+
+**Fecha:** 24 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-03)
+
+**Contexto**
+Al revisar en `task-start` el draft de `epic-start` (`tests/features/e14_t03_onboarding_flow.feature`),
+el escenario "sobre mí" asume un valor `user_name` ya disponible para copiar a `patient_name`. La
+columna `profiles.user_name` se añadió en T-01 (migración `20260723002559_e14_t01_add_profile_onboarding_columns.sql`,
+D-088) pero ningún flujo la escribe todavía — poblarla es precisamente el alcance de T-04
+("Migración de `full_name`/`user_name` a `profiles`"). Hoy el nombre de quien chatea vive en
+`user_metadata.full_name`, escrito por `_ensure_full_name()` (D-040) — decisión que además
+descartó explícitamente crear una columna `profiles.full_name` por el coste de sincronización.
+Leer de `profiles.user_name` en T-03 dejaría el caso "sobre mí" roto para todos los usuarios hasta
+que T-04 se cierre, sin que esa dependencia esté declarada en `backlog/epics.md` (el orden actual
+es T-03 antes que T-04).
+
+**Decisión**
+La función nueva de onboarding de perfil (`_ensure_patient_profile()`) lee el nombre de quien
+escribe de `cl.context.session.user.metadata.get("full_name")` para el caso "sobre mí" — no de
+`profiles.user_name`. Ese valor ya lo deja resuelto `_ensure_full_name()`, que se ejecuta justo
+antes en el mismo `on_chat_start` y escribe tanto en Supabase como en `user.metadata` de la sesión
+en curso: evita una segunda llamada a Supabase. Si `full_name` no está disponible (p. ej. el
+usuario no respondió a tiempo a `_ensure_full_name`), `patient_name` simplemente no se autorrellena
+en el caso "sobre mí" — mismo criterio de degradación sin bloqueo que el resto del onboarding.
+
+**Alternativas descartadas**
+- Leer de `profiles.user_name`: roto en la práctica hasta que T-04 se cierre.
+- Invertir el orden de tareas (bloquear T-03 hasta que T-04 complete la migración): innecesario —
+  ambas quedan independientes si T-03 usa la fuente ya vigente hoy.
+
+**Consecuencias**
+- `tests/features/e14_t03_onboarding_flow.feature`, escenario "Si los datos son sobre el propio
+  usuario...": `patient_name` se rellena con `cl.context.session.user.metadata["full_name"]`.
+- Cuando T-04 migre y sincronice `profiles.user_name`, esta lectura no necesita cambiar (mismo
+  valor, columna adicional poblada en paralelo).
+
+---
+
+## D-090 — E-14: nueva T-08 (pulido UI del onboarding) se adelanta a T-04/T-05/T-06/T-07
+
+**Fecha:** 24 de julio de 2026
+**Fase:** técnica / producto
+**Épica:** E-14
+
+**Contexto**
+Al hacer Marcos QA manual en vivo del flujo de T-03 (primera prueba real contra Chainlit y
+Supabase corriendo en local, no solo los tests con mocks de `test_e14_t03.py`), surgieron varios
+hallazgos de UI:
+
+1. El texto de consentimiento (T-02) y, tras refrescar, la propia pregunta de diagnóstico (T-03)
+   se renderizaban como un título gigante con gradiente. Causa raíz: `design/public/style.css`
+   tiene una regla (`[data-step-type="assistant_message"]:first-child`, D-036/T-05) que asume
+   que el saludo (`_greeting()`) es siempre el primer mensaje del hilo — asunción rota desde que
+   T-02 empezó a enviar el gate de consentimiento antes del saludo, y agravada por T-03. El bug
+   es en realidad retroactivo a T-02, solo visible ahora con más pasos delante del saludo.
+2. `AskActionMessage` de Chainlit reescribe su propio contenido a `"**Selected:** <label>"` al
+   responder (hardcodeado en `chainlit/message.py:556`, no en nuestro código) — combinado con el
+   bug anterior, esa reescritura también heredaba el título gigante si era el primer mensaje del
+   hilo.
+3. Falta una cabecera genérica antes del párrafo de consentimiento, indicando que vienen unas
+   preguntas antes de empezar.
+4. Los botones de Acepto/Ahora no y Sobre mí/Sobre otra persona no están centrados.
+5. `_parse_patient_age()` usa `int(raw.strip())` a pelo — una respuesta como "12 años" no se
+   reconoce como edad válida.
+
+**Decisión**
+Se crea **T-08** (nueva) para agrupar estos cinco hallazgos, con el fix del punto 1 aplicado vía
+etiquetado por contenido en `design/public/custom.js` (mismo patrón ya usado para "Fuentes
+consultadas:", `tagSourcesSections`) en vez de seguir dependiendo de la posición en el DOM, y el
+punto 4 con el mismo mecanismo (etiquetar la fila de botones por sus labels conocidas). T-03 se
+cierra tal cual — lógica de datos correcta, tests en verde — sin bloquearse por estos hallazgos
+de UI.
+
+Marcos pide ejecutar T-08 a continuación de T-03, **antes** de T-04/T-05/T-06/T-07: T-04
+(migración de nombre/display_name) y T-05 (edición de perfil vía `cl.ChatSettings`) siguen
+tocando la misma superficie de UI del perfil, y no conviene construir encima de un bug de CSS
+todavía sin arreglar. Los IDs no se renumeran (nota de numeración de `backlog/epics.md`: los IDs
+son correlativos al orden de ejecución, pero un reordenamiento documentado en prosa ya tiene
+precedente — D-056, E-09) — T-08 se documenta como próxima a ejecutar en la tabla de tareas de
+E-14.
+
+**Alternativas descartadas**
+- Bloquear el cierre de T-03 hasta arreglar también estos hallazgos: descartado — la lógica de
+  datos de T-03 es correcta y está probada; mezclar un bug de CSS heredado de T-02 con el cierre
+  de T-03 dificultaría la trazabilidad.
+- Dejar T-08 al final de la cola (tras T-07) respetando el orden numérico: descartado por
+  Marcos — prefiere no acumular más UI (T-04/T-05) sobre un bug ya identificado.
+
+**Consecuencias**
+- `backlog/epics.md`: nueva fila T-08 en la tabla de tareas de E-14, con nota de orden de
+  ejecución.
+- Queda abierto (no resuelto por esta decisión): por qué `patient_diagnosis` volvió a
+  preguntarse tras un refresco de página en la sesión de QA de Marcos — pendiente de que
+  compruebe la consola del servidor o la fila de `profiles` en Supabase antes de decidir si es
+  un bug de persistencia real o un efecto de sesión/usuario distinto.
+
+---
+
+## D-091 — E-14 T-04: alta de cuenta Google escribe `profiles.user_name` en la creación; login con fallback de lectura a `user_metadata.full_name` cuando `profiles.user_name` está vacío
+
+**Fecha:** 24 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-04)
+
+**Contexto**
+Al revisar en `task-start` el draft de `epic-start` (`tests/features/e14_t04_username_migration.feature`),
+quedaron dos comportamientos de borde sin definir sobre cómo se propaga `profiles.user_name` (columna
+añadida en T-01, D-088) como fuente canónica del nombre, sustituyendo a `user_metadata.full_name`
+(D-040) sin romper la primera impresión de `display_name` en el desplegable de usuario:
+
+1. **Alta de cuenta Google nueva.** Hoy `get_or_create_google_user()` (`auth/supabase_client.py`)
+   escribe el nombre de Google solo en `user_metadata.full_name` en la creación (D-040 punto 7). El
+   `.feature` de epic-start solo cubre el backfill genérico hacia `profiles.user_name` disparado en
+   `on_chat_start` (Scenario 1) — que en teoría también resolvería este caso, pero dejaría el
+   desplegable mostrando el email en el primerísimo login de cada cuenta Google nueva, hasta que se
+   abra un chat.
+2. **Usuarios ya existentes (migración).** Un usuario con `full_name` ya guardado en `user_metadata`
+   antes de este despliegue tiene `profiles.user_name` en NULL hasta que abre un chat — el backfill
+   vive en `on_chat_start`, posterior al login. Sin más cambios, el desplegable mostraría el email en
+   ese primer login post-despliegue y ya el nombre a partir del segundo.
+
+**Decisión**
+1. `get_or_create_google_user()` escribe el nombre directamente en `profiles.user_name` en el
+   momento de creación de la cuenta (además de en `user_metadata.full_name`, sin retirar esa
+   escritura — mismo criterio de no perder el dato de D-089), usando el nombre real que ya trae
+   `raw_user_data` de Google. `display_name` sale correcto desde el primerísimo login, sin depender
+   de que se abra un chat antes.
+2. `auth_callback` (password) y `oauth_callback` (Google) hacen una lectura de fallback a
+   `user_metadata.full_name` cuando `get_profile(user_id).get("user_name")` está vacío, solo para
+   fijar `cl.User(display_name=...)` en esa construcción — sin escribir nada en `profiles` desde el
+   login. El backfill real (persistir en `profiles.user_name`) lo sigue haciendo `_ensure_full_name()`
+   en `on_chat_start`, sin duplicar esa escritura en los callbacks de login.
+
+**Alternativas descartadas**
+- Confiar solo en el backfill genérico de `on_chat_start` para ambos casos (Opción B de Q1 y Opción A
+  de Q2 en la revisión de `task-start`): más simple, menos superficie tocada, pero deja una regresión
+  visual transitoria (email en vez de nombre) en el primer login de cada cuenta Google nueva y en el
+  primer login de cualquier usuario ya activo tras el despliegue de T-04 — Marcos entre ellos.
+  Descartada por Marcos: prefiere pagar la lectura extra en los callbacks de login antes que aceptar
+  esa regresión, aunque sea temporal.
+- Que los callbacks de login también escriban `profiles.user_name` (no solo lean) al detectar el
+  fallback: descartado — duplicaría la responsabilidad de persistencia con `_ensure_full_name()`, que
+  ya es la única función que escribe `profiles.user_name` desde D-089/T-03. Mantener la escritura en
+  un solo sitio evita condiciones de carrera entre el callback de login y el primer `on_chat_start` de
+  esa misma sesión.
+
+**Justificación**
+Separar "qué se persiste y dónde" (una sola función escribe `profiles.user_name`) de "qué se lee para
+construir `display_name` en el momento del login" (lectura con fallback, sin escritura) evita
+duplicar lógica de persistencia en tres sitios (password login, password signup, oauth) mientras
+resuelve la regresión visual que preocupaba a Marcos. El caso Google es el único que puede resolverse
+por completo en la creación porque `raw_user_data` ya trae el nombre real en ese momento — a
+diferencia del signup por password, donde el formulario de Chainlit no admite un campo de nombre
+(límite duro, D-040) y `display_name` no puede fijarse hasta que el usuario responde en el chat.
+
+**Consecuencias**
+- `auth/supabase_client.py::get_or_create_google_user()`: además de `user_metadata.full_name`, escribe
+  `profiles.user_name` en la creación (vía `update_profile`, tras `get_or_create_profile`). En el
+  camino de usuario ya existente (`_find_user_by_email`), aplica el mismo criterio que ya tenía para
+  `user_metadata`: solo rellena `profiles.user_name` si viene vacío.
+- `chainlit/main_family.py::auth_callback()` y `oauth_callback()`: antes de construir `cl.User(...)`,
+  leen `get_profile(user_id).get("user_name")`; si viene vacío, caen a
+  `get_user_metadata(user_id).get("full_name")` solo para poblar `display_name` — ninguna escritura
+  nueva en estos callbacks.
+- `tests/features/e14_t04_username_migration.feature`: gana dos escenarios (alta de cuenta Google
+  escribe `profiles.user_name` directamente; login con `profiles.user_name` vacío cae a
+  `user_metadata.full_name` para `display_name`, sin persistir el fallback).
+- No afecta a `_ensure_full_name()` (D-089): sigue siendo la única función que escribe
+  `profiles.user_name` de forma duradera; el nombre de la clave de sesión `user.metadata["full_name"]`
+  tampoco cambia (D-089 ya fijaba que esa lectura no necesita cambiar).
+
+---
+
+## D-092 — E-14 T-05: icono de ajustes vía `chat_settings_location` (no CSS); desplegable de usuario amplía su alcance con nombre (serifa) + email vía `/user`
+
+**Fecha:** 25 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-05)
+
+**Contexto**
+Al revisar en `task-start` el draft de `epic-start` (`tests/features/e14_t05_profile_settings_panel.feature`),
+aparecieron dos puntos que cambian el enfoque técnico decidido en `epic-start` (23 jul 2026, recogido en
+`backlog/epics.md`):
+
+1. El draft proponía reposicionar el icono de `cl.ChatSettings` (id `chat-settings-open-modal`) con
+   `custom_css`, asumiendo que ya vive cerca del header. Descompilando el bundle de `chainlit==2.11.1`
+   (`chainlit/frontend/dist/assets/index-*.js`) se confirma que ese id solo existe en la ubicación por
+   defecto (`message_composer`, junto al input de chat) — moverlo al header exigiría un hack DOM tipo
+   `MutationObserver` (mismo patrón ya usado para el theme-toggle, con su propio historial de bugs —
+   icono duplicado, documentado en `custom.js`).
+2. Al enseñar Marcos una captura del desplegable de usuario (solo muestra el email, pese a T-04), pidió
+   ir más allá de lo que `epic-start` había descartado ("no el desplegable nativo, portal de Radix sin
+   id fijo"): quiere el nombre (tipografía serifa de títulos, `--font-display`/Merriweather peso 500) arriba
+   y el email debajo, ambos visibles a la vez. El componente nativo (función `eWn` en el bundle) solo pinta
+   una única línea (`display_name` si existe, si no `identifier`) — nunca los dos. `epic-start` había
+   descartado tocar ese desplegable por la fragilidad del portal (sin id fijo, se remonta en cada apertura);
+   esta decisión lo revierte parcialmente al encontrarse una fuente de datos independiente del DOM
+   renderizado.
+
+**Decisión**
+1. **Icono de ajustes.** En vez de `custom_css`, se activa la opción nativa
+   `chat_settings_location = "sidebar"` en `chainlit/family/.chainlit/config.toml`. Verificado en el
+   bundle: con ese valor el icono se renderiza con un id distinto y estable
+   (`chat-settings-header-button`) dentro de la misma fila de header que el avatar, inmediatamente antes
+   de `user-nav-button` — sin CSS ni JS propios.
+2. **Desplegable de usuario.** Se amplía el alcance de T-05 (antes solo "investigación no bloqueante" en
+   el draft de `epic-start`) a un criterio real. La app hace `fetch('/user')` (endpoint nativo de
+   Chainlit, `chainlit/server.py`, ya usado internamente por el frontend vía SWR) para obtener
+   `identifier` y `display_name` de forma independiente de lo que el DOM nativo decida pintar, e inyecta
+   un bloque de dos líneas (nombre en `--font-display` peso 500 + email en el estilo ya existente) dentro
+   del portal, sustituyendo la línea nativa única. Misma técnica de `MutationObserver` que el
+   theme-toggle para detectar la apertura del portal — pero ahora anclada a un dato propio (fetch), no a
+   scraping del texto ya renderizado.
+3. **Validación de `patient_age` desde el panel.** `NumberInput` no tiene `min`/`max` nativos (a
+   diferencia de `Slider`, verificado en `chainlit/input_widget.py`). Si el valor guardado está fuera de
+   0-120, ese campo concreto no se persiste y se avisa con un mensaje de error — el resto de campos
+   válidos sí se guardan (mismo criterio de no bloquear que ya sigue el resto de la app).
+4. **Confirmación de guardado.** `@cl.on_settings_update` envía un mensaje visible de éxito o error tras
+   intentar persistir — a diferencia de las escrituras de fondo del onboarding (T-03), aquí es una acción
+   explícita de "Guardar" que sí espera feedback.
+
+**Alternativas descartadas**
+- Reposicionar el icono con `custom_css`/DOM: descartado — ya existe una opción de config nativa que
+  hace lo mismo sin superficie de hack nueva.
+- Mantener el desplegable nativo intacto (criterio original de `epic-start`): descartado por Marcos al
+  ver la captura — quiere nombre y email visibles a la vez, algo que el componente nativo no soporta con
+  una sola cadena.
+- Guardar `patient_age` fuera de rango silenciosamente sin avisar: descartado — deja al usuario sin saber
+  por qué su cambio no se aplicó.
+
+**Consecuencias**
+- `backlog/epics.md`: fila T-05 actualizada (tabla de tareas de E-14).
+- `chainlit/family/.chainlit/config.toml`: nueva línea `chat_settings_location = "sidebar"`.
+- `design/public/custom.js`: nueva función de inyección del bloque nombre+email en el desplegable
+  (`fetch('/user')` + `MutationObserver`), sin tocar el bundle de Chainlit.
+- `tests/features/e14_t05_profile_settings_panel.feature`: escenario del icono actualizado (ya no habla
+  de `custom_css`); nuevo escenario para el desplegable de usuario (nombre+email); nuevos escenarios de
+  validación de `patient_age` y confirmación de guardado. El escenario de "investigación no bloqueante
+  del desplegable nativo" se retira — deja de ser investigación, pasa a ser criterio adoptado.
+- Diagnóstico pendiente, no bloqueante: por qué el desplegable de Marcos mostraba solo el email pese a
+  T-04 — hipótesis más probable es sesión anterior al fix o cuenta sin `_ensure_full_name()` completado,
+  no un bug de T-04. A confirmar con un logout/login antes de dar por buena la hipótesis.
+
+---
+
+## D-093 — E-14 T-06: perfil cacheado en `cl.user_session` (no releído por mensaje); bloque `[PERFIL DEL PACIENTE]` se omite entero si no hay perfil
+
+**Fecha:** 25 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-06)
+
+**Contexto**
+Al revisar en `task-start` el draft de `epic-start` (`tests/features/e14_t06_profile_memory_in_prompt.feature`),
+los 5 escenarios cubrían `rag/generator.py`/`rag/pipeline.py` (cómo se formatea e inyecta `profile_context`
+en `_PROMPT_TEMPLATE`) pero no decían nada de `chainlit/main_family.py` — quien tiene que conseguir el
+perfil y pasarlo a `pipeline.query()`/`aquery_stream()`. Sin ese wiring, el criterio de alto nivel de E-14
+("el agente usa la memoria de perfil para contextualizar respuestas") no queda cubierto end-to-end. Surgieron
+dos puntos abiertos:
+
+1. **De dónde lee `_answer()` el perfil en cada mensaje.** `on_chat_start` ya lee `profile` una vez vía
+   `_ensure_patient_profile()` (T-03/D-090), pero esa variable es local a esa función — `_answer()` (llamada
+   desde `on_message` y desde el callback de preguntas sugeridas) no tiene acceso a ella hoy. Dos opciones:
+   releer `get_profile(user_id)` en cada mensaje (siempre fresco, pero una consulta a Supabase extra por
+   mensaje — hoy `_answer()` no toca Supabase en absoluto), o cachear el `profile` ya leído en
+   `cl.user_session` y mantenerlo sincronizado en `on_settings_update` (T-05) cuando el usuario edita sus
+   datos desde el panel de ajustes.
+2. **Formato de `profile_context` cuando no hay ningún dato de perfil** (usuario sin onboarding completado,
+   `patient_name` NULL — Scenario "Usuario sin perfil..." del `.feature`). El draft dice "profile_context
+   queda vacío o ausente del prompt", una redacción ambigua entre dos formatos distintos de cara al LLM:
+   dejar el placeholder como string vacío bajo una cabecera `[PERFIL DEL PACIENTE]` fija, u omitir el
+   bloque entero.
+
+**Decisión**
+1. **Perfil cacheado en sesión.** El `profile` que devuelve `_ensure_patient_profile()` en `on_chat_start`
+   se guarda en `cl.user_session` (p.ej. `cl.user_session.set("profile", profile)`). `_answer()` lo lee de
+   ahí, sin una segunda consulta a Supabase por mensaje — mismo criterio de evitar round-trips ya seguido en
+   `_resolve_display_name`/`_ensure_full_name` (D-089, D-091). `on_settings_update` (T-05) actualiza esa
+   misma copia en `cl.user_session` tras persistir en Supabase, para que el siguiente mensaje ya vea los
+   cambios sin esperar a un nuevo `on_chat_start`.
+2. **Bloque de perfil omitido por completo si no hay ningún dato.** Cuando `patient_name` es NULL (sin
+   onboarding), `_PROMPT_TEMPLATE` no incluye la sección `[PERFIL DEL PACIENTE]` en absoluto — ni cabecera
+   ni contenido — en vez de dejar un placeholder vacío bajo una cabecera fija. Con perfil parcial (algunos
+   campos sí, otros no — ya resuelto sin ambigüedad en el `.feature`), el bloque sí aparece, pero solo con
+   los campos disponibles.
+
+**Alternativas descartadas**
+- Releer `get_profile(user_id)` en cada mensaje: descartado por Marcos — prefiere evitar el round-trip a
+  Supabase por mensaje que no existe hoy en `_answer()`.
+- Dejar `[PERFIL DEL PACIENTE]` con cabecera vacía cuando no hay datos: descartado — una sección vacía sin
+  contenido es ruido innecesario en el prompt de cara al LLM, sin ningún beneficio sobre omitirla.
+
+**Consecuencias**
+- `tests/features/e14_t06_profile_memory_in_prompt.feature`: se añaden dos escenarios nuevos (cacheo en
+  `cl.user_session` + sincronización en `on_settings_update`) y se reformula el escenario de perfil vacío
+  para eliminar la ambigüedad ("se omite el bloque entero", no "vacío o ausente").
+- `chainlit/main_family.py`: `on_chat_start` cachea `profile` en `cl.user_session`; `_answer()` lo lee de
+  ahí; `on_settings_update` sincroniza la copia cacheada tras persistir.
+- `rag/pipeline.py`/`rag/generator.py`: `query()`/`aquery_stream()`/`generate()`/`agenerate_stream()` reciben
+  un parámetro de perfil opcional (default `None`), para no romper las llamadas posicionales existentes
+  (`tests/step_defs/test_e04_t06.py`, `scripts/smoke_test_rag.py`).
+
+**Actualización (25 jul 2026, QA manual tras implementación)**
+Confirmado: `display_name` viaja embebido en el JWT de sesión (`chainlit/auth/jwt.py::create_jwt`),
+emitido una única vez en el login (`server.py`, ruta `/login`, función privada `_authenticate_user` —
+sin equivalente público). `GET /user` solo decodifica ese mismo JWT en cada petición; no vuelve a leer
+`profiles.user_name`. Por eso avatar y desplegable no reflejan un cambio de nombre (ni el capturado por
+primera vez en el onboarding, que ocurre *después* del login) hasta el siguiente login real — a
+diferencia del saludo (`_greeting()`), que sí se actualiza porque lee `user.metadata["full_name"]`, un
+dict en memoria de sesión que `_ensure_full_name()` reescribe en cada `on_chat_start`.
+
+Se evaluó construir una ruta propia de refresco de sesión (nueva entrada en `_auth_router`,
+reconstruyendo y reemitiendo el JWT con `create_jwt`/`set_auth_cookie` — ambas funciones públicas de
+`chainlit.auth.*`, aunque no de la API estable `cl.*`) para reflejar el cambio sin logout/login. Marcos
+la descarta por ahora: **se acepta la limitación** — avatar/desplegable de un usuario solo muestran su
+nombre actualizado a partir de su siguiente login (la sesión dura 15 días,
+`user_session_timeout` en `.chainlit/config.toml`), no de forma inmediata tras guardar en el panel de
+T-05 ni tras completar el onboarding por primera vez. Verificado en vivo por Marcos: tras cerrar sesión
+y volver a entrar, el desplegable ya muestra nombre + email correctamente.
+
+**Alternativa descartada (añadido):** construir `/auth/refresh-session` reutilizando
+`chainlit.auth.jwt.create_jwt`/`chainlit.auth.cookie.set_auth_cookie` — descartada por Marcos: el
+esfuerzo (ruta nueva + test HTTP a nivel FastAPI, fuera del patrón pytest-bdd del resto de T-05) y el
+acoplamiento a funciones internas de Chainlit no forman parte de la API estable `cl.*` no compensan
+frente a aceptar que el reflejo del nombre espera al siguiente login.
+
+**Ajuste visual adicional:** el bloque de nombre inyectado quedaba pegado al email (el wrapper nativo
+usa `leading-none` pensado para una sola línea) — se añade `margin-bottom: 4px` al `<p>` del nombre en
+`injectUserMenuNameEmail`/`renderIdentity` (`design/public/custom.js`).
+
+---
+
+## D-094 — E-14 T-07: Scenario 2 de regresión separado en 2a (RAGAS mecánico, path sin perfil) y 2b (revisión manual dirigida, path con perfil)
+
+**Fecha:** 25 de julio de 2026
+**Fase:** proceso / técnica
+**Épica:** E-14 (T-07)
+
+**Contexto**
+El borrador de `epic-start` para el Scenario 2 de cierre planteaba "re-ejecutar los casos de
+evaluación relevantes (los que tocan tono/tuteo/registro familiar)" comparando Faithfulness/
+Answer Relevancy contra el baseline de cierre de E-13. Al revisar en `task-start`, dos problemas
+lo hacían no verificable tal cual:
+
+1. `scripts/run_ragas_eval.py` nunca pasa el parámetro `profile` a `pipeline.query()`/
+   `RAGPipeline.query()` — siempre es `None`. Re-ejecutar el dataset RAGAS existente no ejercita
+   en absoluto el bloque `[PERFIL DEL PACIENTE]` añadido en T-06 (D-093): no hay ninguna
+   diferencia de comportamiento posible que ese re-run pudiera detectar.
+2. Faithfulness y Answer Relevancy no miden tono, tuteo ni registro — miden fidelidad al
+   contexto recuperado y relevancia de la respuesta a la pregunta. No son la métrica adecuada
+   para verificar si el LLM adapta el registro a la edad del paciente o usa su nombre real en
+   vez de "el paciente".
+
+**Decisión**
+Se separa el Scenario 2 en dos bloques independientes, mismo patrón que E-11 T-07 (D-070:
+regresión mecánica + revisión manual dirigida con script propio, sin usar RAGAS para lo que
+RAGAS no mide):
+
+- **2a — Regresión mecánica del path sin perfil:** se re-ejecuta el dataset RAGAS completo (32
+  casos) tal como lo invoca hoy `scripts/run_ragas_eval.py` (`profile=None` siempre), y se
+  compara Faithfulness/Answer Relevancy contra el baseline de cierre de E-13
+  (`e09_t02_ragas_full_scores_e13_t04_baseline.json`). Esto cubre el riesgo real: que el cambio
+  de prompt de T-06 haya corrompido por accidente el path mayoritario (usuarios sin perfil).
+- **2b — Revisión manual dirigida del path con perfil:** script nuevo con 5-8 preguntas
+  reproducibles, cada una ejecutada con un `profile` distinto (paciente niño con diagnóstico,
+  paciente adulto con contexto parcial, etc.), inspeccionadas a mano para confirmar que la
+  respuesta usa el nombre real del paciente, no reintroduce el diagnóstico como información
+  nueva, y simplifica el registro cuando la edad es baja. Resultado: pass/fail cualitativo por
+  caso, no una métrica RAGAS.
+
+**Alternativas descartadas**
+- Mantener el Scenario 2 tal como estaba en el borrador de `epic-start`: descartado — no
+  detectaría ninguna regresión real, daría una falsa sensación de cobertura.
+- Ampliar el dataset RAGAS con casos que sí pasen `profile`: descartado por sobrecoste frente al
+  beneficio — RAGAS sigue sin medir tono/registro aunque se le pase perfil; el problema no es de
+  cobertura del dataset sino de qué mide la métrica.
+
+**Consecuencias**
+- `tests/features/e14_t07_closure_regression.feature`: Scenario 2 original sustituido por 2a y
+  2b.
+- Nuevo script de verificación manual para 2b (nombre y ubicación a definir en
+  `tasks/E14-T07-plan.md`), siguiendo el patrón de `scripts/run_e11_t04_linguistic_review.py`.
+
+---
+
+## D-095 — E-14 T-07: hallazgo de 2b (truncamiento de tone_05, falta CIERRE OBLIGATORIO) — sube LLM_MAX_TOKENS de 2048 a 3072
+
+**Fecha:** 25 de julio de 2026
+**Fase:** técnica
+**Épica:** E-14 (T-07)
+
+**Contexto**
+Ejecutando 2b (D-094), `tone_05` (perfil con `patient_age=8`, sin diagnóstico, pregunta "¿Qué
+es una inmunodeficiencia primaria?") devolvió una respuesta cortada a media palabra
+("...causando, por ejemplo, inflamación en las articul") sin el bloque `[CIERRE OBLIGATORIO]`
+(recordatorio del rol informativo + derivación a consulta médica) que sí aparece en `tone_06`
+(misma pregunta, sin perfil, respuesta completa). `rag/generator.py` no lee `finish_reason` —
+el truncamiento es silencioso, sin ninguna señal de que la respuesta quedó incompleta.
+
+Mismo mecanismo que D-082: `gemini-2.5-flash` con thinking activado por defecto comparte
+`max_output_tokens` entre el razonamiento interno y la respuesta visible. D-082 ya fijó
+`LLM_MAX_TOKENS=2048` como margen para este problema general, pero no contaba con el coste de
+tokens añadido por el bloque `[PERFIL DEL PACIENTE]` (D-093, T-06) — prompt más complejo, más
+thinking, menos margen para la respuesta visible en casos ya cerca del límite.
+
+En este caso concreto el contenido cortado no era de seguridad (D-093 no afecta a
+`apply_safety_filter()`), pero el mecanismo que garantiza el cierre obligatorio en *todas* las
+respuestas puede fallar silenciosamente — toca el corolario de Falso Negativo Cero aunque esta
+vez no lo haya comprometido.
+
+**Decisión**
+1. `LLM_MAX_TOKENS` sube de 2048 a 3072 en `rag/config.py` (default) y `.env.example` — mismo
+   tipo de ajuste que D-082, sin desactivar el thinking ni tocar el prompt.
+2. Verificación acotada tras el cambio (Ronda 2 de `tasks/E14-T07-plan.md`): re-ejecutar los 6
+   casos de `scripts/run_e14_t07_profile_tone_review.py` (confirmar que `tone_05` ya no se
+   corta) + 2 preguntas de alarma nuevas con perfil (no cubiertas en la Ronda 1 — es el
+   escenario real donde un corte silencioso comprometería Falso Negativo Cero, y hasta ahora no
+   se había probado con perfil).
+3. **Pendiente para Marcos:** actualizar `LLM_MAX_TOKENS` en su `.env` personal si ya lo tenía
+   fijado a `2048` (gitignored, no se sincroniza solo — mismo aviso que D-082/D-025).
+
+**Alternativas descartadas**
+- Investigación completa antes de decidir (cuantificar cuántos de los 32 casos de 2a se
+  truncarían con perfil real): descartada por Marcos — el mecanismo ya es conocido (D-082), y
+  el coste de subir el margen es mínimo (céntimos/hora, D-043) frente al de una investigación
+  completa a 4 días del cierre del TFM.
+- Documentar como limitación conocida sin fix: descartada — el fix es barato y el riesgo toca
+  Falso Negativo Cero, no solo calidad.
+
+**Consecuencias**
+- `rag/config.py`, `.env.example`: `LLM_MAX_TOKENS` default `2048` → `3072`.
+- `tasks/E14-T07-plan.md`: nueva sección "Ronda 2".
+- No se reejecuta 2a (RAGAS) tras este cambio — subir el margen de salida no debería alterar
+  Faithfulness/Answer Relevancy/Context Precision/Recall (no cambia qué se recupera ni el
+  contenido generado dentro del límite anterior), y no es el foco de este fix. Si Marcos quiere
+  esa confirmación igualmente, es una ampliación a decidir aparte.
+
+---
+
+## D-096 — E-08 capa 1: métricas RAGAS mínimas se formalizan como blocker explícito, no solo como razón narrativa
+
+**Fecha:** 26 de julio de 2026
+**Fase:** producto
+**Épica:** E-08 (bloqueo) — motivado por el cierre de E-14
+
+**Contexto**
+Con E-14 cerrada, solo queda E-12 antes del 29 de julio. Al valorar si adelantar E-08 (memoria
+conversacional + histórico) con el tiempo que pudiera sobrar, Marcos confirmó el plan actual
+(no adelantarla) pero señaló que la razón de fondo —calidad de RAG no resuelta— debería quedar
+registrada de forma más explícita que como nota narrativa dispersa en D-059/D-063/D-087: no es
+"E-08 toca después de tal épica", sino "E-08 capa 1 no se toca mientras las métricas sigan por
+debajo de objetivo", con independencia de cuántas épicas de producto se completen mientras
+tanto.
+
+Estado real de las métricas a fecha de cierre de E-14 (`docs/evaluation.md` §7, medición post-E-13
+de 32 casos; `tests/eval/results/e14_t07_ragas_regression_check.json`, regresión 2a de E-14 T-07
+sobre el mismo dataset, D-094): Faithfulness 83.2% (post-E-13) / 79.5% (regresión E-14 T-07),
+objetivo >95%; Context Precision 59.5% (post-E-13) / 61.6% (regresión E-14 T-07), objetivo >85%.
+Ambas dentro del margen de ruido del evaluador ya documentado (D-085/D-086), pero de forma
+consistente muy por debajo de objetivo en las tres mediciones más recientes (post-E-11, post-E-13,
+regresión de E-14).
+
+**Decisión**
+Se formaliza como condición de gate explícita, no como orden de ejecución entre épicas: **E-08
+capa 1 (memoria conversacional de corto plazo) permanece bloqueada mientras Faithfulness no
+supere el 95% y Context Precision no supere el 85%** en la medición RAGAS de 32 casos (mismo
+dataset y método de `docs/evaluation.md` §7). El cierre de épicas de producto (E-11, E-13, E-14,
+o cualquier futura) no desbloquea la capa 1 por sí mismo — solo lo hace un ciclo de mejora de RAG
+que alcance ambos umbrales. Las capas 2 (ya extraída a E-14 y completada) y 3 (histórico
+persistente) no están sujetas a este gate — su aplazamiento sigue siendo de priorización
+(D-063), no de calidad.
+
+**Alternativas descartadas**
+- Dejarlo como está (razón narrativa repartida en D-059/D-063/D-087): descartado — a partir de
+  ahora cualquier persona (o agente) que revise si "ya toca" E-08 tiene que releer tres
+  decisiones distintas para reconstruir el criterio, en vez de comprobar dos números contra un
+  umbral.
+
+**Consecuencias**
+- `backlog/epics.md`, E-08: nota de blocker explícito añadida, referenciando D-096.
+- `README.md`, columna "Bloqueada por" de E-08: se sustituye la referencia a "E-11 (capa 1)" por
+  el gate de métricas explícito.
+- `backlog/epics.md`: nueva **E-15** (ciclo de mejora de calidad, ronda 2) — da nombre y alcance
+  al "futuro ciclo de mejora de RAG" mencionado en esta decisión y en D-059/D-063/D-087, post-TFM
+  sin fecha asignada. Su criterio de cierre real es alcanzar los mismos umbrales de este gate, no
+  solo completar sus tareas — cerrar E-15 no desbloquea la capa 1 de E-08 por sí mismo si no los
+  alcanza (mismo patrón que dejó E-11 cerrada sin resolverlo).
+
+---
+
+## D-097 — `epic-start` Paso 0: verificación de que la rama de época parte de `main` actualizado
+
+**Fecha:** 26 de julio de 2026
+**Fase:** proceso / workflow
+**Épica:** E-14 (hallazgo de cierre, corrección aplicada a `skills/epic-start/SKILL.md`)
+
+**Contexto**
+Al cerrar E-14, el PR `epic/E14-profile-memory → main` mostró un volumen de conflictos de merge
+inesperado. Investigado con comandos de lectura (`git merge-base`, `git diff`): el ancestro común
+real entre `main` y `epic/E14-profile-memory` era un commit **anterior** al cierre de E-13
+(`891afc1`), no el commit de cierre de E-13 en sí. Causa: `epic/E13-medlineplus` se mergeó a
+`main` mediante **squash** (PR #77, `3db4b7b`, 22 jul 23:49) unos minutos antes de que arrancara
+E-14, pero el primer commit de `epic/E14-profile-memory` (`3ce02c3`, 23 jul 01:12) seguía
+colgando de la punta de la rama de época de E-13 (`0458cc2`) en vez de partir de `main` ya
+actualizado con el squash. `git diff 0458cc2 3db4b7b` confirma que el contenido en ambos puntos
+era idéntico — no fue un problema de contenido, sino de que un lado del historial tiene un solo
+commit (squash) y el otro los commits individuales que llevan al mismo sitio, lo que confunde el
+merge de 3 vías y genera conflictos espurios en cascada.
+
+`epic-start` Paso 0 ya instruye `git checkout main && git pull origin main` antes de crear la
+rama de época — la instrucción es correcta, pero no hay ninguna verificación posterior que
+confirme que se ejecutó contra el estado real de origin, ni de quién ejecuta el `checkout -b`
+(Marcos o Antigravity). El fallo no se detectó hasta el cierre, cuatro días después, cuando ya
+había generado el coste de resolver el PR.
+
+**Decisión**
+Se añade un paso de verificación a `epic-start` Paso 0, justo tras la confirmación de Marcos de
+que la rama ya existe en origin: `git fetch origin --prune` + `git merge-base --is-ancestor
+origin/main epic/E[nn]-nombre`, de lectura, ejecutable por el agente sin permiso adicional
+(mismo criterio que el `git fetch` explícito añadido a `epic-close` Paso 1 durante el cierre de
+E-13). Si la verificación falla, la épica no avanza a los pasos siguientes sin resolverlo con
+Marcos.
+
+**Alternativas descartadas**
+- Dejarlo como está, confiando en que Paso 0 ya lo dice bien: descartado — la instrucción correcta
+  no evitó el problema una vez, y el coste de detectarlo tarde (conflictos de merge al cierre,
+  4 días después) es mayor que el de un chequeo de una línea al arrancar.
+- Arreglarlo solo en el momento (`git rebase --onto`, ya aplicado a `epic/E14-profile-memory`) sin
+  tocar la skill: descartado — resuelve el síntoma de esta épica, no evita que se repita en la
+  siguiente.
+
+**Consecuencias**
+- `skills/epic-start/SKILL.md`: nueva verificación en Paso 0, con el precedente de E-14
+  documentado inline.
+- `docs/process-log.md`, entrada de E-14: actualizada para reflejar este cambio de skill (no
+  "ninguna edición", como se había registrado antes de este hallazgo).

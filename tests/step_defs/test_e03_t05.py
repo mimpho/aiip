@@ -13,9 +13,37 @@ from supabase_auth.errors import AuthApiError
 
 
 class _FakeUser:
-    def __init__(self, identifier: str, metadata: dict | None = None):
+    def __init__(self, identifier: str, display_name: str | None = None, metadata: dict | None = None):
         self.identifier = identifier
+        self.display_name = display_name
         self.metadata = metadata or {}
+
+
+def _make_chat_settings_factory():
+    """MagicMock que imita `cl.ChatSettings(inputs).send()` (coroutine, E-14 T-05)."""
+
+    def _build(inputs):
+        instance = MagicMock()
+        instance.inputs = inputs
+        instance.send = MagicMock()
+        return instance
+
+    return MagicMock(side_effect=_build)
+
+
+class _FakeTextInput:
+    def __init__(self, id, label, initial=None, multiline=False, **kwargs):
+        self.id = id
+        self.label = label
+        self.initial = initial
+        self.multiline = multiline
+
+
+class _FakeNumberInput:
+    def __init__(self, id, label, initial=None, **kwargs):
+        self.id = id
+        self.label = label
+        self.initial = initial
 
 
 _fake_cl = types.ModuleType("chainlit")
@@ -23,12 +51,14 @@ _fake_cl.password_auth_callback = lambda f: f
 _fake_cl.oauth_callback = lambda f: f
 _fake_cl.on_chat_start = lambda f: f
 _fake_cl.on_message = lambda f: f
+_fake_cl.on_settings_update = lambda f: f
 _fake_cl.action_callback = lambda name: (lambda f: f)
 _fake_cl.User = _FakeUser
 _fake_cl.user_session = MagicMock()
 _fake_cl.Message = MagicMock()
 _fake_cl.Action = MagicMock()
 _fake_cl.make_async = lambda f: f
+_fake_cl.ChatSettings = _make_chat_settings_factory()
 
 # Overwrite (not setdefault) and drop any cached main_family: other test
 # modules register their own fake "chainlit", and main_family must be
@@ -43,6 +73,14 @@ _fake_server = types.ModuleType("chainlit.server")
 _fake_server.app = FastAPI()
 sys.modules["chainlit.server"] = _fake_server
 
+# E-14 T-05 (D-092): main_family.py importa TextInput/NumberInput de
+# chainlit.input_widget a nivel de módulo — sin este fake, importar
+# main_family aquí fallaría con ModuleNotFoundError.
+_fake_input_widget = types.ModuleType("chainlit.input_widget")
+_fake_input_widget.TextInput = _FakeTextInput
+_fake_input_widget.NumberInput = _FakeNumberInput
+sys.modules["chainlit.input_widget"] = _fake_input_widget
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "chainlit"))
 sys.modules.pop("main_family", None)
 import main_family  # noqa: E402
@@ -56,6 +94,13 @@ scenarios("../features/e03_t05_chainlit_auth.feature")
 @given(parsers.parse('la variable APP_ROLE es "{role}"'))
 def app_role_env(monkeypatch, role):
     monkeypatch.setenv("APP_ROLE", role)
+    # E-14 T-04 (D-091): auth_callback ahora resuelve display_name leyendo
+    # profiles/user_metadata en cada construcción de cl.User — mock por
+    # defecto para que estos tests (centrados en el wiring login/signup, no
+    # en el nombre) no golpeen Supabase real con los user_id ficticios que
+    # usan sus mocks de login()/signup().
+    monkeypatch.setattr(main_family, "get_profile", lambda user_id: {})
+    monkeypatch.setattr(main_family, "get_user_metadata", lambda user_id: {})
 
 
 # ── Scenario 1: Login con credenciales válidas ────────────────────────────────
