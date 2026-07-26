@@ -737,13 +737,41 @@ números, no solo declarado.
 workflow (Cowork/Antigravity/human-in-the-loop) a medida que ocurren, antes de llegar al cierre
 real de la fase — scratchpad de entrada para T-01, no el deliverable.
 
+**Descomposición y decisiones de `epic-start` (26 jul 2026):** aprobada por Marcos, con la
+descomposición original ampliada en dos puntos:
+- **Fallo de la hipótesis inicial del roadmap:** el plan original no preveía épicas dedicadas a
+  mejorar la calidad del RAG — al no alcanzar los objetivos RAGAS fijados (E-07/E-09), se crearon
+  **dos** épicas de mejora: E-11 (ya dentro de la Fase 1.5) y E-15 (candidata post-TFM, sin
+  fecha). T-01 documenta esto explícitamente como punto crítico de la retrospectiva, no solo como
+  ajuste de rumbo positivo (a diferencia del caso de ampliación de KB de E-11 T-01/T-02, que sí
+  mejoró las métricas).
+- **Visibilidad del esfuerzo de continuidad post-TFM:** el proyecto se define como "TFM con
+  vocación de herramienta real" (`AGENTS.md`) — T-01 da visibilidad explícita al esfuerzo por
+  maximizar el avance dentro del plazo del TFM y a la intención declarada de seguir mejorando el
+  sistema después, de forma altruista, para familias con IDPs (ejemplos: E-15, capas 1 y 3 de
+  E-08 aplazadas).
+- **Alcance de `prompts.md`:** mismo criterio que retrospectivas anteriores — se incorporan todos
+  los ángulos candidatos de `docs/e12-retro-notes.md` (metodología Cowork/Antigravity,
+  hallazgo estructural del RAG naive en E-13 T-04, límites de personalización de Chainlit de
+  E-14 T-05) además del caso ya identificado (KB limitado, P-032), salvo que alguno resulte
+  redundante o añada verbosidad sin aportar un ángulo distinto.
+- **Sin formalización Gherkin (excepción al Paso 2 de `epic-start`):** T-01 es una retrospectiva
+  narrativa de proyecto de TFM, no un comportamiento de sistema — forzar "Dado/Cuando/Entonces"
+  sobre criterios como "explicar por qué se descartó una idea" resulta artificial y menos legible
+  que prosa natural. Marcos decide no crear `.feature` para esta tarea; los criterios de
+  aceptación quedan como los bullets de arriba (lenguaje natural) y el propio deliverable es un
+  documento markdown de redacción libre. Precedente distinto al de E-06 T-06/E-11 T-07 (que sí
+  llevaron `.feature` pese a ser documentación) — la diferencia es que aquellas describían
+  artefactos con estructura verificable (datasheet con secciones fijas, informe con métricas
+  tabuladas), mientras que esta es una narrativa de proceso.
+
 ### Tareas
 
 | ID | Tarea | Estado |
 |---|---|---|
 | T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | ⚪ Pendiente |
 
-**Estado:** ⚪ No iniciada
+**Estado:** 🔵 En curso
 
 ---
 
