@@ -765,11 +765,23 @@ descomposición original ampliada en dos puntos:
   artefactos con estructura verificable (datasheet con secciones fijas, informe con métricas
   tabuladas), mientras que esta es una narrativa de proceso.
 
+**Revisión crítica final (`task-start` T-01, 26 jul 2026):** se añade un criterio de tono narrativo,
+no cubierto explícitamente en `epic-start`: el documento asume los resultados y cambios de rumbo
+como parte deliberada de una metodología iterativa con human-in-the-loop — sin ocultar ni suavizar
+cifras por debajo de objetivo (Faithfulness 79.5%/83.2%, Context Precision 59.5%/61.6%, mismo
+criterio de transparencia que D-058/D-072/D-084/D-085/D-086), siendo críticos y honestos con los
+resultados, pero interpretándolos como evidencia de adaptación rigurosa a imprevistos — no como
+errores a disculpar — en un roadmap que solo cambió cuando la evidencia lo justificó, nunca de
+forma gratuita. Tono orientado a un tribunal académico: pone en valor el proceso de decisión, no
+solo el resultado final. Sin rama de tarea (precedente E-06 T-06, acordado en `epic-start`); sin
+`.feature` (acordado en `epic-start`); sin plan en `tasks/` — se redacta directamente en Cowork con
+el contexto ya reunido en esta sesión.
+
 ### Tareas
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | ⚪ Pendiente |
+| T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | 🔄 En progreso |
 
 **Estado:** 🔵 En curso
 

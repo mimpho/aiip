@@ -1121,3 +1121,94 @@ Gemini thinking activado, no asumir que el ajuste anterior (D-082) sigue siendo 
 truncamiento es silencioso mientras no se lea `finish_reason`, así que el riesgo no se detecta
 solo con RAGAS (no mide si la respuesta quedó cortada) — hace falta revisión manual dirigida
 (P-040/D-094) para exponerlo.
+
+### P-042 — Reparto Cowork/Antigravity como metodología de human-in-the-loop, no solo infraestructura
+**Fecha:** 22 julio 2026
+**Fase:** E-13 (T-03) / retrospectiva de roadmap (E-12)
+**Tipo:** metodología de desarrollo
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Reflexión de Marcos durante `task-start` de E-13 T-03, al hilo de una sesión que tocó en poco
+tiempo una corrección de cifras heredadas, una decisión de alcance con dos opciones reales
+(D-079), una mejora de skill descubierta a mitad de tarea (D-080) y un bug de contenido que
+Antigravity no habría detectado solo (D-081, mojibake en letras griegas): aunque Cowork y
+Antigravity corren sobre el mismo modelo (Sonnet 5), no son intercambiables. El valor no está en
+el modelo, está en el contexto y el rol de cada superficie — Cowork como espacio de debate e
+investigación antes de que Antigravity ejecute, dejando un `.feature`/plan sin ambigüedad para
+que el ciclo TDD no tenga que parar a decidir nada. Las skills del workflow
+(`epic-start`/`task-start`/`task-close`/`epic-close`) se han ido afinando con retrospectivas
+reales detectadas en caliente durante el trabajo (ej. D-080), no solo en revisiones programadas
+al cierre de cada épica.
+
+**Resultado / aprendizaje:**
+El propio reparto de roles entre dos superficies que usan el mismo modelo es, en sí mismo, un
+diseño metodológico deliberado: separar "dónde se decide" de "dónde se ejecuta" reduce el coste
+de retrabajo y deja trazabilidad de por qué se descartaron alternativas (`decisions.md`), en vez
+de depender de que el modelo "se acuerde" de todo dentro de una sesión larga. Patrón reutilizable
+para cualquier proyecto con agentes de IA en distintos roles: diseño conversacional con
+aprobación humana explícita en cada gate, frente a ejecución autónoma sobre una tarea ya cerrada.
+
+### P-043 — RAG "naive" no agrega bien preguntas de listado/categoría — hallazgo confirmado y autocorregido en el propio proceso
+**Fecha:** 22 julio 2026
+**Fase:** E-13 (T-04)
+**Tipo:** decisión técnica / metodología de investigación
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Al revisar T-04, Marcos preguntó por qué el sistema no "aglutina" bien información de las 40
+fichas nuevas de MedlinePlus para preguntas generales o de grupo (p. ej. "¿qué IDPs existen
+ligadas al cromosoma X?"), en vez de asumir sin más que era un problema de idioma. Verificado en
+tres pasos con evidencia directa: (1) BM25 real + barrido de `top_k` confirma que un listado
+genérico no recupera ninguna ficha de MedlinePlus a ningún valor de `top_k` (D-084); (2) la
+réplica dirigida sobre "cromosoma X" reproduce el mismo fallo — score BM25 de 0.0 para el mejor
+chunk relevante, sin ninguna fuente de MedlinePlus en la respuesta real de producción; (3) la
+remedición RAGAS de T-04 mostró Context Precision empeorando (63.2%→59.5%), lo que en una
+primera lectura se interpretó como la misma causa ("contenido estrecho compite con preguntas
+amplias"). Investigado con más rigor a petición de Marcos (D-086), esa tercera pieza **no se
+sostuvo**: el desglose caso a caso mostró que la caída se concentraba en solo 5 de 32 casos, y 4
+de ellos quedaron explicados como ruido de muestreo del evaluador LLM, no como efecto real de la
+ampliación de KB sobre el retrieval. La lectura se corrigió explícitamente el mismo día, sin
+dejarla pasar como si la primera versión hubiera sido correcta.
+
+**Resultado / aprendizaje:**
+El hallazgo real y confirmado es solo el del retrieval (D-084): el RAG del proyecto es "naive"
+(sin agregación entre documentos) y falla al reunir información de varias fuentes cuando la
+pregunta no apunta a un objetivo léxico o semántico concreto — funciona bien para "una enfermedad
+a la vez", mal para listados o categorías. La lección metodológica, más allá del hallazgo
+técnico, es que una explicación que conecta varias piezas de evidencia con una única causa
+"limpia" merece la misma revisión escéptica que cualquier otro resultado, incluso cuando la
+narrativa resultante es más satisfactoria — y que corregirla en público, en vez de dejarla
+pasar, es parte del mismo principio de transparencia que el proyecto aplica a los resultados del
+modelo (CHART/TRIPOD-LLM, D-058/D-072/D-085/D-086).
+
+### P-044 — Límites de personalización de Chainlit: coste real de un frontend pensado para "montar y tirar"
+**Fecha:** 25 julio 2026
+**Fase:** E-14 (T-05)
+**Tipo:** decisión de stack / reflexión de producto
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Reflexión de Marcos justo tras cerrar E-14 T-05 (edición de perfil vía `cl.ChatSettings` +
+redibujado del desplegable de usuario): "Ahora veo las limitaciones de customización de
+Chainlit. Entiendo que está pensado para montar y tirar con lo que viene. Muchas de las
+customizaciones que hemos hecho son apaños, parches, y desde luego nada serio." Evidencia
+acumulada a lo largo del proyecto que respalda esa lectura: casi toda personalización visual o
+de comportamiento más allá de `theme.json`/tokens vive como inyección de DOM vía
+`MutationObserver` sobre `document.body`, apoyada en selectores estructurales (clases Tailwind,
+jerarquía del DOM) en vez de un gancho oficial de Chainlit; verificar si una opción de
+configuración existía de verdad exigió descompilar el bundle del frontend
+(`chainlit/frontend/dist/assets/index-*.js`). Límite estructural concreto de T-05 (D-092): el
+nombre de usuario va embebido en el JWT de sesión, fijado en el login, sin mecanismo de
+refresco — un cambio de perfil en caliente no se refleja en la UI nativa hasta el siguiente
+login. Se aceptó la limitación en vez de construir un endpoint propio de refresco de sesión,
+para no seguir acumulando acoplamiento a internals de Chainlit no cubiertos por su API pública.
+
+**Resultado / aprendizaje:**
+Chainlit permite montar rápido un asistente conversacional completo (auth + streaming + UI) con
+muy poco código propio — encaja bien con el alcance y el plazo de un TFM — pero cualquier
+personalización que se sale de lo que trae de fábrica se paga en parches frágiles, acoplamiento
+a internals no documentados, y limitaciones que hay que aceptar en vez de resolver. Es una
+reflexión honesta sobre el coste de una elección de stack concreta, no solo sobre el resultado
+del RAG — mismo principio de transparencia que el resto del proyecto (D-058/D-072/D-084/D-086),
+aplicado aquí a la herramienta elegida en sí.

@@ -12,7 +12,14 @@ Las familias que conviven con una Inmunodeficiencia Primaria (IDP) se enfrentan 
 
 AIIP es un asistente conversacional diseñado para acompañar a ambos perfiles ante sus dudas: orienta, informa y facilita el acceso a información contrastada sobre IDP. No es una herramienta de diagnóstico ni reemplaza la consulta médica — su función es reducir la distancia entre la pregunta y la información de calidad, siempre con un profesional como referencia final.
 
-El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y utiliza la IA como instrumento principal en todo el ciclo de vida: producto, diseño, desarrollo, base de conocimiento, testing y evaluación.
+El proyecto se desarrolla en colaboración con Jacques Rivière, inmunólogo pediátrico, y utiliza la IA como instrumento principal en todo el ciclo de vida: producto, diseño, desarrollo, base de conocimiento, testing y evaluación.
+
+> AIIP no fue la primera idea. El proyecto original era una herramienta de reparación genética de
+> precisión (XPR) — descartada como TFM tras la revisión de Jacques Rivière, el inmunólogo
+> colaborador, por la complejidad del tema y los perfiles científicos que habría exigido, no por
+> viabilidad técnica en sentido estricto. Fue el propio Jacques quien propuso después un asistente
+> conversacional para familias como alternativa. Historia completa en
+> [`docs/roadmap-retrospective.md`](docs/roadmap-retrospective.md).
 
 ---
 
