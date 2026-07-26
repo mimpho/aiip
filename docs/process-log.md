@@ -357,10 +357,15 @@ desarrollo asistido por IA a lo largo del proyecto.
 
 ### ¿Qué cambió en las skills o el workflow?
 
-- Ninguna edición a `epic-start`/`task-start`/`epic-close` en este cierre. Los dos patrones con
-  valor reutilizable (chequeo mecánico + revisión manual dirigida cuando la métrica automática
-  no mide lo que cambió; revisar el margen de tokens al añadir contenido al prompt) quedan
-  registrados en `prompts.md` (P-039, P-040, P-041) en vez de convertirse en pasos de skill —
-  son decisiones de diseño de evaluación/prompting, no huecos de proceso.
+- Los dos patrones con valor reutilizable (chequeo mecánico + revisión manual dirigida cuando la
+  métrica automática no mide lo que cambió; revisar el margen de tokens al añadir contenido al
+  prompt) quedan registrados en `prompts.md` (P-039, P-040, P-041) en vez de convertirse en
+  pasos de skill — son decisiones de diseño de evaluación/prompting, no huecos de proceso.
+- **`epic-start` (Paso 0 ampliado, D-097):** nueva verificación de lectura tras crear la rama de
+  época, comprobando que realmente parte de `main` actualizado. Se añadió al revisar, ya con la
+  épica cerrada, por qué el PR `epic/E14-profile-memory → main` generó conflictos de merge
+  extensos: `epic/E14-profile-memory` había partido de la rama de época de E-13 en vez de `main`
+  ya actualizado con el squash-merge del cierre de E-13, cuatro días antes — no detectado hasta
+  el cierre. Aplicado en `skills/epic-start/SKILL.md`.
 
 ---

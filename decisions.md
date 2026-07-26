@@ -5306,3 +5306,52 @@ persistente) no están sujetas a este gate — su aplazamiento sigue siendo de p
   sin fecha asignada. Su criterio de cierre real es alcanzar los mismos umbrales de este gate, no
   solo completar sus tareas — cerrar E-15 no desbloquea la capa 1 de E-08 por sí mismo si no los
   alcanza (mismo patrón que dejó E-11 cerrada sin resolverlo).
+
+---
+
+## D-097 — `epic-start` Paso 0: verificación de que la rama de época parte de `main` actualizado
+
+**Fecha:** 26 de julio de 2026
+**Fase:** proceso / workflow
+**Épica:** E-14 (hallazgo de cierre, corrección aplicada a `skills/epic-start/SKILL.md`)
+
+**Contexto**
+Al cerrar E-14, el PR `epic/E14-profile-memory → main` mostró un volumen de conflictos de merge
+inesperado. Investigado con comandos de lectura (`git merge-base`, `git diff`): el ancestro común
+real entre `main` y `epic/E14-profile-memory` era un commit **anterior** al cierre de E-13
+(`891afc1`), no el commit de cierre de E-13 en sí. Causa: `epic/E13-medlineplus` se mergeó a
+`main` mediante **squash** (PR #77, `3db4b7b`, 22 jul 23:49) unos minutos antes de que arrancara
+E-14, pero el primer commit de `epic/E14-profile-memory` (`3ce02c3`, 23 jul 01:12) seguía
+colgando de la punta de la rama de época de E-13 (`0458cc2`) en vez de partir de `main` ya
+actualizado con el squash. `git diff 0458cc2 3db4b7b` confirma que el contenido en ambos puntos
+era idéntico — no fue un problema de contenido, sino de que un lado del historial tiene un solo
+commit (squash) y el otro los commits individuales que llevan al mismo sitio, lo que confunde el
+merge de 3 vías y genera conflictos espurios en cascada.
+
+`epic-start` Paso 0 ya instruye `git checkout main && git pull origin main` antes de crear la
+rama de época — la instrucción es correcta, pero no hay ninguna verificación posterior que
+confirme que se ejecutó contra el estado real de origin, ni de quién ejecuta el `checkout -b`
+(Marcos o Antigravity). El fallo no se detectó hasta el cierre, cuatro días después, cuando ya
+había generado el coste de resolver el PR.
+
+**Decisión**
+Se añade un paso de verificación a `epic-start` Paso 0, justo tras la confirmación de Marcos de
+que la rama ya existe en origin: `git fetch origin --prune` + `git merge-base --is-ancestor
+origin/main epic/E[nn]-nombre`, de lectura, ejecutable por el agente sin permiso adicional
+(mismo criterio que el `git fetch` explícito añadido a `epic-close` Paso 1 durante el cierre de
+E-13). Si la verificación falla, la épica no avanza a los pasos siguientes sin resolverlo con
+Marcos.
+
+**Alternativas descartadas**
+- Dejarlo como está, confiando en que Paso 0 ya lo dice bien: descartado — la instrucción correcta
+  no evitó el problema una vez, y el coste de detectarlo tarde (conflictos de merge al cierre,
+  4 días después) es mayor que el de un chequeo de una línea al arrancar.
+- Arreglarlo solo en el momento (`git rebase --onto`, ya aplicado a `epic/E14-profile-memory`) sin
+  tocar la skill: descartado — resuelve el síntoma de esta épica, no evita que se repita en la
+  siguiente.
+
+**Consecuencias**
+- `skills/epic-start/SKILL.md`: nueva verificación en Paso 0, con el precedente de E-14
+  documentado inline.
+- `docs/process-log.md`, entrada de E-14: actualizada para reflejar este cambio de skill (no
+  "ninguna edición", como se había registrado antes de este hallazgo).

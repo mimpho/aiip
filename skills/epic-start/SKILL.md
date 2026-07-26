@@ -48,6 +48,25 @@ resuman el tema (ej. épica "Evaluación RAGAS" → `ragas-eval`, no `evaluacion
 La rama debe existir en origin antes de crear los `.feature` y actualizar el backlog,
 para evitar conflictos con `git pull` posterior.
 
+**Verificación (26 jul 2026, precedente E-14/D-096-adyacente):** tras la confirmación,
+comprueba que la rama de época realmente parte de `main` actualizado — es de lectura,
+el agente puede ejecutarlo:
+
+```bash
+git fetch origin --prune
+git merge-base --is-ancestor origin/main epic/E[nn]-nombre && echo "OK: rama al día con main" || echo "⚠️ La rama NO parte de main actualizado"
+```
+
+Si sale el aviso, no sigas a los pasos siguientes sin resolverlo con Marcos. Precedente:
+`epic/E14-profile-memory` se creó colgando todavía de la punta de `epic/E13-medlineplus`
+(no de `main`, que ya tenía el PR de cierre de E-13 mergeado por squash unos minutos
+antes) — probablemente por no haber ejecutado `git pull origin main` contra el estado
+real de origin, o por partir de la rama de época anterior en vez de `main`. No se detectó
+hasta el cierre de E-14, cuando generó conflictos de merge extensos y espurios (el
+contenido era idéntico, pero el squash de un lado frente a los commits individuales del
+otro confundió el 3-way merge) — arreglable con `git rebase --onto`, pero evitable del
+todo si se verifica aquí, al arrancar la épica.
+
 ---
 
 ## Paso 1 — Descomposición en tareas [GATE: Marcos aprueba]
