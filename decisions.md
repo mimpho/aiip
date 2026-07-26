@@ -5255,3 +5255,54 @@ vez no lo haya comprometido.
   Faithfulness/Answer Relevancy/Context Precision/Recall (no cambia qué se recupera ni el
   contenido generado dentro del límite anterior), y no es el foco de este fix. Si Marcos quiere
   esa confirmación igualmente, es una ampliación a decidir aparte.
+
+---
+
+## D-096 — E-08 capa 1: métricas RAGAS mínimas se formalizan como blocker explícito, no solo como razón narrativa
+
+**Fecha:** 26 de julio de 2026
+**Fase:** producto
+**Épica:** E-08 (bloqueo) — motivado por el cierre de E-14
+
+**Contexto**
+Con E-14 cerrada, solo queda E-12 antes del 29 de julio. Al valorar si adelantar E-08 (memoria
+conversacional + histórico) con el tiempo que pudiera sobrar, Marcos confirmó el plan actual
+(no adelantarla) pero señaló que la razón de fondo —calidad de RAG no resuelta— debería quedar
+registrada de forma más explícita que como nota narrativa dispersa en D-059/D-063/D-087: no es
+"E-08 toca después de tal épica", sino "E-08 capa 1 no se toca mientras las métricas sigan por
+debajo de objetivo", con independencia de cuántas épicas de producto se completen mientras
+tanto.
+
+Estado real de las métricas a fecha de cierre de E-14 (`docs/evaluation.md` §7, medición post-E-13
+de 32 casos; `tests/eval/results/e14_t07_ragas_regression_check.json`, regresión 2a de E-14 T-07
+sobre el mismo dataset, D-094): Faithfulness 83.2% (post-E-13) / 79.5% (regresión E-14 T-07),
+objetivo >95%; Context Precision 59.5% (post-E-13) / 61.6% (regresión E-14 T-07), objetivo >85%.
+Ambas dentro del margen de ruido del evaluador ya documentado (D-085/D-086), pero de forma
+consistente muy por debajo de objetivo en las tres mediciones más recientes (post-E-11, post-E-13,
+regresión de E-14).
+
+**Decisión**
+Se formaliza como condición de gate explícita, no como orden de ejecución entre épicas: **E-08
+capa 1 (memoria conversacional de corto plazo) permanece bloqueada mientras Faithfulness no
+supere el 95% y Context Precision no supere el 85%** en la medición RAGAS de 32 casos (mismo
+dataset y método de `docs/evaluation.md` §7). El cierre de épicas de producto (E-11, E-13, E-14,
+o cualquier futura) no desbloquea la capa 1 por sí mismo — solo lo hace un ciclo de mejora de RAG
+que alcance ambos umbrales. Las capas 2 (ya extraída a E-14 y completada) y 3 (histórico
+persistente) no están sujetas a este gate — su aplazamiento sigue siendo de priorización
+(D-063), no de calidad.
+
+**Alternativas descartadas**
+- Dejarlo como está (razón narrativa repartida en D-059/D-063/D-087): descartado — a partir de
+  ahora cualquier persona (o agente) que revise si "ya toca" E-08 tiene que releer tres
+  decisiones distintas para reconstruir el criterio, en vez de comprobar dos números contra un
+  umbral.
+
+**Consecuencias**
+- `backlog/epics.md`, E-08: nota de blocker explícito añadida, referenciando D-096.
+- `README.md`, columna "Bloqueada por" de E-08: se sustituye la referencia a "E-11 (capa 1)" por
+  el gate de métricas explícito.
+- `backlog/epics.md`: nueva **E-15** (ciclo de mejora de calidad, ronda 2) — da nombre y alcance
+  al "futuro ciclo de mejora de RAG" mencionado en esta decisión y en D-059/D-063/D-087, post-TFM
+  sin fecha asignada. Su criterio de cierre real es alcanzar los mismos umbrales de este gate, no
+  solo completar sus tareas — cerrar E-15 no desbloquea la capa 1 de E-08 por sí mismo si no los
+  alcanza (mismo patrón que dejó E-11 cerrada sin resolverlo).

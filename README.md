@@ -23,7 +23,7 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | Fase 0 — Documentación técnica | ✅ Completada | 12 jun 2026 | — (previa a la descomposición en épicas) |
 | Fase 1 — MVP core | ✅ Completada | 10 jul 2026 | E-01 a E-06 |
 | Fase 1.5 — MVP completo | 🔵 En curso | 29 jul 2026 | E-07, E-09, E-11, E-13, E-14, E-12 |
-| Features opcionales | ⚪ Backlog | Post-TFM | E-08 (memoria conversacional + histórico, capas 1 y 3), E-10 (pulido: responsive, CORS y UX), F-01 (perfil profesional, multimodal) |
+| Features opcionales | ⚪ Backlog | Post-TFM | E-08 (memoria conversacional + histórico, capas 1 y 3), E-10 (pulido: responsive, CORS y UX), E-15 (ciclo de mejora de calidad, ronda 2), F-01 (perfil profesional, multimodal) |
 
 > **E-07 y E-08** se movieron de Fase 1 a Fase 1.5 el 10 jul 2026 — ninguna era requisito del hito "código funcional" (lo entrega E-05); ver notas en `backlog/epics.md`.
 >
@@ -40,13 +40,14 @@ El proyecto se desarrolla en colaboración con un inmunólogo pediátrico y util
 | E-05 | Interfaz conversacional (Chainlit) | ✅ Completada — 10 jul 2026 | E-02, E-04 |
 | E-06 | Ingesta y procesamiento de la KB | ✅ Completada — 08 jul 2026 | E-01 |
 | E-07 | Evaluación RAGAS parcial | ✅ Completada — 16 jul 2026 | E-06 |
-| E-08 | Memoria conversacional + histórico (capas 1 y 3) | ⚪ No iniciada — aplazada a post-TFM (D-063, D-087) | E-03, E-04, E-06, E-11 (capa 1) |
+| E-08 | Memoria conversacional + histórico (capas 1 y 3) | ⚪ No iniciada — aplazada a post-TFM (D-063, D-087) | E-03, E-04, E-06; capa 1 con gate explícito de métricas RAGAS — Faithfulness >95%, Context Precision >85% (D-096) — candidato E-15, pero no desbloqueada por su simple cierre |
 | E-09 | Evaluación RAGAS completa | ✅ Completada — 18 jul 2026 | E-07 |
 | E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada — aplazada a post-TFM (D-087) | E-05 |
 | E-11 | Ciclo de mejora de calidad (post-E-09) | ✅ Completada — 21 jul 2026 | E-09 |
 | E-12 | Retrospectiva final del roadmap (cierre TFM) — innegociable | ⚪ No iniciada | E-11, E-13, E-14 |
 | E-13 | Ampliación de KB — fuentes MedlinePlus Genetics | ✅ Completada — 22 jul 2026 | E-11 |
 | E-14 | Memoria de perfil (onboarding) | ✅ Completada — 26 jul 2026 | E-03, E-04, E-06, E-13 |
+| E-15 | Ciclo de mejora de calidad, ronda 2 | ⚪ No iniciada — candidata post-TFM, sin fecha (D-096) | E-11, E-13, E-14 |
 
 ---
 
@@ -94,6 +95,7 @@ gantt
     section Features opcionales
     E-08 Memoria conversac. + histórico :       e08, 2026-07-29, 2026-09-01
     E-10 Pulido final                 :         e10, 2026-07-29, 2026-09-01
+    E-15 Mejora de calidad, ronda 2   :         e15, 2026-07-29, 2026-09-01
     Perfil profesional · Multimodal   :         fo, 2026-07-29, 2026-09-01
 
     section Hitos

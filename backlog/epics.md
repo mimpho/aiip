@@ -442,6 +442,21 @@ decisión de diseño sobre derecho al olvido, no implementarla, así que
 aplazar la capa 3 no deja ningún cabo suelto para la entrega. Detalle
 completo del razonamiento en D-063.
 
+**Blocker explícito de la capa 1 (26 jul 2026, D-096):** al cerrar E-14 y valorar si adelantar
+E-08 con el tiempo restante antes del 29 de julio, se formaliza como condición de gate, no como
+simple orden de ejecución: **la capa 1 (memoria conversacional) permanece bloqueada mientras
+Faithfulness no supere el 95% y Context Precision no supere el 85%** en la medición RAGAS de 32
+casos (`docs/evaluation.md` §7). A fecha de cierre de E-14: Faithfulness 83.2%/79.5% y Context
+Precision 59.5%/61.6% (post-E-13 / regresión E-14 T-07) — ambas muy por debajo de objetivo. El
+cierre de épicas de producto (E-11, E-13, E-14, o futuras) no desbloquea la capa 1 por sí mismo;
+solo lo hace alcanzar ambos umbrales. Las capas 2 (ya resuelta en E-14) y 3 no están sujetas a
+este gate.
+
+**Épica candidata (26 jul 2026):** el ciclo de mejora que resolvería este gate se formaliza como
+**E-15** (ciclo de mejora de calidad, ronda 2 — post-TFM, sin fecha asignada). Importante: cerrar
+E-15 no equivale a desbloquear la capa 1 si no alcanza los umbrales — mismo criterio que dejó
+E-11 cerrada sin resolver este mismo gate (ver nota de alcance de E-15).
+
 **Nota de reversión parcial (23 jul 2026, D-087):** la capa 2 (memoria de
 perfil: onboarding + contextualización + migración de `full_name`) se
 extrae a una épica nueva, **E-14 — Memoria de perfil (onboarding)**, y
@@ -984,6 +999,59 @@ conviene no construir encima de un bug de CSS todavía sin arreglar.
 - `decisions.md` — D-087 a D-095
 
 **Estado:** ✅ Completada — 26 jul 2026
+
+---
+
+### E-15 — Ciclo de mejora de calidad, ronda 2
+
+Segunda ronda de mejora de RAG tras E-11, dirigida a cerrar el gate de métricas que bloquea la
+capa 1 de E-08 (D-096). No forma parte de Fase 1.5 ni tiene fecha asignada — épica candidata
+post-TFM.
+
+**Nota de origen (26 jul 2026):** al cerrar E-14 y valorar qué hacer con el tiempo restante antes
+del 29 de julio, se descarta adelantar E-08 (D-096: bloqueada por métricas, no por orden de
+épicas), pero se decide dar nombre y alcance al "futuro ciclo de mejora de RAG" que
+D-059/D-063/D-087/D-096 dejaban sin fecha ni épica asignada — mismo criterio que E-08/E-10:
+convertir trabajo futuro ya conocido en algo con alcance propio, no dejarlo como prosa dispersa
+entre varias decisiones.
+
+**Nota de alcance — a diferencia de E-11:** E-11 cerró con Faithfulness/Context Precision
+todavía por debajo de objetivo (83.2%/59.5% tras E-13; 79.5%/61.6% en la regresión de E-14 T-07)
+— cerrar sus tareas no fue lo mismo que alcanzar el umbral. **E-15 no se da por completada solo
+con cerrar sus tareas**: su criterio de cierre real es alcanzar Faithfulness >95% y Context
+Precision >85% (mismo umbral de D-096), o una decisión explícita de Marcos de aceptar el estado
+actual como límite práctico y documentarlo como tal (mismo patrón que D-085/D-086 al aceptar
+ruido del evaluador en vez de perseguirlo indefinidamente). Si se cierra sin alcanzar el umbral,
+**el blocker de la capa 1 de E-08 permanece activo** — cerrar E-15 no lo levanta
+automáticamente.
+
+**Candidatos a investigar (a validar/ampliar en `epic-start` cuando se arranque):**
+- D-084 (abierto): BM25 no encuentra fichas de MedlinePlus (inglés) en preguntas de listado
+  amplio en español — posible mejora de retrieval cross-lingual.
+- Patrón de ruido del evaluador LLM-as-judge (D-069, D-085, D-086) — explorar si repetir la
+  medición (varias pasadas, promediar) separa mejor señal real de ruido, en vez de investigar
+  caso a caso cada vez que un número baja.
+- Faithfulness estancado (~83-85%) pese a dos ciclos de mejora centrados sobre todo en Context
+  Precision (E-11 T-02) — investigar si la causa es de generación (prompt/grounding) más que de
+  retrieval, ángulo no explorado a fondo en E-11.
+- Candidatos técnicos aún no probados: reranking sobre los resultados del retriever híbrido,
+  ajuste de tamaño/solape de chunk, o revisión del modelo de embeddings (`BAAI/bge-m3`) contra
+  alternativas.
+
+**Criterios de aceptación de alto nivel**
+- Faithfulness > 95% y Context Precision > 85% en la medición RAGAS de 32 casos
+  (`docs/evaluation.md` §7), o decisión explícita documentada de aceptar el estado actual como
+  límite práctico
+- Resultados documentados en `docs/evaluation.md` con el mismo criterio de transparencia que
+  E-09/E-11/E-13 (antes/después, investigación dirigida de cualquier caída)
+- Estado del blocker de la capa 1 de E-08 (D-096) actualizado en `backlog/epics.md`/`README.md`
+  según el resultado
+
+### Tareas
+
+Pendiente de descomposición en `epic-start` cuando se decida arrancar.
+
+**Estado:** ⚪ No iniciada — candidata post-TFM, sin fecha asignada (D-096)
 
 ---
 
