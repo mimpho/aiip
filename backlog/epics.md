@@ -777,11 +777,40 @@ solo el resultado final. Sin rama de tarea (precedente E-06 T-06, acordado en `e
 `.feature` (acordado en `epic-start`); sin plan en `tasks/` — se redacta directamente en Cowork con
 el contexto ya reunido en esta sesión.
 
+**Ampliación de alcance (26 jul 2026):** al revisar las instrucciones oficiales de entrega del TFM
+(plantilla `AI4Devs-finalproject`, LIDR-academy) y plantear si el tribunal podría probar la
+herramienta, aparecieron dos huecos reales, no solo de redacción:
+
+1. **`README.md`/`prompts.md` no siguen la estructura de entrega exigida** — 8 secciones fijas (0
+   ficha del proyecto a 7 pull requests) y máximo 3 prompts por sección, respectivamente. Buena
+   parte del contenido ya existe en el repo (PRD, tech-spec, historias en `tests/features/`,
+   planes en `tasks/`) pero no está curado en ese formato. De paso se detectó que el modelo de
+   datos de `docs/tech-spec.md` §7.2 está desactualizado: describe el esquema aspiracional de
+   Fase 0 (roles en español, tablas `conversations`/`messages`) que nunca se creó porque la
+   memoria conversacional (E-08 capas 1 y 3) quedó aplazada — el esquema real son las 3
+   migraciones de Supabase existentes.
+2. **No hay ningún despliegue público.** D-007 (junio 2026) comprometió una URL pública firme
+   para el 10 de julio; quedó documentado como pendiente de infraestructura en
+   `backlog/ideas.md`, aparcado explícitamente para "E-10 o épica propia" — pero nadie lo
+   reasignó cuando E-10 se eliminó de la Fase 1.5 (D-087). El análisis técnico (requisitos de
+   RAM para bge-m3, empaquetado de ChromaDB, inventario de secrets, HF Spaces vs Fly.io) ya
+   estaba hecho en `ideas.md`, solo sin ejecutar.
+
+Marcos decide no dar por cerrada la épica hasta resolver el despliegue — el cierre real del TFM
+incluye que el tribunal pueda ejecutar la herramienta, no solo la retrospectiva narrativa. Se
+añaden T-02 y T-03, ejecutadas en paralelo (T-03 depende sobre todo de acciones de Marcos fuera
+de Cowork: cuentas, credenciales, despliegue real). Sin el workflow completo de `epic-start` para
+estas dos tareas — directo a tabla de tareas, sin Gherkin ni gates, dado el margen de 3 días
+hasta el 29 de julio. Queda pendiente valorar si hace falta una T-04 de cierre final una vez
+completado el despliegue.
+
 ### Tareas
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | 🔄 En progreso |
+| T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | 🔄 En progreso (pendiente de confirmar push) |
+| T-02 | Adaptar `README.md`/`prompts.md` a la plantilla oficial de entrega + corregir modelo de datos desactualizado | ⚪ Pendiente |
+| T-03 | Despliegue público (HF Spaces / Fly.io) — en paralelo a T-02 | ⚪ Pendiente |
 
 **Estado:** 🔵 En curso
 
