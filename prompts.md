@@ -1,10 +1,159 @@
-# prompts.md — Log histórico de prompts
+# prompts.md
 ## AIIP — Asistente Inteligente de Inmunodeficiencias Primarias
 
-> Log append-only de prompts operativos usados durante el desarrollo del proyecto.
-> Solo se registran prompts con valor real — decisiones de prompting, system prompts candidatos, razonamiento técnico. No se registran conversaciones exploratorias.
-> Las entradas se añaden siempre al final, respetando orden cronológico estricto.
-> De este log se extraerán en el futuro los prompts especializados por área.
+> Detalla en esta sección los prompts principales utilizados durante la creación del proyecto,
+> que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del
+> desarrollo. Estructura oficial de entrega `AI4Devs-finalproject` (LIDR-academy): máximo 3
+> prompts por sección, seleccionados de entre los más relevantes.
+>
+> El log completo (44 entradas, todas las fases del proyecto) se conserva íntegro en el
+> [Anexo](#anexo--log-histórico-completo-de-prompts) de este mismo fichero. Cada prompt curado
+> abajo referencia su entrada original (`P-0XX`) por si se quiere el contexto completo.
+
+## Índice
+
+1. [Descripción general del producto](#1-descripción-general-del-producto)
+2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
+3. [Modelo de datos](#3-modelo-de-datos)
+4. [Especificación de la API](#4-especificación-de-la-api)
+5. [Historias de usuario](#5-historias-de-usuario)
+6. [Tickets de trabajo](#6-tickets-de-trabajo)
+7. [Pull requests](#7-pull-requests)
+8. [Anexo — Log histórico completo de prompts](#anexo--log-histórico-completo-de-prompts)
+
+---
+
+## 1. Descripción general del producto
+
+**Prompt 1** (P-001, 8 jun 2026): Contexto inicial del proyecto — objetivo, para quién, stack y
+metodología, usado para arrancar sesiones de trabajo sin perder el hilo.
+
+**Prompt 2** (P-011, 25 jun 2026): Brief de identidad visual y experiencia de usuario para
+Claude Design — dos perfiles, dark mode, tono empático no clínico, referencia exploratoria del
+prototipo de Lovable.
+
+**Prompt 3** (P-021, 7 jul 2026): Decisión de prompting sobre la característica de citación de
+fuentes — separar qué cita el LLM de qué se muestra como fuente (lista determinista por código),
+clave para la funcionalidad de trazabilidad del producto.
+
+---
+
+## 2. Arquitectura del sistema
+
+### 2.1. Diagrama de arquitectura
+
+**Prompt 1** (P-032, 18 jul 2026): Verificación de la hipótesis de causa raíz (cobertura de KB
+vs. ranking de retrieval) cruzando los casos con baja Context Precision contra
+`data/raw/manifest.json` antes de tocar la arquitectura de retrieval — decisión de arquitectura
+de IA que confirmó dónde invertir el esfuerzo.
+
+### 2.2. Descripción de componentes principales
+
+**Prompt 1** (P-010, 25 jun 2026): Decisión de stack de UI (CSS custom properties como fuente
+única de tokens, sin Tailwind) dado que Chainlit es una app compilada sin árbol de componentes
+accesible.
+
+### 2.3. Descripción de alto nivel del proyecto y estructura de ficheros
+
+**Prompt 1** (P-002, 8 jun 2026): Definición de la estructura de documentación del repositorio
+— documentación viva sin replicación, mínima superficie de mantenimiento, separación
+producto/técnico.
+
+### 2.4. Infraestructura y despliegue
+
+> Sin prompts registrados todavía — el despliegue público (E-12 T-03) está en curso. Esta
+> sección se completará cuando se ejecute.
+
+### 2.5. Seguridad
+
+**Prompt 1** (P-030, 18 jul 2026): Guardrail contra repetición literal de frases inyectadas por
+prompt injection — la restricción tiene que vivir en el propio system prompt, no solo en el
+filtro de seguridad posterior.
+
+**Prompt 2** (P-023, 9 jul 2026): Guardrail contra generalizar protocolos de tratamiento
+concretos encontrados en el contexto recuperado como si fueran pauta genérica aplicable a
+cualquiera.
+
+**Prompt 3** (P-034, 20 jul 2026): Generalización de una restricción de seguridad ya existente
+(información operativa de un centro concreto) en vez de crear una regla nueva ad-hoc.
+
+### 2.6. Tests
+
+**Prompt 1** (P-020, 7 jul 2026): Diagnóstico de respuestas truncadas en el smoke test — un test
+que solo valida "no vacío" no detecta truncamiento por presupuesto de tokens de thinking
+agotado.
+
+**Prompt 2** (P-027, 10 jul 2026): Investigación de una regresión real detectada por
+`pytest tests/ -v` al cerrar E-05 — comportamiento anti-enumeración de Supabase que cambió
+silenciosamente el contrato de error de `signup()`.
+
+**Prompt 3** (P-040, 25 jul 2026): Diseño de la evaluación de regresión de cierre separando
+chequeo mecánico (RAGAS) de revisión cualitativa dirigida, porque la métrica automática no cubre
+lo que el cambio de prompt realmente afectaba (tono/registro).
+
+---
+
+## 3. Modelo de datos
+
+**Prompt 1** (P-039, 25 jul 2026): Diseño del bloque `[PERFIL DEL PACIENTE]` inyectado
+condicionalmente en el prompt de generación a partir de los campos reales de `profiles`
+(`patient_name`, `patient_diagnosis`, `patient_age`, `patient_context`), sin tocar el retriever.
+
+**Prompt 2** (P-019, 30 jun 2026): Decisión de doble bloqueo (capa de auth + capa de UI) para el
+perfil profesional stub, ligada al campo `role` de `profiles`.
+
+---
+
+## 4. Especificación de la API
+
+**Prompt 1** (P-018, 27 jun 2026): Decisión de arquitectura que fundamenta las rutas de
+autenticación expuestas (`/auth/forgot-password`, `/auth/confirm`) — Supabase Auth como único
+broker de identidad, Chainlit nunca implementa su propio flujo OAuth.
+
+---
+
+## 5. Historias de usuario
+
+**Prompt 1** — Falso Negativo Cero (P-030, 18 jul 2026): guardrail de seguridad contra
+repetición literal de frases inyectadas que contradicen el comportamiento de derivación médica.
+
+**Prompt 2** — Chat con el pipeline RAG (P-024, 10 jul 2026): hallazgo de smoke test sobre
+detección de idioma en frases cortas con datos numéricos/clínicos, parte del comportamiento de
+respuesta del chat.
+
+**Prompt 3** — Onboarding del perfil del paciente (P-039, 25 jul 2026): diseño del bloque de
+contexto de perfil inyectado condicionalmente, sin repetir información ya conocida por el
+usuario.
+
+---
+
+## 6. Tickets de trabajo
+
+**Prompt 1** (P-006, 22 jun 2026): Definición del workflow de desarrollo — tareas de setup
+ligeras, tareas de código con Plan → Rama → TDD → Validación → PR → Cierre.
+
+**Prompt 2** (P-016, 27 jun 2026): Creación de la skill `task-start` para cubrir el hueco entre
+tener el `.feature` aprobado y abrir el IDE, con `tasks/E[nn]-T[nn]-plan.md` como frontera entre
+Cowork (decide) y Antigravity (ejecuta).
+
+---
+
+## 7. Pull requests
+
+**Prompt 1** (P-015, 27 jun 2026): Diseño de las skills `epic-start`/`epic-close`, incluyendo el
+PR único de integración `epic→main` al cerrar cada épica.
+
+**Prompt 2** (P-017, 28 jun 2026): Creación de la skill `task-close` — PR description en inglés
+y checklist de merge a la rama de la épica.
+
+---
+
+## Anexo — Log histórico completo de prompts
+
+> Log append-only de prompts operativos usados durante el desarrollo del proyecto, 44 entradas
+> desde Fase 0 hasta la fecha. Solo se registran prompts con valor real — decisiones de
+> prompting, system prompts candidatos, razonamiento técnico. No se registran conversaciones
+> exploratorias. Las entradas se añaden siempre al final, respetando orden cronológico estricto.
 
 ---
 

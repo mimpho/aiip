@@ -808,7 +808,7 @@ completado el despliegue.
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | 🔄 En progreso (pendiente de confirmar push) |
+| T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | ✅ Completada |
 | T-02 | Adaptar `README.md`/`prompts.md` a la plantilla oficial de entrega + corregir modelo de datos desactualizado | ⚪ Pendiente |
 | T-03 | Despliegue público (HF Spaces / Fly.io) — en paralelo a T-02 | ⚪ Pendiente |
 

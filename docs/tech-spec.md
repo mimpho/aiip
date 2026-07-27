@@ -228,50 +228,58 @@ Ver desarrollo completo en `docs/security.md`. Resumen de capas:
 
 ### 7.2. Esquema de base de datos
 
+> Actualizado 26 jul 2026 (E-12 T-02) para reflejar el esquema real (3 migraciones en
+> `supabase/migrations/`), no el diseño aspiracional de Fase 0. `profiles` es la **única**
+> tabla real hoy — `conversations`/`messages` (memoria de corto plazo y persistencia entre
+> sesiones, capas 1 y 3 de E-08) nunca se crearon: quedaron aplazadas a seguimiento post-TFM
+> (D-063/D-087), condicionadas a un futuro ciclo de mejora de RAG (D-096, E-15). Ver también
+> §11.1 (diagrama ER actualizado).
+
 ```sql
--- Perfil de usuario (memoria de perfil)
+-- profiles — rol + memoria de perfil (E-03 T-02, D-029 renombra roles a inglés, E-14 T-01
+-- amplía con datos de onboarding y consentimiento de salud)
 CREATE TABLE profiles (
-    id          UUID PRIMARY KEY REFERENCES auth.users,
-    role        TEXT NOT NULL CHECK (role IN ('familiar', 'profesional')),
-    patient_age INTEGER,
-    idp_type    TEXT,
-    context     TEXT,
-    created_at  TIMESTAMPTZ DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ DEFAULT NOW()
+    id                      UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    role                    TEXT NOT NULL CHECK (role IN ('family', 'professional')),
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
+    user_name               TEXT,
+    patient_name            TEXT,
+    patient_diagnosis       TEXT,
+    patient_age             INTEGER,
+    patient_context         TEXT,
+    health_data_consent_at  TIMESTAMPTZ
 );
 
--- Conversaciones (memoria de conversación)
-CREATE TABLE conversations (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id     UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    started_at  TIMESTAMPTZ DEFAULT NOW(),
-    summary     TEXT
-);
-
--- Mensajes
-CREATE TABLE messages (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    conversation_id UUID REFERENCES conversations(id) ON DELETE CASCADE,
-    role            TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
-    content         TEXT NOT NULL,
-    sources         JSONB,
-    created_at      TIMESTAMPTZ DEFAULT NOW()
-);
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+-- service_role: acceso completo (todas las escrituras pasan por auth/supabase_client.py)
+-- authenticated: SELECT/UPDATE de su propia fila (auth.uid() = id), a nivel de tabla completa
+-- — sin restricción por columna sobre health_data_consent_at ni CHECK de rango en
+-- patient_age (D-088): sin ruta de cliente directo contra Supabase en el stack actual
+-- (Chainlit es backend Python), validación de rango se deja a la capa de aplicación.
 ```
 
-> `ON DELETE CASCADE` garantiza que al borrar un usuario se eliminan todos sus datos — implementación del derecho al olvido (D-009).
+> `ON DELETE CASCADE` garantiza que al borrar un usuario se elimina su fila de `profiles` —
+> implementación del derecho al olvido para los datos hoy persistidos (D-009). La capa 3 de
+> E-08 (histórico de conversaciones) no existe todavía, así que no hay nada más que borrar.
 
 ### 7.3. Memoria de perfil en el contexto RAG
 
-El perfil del usuario se inyecta en el prompt para contextualizar las respuestas:
+El perfil se cachea en `cl.user_session` (no se relee por mensaje, D-093) y se inyecta en el
+prompt de generación solo si `patient_name` está presente — mismo criterio de "hay
+onboarding" que usa `_ensure_patient_profile()` en `chainlit/main_family.py`. Cada campo
+restante se añade solo si tiene valor; nunca se menciona como "no disponible" (D-093):
 
 ```python
-profile_context = f"""
-Contexto del usuario:
-- Tipo de IDP del paciente: {profile.idp_type}
-- Edad del paciente: {profile.patient_age} años
-"""
-# Se añade al system prompt en cada conversación
+# rag/generator.py::_format_profile_context()
+lines = [f"Nombre: {profile['patient_name']}"]
+if profile.get("patient_diagnosis"):
+    lines.append(f"Diagnóstico: {profile['patient_diagnosis']}")
+if profile.get("patient_age"):
+    lines.append(f"Edad: {profile['patient_age']} años")
+if profile.get("patient_context"):
+    lines.append(f"Contexto: {profile['patient_context']}")
+# Bloque [PERFIL DEL PACIENTE] completo, omitido si no hay patient_name (P-039)
 ```
 
 ---
@@ -364,52 +372,43 @@ RAG_CHUNK_OVERLAP=50
 
 ### 11.1. Arquitectura de datos
 
+> Actualizado 26 jul 2026 (E-12 T-02) — refleja el esquema real. `CONVERSATIONS`/`MESSAGES`
+> no existen: eran el diseño de la capa 1 (memoria de corto plazo) y capa 3 (persistencia
+> entre sesiones) de E-08, aplazadas a seguimiento post-TFM (D-063/D-087), condicionadas al
+> gate de calidad de RAG de D-096.
+
 ```mermaid
 erDiagram
     USERS ||--|| PROFILES : has
-    PROFILES ||--o{ CONVERSATIONS : starts
-    CONVERSATIONS ||--o{ MESSAGES : contains
 
     PROFILES {
-        uuid id PK
-        text role
+        uuid id PK "FK -> auth.users(id), ON DELETE CASCADE"
+        text role "family | professional"
+        text user_name
+        text patient_name
+        text patient_diagnosis
         integer patient_age
-        text idp_type
-        text context
-    }
-
-    CONVERSATIONS {
-        uuid id PK
-        uuid user_id FK
-        text summary
-        timestamptz started_at
-    }
-
-    MESSAGES {
-        uuid id PK
-        uuid conversation_id FK
-        text role
-        text content
-        jsonb sources
+        text patient_context
+        timestamptz health_data_consent_at
         timestamptz created_at
+        timestamptz updated_at
     }
 ```
 
 ### 11.2. Separación de perfiles
 
+> Actualizado 26 jul 2026 — la separación real es por entrypoint/puerto (dos apps Chainlit
+> distintas), no por ruta bajo un mismo dominio como sugería la versión anterior de este
+> diagrama. El perfil profesional es un stub sin RAG conectado (E-03, E-05).
+
 ```mermaid
 graph LR
-    URL_F[fa:fa-link aiip.app/familiar] --> AUTH_F[Supabase Auth\nrol: familiar]
-    URL_P[fa:fa-link aiip.app/profesional] --> AUTH_P[Supabase Auth\nrol: profesional]
+    APP_F["chainlit/main_family.py\npuerto 8000"] --> AUTH_F["Supabase Auth\nrole: family"]
+    APP_P["chainlit/main_professional.py\npuerto 8001 — stub, sin RAG"] --> AUTH_P["Supabase Auth\nrole: professional"]
 
-    AUTH_F --> SP_F[System prompt\nfamiliar]
-    AUTH_P --> SP_P[System prompt\nprofesional]
-
-    SP_F --> KB_F[(ChromaDB\ncolección familiar)]
-    SP_P --> KB_P[(ChromaDB\ncolección profesional)]
-
-    KB_F --> LLM[Gemini Flash]
-    KB_P --> LLM
+    AUTH_F --> SP_F["System prompt\nsystem_prompt_family.txt"]
+    SP_F --> KB_F[("ChromaDB\ncolección family")]
+    KB_F --> LLM["Gemini 2.5 Flash"]
 ```
 
 ---
