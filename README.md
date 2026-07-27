@@ -675,7 +675,7 @@ gantt
     E-11 Ciclo de mejora de calidad   :done,    e11, 2026-07-18, 2026-07-21
     E-13 Ampliación KB (MedlinePlus)  :done,    e13, 2026-07-21, 2026-07-22
     E-14 Memoria de perfil            :done,    e14, 2026-07-23, 2026-07-26
-    E-12 Retro + entrega TFM          :crit,    e12, 2026-07-28, 2026-07-29
+    E-12 Retro + entrega TFM          :done, crit, e12, 2026-07-28, 2026-07-28
 
     section Features opcionales
     E-08 Memoria conversac. + histórico :       e08, 2026-07-29, 2026-09-01
@@ -702,6 +702,9 @@ aiip/
 ├── decisions.md       ← Registro de decisiones relevantes del proyecto.
 ├── requirements.txt   ← Dependencias Python del proyecto.
 ├── .env.example       ← Variables de entorno necesarias (nunca commitear .env).
+├── Dockerfile         ← Imagen de producción (E-12 T-03): Chainlit + bge-m3 + ChromaDB.
+├── .dockerignore      ← Exclusiones para `docker build` local.
+├── .gcloudignore      ← Exclusiones para `gcloud run deploy --source .` — necesario aparte de `.dockerignore`, si no hereda `.gitignore` y `data/chroma/` no viaja.
 ├── .chainlit/         ← Traducciones i18n de Chainlit (reutilizadas vía symlink desde chainlit/family/.chainlit/translations); config.toml es boilerplate de `chainlit init` sin uso real (config real: chainlit/family/.chainlit/config.toml).
 ├── chainlit.md        ← Stub de bienvenida de Chainlit sin uso (real: chainlit/family/chainlit.md, vacío por diseño — D-039).
 │
