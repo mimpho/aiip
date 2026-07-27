@@ -611,7 +611,7 @@ human-in-the-loop del proyecto.
 |---|---|---|---|
 | Fase 0 — Documentación técnica | ✅ Completada | 12 jun 2026 | — (previa a la descomposición en épicas) |
 | Fase 1 — MVP core | ✅ Completada | 10 jul 2026 | E-01 a E-06 |
-| Fase 1.5 — MVP completo | 🔵 En curso | 29 jul 2026 | E-07, E-09, E-11, E-13, E-14, E-12 |
+| Fase 1.5 — MVP completo | ✅ Completada | 28 jul 2026 | E-07, E-09, E-11, E-13, E-14, E-12 |
 | Features opcionales | ⚪ Backlog | Post-TFM | E-08 (memoria conversacional + histórico, capas 1 y 3), E-10 (pulido: responsive, CORS y UX), E-15 (ciclo de mejora de calidad, ronda 2), F-01 (perfil profesional, multimodal) |
 
 > **E-07 y E-08** se movieron de Fase 1 a Fase 1.5 el 10 jul 2026 — ninguna era requisito del hito "código funcional" (lo entrega E-05); ver notas en `backlog/epics.md`.
