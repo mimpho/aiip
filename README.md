@@ -633,7 +633,7 @@ human-in-the-loop del proyecto.
 | E-09 | Evaluación RAGAS completa | ✅ Completada — 18 jul 2026 | E-07 |
 | E-10 | Pulido: responsive, CORS y UX | ⚪ No iniciada — aplazada a post-TFM (D-087) | E-05 |
 | E-11 | Ciclo de mejora de calidad (post-E-09) | ✅ Completada — 21 jul 2026 | E-09 |
-| E-12 | Retrospectiva final del roadmap + entrega TFM (cierre TFM) — innegociable | 🔵 En curso | E-11, E-13, E-14 |
+| E-12 | Retrospectiva final del roadmap + entrega TFM (cierre TFM) — innegociable | ✅ Completada | E-11, E-13, E-14 |
 | E-13 | Ampliación de KB — fuentes MedlinePlus Genetics | ✅ Completada — 22 jul 2026 | E-11 |
 | E-14 | Memoria de perfil (onboarding) | ✅ Completada — 26 jul 2026 | E-03, E-04, E-06, E-13 |
 | E-15 | Ciclo de mejora de calidad, ronda 2 | ⚪ No iniciada — candidata post-TFM, sin fecha (D-096) | E-11, E-13, E-14 |

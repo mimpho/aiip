@@ -811,13 +811,18 @@ completado el despliegue.
 | T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | ✅ Completada |
 | T-02 | Adaptar `README.md`/`prompts.md` a la plantilla oficial de entrega + corregir modelo de datos desactualizado | ✅ Completada |
 | T-03 | Despliegue público (Google Cloud Run) — en paralelo a T-02 | ✅ Completada |
-| T-04 | Repaso final de QA del paquete de entrega (README, `prompts.md`, enlaces, URL real) | 🔵 En curso |
+| T-04 | Repaso final de QA del paquete de entrega (README, `prompts.md`, enlaces, URL real) | ✅ Completada |
 
-**Nota de alcance T-04 (28 jul 2026):** tarea ligera, sin `epic-start` completo (mismo precedente
-que T-01) — repaso directo del paquete de entrega ya construido, no trabajo nuevo: estructura del
-`README.md` contra la plantilla oficial `AI4Devs-finalproject`, límite de 3 prompts por sección en
-`prompts.md`, enlaces internos y externos (incluida la URL real de producción), sin referencias
-desactualizadas a la plataforma de despliegue descartada.
+**Nota de alcance y cierre T-04 (28 jul 2026):** tarea ligera, sin `epic-start` completo (mismo
+precedente que T-01) — repaso directo del paquete de entrega ya construido, no trabajo nuevo.
+Verificado: estructura del `README.md` contra las 8 secciones (0-7 + Anexo) de la plantilla
+oficial `AI4Devs-finalproject`; los 10 enlaces externos del README (GitHub, PRs, prototipos
+Lovable, URL real de producción) responden 200; sin referencias desactualizadas a Fly.io/HF
+Spaces como plan vigente (solo quedan como registro histórico del recorrido, D-098); sin
+marcadores `TODO`/`FIXME` sueltos. Único hallazgo real: `prompts.md` sección 2.4
+(Infraestructura y despliegue) seguía con el placeholder "sin prompts registrados... en curso" —
+corregido con dos entradas nuevas (P-045, P-046, dentro del límite de 3 por sección) que
+documentan la verificación de tier gratuito y el diagnóstico del bug de `.gcloudignore`.
 
 **Nota de cierre T-03 (28 jul 2026):** el plan original evaluaba HF Spaces/Fly.io; la verificación
 explícita del tier gratuito de cada plataforma (pedida antes de implementar) forzó dos cambios de
@@ -831,7 +836,7 @@ Supabase) documentados en `tasks/E12-T03-plan.md` y D-098/D-099 (`decisions.md`)
 completo verificado sobre la URL real: login email/password, login Google, recuperación de
 contraseña, pregunta con fuentes citadas, caso de alarma.
 
-**Estado:** 🔵 En curso — pendiente decidir si hace falta T-04 (cierre final de la épica)
+**Estado:** ✅ Completada — T-01/T-02/T-03/T-04 cerradas, 28 jul 2026
 
 ---
 
