@@ -811,6 +811,13 @@ completado el despliegue.
 | T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | ✅ Completada |
 | T-02 | Adaptar `README.md`/`prompts.md` a la plantilla oficial de entrega + corregir modelo de datos desactualizado | ✅ Completada |
 | T-03 | Despliegue público (Google Cloud Run) — en paralelo a T-02 | ✅ Completada |
+| T-04 | Repaso final de QA del paquete de entrega (README, `prompts.md`, enlaces, URL real) | 🔵 En curso |
+
+**Nota de alcance T-04 (28 jul 2026):** tarea ligera, sin `epic-start` completo (mismo precedente
+que T-01) — repaso directo del paquete de entrega ya construido, no trabajo nuevo: estructura del
+`README.md` contra la plantilla oficial `AI4Devs-finalproject`, límite de 3 prompts por sección en
+`prompts.md`, enlaces internos y externos (incluida la URL real de producción), sin referencias
+desactualizadas a la plataforma de despliegue descartada.
 
 **Nota de cierre T-03 (28 jul 2026):** el plan original evaluaba HF Spaces/Fly.io; la verificación
 explícita del tier gratuito de cada plataforma (pedida antes de implementar) forzó dos cambios de

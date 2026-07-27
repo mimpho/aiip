@@ -61,8 +61,15 @@ producto/técnico.
 
 ### 2.4. Infraestructura y despliegue
 
-> Sin prompts registrados todavía — el despliegue público (E-12 T-03) está en curso. Esta
-> sección se completará cuando se ejecute.
+**Prompt 1** (P-045, 27 jul 2026): Verificación explícita del tier gratuito, pedida antes de
+implementar el plan ya escrito — encontró que ni Fly.io ni HF Spaces (las dos plataformas
+evaluadas) ofrecen ya una ruta Docker gratuita real, forzando dos reversiones de plataforma en
+la misma tarde hasta cerrar con Google Cloud Run.
+
+**Prompt 2** (P-046, 28 jul 2026): Diagnóstico de `data/chroma/` ausente de la imagen desplegada
+sin ningún error visible — aislado con un test dirigido (imagen exacta, sin presión de memoria ni
+concurrencia) antes de asumir que era la condición de carrera de instancias ya sospechada; causa
+real: `gcloud run deploy --source .` hereda `.gitignore` cuando no existe `.gcloudignore`.
 
 ### 2.5. Seguridad
 
@@ -1361,3 +1368,64 @@ a internals no documentados, y limitaciones que hay que aceptar en vez de resolv
 reflexión honesta sobre el coste de una elección de stack concreta, no solo sobre el resultado
 del RAG — mismo principio de transparencia que el resto del proyecto (D-058/D-072/D-084/D-086),
 aplicado aquí a la herramienta elegida en sí.
+
+### P-045 — Verificación explícita del tier gratuito revierte dos veces la plataforma de despliegue elegida
+**Fecha:** 27 julio 2026
+**Fase:** E-12 (T-03)
+**Tipo:** decisión técnica / metodología de verificación
+**Herramienta:** Antigravity
+
+**Prompt / decisión:**
+El plan de despliegue (`tasks/E12-T03-plan.md`) llegaba a Antigravity con Fly.io ya elegido como
+plataforma, con una justificación técnica concreta (build desde filesystem local, evita
+git-lfs). Marcos pidió explícitamente, antes de implementar nada: "Pregunta antes de tirar
+adelante si hay dudas. Aunque ya tengamos stack definido, hemos de verificar que el tier
+gratuito cumpla con lo necesario" — no dar por bueno que "ya está decidido" sin comprobarlo
+contra la realidad. La verificación (contra documentación oficial, no contra blogs SEO de
+terceros que resultaron poco fiables en varias búsquedas intermedias) encontró que Fly.io ya no
+ofrece tier gratuito a cuentas nuevas desde 2024. Descartado a favor de HF Spaces — pero al ir a
+crear el Space en la web (ya con el Dockerfile validado en local), apareció un segundo hallazgo:
+el SDK Docker de HF Spaces está tras muro de pago desde ~3 semanas antes, cambio no anunciado
+oficialmente, confirmado con una captura de pantalla de la propia UI. Segunda reversión, en la
+misma tarde, a Google Cloud Run — verificado con las mismas cifras oficiales antes de
+comprometerse.
+
+**Resultado / aprendizaje:**
+Dos reversiones de plataforma en una sola tarde, ambas motivadas por pedir verificación explícita
+en vez de confiar en una decisión "ya tomada". El coste de research adicional (varias búsquedas,
+alguna comparación de precios) fue bajo comparado con el de construir un despliegue completo
+sobre una plataforma que resulta no ser viable — y el propio Dockerfile construido para HF Spaces
+se reutilizó sin cambios para Cloud Run, así que el trabajo de validación local no se perdió en
+ninguna de las dos reversiones. Mismo principio de escepticismo aplicado a infraestructura que el
+proyecto ya aplicaba a resultados de evaluación (P-043): verificar antes de comprometerse,
+incluso cuando la respuesta "obvia" ya estaba escrita en un plan.
+
+### P-046 — `data/chroma/` ausente de la imagen sin ningún error visible: aislar la causa con un test dirigido en vez de asumir
+**Fecha:** 28 julio 2026
+**Fase:** E-12 (T-03)
+**Tipo:** hallazgo técnico / metodología de depuración
+**Herramienta:** Antigravity
+
+**Prompt / decisión:**
+Con la app ya desplegada en Cloud Run, Marcos reportó: "no ha cargado las fuentes consultadas
+tras lanzar la respuesta a mi pregunta" — sin más contexto sobre la causa. La primera hipótesis
+razonable era una condición de carrera entre instancias concurrentes de Cloud Run (ya se habían
+visto síntomas de OOM y autoscaling agresivo). En vez de asumirlo y aplicar un fix directamente,
+se aisló la variable: se descargó la imagen exacta desplegada (mismo digest) y se ejecutó
+localmente con `docker run --platform linux/amd64`, sin presión de memoria ni concurrencia —
+`retrieve()` seguía devolviendo 0 resultados de forma determinista. Inspección directa de
+`chromadb.PersistentClient(path='./data/chroma').list_collections()` dentro de la imagen mostró
+`[]`, y `ls data/chroma/` devolvió "No such file or directory": la base vectorial nunca había
+llegado a la imagen. Causa raíz: `gcloud run deploy --source .` hereda `.gitignore` para decidir
+qué subir a Cloud Build cuando no existe `.gcloudignore` explícito — y `data/chroma/` está
+gitignored a propósito para GitHub.
+
+**Resultado / aprendizaje:**
+El fallo no lanzaba ningún error — la app respondía con normalidad, solo que sin ningún contexto
+real de la KB, silenciosamente. Sin el paso de aislar la causa en local antes de teorizar, habría
+sido fácil aplicar el fix equivocado (ajustar concurrencia/memoria) y dar el problema por
+resuelto sin comprobarlo, dejando el fallo real sin detectar. La lección — construir un test
+dirigido y determinista antes de asumir una causa, aunque exista una hipótesis plausible ya sobre
+la mesa — es el mismo principio que ya aparece en P-043 (revisar con escepticismo una explicación
+satisfactoria antes de darla por buena), aplicado aquí a infraestructura en vez de a resultados
+de evaluación.
