@@ -125,17 +125,47 @@ memoria conversacional sobre un pipeline de calidad no resuelta) nunca cambió, 
 
 ---
 
-## 7. Por qué existe este documento
+## 7. El despliegue público: dos reversiones de plataforma en una tarde
+
+El compromiso de una URL pública se fijó en junio (D-007) para el 10 de julio y quedó sin
+ejecutar hasta el cierre de esta misma épica (T-03, 27-28 de julio). El plan inicial elegía
+Fly.io por una razón técnica concreta: su build usa el filesystem local como contexto, evitando
+el git-lfs que exigiría subir `data/chroma/` (gitignored a propósito, para GitHub) a un remoto
+separado. Antes de implementarlo, se pidió verificar explícitamente que el tier gratuito de la
+plataforma elegida seguía siendo real — no darlo por bueno solo porque el plan ya estaba escrito.
+La verificación (contra documentación oficial, no contra los blogs de terceros que resultaron
+poco fiables en varias búsquedas intermedias) encontró que Fly.io ya no ofrece tier gratuito a
+cuentas nuevas desde 2024. Primera reversión: HF Spaces. Con el Dockerfile ya validado de punta a
+punta en local, al ir a crear el Space se descubrió que su SDK Docker está tras un muro de pago
+desde hacía ~3 semanas — cambio no anunciado oficialmente por Hugging Face, confirmado con una
+captura de la propia interfaz. Segunda reversión, en la misma tarde: Google Cloud Run, con su
+cuota Always Free verificada con el mismo criterio (D-098).
+
+La ejecución sobre Cloud Run sacó a la luz varios problemas silenciosos que el plan no había
+anticipado — ninguno bloqueante por separado, pero juntos impidieron que la app funcionara hasta
+resolverlos: symlinks que no sobreviven a `gcloud run deploy --source .` (a diferencia de un
+`docker build` local), una variable de entorno (`CHAINLIT_URL`) necesaria para que el login de
+Google construya la URL de retorno correcta detrás del proxy de Cloud Run, y el hallazgo más
+grave — `gcloud run deploy --source .` hereda `.gitignore` cuando no existe un `.gcloudignore`
+explícito, dejando `data/chroma/` completamente fuera de la imagen sin lanzar ningún error: el
+RAG respondía con normalidad, solo que sin ningún contexto real de la base de conocimiento.
+Diagnosticado aislando la causa con un test dirigido sobre la imagen exacta desplegada, en vez de
+asumir que era la condición de carrera entre instancias ya sospechada por el autoscaling de Cloud
+Run (D-099).
+
+---
+
+## 8. Por qué existe este documento
 
 La necesidad de esta retrospectiva surgió el 19 de julio, al pedir Marcos dejar constancia de un
-caso de human-in-the-loop (sección 8) y preguntar dónde quedaba reflejada la evolución del
+caso de human-in-the-loop (sección 9) y preguntar dónde quedaba reflejada la evolución del
 roadmap completo — no había ningún sitio para eso (D-062). Se creó E-12 como última épica de la
 Fase 1.5, sin TDD pero con rama y PR, marcada desde el origen como innegociable: se ejecuta pase
 lo que pase con el resto del roadmap (D-064).
 
 ---
 
-## 8. Aprendizajes de proceso
+## 9. Aprendizajes de proceso
 
 **KB limitada, verificada antes de tocar código.** Ante peor Context Precision/Recall en varios
 casos de E-09, la intuición de que faltaba cobertura documental (no un problema de ranking) se
@@ -155,9 +185,16 @@ reflexión de Marcos sobre Chainlit: *"está pensado para montar y tirar con lo 
 parte de la personalización del proyecto vive como parches sobre internals no documentados,
 riesgo aceptado caso a caso, no ignorado (P-044).
 
+**Verificar antes de comprometerse, incluso con la respuesta ya escrita en un plan.** Pedir
+verificar el tier gratuito de una plataforma ya "decidida" reveló que ni Fly.io ni HF Spaces
+ofrecían ya una ruta gratuita real, forzando dos reversiones en una tarde (P-045). El mismo
+principio de escepticismo, aplicado a un fallo silencioso en producción en vez de a un plan:
+aislar la causa con un test dirigido antes de asumir la hipótesis más plausible sobre la mesa
+(P-046).
+
 ---
 
-## 9. Lo que queda para después del TFM
+## 10. Lo que queda para después del TFM
 
 AIIP se define como un TFM con vocación de herramienta real, no un ejercicio que termina el 29 de
 julio. Eso se refleja en cómo queda documentado lo pendiente, no solo en lo que se construyó:
@@ -170,11 +207,13 @@ mejorando después de la entrega.
 
 ---
 
-## 10. Cierre
+## 11. Cierre
 
 El roadmap de AIIP cambió varias veces, y cada cambio tiene una decisión, un contexto y una
 alternativa descartada que lo justifican — desde la idea original abandonada por viabilidad
-técnica hasta el gate de métricas que hoy condiciona la memoria conversacional. Ningún ajuste fue
+técnica hasta el gate de métricas que hoy condiciona la memoria conversacional, pasando por la
+propia plataforma de despliegue, revertida dos veces en una tarde por verificación explícita en
+vez de confianza ciega en un plan ya escrito. Ningún ajuste fue
 gratuito, y ninguno se cierra fingiendo un resultado mejor del que hay: Faithfulness y Context
 Precision siguen por debajo de objetivo a fecha de este documento. Se documenta así, sin
 suavizarlo, porque el valor de este roadmap no está en haber llegado a todos los números dentro
