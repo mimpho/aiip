@@ -369,3 +369,47 @@ desarrollo asistido por IA a lo largo del proyecto.
   el cierre. Aplicado en `skills/epic-start/SKILL.md`.
 
 ---
+
+## E-12 — Retrospectiva final del roadmap (cierre TFM)
+**Periodo:** 26–28 jul 2026
+**Tareas:** T-01 a T-04 (4 tareas, todas completadas)
+
+### ¿Qué funcionó bien en el proceso?
+
+- **Pedir verificación explícita del tier gratuito antes de implementar** evitó construir sobre
+  una plataforma no viable — dos veces. El coste de research adicional fue bajo comparado con el
+  de descubrirlo a medio despliegue.
+- **El Dockerfile validado en local se reutilizó sin cambios** en las tres plataformas evaluadas
+  (Fly.io, HF Spaces, Cloud Run) — el trabajo de validación no se perdió en ninguna reversión.
+- **Documentar cada hallazgo en el momento** (`tasks/E12-T03-plan.md`, `decisions.md`) en vez de
+  al final permitió reconstruir el hilo completo para el PR y la retro sin depender de la
+  memoria de la sesión.
+
+### ¿Qué generó fricción o retraso?
+
+- **La ejecución real de T-03 tardó mucho más de lo esperado** — no por el despliegue en sí, sino
+  por una cadena de bugs silenciosos específicos del mecanismo `gcloud run deploy --source .`
+  (symlinks, `.gcloudignore` heredando `.gitignore`, `CHAINLIT_URL` para el redirect de OAuth,
+  `email_redirect_to` para los emails de Supabase) que ningún plan podía anticipar sin ejecutar
+  contra la plataforma real.
+- **Un primer intento de fix incorrecto** (cambiar la plantilla de email de Supabase a
+  `{{ .ConfirmationURL }}`) habría roto un patrón de ruta propia ya documentado en D-040.
+  Revisar `decisions.md` *antes* de aplicar un fix, no solo al final, habría evitado el paso en
+  falso.
+- **T-03/T-04 se ejecutaron sin `epic-start`/`task-start` completos** (decisión ya tomada,
+  justificada por el plazo de entrega) — funcionó, pero varios hallazgos de infraestructura se
+  descubrieron sobre la marcha en vez de anticiparse en un plan revisado con más calma.
+
+### ¿Qué cambió en las skills o el workflow?
+
+- Ninguna skill nueva ni corrección aplicada en este cierre — el patrón de "verificar antes de
+  implementar" y "aislar la causa antes de asumir" ya está capturado como principio general en
+  el repo (P-032, P-043); en E-12 se aplicó también a infraestructura de despliegue, no solo a
+  resultados de modelo (P-045, P-046).
+- Mejora candidata, no aplicada ahora: que `task-start`/`epic-start` traten por defecto una
+  decisión de plataforma/proveedor externo ya "cerrada" en el plan como hipótesis a verificar,
+  no como hecho — en E-12 pasó porque Marcos lo pidió explícitamente, pero podría generalizarse
+  como paso por defecto para este tipo concreto de decisión (infraestructura externa, no
+  arquitectura interna del propio código).
+
+---

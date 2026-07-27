@@ -1,10 +1,166 @@
-# prompts.md — Log histórico de prompts
+# prompts.md
 ## AIIP — Asistente Inteligente de Inmunodeficiencias Primarias
 
-> Log append-only de prompts operativos usados durante el desarrollo del proyecto.
-> Solo se registran prompts con valor real — decisiones de prompting, system prompts candidatos, razonamiento técnico. No se registran conversaciones exploratorias.
-> Las entradas se añaden siempre al final, respetando orden cronológico estricto.
-> De este log se extraerán en el futuro los prompts especializados por área.
+> Detalla en esta sección los prompts principales utilizados durante la creación del proyecto,
+> que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del
+> desarrollo. Estructura oficial de entrega `AI4Devs-finalproject` (LIDR-academy): máximo 3
+> prompts por sección, seleccionados de entre los más relevantes.
+>
+> El log completo (44 entradas, todas las fases del proyecto) se conserva íntegro en el
+> [Anexo](#anexo--log-histórico-completo-de-prompts) de este mismo fichero. Cada prompt curado
+> abajo referencia su entrada original (`P-0XX`) por si se quiere el contexto completo.
+
+## Índice
+
+1. [Descripción general del producto](#1-descripción-general-del-producto)
+2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
+3. [Modelo de datos](#3-modelo-de-datos)
+4. [Especificación de la API](#4-especificación-de-la-api)
+5. [Historias de usuario](#5-historias-de-usuario)
+6. [Tickets de trabajo](#6-tickets-de-trabajo)
+7. [Pull requests](#7-pull-requests)
+8. [Anexo — Log histórico completo de prompts](#anexo--log-histórico-completo-de-prompts)
+
+---
+
+## 1. Descripción general del producto
+
+**Prompt 1** (P-001, 8 jun 2026): Contexto inicial del proyecto — objetivo, para quién, stack y
+metodología, usado para arrancar sesiones de trabajo sin perder el hilo.
+
+**Prompt 2** (P-011, 25 jun 2026): Brief de identidad visual y experiencia de usuario para
+Claude Design — dos perfiles, dark mode, tono empático no clínico, referencia exploratoria del
+prototipo de Lovable.
+
+**Prompt 3** (P-021, 7 jul 2026): Decisión de prompting sobre la característica de citación de
+fuentes — separar qué cita el LLM de qué se muestra como fuente (lista determinista por código),
+clave para la funcionalidad de trazabilidad del producto.
+
+---
+
+## 2. Arquitectura del sistema
+
+### 2.1. Diagrama de arquitectura
+
+**Prompt 1** (P-032, 18 jul 2026): Verificación de la hipótesis de causa raíz (cobertura de KB
+vs. ranking de retrieval) cruzando los casos con baja Context Precision contra
+`data/raw/manifest.json` antes de tocar la arquitectura de retrieval — decisión de arquitectura
+de IA que confirmó dónde invertir el esfuerzo.
+
+### 2.2. Descripción de componentes principales
+
+**Prompt 1** (P-010, 25 jun 2026): Decisión de stack de UI (CSS custom properties como fuente
+única de tokens, sin Tailwind) dado que Chainlit es una app compilada sin árbol de componentes
+accesible.
+
+### 2.3. Descripción de alto nivel del proyecto y estructura de ficheros
+
+**Prompt 1** (P-002, 8 jun 2026): Definición de la estructura de documentación del repositorio
+— documentación viva sin replicación, mínima superficie de mantenimiento, separación
+producto/técnico.
+
+### 2.4. Infraestructura y despliegue
+
+**Prompt 1** (P-045, 27 jul 2026): Verificación explícita del tier gratuito, pedida antes de
+implementar el plan ya escrito — encontró que ni Fly.io ni HF Spaces (las dos plataformas
+evaluadas) ofrecen ya una ruta Docker gratuita real, forzando dos reversiones de plataforma en
+la misma tarde hasta cerrar con Google Cloud Run.
+
+**Prompt 2** (P-046, 28 jul 2026): Diagnóstico de `data/chroma/` ausente de la imagen desplegada
+sin ningún error visible — aislado con un test dirigido (imagen exacta, sin presión de memoria ni
+concurrencia) antes de asumir que era la condición de carrera de instancias ya sospechada; causa
+real: `gcloud run deploy --source .` hereda `.gitignore` cuando no existe `.gcloudignore`.
+
+### 2.5. Seguridad
+
+**Prompt 1** (P-030, 18 jul 2026): Guardrail contra repetición literal de frases inyectadas por
+prompt injection — la restricción tiene que vivir en el propio system prompt, no solo en el
+filtro de seguridad posterior.
+
+**Prompt 2** (P-023, 9 jul 2026): Guardrail contra generalizar protocolos de tratamiento
+concretos encontrados en el contexto recuperado como si fueran pauta genérica aplicable a
+cualquiera.
+
+**Prompt 3** (P-034, 20 jul 2026): Generalización de una restricción de seguridad ya existente
+(información operativa de un centro concreto) en vez de crear una regla nueva ad-hoc.
+
+### 2.6. Tests
+
+**Prompt 1** (P-020, 7 jul 2026): Diagnóstico de respuestas truncadas en el smoke test — un test
+que solo valida "no vacío" no detecta truncamiento por presupuesto de tokens de thinking
+agotado.
+
+**Prompt 2** (P-027, 10 jul 2026): Investigación de una regresión real detectada por
+`pytest tests/ -v` al cerrar E-05 — comportamiento anti-enumeración de Supabase que cambió
+silenciosamente el contrato de error de `signup()`.
+
+**Prompt 3** (P-040, 25 jul 2026): Diseño de la evaluación de regresión de cierre separando
+chequeo mecánico (RAGAS) de revisión cualitativa dirigida, porque la métrica automática no cubre
+lo que el cambio de prompt realmente afectaba (tono/registro).
+
+---
+
+## 3. Modelo de datos
+
+**Prompt 1** (P-039, 25 jul 2026): Diseño del bloque `[PERFIL DEL PACIENTE]` inyectado
+condicionalmente en el prompt de generación a partir de los campos reales de `profiles`
+(`patient_name`, `patient_diagnosis`, `patient_age`, `patient_context`), sin tocar el retriever.
+
+**Prompt 2** (P-019, 30 jun 2026): Decisión de doble bloqueo (capa de auth + capa de UI) para el
+perfil profesional stub, ligada al campo `role` de `profiles`.
+
+---
+
+## 4. Especificación de la API
+
+**Prompt 1** (P-018, 27 jun 2026): Decisión de arquitectura que fundamenta las rutas de
+autenticación expuestas (`/auth/forgot-password`, `/auth/confirm`) — Supabase Auth como único
+broker de identidad, Chainlit nunca implementa su propio flujo OAuth.
+
+---
+
+## 5. Historias de usuario
+
+**Prompt 1** — Falso Negativo Cero (P-030, 18 jul 2026): guardrail de seguridad contra
+repetición literal de frases inyectadas que contradicen el comportamiento de derivación médica.
+
+**Prompt 2** — Chat con el pipeline RAG (P-024, 10 jul 2026): hallazgo de smoke test sobre
+detección de idioma en frases cortas con datos numéricos/clínicos, parte del comportamiento de
+respuesta del chat.
+
+**Prompt 3** — Onboarding del perfil del paciente (P-039, 25 jul 2026): diseño del bloque de
+contexto de perfil inyectado condicionalmente, sin repetir información ya conocida por el
+usuario.
+
+---
+
+## 6. Tickets de trabajo
+
+**Prompt 1** (P-006, 22 jun 2026): Definición del workflow de desarrollo — tareas de setup
+ligeras, tareas de código con Plan → Rama → TDD → Validación → PR → Cierre.
+
+**Prompt 2** (P-016, 27 jun 2026): Creación de la skill `task-start` para cubrir el hueco entre
+tener el `.feature` aprobado y abrir el IDE, con `tasks/E[nn]-T[nn]-plan.md` como frontera entre
+Cowork (decide) y Antigravity (ejecuta).
+
+---
+
+## 7. Pull requests
+
+**Prompt 1** (P-015, 27 jun 2026): Diseño de las skills `epic-start`/`epic-close`, incluyendo el
+PR único de integración `epic→main` al cerrar cada épica.
+
+**Prompt 2** (P-017, 28 jun 2026): Creación de la skill `task-close` — PR description en inglés
+y checklist de merge a la rama de la épica.
+
+---
+
+## Anexo — Log histórico completo de prompts
+
+> Log append-only de prompts operativos usados durante el desarrollo del proyecto, 44 entradas
+> desde Fase 0 hasta la fecha. Solo se registran prompts con valor real — decisiones de
+> prompting, system prompts candidatos, razonamiento técnico. No se registran conversaciones
+> exploratorias. Las entradas se añaden siempre al final, respetando orden cronológico estricto.
 
 ---
 
@@ -1121,3 +1277,155 @@ Gemini thinking activado, no asumir que el ajuste anterior (D-082) sigue siendo 
 truncamiento es silencioso mientras no se lea `finish_reason`, así que el riesgo no se detecta
 solo con RAGAS (no mide si la respuesta quedó cortada) — hace falta revisión manual dirigida
 (P-040/D-094) para exponerlo.
+
+### P-042 — Reparto Cowork/Antigravity como metodología de human-in-the-loop, no solo infraestructura
+**Fecha:** 22 julio 2026
+**Fase:** E-13 (T-03) / retrospectiva de roadmap (E-12)
+**Tipo:** metodología de desarrollo
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Reflexión de Marcos durante `task-start` de E-13 T-03, al hilo de una sesión que tocó en poco
+tiempo una corrección de cifras heredadas, una decisión de alcance con dos opciones reales
+(D-079), una mejora de skill descubierta a mitad de tarea (D-080) y un bug de contenido que
+Antigravity no habría detectado solo (D-081, mojibake en letras griegas): aunque Cowork y
+Antigravity corren sobre el mismo modelo (Sonnet 5), no son intercambiables. El valor no está en
+el modelo, está en el contexto y el rol de cada superficie — Cowork como espacio de debate e
+investigación antes de que Antigravity ejecute, dejando un `.feature`/plan sin ambigüedad para
+que el ciclo TDD no tenga que parar a decidir nada. Las skills del workflow
+(`epic-start`/`task-start`/`task-close`/`epic-close`) se han ido afinando con retrospectivas
+reales detectadas en caliente durante el trabajo (ej. D-080), no solo en revisiones programadas
+al cierre de cada épica.
+
+**Resultado / aprendizaje:**
+El propio reparto de roles entre dos superficies que usan el mismo modelo es, en sí mismo, un
+diseño metodológico deliberado: separar "dónde se decide" de "dónde se ejecuta" reduce el coste
+de retrabajo y deja trazabilidad de por qué se descartaron alternativas (`decisions.md`), en vez
+de depender de que el modelo "se acuerde" de todo dentro de una sesión larga. Patrón reutilizable
+para cualquier proyecto con agentes de IA en distintos roles: diseño conversacional con
+aprobación humana explícita en cada gate, frente a ejecución autónoma sobre una tarea ya cerrada.
+
+### P-043 — RAG "naive" no agrega bien preguntas de listado/categoría — hallazgo confirmado y autocorregido en el propio proceso
+**Fecha:** 22 julio 2026
+**Fase:** E-13 (T-04)
+**Tipo:** decisión técnica / metodología de investigación
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Al revisar T-04, Marcos preguntó por qué el sistema no "aglutina" bien información de las 40
+fichas nuevas de MedlinePlus para preguntas generales o de grupo (p. ej. "¿qué IDPs existen
+ligadas al cromosoma X?"), en vez de asumir sin más que era un problema de idioma. Verificado en
+tres pasos con evidencia directa: (1) BM25 real + barrido de `top_k` confirma que un listado
+genérico no recupera ninguna ficha de MedlinePlus a ningún valor de `top_k` (D-084); (2) la
+réplica dirigida sobre "cromosoma X" reproduce el mismo fallo — score BM25 de 0.0 para el mejor
+chunk relevante, sin ninguna fuente de MedlinePlus en la respuesta real de producción; (3) la
+remedición RAGAS de T-04 mostró Context Precision empeorando (63.2%→59.5%), lo que en una
+primera lectura se interpretó como la misma causa ("contenido estrecho compite con preguntas
+amplias"). Investigado con más rigor a petición de Marcos (D-086), esa tercera pieza **no se
+sostuvo**: el desglose caso a caso mostró que la caída se concentraba en solo 5 de 32 casos, y 4
+de ellos quedaron explicados como ruido de muestreo del evaluador LLM, no como efecto real de la
+ampliación de KB sobre el retrieval. La lectura se corrigió explícitamente el mismo día, sin
+dejarla pasar como si la primera versión hubiera sido correcta.
+
+**Resultado / aprendizaje:**
+El hallazgo real y confirmado es solo el del retrieval (D-084): el RAG del proyecto es "naive"
+(sin agregación entre documentos) y falla al reunir información de varias fuentes cuando la
+pregunta no apunta a un objetivo léxico o semántico concreto — funciona bien para "una enfermedad
+a la vez", mal para listados o categorías. La lección metodológica, más allá del hallazgo
+técnico, es que una explicación que conecta varias piezas de evidencia con una única causa
+"limpia" merece la misma revisión escéptica que cualquier otro resultado, incluso cuando la
+narrativa resultante es más satisfactoria — y que corregirla en público, en vez de dejarla
+pasar, es parte del mismo principio de transparencia que el proyecto aplica a los resultados del
+modelo (CHART/TRIPOD-LLM, D-058/D-072/D-085/D-086).
+
+### P-044 — Límites de personalización de Chainlit: coste real de un frontend pensado para "montar y tirar"
+**Fecha:** 25 julio 2026
+**Fase:** E-14 (T-05)
+**Tipo:** decisión de stack / reflexión de producto
+**Herramienta:** Claude Cowork
+
+**Prompt / decisión:**
+Reflexión de Marcos justo tras cerrar E-14 T-05 (edición de perfil vía `cl.ChatSettings` +
+redibujado del desplegable de usuario): "Ahora veo las limitaciones de customización de
+Chainlit. Entiendo que está pensado para montar y tirar con lo que viene. Muchas de las
+customizaciones que hemos hecho son apaños, parches, y desde luego nada serio." Evidencia
+acumulada a lo largo del proyecto que respalda esa lectura: casi toda personalización visual o
+de comportamiento más allá de `theme.json`/tokens vive como inyección de DOM vía
+`MutationObserver` sobre `document.body`, apoyada en selectores estructurales (clases Tailwind,
+jerarquía del DOM) en vez de un gancho oficial de Chainlit; verificar si una opción de
+configuración existía de verdad exigió descompilar el bundle del frontend
+(`chainlit/frontend/dist/assets/index-*.js`). Límite estructural concreto de T-05 (D-092): el
+nombre de usuario va embebido en el JWT de sesión, fijado en el login, sin mecanismo de
+refresco — un cambio de perfil en caliente no se refleja en la UI nativa hasta el siguiente
+login. Se aceptó la limitación en vez de construir un endpoint propio de refresco de sesión,
+para no seguir acumulando acoplamiento a internals de Chainlit no cubiertos por su API pública.
+
+**Resultado / aprendizaje:**
+Chainlit permite montar rápido un asistente conversacional completo (auth + streaming + UI) con
+muy poco código propio — encaja bien con el alcance y el plazo de un TFM — pero cualquier
+personalización que se sale de lo que trae de fábrica se paga en parches frágiles, acoplamiento
+a internals no documentados, y limitaciones que hay que aceptar en vez de resolver. Es una
+reflexión honesta sobre el coste de una elección de stack concreta, no solo sobre el resultado
+del RAG — mismo principio de transparencia que el resto del proyecto (D-058/D-072/D-084/D-086),
+aplicado aquí a la herramienta elegida en sí.
+
+### P-045 — Verificación explícita del tier gratuito revierte dos veces la plataforma de despliegue elegida
+**Fecha:** 27 julio 2026
+**Fase:** E-12 (T-03)
+**Tipo:** decisión técnica / metodología de verificación
+**Herramienta:** Antigravity
+
+**Prompt / decisión:**
+El plan de despliegue (`tasks/E12-T03-plan.md`) llegaba a Antigravity con Fly.io ya elegido como
+plataforma, con una justificación técnica concreta (build desde filesystem local, evita
+git-lfs). Marcos pidió explícitamente, antes de implementar nada: "Pregunta antes de tirar
+adelante si hay dudas. Aunque ya tengamos stack definido, hemos de verificar que el tier
+gratuito cumpla con lo necesario" — no dar por bueno que "ya está decidido" sin comprobarlo
+contra la realidad. La verificación (contra documentación oficial, no contra blogs SEO de
+terceros que resultaron poco fiables en varias búsquedas intermedias) encontró que Fly.io ya no
+ofrece tier gratuito a cuentas nuevas desde 2024. Descartado a favor de HF Spaces — pero al ir a
+crear el Space en la web (ya con el Dockerfile validado en local), apareció un segundo hallazgo:
+el SDK Docker de HF Spaces está tras muro de pago desde ~3 semanas antes, cambio no anunciado
+oficialmente, confirmado con una captura de pantalla de la propia UI. Segunda reversión, en la
+misma tarde, a Google Cloud Run — verificado con las mismas cifras oficiales antes de
+comprometerse.
+
+**Resultado / aprendizaje:**
+Dos reversiones de plataforma en una sola tarde, ambas motivadas por pedir verificación explícita
+en vez de confiar en una decisión "ya tomada". El coste de research adicional (varias búsquedas,
+alguna comparación de precios) fue bajo comparado con el de construir un despliegue completo
+sobre una plataforma que resulta no ser viable — y el propio Dockerfile construido para HF Spaces
+se reutilizó sin cambios para Cloud Run, así que el trabajo de validación local no se perdió en
+ninguna de las dos reversiones. Mismo principio de escepticismo aplicado a infraestructura que el
+proyecto ya aplicaba a resultados de evaluación (P-043): verificar antes de comprometerse,
+incluso cuando la respuesta "obvia" ya estaba escrita en un plan.
+
+### P-046 — `data/chroma/` ausente de la imagen sin ningún error visible: aislar la causa con un test dirigido en vez de asumir
+**Fecha:** 28 julio 2026
+**Fase:** E-12 (T-03)
+**Tipo:** hallazgo técnico / metodología de depuración
+**Herramienta:** Antigravity
+
+**Prompt / decisión:**
+Con la app ya desplegada en Cloud Run, Marcos reportó: "no ha cargado las fuentes consultadas
+tras lanzar la respuesta a mi pregunta" — sin más contexto sobre la causa. La primera hipótesis
+razonable era una condición de carrera entre instancias concurrentes de Cloud Run (ya se habían
+visto síntomas de OOM y autoscaling agresivo). En vez de asumirlo y aplicar un fix directamente,
+se aisló la variable: se descargó la imagen exacta desplegada (mismo digest) y se ejecutó
+localmente con `docker run --platform linux/amd64`, sin presión de memoria ni concurrencia —
+`retrieve()` seguía devolviendo 0 resultados de forma determinista. Inspección directa de
+`chromadb.PersistentClient(path='./data/chroma').list_collections()` dentro de la imagen mostró
+`[]`, y `ls data/chroma/` devolvió "No such file or directory": la base vectorial nunca había
+llegado a la imagen. Causa raíz: `gcloud run deploy --source .` hereda `.gitignore` para decidir
+qué subir a Cloud Build cuando no existe `.gcloudignore` explícito — y `data/chroma/` está
+gitignored a propósito para GitHub.
+
+**Resultado / aprendizaje:**
+El fallo no lanzaba ningún error — la app respondía con normalidad, solo que sin ningún contexto
+real de la KB, silenciosamente. Sin el paso de aislar la causa en local antes de teorizar, habría
+sido fácil aplicar el fix equivocado (ajustar concurrencia/memoria) y dar el problema por
+resuelto sin comprobarlo, dejando el fallo real sin detectar. La lección — construir un test
+dirigido y determinista antes de asumir una causa, aunque exista una hipótesis plausible ya sobre
+la mesa — es el mismo principio que ya aparece en P-043 (revisar con escepticismo una explicación
+satisfactoria antes de darla por buena), aplicado aquí a infraestructura en vez de a resultados
+de evaluación.

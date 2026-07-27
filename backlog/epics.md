@@ -737,13 +737,106 @@ números, no solo declarado.
 workflow (Cowork/Antigravity/human-in-the-loop) a medida que ocurren, antes de llegar al cierre
 real de la fase — scratchpad de entrada para T-01, no el deliverable.
 
+**Descomposición y decisiones de `epic-start` (26 jul 2026):** aprobada por Marcos, con la
+descomposición original ampliada en dos puntos:
+- **Fallo de la hipótesis inicial del roadmap:** el plan original no preveía épicas dedicadas a
+  mejorar la calidad del RAG — al no alcanzar los objetivos RAGAS fijados (E-07/E-09), se crearon
+  **dos** épicas de mejora: E-11 (ya dentro de la Fase 1.5) y E-15 (candidata post-TFM, sin
+  fecha). T-01 documenta esto explícitamente como punto crítico de la retrospectiva, no solo como
+  ajuste de rumbo positivo (a diferencia del caso de ampliación de KB de E-11 T-01/T-02, que sí
+  mejoró las métricas).
+- **Visibilidad del esfuerzo de continuidad post-TFM:** el proyecto se define como "TFM con
+  vocación de herramienta real" (`AGENTS.md`) — T-01 da visibilidad explícita al esfuerzo por
+  maximizar el avance dentro del plazo del TFM y a la intención declarada de seguir mejorando el
+  sistema después, de forma altruista, para familias con IDPs (ejemplos: E-15, capas 1 y 3 de
+  E-08 aplazadas).
+- **Alcance de `prompts.md`:** mismo criterio que retrospectivas anteriores — se incorporan todos
+  los ángulos candidatos de `docs/e12-retro-notes.md` (metodología Cowork/Antigravity,
+  hallazgo estructural del RAG naive en E-13 T-04, límites de personalización de Chainlit de
+  E-14 T-05) además del caso ya identificado (KB limitado, P-032), salvo que alguno resulte
+  redundante o añada verbosidad sin aportar un ángulo distinto.
+- **Sin formalización Gherkin (excepción al Paso 2 de `epic-start`):** T-01 es una retrospectiva
+  narrativa de proyecto de TFM, no un comportamiento de sistema — forzar "Dado/Cuando/Entonces"
+  sobre criterios como "explicar por qué se descartó una idea" resulta artificial y menos legible
+  que prosa natural. Marcos decide no crear `.feature` para esta tarea; los criterios de
+  aceptación quedan como los bullets de arriba (lenguaje natural) y el propio deliverable es un
+  documento markdown de redacción libre. Precedente distinto al de E-06 T-06/E-11 T-07 (que sí
+  llevaron `.feature` pese a ser documentación) — la diferencia es que aquellas describían
+  artefactos con estructura verificable (datasheet con secciones fijas, informe con métricas
+  tabuladas), mientras que esta es una narrativa de proceso.
+
+**Revisión crítica final (`task-start` T-01, 26 jul 2026):** se añade un criterio de tono narrativo,
+no cubierto explícitamente en `epic-start`: el documento asume los resultados y cambios de rumbo
+como parte deliberada de una metodología iterativa con human-in-the-loop — sin ocultar ni suavizar
+cifras por debajo de objetivo (Faithfulness 79.5%/83.2%, Context Precision 59.5%/61.6%, mismo
+criterio de transparencia que D-058/D-072/D-084/D-085/D-086), siendo críticos y honestos con los
+resultados, pero interpretándolos como evidencia de adaptación rigurosa a imprevistos — no como
+errores a disculpar — en un roadmap que solo cambió cuando la evidencia lo justificó, nunca de
+forma gratuita. Tono orientado a un tribunal académico: pone en valor el proceso de decisión, no
+solo el resultado final. Sin rama de tarea (precedente E-06 T-06, acordado en `epic-start`); sin
+`.feature` (acordado en `epic-start`); sin plan en `tasks/` — se redacta directamente en Cowork con
+el contexto ya reunido en esta sesión.
+
+**Ampliación de alcance (26 jul 2026):** al revisar las instrucciones oficiales de entrega del TFM
+(plantilla `AI4Devs-finalproject`, LIDR-academy) y plantear si el tribunal podría probar la
+herramienta, aparecieron dos huecos reales, no solo de redacción:
+
+1. **`README.md`/`prompts.md` no siguen la estructura de entrega exigida** — 8 secciones fijas (0
+   ficha del proyecto a 7 pull requests) y máximo 3 prompts por sección, respectivamente. Buena
+   parte del contenido ya existe en el repo (PRD, tech-spec, historias en `tests/features/`,
+   planes en `tasks/`) pero no está curado en ese formato. De paso se detectó que el modelo de
+   datos de `docs/tech-spec.md` §7.2 está desactualizado: describe el esquema aspiracional de
+   Fase 0 (roles en español, tablas `conversations`/`messages`) que nunca se creó porque la
+   memoria conversacional (E-08 capas 1 y 3) quedó aplazada — el esquema real son las 3
+   migraciones de Supabase existentes.
+2. **No hay ningún despliegue público.** D-007 (junio 2026) comprometió una URL pública firme
+   para el 10 de julio; quedó documentado como pendiente de infraestructura en
+   `backlog/ideas.md`, aparcado explícitamente para "E-10 o épica propia" — pero nadie lo
+   reasignó cuando E-10 se eliminó de la Fase 1.5 (D-087). El análisis técnico (requisitos de
+   RAM para bge-m3, empaquetado de ChromaDB, inventario de secrets, HF Spaces vs Fly.io) ya
+   estaba hecho en `ideas.md`, solo sin ejecutar.
+
+Marcos decide no dar por cerrada la épica hasta resolver el despliegue — el cierre real del TFM
+incluye que el tribunal pueda ejecutar la herramienta, no solo la retrospectiva narrativa. Se
+añaden T-02 y T-03, ejecutadas en paralelo (T-03 depende sobre todo de acciones de Marcos fuera
+de Cowork: cuentas, credenciales, despliegue real). Sin el workflow completo de `epic-start` para
+estas dos tareas — directo a tabla de tareas, sin Gherkin ni gates, dado el margen de 3 días
+hasta el 29 de julio. Queda pendiente valorar si hace falta una T-04 de cierre final una vez
+completado el despliegue.
+
 ### Tareas
 
 | ID | Tarea | Estado |
 |---|---|---|
-| T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | ⚪ Pendiente |
+| T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | ✅ Completada |
+| T-02 | Adaptar `README.md`/`prompts.md` a la plantilla oficial de entrega + corregir modelo de datos desactualizado | ✅ Completada |
+| T-03 | Despliegue público (Google Cloud Run) — en paralelo a T-02 | ✅ Completada |
+| T-04 | Repaso final de QA del paquete de entrega (README, `prompts.md`, enlaces, URL real) | ✅ Completada |
 
-**Estado:** ⚪ No iniciada
+**Nota de alcance y cierre T-04 (28 jul 2026):** tarea ligera, sin `epic-start` completo (mismo
+precedente que T-01) — repaso directo del paquete de entrega ya construido, no trabajo nuevo.
+Verificado: estructura del `README.md` contra las 8 secciones (0-7 + Anexo) de la plantilla
+oficial `AI4Devs-finalproject`; los 10 enlaces externos del README (GitHub, PRs, prototipos
+Lovable, URL real de producción) responden 200; sin referencias desactualizadas a Fly.io/HF
+Spaces como plan vigente (solo quedan como registro histórico del recorrido, D-098); sin
+marcadores `TODO`/`FIXME` sueltos. Único hallazgo real: `prompts.md` sección 2.4
+(Infraestructura y despliegue) seguía con el placeholder "sin prompts registrados... en curso" —
+corregido con dos entradas nuevas (P-045, P-046, dentro del límite de 3 por sección) que
+documentan la verificación de tier gratuito y el diagnóstico del bug de `.gcloudignore`.
+
+**Nota de cierre T-03 (28 jul 2026):** el plan original evaluaba HF Spaces/Fly.io; la verificación
+explícita del tier gratuito de cada plataforma (pedida antes de implementar) forzó dos cambios de
+plataforma en la misma tarde — Fly.io ya no tiene tier gratuito para cuentas nuevas, y el SDK
+Docker de HF Spaces pasó a ser de pago sin previo aviso ~3 semanas antes. Se cerró con **Google
+Cloud Run** (Always Free real, verificado contra documentación oficial). Recorrido completo,
+hallazgos técnicos durante la ejecución (symlinks rotos en `gcloud run deploy --source .`, OOM a
+4/6GiB, `.gcloudignore` heredando `.gitignore` y dejando `data/chroma/` fuera de la imagen,
+`CHAINLIT_URL` para el redirect de OAuth tras el proxy, `email_redirect_to` para los emails de
+Supabase) documentados en `tasks/E12-T03-plan.md` y D-098/D-099 (`decisions.md`). Smoke test
+completo verificado sobre la URL real: login email/password, login Google, recuperación de
+contraseña, pregunta con fuentes citadas, caso de alarma.
+
+**Estado:** ✅ Completada — T-01/T-02/T-03/T-04 cerradas, 28 jul 2026
 
 ---
 

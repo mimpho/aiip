@@ -85,6 +85,9 @@ aiip/
 ├── decisions.md           ← Registro de decisiones. Leerlo antes de tomar decisiones de diseño.
 ├── requirements.txt       ← Dependencias Python del proyecto
 ├── .env.example           ← Variables de entorno necesarias (nunca commitear .env)
+├── Dockerfile             ← Imagen de producción (E-12 T-03): Chainlit + bge-m3 + ChromaDB
+├── .dockerignore          ← Exclusiones para `docker build` local
+├── .gcloudignore          ← Exclusiones para `gcloud run deploy --source .` — sin él hereda `.gitignore` y `data/chroma/` no viaja a la imagen
 ├── .chainlit/             ← Traducciones i18n de Chainlit (reutilizadas vía symlink desde chainlit/family/.chainlit/translations); config.toml es boilerplate sin uso real (E-05, D-039)
 ├── chainlit.md            ← Stub de bienvenida de Chainlit sin uso (real: chainlit/family/chainlit.md, vacío por diseño — E-05, D-039)
 ├── chainlit/              ← Entrypoints y configuración Chainlit

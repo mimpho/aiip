@@ -1,0 +1,16 @@
+# Sin este fichero, `gcloud run deploy --source .` hereda .gitignore para decidir qué subir a
+# Cloud Build — y .gitignore excluye data/chroma/ (a propósito, para GitHub). Este fichero rompe
+# esa herencia explícitamente; data/chroma/ NO debe excluirse aquí, es la base vectorial del RAG.
+.venv/
+.git/
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+tasks/
+docs/
+data/raw/
+!data/raw/manifest.json
+.env
+.DS_Store
+.claude/

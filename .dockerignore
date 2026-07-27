@@ -1,0 +1,13 @@
+.venv/
+.git/
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+tasks/
+docs/
+data/raw/
+!data/raw/manifest.json
+.env
+.DS_Store
+.claude/
