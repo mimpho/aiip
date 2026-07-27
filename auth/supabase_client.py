@@ -79,6 +79,25 @@ def sign_in_with_oauth(provider: str, redirect_to: str | None = None) -> str:
     return response.url
 
 
+def _confirm_redirect_url() -> str | None:
+    """Base URL para {{ .RedirectTo }} en las plantillas de email de Supabase
+    (D-040, punto 4: "Confirm signup"/"Reset password" apuntan a
+    "{{ .RedirectTo }}/auth/confirm?token_hash={{ .TokenHash }}&type=...").
+
+    Devuelve solo el dominio, SIN "/auth/confirm" — la plantilla ya añade ese
+    path; duplicarlo aquí generaría "/auth/confirm/auth/confirm?...".
+
+    Solo hace falta detrás de un proxy (p.ej. Cloud Run) donde la URL pública
+    no coincide con la interna que ve el proceso — mismo motivo que
+    CHAINLIT_URL en Chainlit (chainlit/server.py, get_user_facing_url) para
+    el redirect_uri de OAuth. Sin CHAINLIT_URL (caso local), None: Supabase
+    usa su Site URL configurado por defecto vía el fallback nativo de
+    {{ .RedirectTo }}.
+    """
+    base_url = os.environ.get("CHAINLIT_URL")
+    return base_url.rstrip("/") if base_url else None
+
+
 def signup(email: str, password: str, role: str) -> dict:
     """Registra un usuario en Supabase Auth y crea su perfil con role.
 
@@ -88,7 +107,11 @@ def signup(email: str, password: str, role: str) -> dict:
     autentica ya o no en función de eso.
     """
     client = get_supabase_client(use_service_key=False)
-    response = client.auth.sign_up({"email": email, "password": password})
+    credentials = {"email": email, "password": password}
+    redirect_url = _confirm_redirect_url()
+    if redirect_url:
+        credentials["options"] = {"email_redirect_to": redirect_url}
+    response = client.auth.sign_up(credentials)
 
     # Con "Confirm email" activado (D-040), Supabase no eleva error para un
     # email ya existente y confirmado — por protección anti-enumeración,
@@ -129,7 +152,9 @@ def request_password_reset(email: str) -> None:
     falta lógica propia para ocultar el resultado.
     """
     client = get_supabase_client(use_service_key=False)
-    client.auth.reset_password_for_email(email)
+    redirect_url = _confirm_redirect_url()
+    options = {"redirect_to": redirect_url} if redirect_url else None
+    client.auth.reset_password_for_email(email, options)
 
 
 def verify_token(token_hash: str, type: str):

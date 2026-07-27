@@ -42,8 +42,11 @@ herramienta diagnóstica ni sustituye al criterio clínico.
 
 ### 0.4. URL del proyecto
 
-> ⚠️ Pendiente — despliegue público en curso (E-12 T-03, ver Anexo). Hasta entonces, instrucciones
-> completas de instalación y ejecución en local en la sección [1.4](#14-instrucciones-de-instalación).
+**[aiip-family-980683376675.europe-west1.run.app](https://aiip-family-980683376675.europe-west1.run.app)**
+— perfil familiar en producción (Google Cloud Run). Login con email/password o Google; ver
+[2.4](#24-infraestructura-y-despliegue) para el detalle del despliegue. El perfil profesional es
+un stub sin RAG conectado (backlog F-01) y no está desplegado — instrucciones de instalación y
+ejecución en local para ambos perfiles en la sección [1.4](#14-instrucciones-de-instalación).
 
 ### 0.5. URL o archivo comprimido del repositorio
 
@@ -185,16 +188,17 @@ es parte de lo que este TFM documenta.
 
 ### 2.4. Infraestructura y despliegue
 
-**Estado actual: en curso (E-12 T-03).** El proyecto corre hoy en local (Chainlit + ChromaDB
-locales, Supabase y Gemini ya en la nube). El compromiso de tener una URL pública se fijó en
-junio (D-007) para el 10 de julio y quedó pendiente de ejecución — detalle completo de por qué en
+**Estado actual: ✅ desplegado y verificado (E-12 T-03).** El proyecto corre en producción como
+contenedor Docker (Chainlit + bge-m3 + ChromaDB) en Google Cloud Run, con Supabase y Gemini ya en
+la nube (EU) desde antes. Smoke test completo verificado sobre la URL real: login email/password,
+login Google, recuperación de contraseña, pregunta con fuentes citadas, y derivación de seguridad
+ante caso de alarma. El compromiso de tener una URL pública se fijó en junio (D-007) para el 10 de
+julio y quedó pendiente de ejecución hasta este cierre de E-12 — detalle completo de por qué en
 `docs/roadmap-retrospective.md`.
-
-Plan de despliegue (análisis ya hecho en `backlog/ideas.md`, pendiente de ejecutar):
 
 ```mermaid
 flowchart TB
-    subgraph Cloud["Hosting (HF Spaces o Fly.io, a decidir)"]
+    subgraph Cloud["Google Cloud Run (europe-west1)"]
         DOCKER["Contenedor Docker\nChainlit + bge-m3 + ChromaDB"]
     end
     DOCKER --> SUPA[(Supabase EU\nAuth + Postgres)]
@@ -202,16 +206,55 @@ flowchart TB
     USER[Tribunal / usuario] -->|HTTPS| DOCKER
 ```
 
-- **Requisitos ya identificados:** bge-m3 pesa ~2GB y necesita RAM real (no vale una función
-  serverless mínima); ChromaDB (~69MB) está en `.gitignore` — hay que empaquetarlo en la imagen o
-  regenerarlo en el build; secrets: `GOOGLE_API_KEY`, `HF_TOKEN`, `CHROMA_PATH`, credenciales
-  Supabase, `CHAINLIT_AUTH_SECRET`, `OAUTH_GOOGLE_CLIENT_ID`/`SECRET`.
-- **Opciones evaluadas:** Hugging Face Spaces con Docker (gratis, 2vCPU/16GB, se duerme tras ~48h
-  sin tráfico, arranca solo) o Fly.io (gratis, el problema de websockets no-sticky solo importa
-  si se escala a más de una instancia — irrelevante para una demo).
-- **CI/CD:** no hay pipeline automatizado todavía — el despliegue inicial será manual (build +
-  push de la imagen); automatizarlo con GitHub Actions queda como mejora post-entrega si el
-  tiempo lo permite.
+- **Plataforma: Google Cloud Run**, elegida tras un recorrido de tres decisiones en la misma
+  tarde (Fly.io → HF Spaces → Cloud Run), cada una descartada por verificación real contra
+  documentación oficial de que su tier gratuito no cubría lo necesario (Fly.io ya no ofrece tier
+  gratuito a cuentas nuevas; HF Spaces puso el SDK Docker tras muro de pago sin previo aviso ~3
+  semanas antes) — detalle completo, incluyendo capturas y cifras de cada verificación, en D-098
+  (`decisions.md`) y `tasks/E12-T03-plan.md`. Cloud Run Always Free (2M requests/mes, 360k
+  GB-seg + 180k vCPU-seg de cómputo/mes) cubre sobradamente el tráfico esperado de una demo de
+  TFM, con coste real esperado de 0€.
+- **Despliegue:** `gcloud run deploy --source .` construye la imagen vía Cloud Build desde el
+  `Dockerfile` de la raíz (usuario no-root, rueda CPU-only de `torch` para evitar el bundle
+  CUDA/GPU que no se usa — imagen resultante 4.05GB, no los >10GB que trae `torch` de PyPI por
+  defecto) y despliega en un solo paso, sin pipeline separado de CI/CD.
+  ```bash
+  gcloud run deploy aiip-family \
+    --source . \
+    --region europe-west1 \
+    --port 8000 \
+    --memory 8Gi \
+    --cpu 2 \
+    --concurrency 4 \
+    --allow-unauthenticated \
+    --env-vars-file=cloudrun-env-vars.yaml \
+    --set-secrets="SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest,GOOGLE_API_KEY=GOOGLE_API_KEY:latest,HF_TOKEN=HF_TOKEN:latest,CHAINLIT_AUTH_SECRET=CHAINLIT_AUTH_SECRET:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest"
+  ```
+  `cloudrun-env-vars.yaml` es un fichero local fuera del repo con los valores no sensibles del
+  `.env` (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, modelo/parámetros del LLM,
+  `OAUTH_GOOGLE_CLIENT_ID`) — recrearlo si se despliega desde otra máquina. Detalle completo,
+  incluyendo la creación de los secrets y la concesión de IAM (solo necesarias una vez, no en
+  cada redeploy), en `tasks/E12-T03-plan.md`.
+  **Importante:** requiere un `.gcloudignore` en la raíz (ya en el repo). Sin él,
+  `gcloud run deploy --source .` hereda `.gitignore` para decidir qué subir a Cloud Build —
+  y como `data/chroma/` está gitignored (a propósito, para GitHub), sin `.gcloudignore` explícito
+  la base vectorial nunca llega a la imagen y el RAG responde sin ningún contexto real, sin
+  ningún error visible (hallazgo real de este despliegue, documentado en `tasks/E12-T03-plan.md`
+  paso 5). `docker build` local sí usa el filesystem como contexto sin este problema — la
+  discrepancia es específica de `gcloud run deploy --source`.
+- **Recursos:** 8GiB RAM / 2 vCPU por instancia, `--concurrency 4` (ajustado tras dos despliegues
+  que murieron por OOM a 4GiB y 6GiB al cargar `bge-m3` bajo carga real). Escala a cero sin
+  tráfico — arranque en frío (~65s) en la siguiente visita mientras se recarga `bge-m3`. Bajo
+  tráfico simultáneo, Cloud Run puede levantar varias instancias en paralelo, cada una cargando su
+  propia copia de `bge-m3` — riesgo conocido y aceptado (no se activa `--min-instances=1` para no
+  incurrir en coste recurrente ni mantenimiento activo durante semanas; detalle y cálculo de coste
+  en `tasks/E12-T03-plan.md`, sección Riesgos conocidos).
+- **Secrets:** `SUPABASE_SERVICE_KEY`, `GOOGLE_API_KEY`, `HF_TOKEN`, `CHAINLIT_AUTH_SECRET`,
+  `OAUTH_GOOGLE_CLIENT_SECRET` en Google Secret Manager, referenciados en el deploy — no en el
+  repo. El resto de configuración (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, modelo/parámetros del
+  LLM, `OAUTH_GOOGLE_CLIENT_ID`) va como variables de entorno directas.
+- **CI/CD:** no hay pipeline automatizado todavía — el despliegue inicial fue manual;
+  automatizarlo con GitHub Actions queda como mejora post-entrega si el tiempo lo permite.
 
 ### 2.5. Seguridad
 

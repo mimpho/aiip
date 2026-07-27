@@ -104,6 +104,8 @@
 - [D-093 — E-14 T-06: perfil cacheado en `cl.user_session` (no releído por mensaje); bloque `[PERFIL DEL PACIENTE]` se omite entero si no hay perfil](#d-093--e-14-t-06-perfil-cacheado-en-cluser_session-no-releído-por-mensaje-bloque-perfil-del-paciente-se-omite-entero-si-no-hay-perfil)
 - [D-094 — E-14 T-07: Scenario 2 de regresión separado en 2a (RAGAS mecánico, path sin perfil) y 2b (revisión manual dirigida, path con perfil)](#d-094--e-14-t-07-scenario-2-de-regresión-separado-en-2a-ragas-mecánico-path-sin-perfil-y-2b-revisión-manual-dirigida-path-con-perfil)
 - [D-095 — E-14 T-07: hallazgo de 2b (truncamiento de tone_05, falta CIERRE OBLIGATORIO) — sube LLM_MAX_TOKENS de 2048 a 3072](#d-095--e-14-t-07-hallazgo-de-2b-truncamiento-de-tone_05-falta-cierre-obligatorio--sube-llm_max_tokens-de-2048-a-3072)
+- [D-098 — Despliegue público (E-12 T-03): recorrido Fly.io → HF Spaces → Google Cloud Run por verificación real de tier gratuito](#d-098--despliegue-público-e-12-t-03-recorrido-flyio--hf-spaces--google-cloud-run-por-verificación-real-de-tier-gratuito)
+- [D-099 — Despliegue público (E-12 T-03): cierre — hallazgos de ejecución en Cloud Run y verificación final](#d-099--despliegue-público-e-12-t-03-cierre--hallazgos-de-ejecución-en-cloud-run-y-verificación-final)
 
 ---
 
@@ -5355,3 +5357,157 @@ Marcos.
   documentado inline.
 - `docs/process-log.md`, entrada de E-14: actualizada para reflejar este cambio de skill (no
   "ninguna edición", como se había registrado antes de este hallazgo).
+
+---
+
+## D-098 — Despliegue público (E-12 T-03): recorrido Fly.io → HF Spaces → Google Cloud Run por verificación real de tier gratuito
+
+**Fecha:** 27 de julio de 2026
+**Fase:** técnica / infraestructura
+**Épica:** E-12 (T-03)
+
+**Contexto**
+`tasks/E12-T03-plan.md` eligió inicialmente Fly.io por un motivo técnico concreto: `fly deploy`
+construye desde el filesystem local, así que `data/chroma/` (gitignored, ~94MB) viaja en la
+imagen sin tocar el `.gitignore` de GitHub. Antes de implementar, se pidió explícitamente
+verificar que el tier gratuito de la plataforma elegida cumplía lo necesario — no darlo por
+supuesto solo porque el stack ya estaba "decidido". La verificación, hecha contra documentación
+oficial en cada paso (no contra blogs SEO de terceros, que resultaron poco fiables en varias
+búsquedas intermedias), forzó dos correcciones de plataforma en la misma tarde:
+
+1. **Fly.io:** ya no ofrece tier gratuito a cuentas nuevas (`fly.io/docs/about/pricing`,
+   "Fly.io no longer offers plans to new customers") — pay-as-you-go puro desde el alta. La
+   asignación legacy (cuentas anteriores a 2024) sería insuficiente de todas formas: 256MB RAM
+   frente a los ~1.2-2.5GB que `bge-m3` necesita solo para inferencia en CPU. Descartados también
+   Render (512MB/0.1 CPU, insuficiente) y Railway (trial de 30 días con crédito, no tier gratuito
+   permanente).
+2. **HF Spaces:** con el Dockerfile ya construido y validado end-to-end en local (build, symlinks,
+   pipeline RAG con `bge-m3`+ChromaDB, login/signup contra Supabase, caso de alarma — ver detalle
+   completo en `tasks/E12-T03-plan.md`), al ir a crear el Space en la web se descubrió que el SDK
+   Docker está tras muro de pago desde ~8 jul 2026 (cambio no anunciado oficialmente, confirmado
+   visualmente: "Docker" marcado `Paid` y "CPU Basic" deshabilitado en la UI de creación de Space;
+   reportado en el foro de HF desde esa fecha, agravado el 24 jul con el mensaje explícito "Add
+   billing to your account... to unlock Docker Spaces"). Invalida la decisión tomada horas antes.
+
+**Decisión**
+Google Cloud Run. `gcloud run deploy --source .` construye desde el filesystem local vía Cloud
+Build — mismo mecanismo que la razón original para elegir Fly.io (build context local, sin
+git-lfs). El `Dockerfile` construido para HF Spaces (usuario no-root UID 1000, rueda CPU-only de
+`torch` para evitar el bundle CUDA/GPU que no se usa) se reutiliza sin cambios. Secrets
+sensibles (`SUPABASE_SERVICE_KEY`, `GOOGLE_API_KEY`, `HF_TOKEN`, `CHAINLIT_AUTH_SECRET`,
+`OAUTH_GOOGLE_CLIENT_SECRET`) van a Secret Manager, referenciados en el deploy; el resto de
+configuración va como variables de entorno directas.
+
+**Alternativas descartadas**
+- Fly.io de pago (~6-11€/mes): descartado por coste recurrente evitable.
+- HF PRO de pago (9$/mes): descartado por ser más caro que Cloud Run y mantener la complejidad
+  extra de git-lfs para `data/chroma/` que Cloud Run no necesita.
+- Oracle Cloud Always Free (VM ARM, hasta 24GB RAM, gratis de forma permanente): descartado por
+  riesgo de capacidad/provisioning agotada en muchas regiones — friction real de horas/días,
+  incompatible con el margen de ~2 días hasta el 29 de julio.
+
+**Justificación**
+Cloud Run Always Free (verificado contra `docs.cloud.google.com/free/docs/free-cloud-features`:
+2 millones de requests/mes, 360.000 GB-segundos de memoria + 180.000 vCPU-segundos de cómputo/mes,
+sin límite de tiempo) cubre sobradamente el tráfico esperado de una demo de TFM — coste real
+esperado: 0€, con tarjeta de verificación pero sin cargo previsto. A diferencia de Fly.io/HF Spaces
+(facturación por tiempo de máquina encendida), Cloud Run solo descuenta cuota mientras el
+contenedor procesa una request activa. El trabajo de validación local del Dockerfile (hecho para
+HF Spaces) no se perdió: Cloud Run consume el mismo `Dockerfile` sin cambios.
+
+**Consecuencias**
+- `Dockerfile` y `.dockerignore` nuevos en la raíz del repo, reutilizables independientemente de
+  la plataforma final (probado también en local con Docker Desktop antes de tocar la nube).
+- `tasks/E12-T03-plan.md` documenta las tres decisiones de plataforma en orden cronológico, con
+  los datos de verificación de cada tier gratuito — la sección "Decisión de plataforma" del plan
+  queda como historial completo, no reescrita.
+- Secrets del despliegue viven en Secret Manager del proyecto GCP (`aiip-500721`), no en este
+  repo — recrear o actualizar con `gcloud secrets create`/`gcloud secrets versions add` si se
+  repite el despliegue desde otra máquina.
+- Pendiente al cierre de esta entrada: registrar el redirect URI de Google OAuth (reutiliza el
+  Client ID existente de D-014/D-032, solo añade una URI nueva — `<url-cloud-run>/auth/oauth/
+  google/callback`) contra la URL real de Cloud Run, y smoke test final antes de marcar T-03 como
+  completada en `backlog/epics.md`.
+
+---
+
+## D-099 — Despliegue público (E-12 T-03): cierre — hallazgos de ejecución en Cloud Run y verificación final
+
+**Fecha:** 28 de julio de 2026
+**Fase:** técnica / infraestructura
+**Épica:** E-12 (T-03, cierre)
+
+**Contexto**
+D-098 documentó por qué la plataforma final fue Google Cloud Run. Ejecutar el despliegue real
+sobre esa plataforma (`gcloud run deploy --source .`) sacó a la luz varios problemas no
+anticipados por el plan, ninguno bloqueante por separado pero que en conjunto impidieron que la
+app funcionara correctamente hasta resolverlos todos. Detalle completo paso a paso, con logs y
+comandos exactos, en `tasks/E12-T03-plan.md` — esta entrada consolida el resultado, no lo repite.
+
+**Decisión (hallazgos aceptados como parte del despliegue final)**
+1. **Symlinks rotos**: `chainlit/family/public` y `chainlit/family/.chainlit/translations` (ambos
+   symlinks en el repo) llegaban como directorios vacíos — `gcloud run deploy --source .` no los
+   preserva igual que `docker build` local. Fix: `Dockerfile` resuelve el contenido real con
+   `cp -r` en vez de depender del symlink, válido para cualquier mecanismo de build.
+2. **OOM en dos escalones** (4GiB y 6GiB insuficientes): memoria final 8GiB + `--concurrency 4`
+   para acotar cuántas inferencias pesadas procesa una misma instancia a la vez. Riesgo residual
+   aceptado explícitamente (no `--min-instances=1`, ver D-098): bajo tráfico simultáneo alto,
+   Cloud Run puede levantar varias instancias en paralelo, cada una cargando `bge-m3` por su
+   cuenta — probabilidad no cuantificada de una respuesta lenta o fallida puntual, mitigable
+   recargando la página.
+3. **`data/chroma/` ausente de la imagen, sin ningún error visible** (el RAG respondía sin
+   contexto real): `gcloud run deploy --source .` hereda `.gitignore` para decidir qué subir a
+   Cloud Build cuando no existe `.gcloudignore` — y `data/chroma/` está gitignored a propósito
+   para GitHub. Fix: `.gcloudignore` explícito en la raíz, mismo contenido que `.dockerignore`.
+   Hallazgo más grave de todo el despliegue por ser silencioso — verificado con test aislado
+   (`docker run --platform linux/amd64` local sobre la imagen exacta desplegada) antes de asumir
+   causa.
+4. **Login de Google fallaba con `redirect_uri_mismatch`** pese a tener la URI correcta dada de
+   alta: Chainlit construye el `redirect_uri` con `get_user_facing_url()`
+   (`chainlit/server.py`), que documenta explícitamente que necesita `CHAINLIT_URL` "behind
+   proxies (like Cloud Run)" — sin ella, usa la URL interna que ve el proceso tras el proxy, no
+   la pública. `CHAINLIT_URL` no estaba en `.env.example` (no hace falta en local).
+5. **Emails de signup/recuperación de contraseña enlazaban a `localhost`** en producción:
+   `auth/supabase_client.py` no pasaba ningún `redirect_to` explícito, así que Supabase usaba su
+   Site URL de dashboard fijo — mismo problema de fondo que el punto 4, pero en superficie
+   distinta (Supabase, no Chainlit). Primer intento de fix de plantilla (`{{ .ConfirmationURL }}`)
+   incorrecto, habría roto el patrón de ruta propia ya diseñado en D-040. Fix real: nueva función
+   `_confirm_redirect_url()` en `auth/supabase_client.py` (lee `CHAINLIT_URL`, mismo patrón que el
+   punto 4) pasando `email_redirect_to`/`redirect_to` a `sign_up()`/`reset_password_for_email()`;
+   plantillas de Supabase ("Confirm signup"/"Reset password") con `{{ .SiteURL }}` sustituido por
+   `{{ .RedirectTo }}` (variable oficial de Supabase, con fallback documentado al Site URL cuando
+   no se pasa nada — local y producción funcionan a la vez sin alternar nada a mano).
+6. **Coste de Cloud Build/Artifact Registry no cubierto por la cuota Always Free de Cloud Run**:
+   verificado aparte (`cloud.google.com/build/pricing`, `cloud.google.com/artifact-registry/
+   pricing`) — Cloud Build con margen de sobra (2.500 min/mes gratis, ~9-10 min por build usados
+   en este despliegue), pero Artifact Registry solo da 0.5GB gratis y cada build sube una imagen
+   nueva (~4GB, aunque Docker reutiliza capas idénticas entre builds). Mitigación: borrar
+   manualmente las imágenes antiguas tras cada deploy, dejando solo la que sirve tráfico —
+   aplicado al cierre de esta tarea.
+
+**Alternativas descartadas**
+- Alternar el Site URL de Supabase a mano entre local y producción (en vez del fix de código del
+  punto 5) — descartado: exige acordarse de revertirlo, y local y producción no podrían coexistir
+  nunca a la vez.
+- `--min-instances=1` para eliminar del todo el riesgo residual del punto 2 — descartado en D-098
+  por coste recurrente y necesidad de mantenimiento activo durante semanas sin supervisión.
+
+**Justificación**
+Cada hallazgo se verificó con evidencia directa (logs de Cloud Run, tests aislados sobre la
+imagen exacta desplegada, documentación oficial citada) antes de aplicar el fix — ninguno se
+asumió por intuición, coherente con la disciplina de verificación que abrió esta tarea (D-098).
+El resultado es un Dockerfile y una mecánica de deploy reproducibles y ya no dependientes de
+suposiciones sobre cómo `gcloud run deploy --source` se comporta.
+
+**Consecuencias**
+- `Dockerfile`, `.dockerignore`, `.gcloudignore` en la raíz del repo.
+- `auth/supabase_client.py`: nueva función `_confirm_redirect_url()`, usada en `signup()` y
+  `request_password_reset()`. 29 tests de `tests/step_defs/test_e05_t06.py` y relacionados siguen
+  en verde sin cambios (mockean las funciones como caja negra).
+- `.env.example`: `CHAINLIT_URL` documentada como variable solo necesaria detrás de un proxy.
+- Smoke test completo verificado sobre `https://aiip-family-980683376675.europe-west1.run.app`:
+  login email/password, login Google, recuperación de contraseña, pregunta con fuentes citadas
+  reales, caso de alarma con derivación de seguridad.
+- `backlog/epics.md`: T-03 marcada ✅ Completada. Queda pendiente de decidir con Marcos si hace
+  falta una T-04 de cierre final de E-12.
+- Secrets en Secret Manager del proyecto GCP (`aiip-500721`), no en este repo.

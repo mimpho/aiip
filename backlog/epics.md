@@ -810,9 +810,21 @@ completado el despliegue.
 |---|---|---|
 | T-01 | Retrospectiva del roadmap: recopilación y narrativa de reordenamientos/repriorizaciones | ✅ Completada |
 | T-02 | Adaptar `README.md`/`prompts.md` a la plantilla oficial de entrega + corregir modelo de datos desactualizado | ✅ Completada |
-| T-03 | Despliegue público (HF Spaces / Fly.io) — en paralelo a T-02 | ⚪ Pendiente |
+| T-03 | Despliegue público (Google Cloud Run) — en paralelo a T-02 | ✅ Completada |
 
-**Estado:** 🔵 En curso
+**Nota de cierre T-03 (28 jul 2026):** el plan original evaluaba HF Spaces/Fly.io; la verificación
+explícita del tier gratuito de cada plataforma (pedida antes de implementar) forzó dos cambios de
+plataforma en la misma tarde — Fly.io ya no tiene tier gratuito para cuentas nuevas, y el SDK
+Docker de HF Spaces pasó a ser de pago sin previo aviso ~3 semanas antes. Se cerró con **Google
+Cloud Run** (Always Free real, verificado contra documentación oficial). Recorrido completo,
+hallazgos técnicos durante la ejecución (symlinks rotos en `gcloud run deploy --source .`, OOM a
+4/6GiB, `.gcloudignore` heredando `.gitignore` y dejando `data/chroma/` fuera de la imagen,
+`CHAINLIT_URL` para el redirect de OAuth tras el proxy, `email_redirect_to` para los emails de
+Supabase) documentados en `tasks/E12-T03-plan.md` y D-098/D-099 (`decisions.md`). Smoke test
+completo verificado sobre la URL real: login email/password, login Google, recuperación de
+contraseña, pregunta con fuentes citadas, caso de alarma.
+
+**Estado:** 🔵 En curso — pendiente decidir si hace falta T-04 (cierre final de la épica)
 
 ---
 
